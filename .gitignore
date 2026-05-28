@@ -6,3 +6,6 @@ dist
 *.log
 
 scripts/.venv/
+.vercel
+tsconfig.tsbuildinfo
+supabase/.temp/
