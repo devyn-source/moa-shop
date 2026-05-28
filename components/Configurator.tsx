@@ -18,7 +18,9 @@ export function Configurator({ product }: { product: CatalogProduct }) {
   const router = useRouter();
   const { addItem } = useCart();
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? "");
-  const [decorationId, setDecorationId] = useState<DecorationMethod>(product.decorations[0]?.id ?? "screen_print");
+  const [decorationIds, setDecorationIds] = useState<DecorationMethod[]>(
+    product.decorations[0] ? [product.decorations[0].id] : []
+  );
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
     Object.fromEntries(product.sizes.map((size) => [size, 0]))
   );
@@ -30,13 +32,19 @@ export function Configurator({ product }: { product: CatalogProduct }) {
     [sizeQty]
   );
   const belowMoq = total < product.moq;
+  const noDecoration = decorationIds.length === 0;
 
   const variant = product.variants.find((item) => item.id === variantId) ?? product.variants[0];
-  const decoration = product.decorations.find((item) => item.id === decorationId) ?? product.decorations[0];
+  const selectedDecorations = product.decorations.filter((item) => decorationIds.includes(item.id));
+  const decorationLabel = selectedDecorations.map((item) => item.label).join(" + ");
   const price = useMemo(
-    () => calculateOrderPrice(product, total, decorationId),
-    [product, total, decorationId]
+    () => calculateOrderPrice(product, total, decorationIds),
+    [product, total, decorationIds]
   );
+
+  function toggleDecoration(id: DecorationMethod) {
+    setDecorationIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   const activeTierIndex = useMemo(
     () =>
@@ -60,7 +68,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
   }
 
   function addToCart() {
-    if (belowMoq) return;
+    if (belowMoq || noDecoration) return;
     addItem({
       productId: product.id,
       slug: product.slug,
@@ -69,8 +77,8 @@ export function Configurator({ product }: { product: CatalogProduct }) {
       variantId: variant?.id ?? "",
       colorLabel: variant?.colorLabel ?? "",
       image: variant?.frontImage,
-      decorationId,
-      decorationLabel: decoration?.label ?? "",
+      decorationIds,
+      decorationLabel,
       sizeQty: Object.fromEntries(product.sizes.filter((s) => (sizeQty[s] ?? 0) > 0).map((s) => [s, sizeQty[s]])),
       quantity: total,
       perUnitUsd: price.perUnitUsd,
@@ -140,18 +148,22 @@ export function Configurator({ product }: { product: CatalogProduct }) {
           <header className="step-block-head">
             <span className="step-pill">02</span>
             <h2>Decoration method</h2>
+            <span className="step-hint">Select one or more — adders stack</span>
           </header>
           <div className="tile-grid tile-grid--wide">
             {product.decorations.map((item) => {
-              const selected = decorationId === item.id;
+              const selected = decorationIds.includes(item.id);
               return (
                 <button
                   type="button"
-                  className={`tile${selected ? " tile--active" : ""}`}
+                  className={`tile tile--check${selected ? " tile--active" : ""}`}
                   key={item.id}
-                  onClick={() => setDecorationId(item.id)}
+                  onClick={() => toggleDecoration(item.id)}
                   aria-pressed={selected}
                 >
+                  <span className={`tile-checkbox${selected ? " tile-checkbox--on" : ""}`} aria-hidden>
+                    {selected ? "✓" : ""}
+                  </span>
                   <span className="tile-body">
                     <strong>{item.label}</strong>
                     <span className="tile-sub">{item.description}</span>
@@ -162,6 +174,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
               );
             })}
           </div>
+          {noDecoration ? <p className="size-msg size-msg--warn">Select at least one decoration method.</p> : null}
         </section>
 
         <section className="step-block">
@@ -174,7 +187,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
             </div>
           </header>
 
-          <div className="size-table" role="table">
+          <div className="size-table" role="table" style={{ ["--size-cols" as string]: product.sizes.length }}>
             <div className="size-table-row size-table-row--head" role="row">
               <div className="size-cell size-cell--label" role="columnheader">Size</div>
               {product.sizes.map((size) => (
@@ -197,13 +210,6 @@ export function Configurator({ product }: { product: CatalogProduct }) {
                 </div>
               ))}
               <div className="size-cell size-cell--total" role="cell"><b>{total.toLocaleString()}</b></div>
-            </div>
-            <div className="size-table-row size-table-row--unit" role="row">
-              <div className="size-cell size-cell--label" role="cell">Unit price</div>
-              {product.sizes.map((size) => (
-                <div key={size} className="size-cell size-cell--muted" role="cell">{currency(price.perUnitUsd)}</div>
-              ))}
-              <div className="size-cell size-cell--total size-cell--strong" role="cell">{currency(price.subtotalUsd)}</div>
             </div>
           </div>
 
@@ -269,7 +275,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
           <p className="eyebrow">Line total</p>
           <div className="price-total-big">
             <span className="price-total-num">{currency(price.totalUsd)}</span>
-            <span className="price-total-sub">{total.toLocaleString()} units · {decoration?.label}</span>
+            <span className="price-total-sub">{total.toLocaleString()} units · {decorationLabel || "no decoration"}</span>
           </div>
 
           <div className="price-stack">
@@ -297,11 +303,15 @@ export function Configurator({ product }: { product: CatalogProduct }) {
 
           <button
             className="button button--lg button--full"
-            disabled={belowMoq}
+            disabled={belowMoq || noDecoration}
             type="button"
             onClick={addToCart}
           >
-            {belowMoq ? `Add ${product.moq - total} more (MOQ ${product.moq})` : "Add to cart →"}
+            {noDecoration
+              ? "Select a decoration"
+              : belowMoq
+                ? `Add ${product.moq - total} more (MOQ ${product.moq})`
+                : "Add to cart →"}
           </button>
           <p className="trust-note">
             Add multiple SKUs, then check out once. 100% upfront · artwork QA before production.

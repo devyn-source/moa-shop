@@ -42,10 +42,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span className="from-unit">/unit at {cheapest.minQty}+</span>
           </div>
 
+          <div className="pdp-cta-row">
+            <Link className="button button--lg button--full" href={`/p/${product.slug}/configure`}>
+              Configure order →
+            </Link>
+            <p className="trust-note">
+              Grab the mockup template from the gallery (left) — inch-grid layout file for placement + sizing.
+            </p>
+          </div>
+
           <details className="pdp-detail" open>
             <summary>
               <span>Product details</span>
-              <span className="pdp-detail-icon" aria-hidden>+</span>
+              <span className="pdp-detail-icon" aria-hidden />
             </summary>
             <div className="pdp-detail-body">
               <p>{product.description}</p>
@@ -58,7 +67,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <details className="pdp-detail">
             <summary>
               <span>Size chart</span>
-              <span className="pdp-detail-icon" aria-hidden>+</span>
+              <span className="pdp-detail-icon" aria-hidden />
             </summary>
             <div className="pdp-detail-body">
               <p className="label">Available sizes</p>
@@ -76,7 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <details className="pdp-detail">
             <summary>
               <span>Price ladder</span>
-              <span className="pdp-detail-icon" aria-hidden>+</span>
+              <span className="pdp-detail-icon" aria-hidden />
             </summary>
             <div className="pdp-detail-body">
               <div className="tier-list">
@@ -94,7 +103,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <details className="pdp-detail">
             <summary>
               <span>Decoration menu</span>
-              <span className="pdp-detail-icon" aria-hidden>+</span>
+              <span className="pdp-detail-icon" aria-hidden />
             </summary>
             <div className="pdp-detail-body">
               <div className="decoration-rows">
@@ -114,7 +123,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <details className="pdp-detail">
             <summary>
               <span>Lead time + shipping</span>
-              <span className="pdp-detail-icon" aria-hidden>+</span>
+              <span className="pdp-detail-icon" aria-hidden />
             </summary>
             <div className="pdp-detail-body">
               <p><span className="label">Production</span> {formatLeadTime(product.leadTimeDays)} from artwork approval</p>
@@ -122,15 +131,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <p><span className="label">Shipping</span> DDP air freight default. Sea freight on request for {product.moq * 4}+ unit orders.</p>
             </div>
           </details>
-
-          <div className="pdp-cta-row">
-            <Link className="button button--lg button--full" href={`/p/${product.slug}/configure`}>
-              Configure order →
-            </Link>
-            <p className="trust-note">
-              Grab the mockup template from the gallery (left). Inch-grid layout file for placement + sizing approval.
-            </p>
-          </div>
         </aside>
       </section>
     </main>

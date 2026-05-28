@@ -98,7 +98,7 @@ export type ShopOrder = {
   companyName: string;
   productId: string;
   variantId: string;
-  decorationId: DecorationMethod;
+  decorationIds: DecorationMethod[];
   quantity: number;
   perUnitUsd: number;
   decorationAdderUsd: number;
@@ -138,7 +138,7 @@ export type OrderInput = {
   companyName: string;
   productId: string;
   variantId: string;
-  decorationId: DecorationMethod;
+  decorationIds: DecorationMethod[];
   quantity: number;
   artworkFileName: string;
   artworkNotes: string;

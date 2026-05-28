@@ -5,7 +5,6 @@ import { getSupabase, orderLookupColumn } from "./supabase";
 import { seedProducts, seedVendors } from "./seed";
 import type {
   CatalogProduct,
-  DecorationMethod,
   OrderInput,
   OrderStatus,
   ProductUpdateInput,
@@ -135,12 +134,14 @@ export async function createOrder(input: OrderInput): Promise<ShopOrder> {
     throw new Error("Variant not found");
   }
 
-  const decoration = product.decorations.find((item) => item.id === input.decorationId);
-  if (!decoration) {
-    throw new Error("Decoration not found");
+  const decorationIds = (input.decorationIds ?? []).filter((id) =>
+    product.decorations.some((item) => item.id === id)
+  );
+  if (decorationIds.length === 0) {
+    throw new Error("No valid decoration method selected");
   }
 
-  const price = calculateOrderPrice(product, input.quantity, input.decorationId);
+  const price = calculateOrderPrice(product, input.quantity, decorationIds);
   const now = new Date().toISOString();
   const supabase = getSupabase();
   const { count } = await supabase.from("orders").select("*", { count: "exact", head: true });
@@ -158,7 +159,7 @@ export async function createOrder(input: OrderInput): Promise<ShopOrder> {
     companyName: input.companyName,
     productId: product.id,
     variantId: variant.id,
-    decorationId: decoration.id as DecorationMethod,
+    decorationIds,
     quantity: price.quantity,
     perUnitUsd: price.perUnitUsd,
     decorationAdderUsd: price.decorationAdderUsd,

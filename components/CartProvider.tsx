@@ -11,7 +11,7 @@ export type CartItem = {
   variantId: string;
   colorLabel: string;
   image?: string;
-  decorationId: string;
+  decorationIds: string[];
   decorationLabel: string;
   sizeQty: Record<string, number>;
   quantity: number;

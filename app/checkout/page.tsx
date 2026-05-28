@@ -40,7 +40,7 @@ export default function CheckoutPage() {
         ...contact,
         productId: item.productId,
         variantId: item.variantId,
-        decorationId: item.decorationId,
+        decorationIds: item.decorationIds,
         quantity: item.quantity,
         artworkFileName: item.artworkFileName,
         artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes

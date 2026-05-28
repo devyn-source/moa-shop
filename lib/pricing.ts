@@ -26,13 +26,13 @@ export function getPriceTier(product: CatalogProduct, quantity: number): PriceTi
 export function calculateOrderPrice(
   product: CatalogProduct,
   quantity: number,
-  decorationId: DecorationMethod
+  decorationIds: DecorationMethod[]
 ) {
   const normalizedQty = Number.isFinite(quantity) ? Math.max(quantity, product.moq) : product.moq;
   const tier = getPriceTier(product, normalizedQty);
-  const decoration = product.decorations.find((item) => item.id === decorationId) ?? product.decorations[0];
+  const decorations = product.decorations.filter((item) => decorationIds.includes(item.id));
   const perUnitUsd = tier.perUnitUsd;
-  const decorationAdderUsd = decoration.perUnitAdderUsd;
+  const decorationAdderUsd = decorations.reduce((sum, item) => sum + item.perUnitAdderUsd, 0);
   const subtotalUsd = normalizedQty * (perUnitUsd + decorationAdderUsd);
   const taxUsd = 0;
   const totalUsd = subtotalUsd + taxUsd;
@@ -40,7 +40,7 @@ export function calculateOrderPrice(
   return {
     quantity: normalizedQty,
     tier,
-    decoration,
+    decorations,
     perUnitUsd,
     decorationAdderUsd,
     subtotalUsd,
