@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { calculateOrderPrice, currency } from "@/lib/pricing";
 import type { CatalogProduct, DecorationMethod } from "@/lib/types";
-import { ProductVisual } from "./ProductVisual";
+import { ProductShot } from "./ProductShot";
 
 const STEPS = [
   { id: 1, label: "Variant" },
@@ -292,8 +292,8 @@ export function Configurator({
 
       <aside className="price-box panel">
         <div className="price-box-pad">
-          <div className="price-box-visual">
-            <ProductVisual type={product.visual} label={product.displayName} swatch={variant?.colorHex} />
+          <div className={`price-box-visual${variant?.frontImage ? " price-box-visual--photo" : ""}`}>
+            <ProductShot product={product} variant={variant} view="front" />
             <span className="visual-meta">{variant?.colorLabel}</span>
           </div>
 

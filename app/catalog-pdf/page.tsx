@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProductVisual } from "@/components/ProductVisual";
+import { ProductShot } from "@/components/ProductShot";
 import { PrintButton } from "@/components/PrintButton";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { getProducts } from "@/lib/store";
@@ -53,11 +53,11 @@ export default async function CatalogPdfPage() {
                 <span className="label">Best for</span> {product.bestFor}
               </p>
             </div>
-            <div className="visual-frame">
-              <ProductVisual
-                type={product.visual}
-                label={product.displayName}
-                swatch={product.variants[0]?.colorHex}
+            <div className="pdf-visual">
+              <ProductShot
+                product={product}
+                variant={product.variants.find((variant) => variant.frontImage) ?? product.variants[0]}
+                view="front"
               />
             </div>
           </div>

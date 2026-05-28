@@ -1642,6 +1642,40 @@ button {
   height: 70%;
 }
 
+.price-box-visual .product-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.price-box-visual--photo {
+  background: #f3efe8;
+}
+
+/* Catalog PDF product thumbnail */
+.pdf-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 5;
+  background: #f3efe8;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pdf-visual .product-visual {
+  width: 70%;
+  height: 70%;
+}
+
+.pdf-visual .product-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .price-total-big {
   display: flex;
   flex-direction: column;
