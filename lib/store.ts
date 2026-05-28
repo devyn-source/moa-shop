@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { calculateOrderPrice } from "./pricing";
+import { getSupabase, orderLookupColumn } from "./supabase";
 import { seedProducts, seedVendors } from "./seed";
 import type {
   CatalogProduct,
@@ -15,7 +16,6 @@ import type {
 const dataDir = path.join(process.cwd(), ".data");
 const productsPath = path.join(dataDir, "products.json");
 const vendorsPath = path.join(dataDir, "vendors.json");
-const ordersPath = path.join(dataDir, "orders.json");
 
 async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   try {
@@ -96,13 +96,32 @@ export async function getVendors(): Promise<Vendor[]> {
 }
 
 export async function getOrders(): Promise<ShopOrder[]> {
-  const orders = await readJson<ShopOrder[]>(ordersPath, []);
-  return orders.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("data")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load orders: ${error.message}`);
+  }
+
+  return (data ?? []).map((row) => row.data as ShopOrder);
 }
 
 export async function getOrderById(id: string): Promise<ShopOrder | null> {
-  const orders = await getOrders();
-  return orders.find((order) => order.id === id || order.orderNumber === id) ?? null;
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("data")
+    .eq(orderLookupColumn(id), id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load order: ${error.message}`);
+  }
+
+  return data ? (data.data as ShopOrder) : null;
 }
 
 export async function createOrder(input: OrderInput): Promise<ShopOrder> {
@@ -123,8 +142,9 @@ export async function createOrder(input: OrderInput): Promise<ShopOrder> {
 
   const price = calculateOrderPrice(product, input.quantity, input.decorationId);
   const now = new Date().toISOString();
-  const orders = await getOrders();
-  const sequence = orders.length + 1;
+  const supabase = getSupabase();
+  const { count } = await supabase.from("orders").select("*", { count: "exact", head: true });
+  const sequence = (count ?? 0) + 1;
   const orderNumber = `MOA-S-${new Date().getFullYear().toString().slice(-2)}${String(
     new Date().getMonth() + 1
   ).padStart(2, "0")}-${String(sequence).padStart(4, "0")}`;
@@ -170,7 +190,19 @@ export async function createOrder(input: OrderInput): Promise<ShopOrder> {
     updatedAt: now
   };
 
-  await writeJson(ordersPath, [order, ...orders]);
+  const { error } = await supabase.from("orders").insert({
+    id: order.id,
+    order_number: order.orderNumber,
+    status: order.status,
+    data: order,
+    created_at: order.createdAt,
+    updated_at: order.updatedAt
+  });
+
+  if (error) {
+    throw new Error(`Failed to create order: ${error.message}`);
+  }
+
   return order;
 }
 
@@ -180,14 +212,11 @@ export async function updateOrderStatus(
   note: string,
   extras?: Partial<Pick<ShopOrder, "trackingCarrier" | "trackingNumber" | "internalNotes">>
 ): Promise<ShopOrder> {
-  const orders = await getOrders();
-  const index = orders.findIndex((order) => order.id === id || order.orderNumber === id);
-
-  if (index === -1) {
+  const current = await getOrderById(id);
+  if (!current) {
     throw new Error("Order not found");
   }
 
-  const current = orders[index];
   const now = new Date().toISOString();
   const updated: ShopOrder = {
     ...current,
@@ -205,8 +234,16 @@ export async function updateOrderStatus(
     ]
   };
 
-  orders[index] = updated;
-  await writeJson(ordersPath, orders);
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("orders")
+    .update({ status, data: updated, updated_at: now })
+    .eq(orderLookupColumn(id), id);
+
+  if (error) {
+    throw new Error(`Failed to update order: ${error.message}`);
+  }
+
   return updated;
 }
 
