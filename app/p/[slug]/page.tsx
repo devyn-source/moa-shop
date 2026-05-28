@@ -33,9 +33,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
 
         <aside className="pdp-right">
-          <p className="eyebrow">{product.category} · {product.skuCode}</p>
-          <h1 className="sku-huge">{product.skuCode}</h1>
-          <p className="sku-subtitle">{product.displayName}</p>
+          <p className="eyebrow">{product.category}</p>
+          <h1 className="sku-huge">{product.displayName}</h1>
+          <p className="sku-subtitle">Style {product.skuCode}</p>
 
           <p className="pdp-lede">{product.headline}</p>
 
