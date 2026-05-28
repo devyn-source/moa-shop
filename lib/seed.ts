@@ -435,6 +435,48 @@ export const seedProducts: CatalogProduct[] = [
     ]
   },
   {
+    id: "prod-nylon-chore",
+    slug: "nylon-chore-jacket",
+    skuCode: "NCJ101",
+    category: "outerwear",
+    displayName: "Nylon Chore Jacket",
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+    fitNotes: "Boxy chore · nylon shell · snap placket · chest + hand pockets",
+    headline: "Lightweight nylon chore jacket with a boxy cut.",
+    description:
+      "A lightweight nylon chore jacket with a boxy cut, snap placket, spread collar, and chest plus hand pockets. Workwear-inspired layering with a clean shell. Decorates best with embroidery, woven patches, and woven labels.",
+    bestFor: "Workwear-inspired drops, team kits, creator merch",
+    visual: "jacket",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: 28,
+    moq: 50,
+    leadTimeDays: 52,
+    isPublished: true,
+    sortOrder: 5,
+    variants: [
+      {
+        id: "chore-black",
+        label: "Nylon chore jacket",
+        fabric: "nylon shell",
+        colorLabel: "Black",
+        colorHex: "#161616",
+        mockupTemplateUrl: "/mockups/nylon-chore-black.pdf",
+        isAvailable: true,
+        frontImage: "/products/nylon-chore/chore-black-front.png",
+        backImage: "/products/nylon-chore/chore-black-back.png"
+      }
+    ],
+    decorations: coreDecorations.filter((item) =>
+      ["embroidery", "patch", "woven_label"].includes(item.id)
+    ),
+    priceTiers: [
+      { minQty: 50, maxQty: 74, perUnitUsd: 94 },
+      { minQty: 75, maxQty: 149, perUnitUsd: 84 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 74 },
+      { minQty: 300, maxQty: null, perUnitUsd: 66 }
+    ]
+  },
+  {
     id: "prod-standard-tote",
     slug: "standard-tote",
     skuCode: "TOT101",
