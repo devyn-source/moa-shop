@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
 import { CartButton } from "@/components/CartButton";
+import { NavLink } from "@/components/NavLink";
 
 export const metadata: Metadata = {
   title: "MOA Catalog",
@@ -15,18 +16,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <CartProvider>
         <header className="site-header">
+          <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
+            <NavLink href="/">Catalog</NavLink>
+            <NavLink href="/catalog-pdf">PDF</NavLink>
+          </nav>
           <Link className="brand-lockup" href="/">
             <span className="brand-moa">MOA</span>
+            <span className="brand-sep" aria-hidden />
             <span className="brand-text">Catalog</span>
           </Link>
-          <nav className="site-nav" aria-label="Primary navigation">
-            <Link href="/" className="nav-primary">Catalog</Link>
-            <Link href="/catalog-pdf" className="nav-primary">PDF</Link>
-            <span className="nav-divider" aria-hidden />
-            <Link href="/admin" className="nav-utility">Admin</Link>
-            <Link href="/admin/orders" className="nav-utility">Orders</Link>
+          <div className="site-actions">
+            <NavLink href="/admin" muted>Admin</NavLink>
+            <NavLink href="/admin/orders" muted>Orders</NavLink>
             <CartButton />
-          </nav>
+          </div>
         </header>
         {children}
         <footer className="site-footer">
