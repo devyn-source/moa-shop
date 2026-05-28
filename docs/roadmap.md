@@ -11,6 +11,37 @@ to "self-service merch program that runs the factory for us."
 
 ---
 
+## North star: low-touch automated revenue stream
+
+Every decision is judged by one test: **does this remove an MOA touchpoint?**
+The goal is a customer can go from browse → paid → in production at the factory
+with **zero MOA involvement** on the happy path. MOA only handles exceptions.
+
+The enemy is the **human QA gate** (someone reviewing every mockup). We delete it,
+not staff it, using two moves:
+
+1. **Constraints replace placement QA.** The artwork tool only allows valid input
+   (art inside decoration zones, locked inch-grid scale, within the method's max
+   colors). Placement *can't* be wrong, so no one checks it.
+2. **Automated validation replaces file QA.** Reject low-res / RGB / too-many-colors
+   / wrong-format at upload, programmatically, with clear guidance. The customer
+   approves the auto-generated proof — MOA does not.
+
+Everything after "payment succeeded" is **event-driven and unattended**: create the
+MoaOS project → generate the PO → send the tech pack to the vendor. The download
+template survives only as a **paid exception lane** for complex jobs (those keep a
+human touch and get priced for it).
+
+**Human touchpoints to eliminate (track these to zero):**
+- [ ] Mockup placement review → constrained browser tool
+- [ ] Art file sanity check → automated upload validation
+- [ ] Project setup in MoaOS → auto-created on payment
+- [ ] PO creation → auto-generated on payment
+- [ ] Tech-pack send to vendor → auto-sent via N8N
+- [ ] Order status updates to client → portal reads live state
+
+---
+
 ## Cross-cutting: Inch-grid measurement system
 
 The "hold that thought" item. A grid overlay on mockups that lets us measure +
@@ -25,26 +56,35 @@ spec once, reuse everywhere.
 
 ---
 
-## Phase 1 — Color selector without a mockup per color
+## Phase 1 — Artwork: constrained placement + auto-validation (the QA-killer)
 
-**Goal:** offer many colorways without shooting/building a separate file for every
-color of every style.
+**Goal:** let the customer position artwork and approve a proof *without MOA review*.
+This is the phase that makes the whole thing low-touch. Not a design editor — a
+**placement + validation gate** strict enough to trust unattended.
 
-**Recommended approach:** stop thinking "one mockup per color."
-1. **Product shots:** keep ONE neutral base shot per style; generate colorways
-   offline by recoloring (preserve luminance/shadows, swap hue+chroma). Shoot only
-   hero colors for real. Add a `recolor` mode to `scripts/process-shot.py`.
-2. **Tech-pack template:** color is irrelevant to the design file — **one template
-   per style**, color is just a spec note. This is where the "separate mockup per
-   color" problem mostly disappears.
-3. **Live swatch preview (optional):** CSS `mix-blend-mode: multiply` tint over the
-   base for instant in-browser colorway previews.
+**What it does:**
+1. **Upload source art** (their logo/vector). This file always goes to the factory —
+   you never generate production art in-browser.
+2. **Constrained placement on the inch-grid:** drag/scale art only within the SKU's
+   valid decoration zones, at locked inch-grid scale, within the method's max colors.
+   Wrong placement is impossible → nothing to review.
+3. **Automated file validation at upload:** vector OR min-DPI raster; reject RGB,
+   low-res, too-many-colors-for-screen-print, wrong format — instant, with guidance.
+4. **Auto-generate the proof + tech-pack spec** (zone, size in inches from the grid,
+   method, colors). **Customer approves the proof** — that approval IS the QA.
+5. **Live color render:** garment renders in the chosen colorway under the art, so
+   one base per style covers every color (kills the "mockup per color" problem too).
 
-- [ ] Decide base-shot standard (neutral garment, good shadow detail)
-- [ ] `process-shot.py --recolor <hex>` (LAB lightness preserved)
-- [ ] Colorway hex map per style in seed
-- [ ] Generate + wire `variant.frontImage`/`backImage` from generated files
-- [ ] One tech-pack template per style (not per color)
+**Download template = paid exception lane**, not the default. Designers/complex jobs
+get a dieline (safe zones, scale, color mode) and a human touch they're priced for.
+
+- [ ] Inch-grid placement canvas (zones + scale constraints per SKU)
+- [ ] Source-art upload → Supabase Storage + automated validation rules
+- [ ] Live garment recolor under the art (one base shot per style)
+- [ ] Auto-generate proof image + structured tech-pack spec (grid coordinates)
+- [ ] Customer proof-approval step (replaces Amanda's review)
+- [ ] Exception path → flag to MOA only when validation can't decide
+- [ ] Keep download dieline as the paid pro lane
 
 ---
 
@@ -114,19 +154,25 @@ automation and a China-vendor file proxy. Phase 4 wires the catalog order into t
 ## Suggested sequence
 
 ```
-Phase 1 (color)  ─┐
-                  ├─► Phase 3 (portal integration) ─► Phase 4 (factory)
-Phase 2 (Stripe) ─┘
-Inch-grid system ──────────────► feeds Phase 1 templates + Phase 4 tech packs
+Inch-grid system ─► Phase 1 (artwork tool) ─┐
+                                            ├─► Phase 3 (auto MoaOS intake) ─► Phase 4 (auto PO + tech pack)
+Phase 2 (Stripe) ───────────────────────────┘
 ```
 
-Phases 1 and 2 are independent — can run in parallel. 3 needs a paid order (2).
-4 needs the project to exist (3).
+Inch-grid underpins Phase 1 (placement) and Phase 4 (tech-pack measurements), so it
+goes first. Phase 1 (artwork tool) and Phase 2 (Stripe) are otherwise independent.
+3 needs a paid order (2) + a spec to hand off (1). 4 needs the project to exist (3).
+
+Each phase is "done" only when it removes its human touchpoint from the North-star
+checklist — not just when the feature works.
 
 ## Start here tomorrow
 
 1. **Decide Phase 3 direction** (integrate vs separate) — unblocks the back half.
-2. **Phase 2 kickoff:** create Stripe test keys, add artwork-upload storage bucket,
-   stub `/api/checkout` + `/api/webhooks/stripe`.
-3. **Phase 1 spike:** prototype `process-shot.py --recolor` on one base shot to prove
-   the "one base, many colors" approach before committing to it.
+   Recommendation stands: integrate into MoaOS.
+2. **Inch-grid spike:** define the grid unit + zone model for one SKU (the tee). It's
+   the backbone for the artwork tool and the tech pack — prove it before building on it.
+3. **Phase 2 kickoff:** Stripe test keys, artwork-upload storage bucket, stub
+   `/api/checkout` + `/api/webhooks/stripe` (pending → paid → fires downstream).
+4. **Phase 1 spike:** prototype the constrained placement canvas + automated file
+   validation on the tee — this is the QA-killer, derisk it early.
