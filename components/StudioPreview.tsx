@@ -22,16 +22,57 @@ const SWATCHES = [
 const BLENDS = ["multiply", "screen", "normal"] as const;
 type Blend = (typeof BLENDS)[number];
 
+// Placement zones as allowed center-ranges (% of the stage) + a default graphic size.
+const ZONES = {
+  "left-chest": { label: "Left chest", x0: 54, x1: 63, y0: 30, y1: 37, size: 11 },
+  "center-chest": { label: "Center chest", x0: 42, x1: 58, y0: 33, y1: 52, size: 26 },
+  "full-front": { label: "Full front", x0: 36, x1: 64, y0: 36, y1: 64, size: 46 }
+} as const;
+type ZoneKey = keyof typeof ZONES;
+
 export function StudioPreview({ defaultBase }: { defaultBase: string }) {
   const [base, setBase] = useState(defaultBase);
   const [art, setArt] = useState(SAMPLE_ART);
   const [color, setColor] = useState("");
   const [blend, setBlend] = useState<Blend>("screen");
-  const [size, setSize] = useState(24);
-  const [posY, setPosY] = useState(40);
-  const [posX, setPosX] = useState(50);
+  const [zone, setZone] = useState<ZoneKey>("center-chest");
+  const [size, setSize] = useState<number>(ZONES["center-chest"].size);
+  const [center, setCenter] = useState({ x: 50, y: 42 });
+
+  const stageRef = useRef<HTMLDivElement>(null);
   const baseInput = useRef<HTMLInputElement>(null);
   const artInput = useRef<HTMLInputElement>(null);
+  const dragging = useRef(false);
+
+  function clampToZone(x: number, y: number, z: ZoneKey) {
+    const r = ZONES[z];
+    return { x: Math.min(r.x1, Math.max(r.x0, x)), y: Math.min(r.y1, Math.max(r.y0, y)) };
+  }
+
+  function selectZone(z: ZoneKey) {
+    setZone(z);
+    setSize(ZONES[z].size);
+    const r = ZONES[z];
+    setCenter({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
+  }
+
+  function onPointerDown(event: React.PointerEvent) {
+    dragging.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onPointerMove(event: React.PointerEvent) {
+    if (!dragging.current || !stageRef.current) return;
+    const rect = stageRef.current.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    setCenter(clampToZone(x, y, zone));
+  }
+
+  function onPointerUp(event: React.PointerEvent) {
+    dragging.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
 
   function onUpload(setter: (url: string) => void) {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +81,7 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
     };
   }
 
+  const z = ZONES[zone];
   const maskStyle = {
     WebkitMaskImage: `url("${base}")`,
     maskImage: `url("${base}")`,
@@ -53,19 +95,34 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
 
   return (
     <div className="studio">
-      <div className="studio-stage">
+      <div className="studio-stage" ref={stageRef}>
         <img className="studio-base" src={base} alt="Garment base" />
         {color ? (
           <div className="studio-layer studio-recolor" style={{ ...maskStyle, background: color }} />
         ) : null}
+
+        {/* allowed print zone */}
         <div
-          className="studio-layer studio-art"
+          className="studio-zone"
+          style={{ left: `${z.x0}%`, top: `${z.y0}%`, width: `${z.x1 - z.x0}%`, height: `${z.y1 - z.y0}%` }}
+        >
+          <span className="studio-zone-tag">{z.label}</span>
+        </div>
+
+        {/* draggable artwork */}
+        <img
+          className="studio-art-img"
+          src={art}
+          alt="Artwork"
+          draggable={false}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
           style={{
-            ...maskStyle,
-            backgroundImage: `url("${art}")`,
-            backgroundSize: `${size}%`,
-            backgroundPosition: `${posX}% ${posY}%`,
-            backgroundRepeat: "no-repeat",
+            left: `${center.x}%`,
+            top: `${center.y}%`,
+            width: `${size}%`,
+            transform: "translate(-50%, -50%)",
             mixBlendMode: blend
           }}
         />
@@ -74,6 +131,28 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
       <div className="studio-controls panel">
         <div className="panel-pad">
           <p className="eyebrow">Design studio · prototype</p>
+
+          <div className="studio-group">
+            <span className="label">Placement zone</span>
+            <div className="studio-seg studio-seg--wrap">
+              {(Object.keys(ZONES) as ZoneKey[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`studio-seg-btn${zone === key ? " studio-seg-btn--active" : ""}`}
+                  onClick={() => selectZone(key)}
+                >
+                  {ZONES[key].label}
+                </button>
+              ))}
+            </div>
+            <p className="trust-note">Drag the artwork on the garment — it stays inside the selected zone.</p>
+          </div>
+
+          <div className="studio-group">
+            <span className="label">Graphic size · {size}%</span>
+            <input type="range" min={6} max={60} value={size} onChange={(e) => setSize(Number(e.target.value))} />
+          </div>
 
           <div className="studio-group">
             <span className="label">Garment color</span>
@@ -91,7 +170,7 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
                 </button>
               ))}
             </div>
-            <p className="trust-note">Recolor needs a light/grey base — upload one below to see it work (black can&apos;t be lightened).</p>
+            <p className="trust-note">Recolor needs a light/grey base — upload one below (black can&apos;t be lightened).</p>
           </div>
 
           <div className="studio-group">
@@ -109,21 +188,6 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
               ))}
             </div>
             <p className="trust-note">Light garment → multiply. Dark garment → screen. Flat decal → normal.</p>
-          </div>
-
-          <div className="studio-group">
-            <span className="label">Graphic size · {size}%</span>
-            <input type="range" min={8} max={60} value={size} onChange={(e) => setSize(Number(e.target.value))} />
-          </div>
-          <div className="studio-group studio-group--row">
-            <label className="studio-mini">
-              <span className="label">Up / down · {posY}%</span>
-              <input type="range" min={10} max={75} value={posY} onChange={(e) => setPosY(Number(e.target.value))} />
-            </label>
-            <label className="studio-mini">
-              <span className="label">Left / right · {posX}%</span>
-              <input type="range" min={20} max={80} value={posX} onChange={(e) => setPosX(Number(e.target.value))} />
-            </label>
           </div>
 
           <div className="studio-group studio-uploads">

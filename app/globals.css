@@ -3206,6 +3206,48 @@ a.stat-card:hover {
   mix-blend-mode: color;
 }
 
+.studio-zone {
+  position: absolute;
+  border: 1.5px dashed rgba(176, 71, 49, 0.5);
+  border-radius: 4px;
+  background: rgba(176, 71, 49, 0.04);
+  pointer-events: none;
+}
+
+.studio-zone-tag {
+  position: absolute;
+  top: -9px;
+  left: 8px;
+  padding: 2px 6px;
+  background: var(--terracotta);
+  border-radius: 3px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-size: 0.46rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.studio-art-img {
+  position: absolute;
+  height: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.studio-art-img:active {
+  cursor: grabbing;
+}
+
+.studio-seg--wrap {
+  flex-wrap: wrap;
+}
+
 .studio-controls {
   position: sticky;
   top: 90px;
