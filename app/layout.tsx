@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { CartProvider } from "@/components/CartProvider";
+import { CartButton } from "@/components/CartButton";
 
 export const metadata: Metadata = {
   title: "MOA Catalog",
@@ -11,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <CartProvider>
         <header className="site-header">
           <Link className="brand-lockup" href="/">
             <span className="brand-moa">MOA</span>
@@ -22,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="nav-divider" aria-hidden />
             <Link href="/admin" className="nav-utility">Admin</Link>
             <Link href="/admin/orders" className="nav-utility">Orders</Link>
+            <CartButton />
           </nav>
         </header>
         {children}
@@ -34,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Built by Magnum Opus Agency. Fixed-MOQ, fixed-price merch programs · factory-direct · artwork QA included.
           </p>
         </footer>
+        </CartProvider>
       </body>
     </html>
   );

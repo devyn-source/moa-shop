@@ -6,30 +6,24 @@ import { useRouter } from "next/navigation";
 import { calculateOrderPrice, currency } from "@/lib/pricing";
 import type { CatalogProduct, DecorationMethod } from "@/lib/types";
 import { ProductShot } from "./ProductShot";
+import { useCart } from "./CartProvider";
 
 const STEPS = [
   { id: 1, label: "Variant" },
   { id: 2, label: "Decoration" },
-  { id: 3, label: "Artwork" },
-  { id: 4, label: "Checkout" }
+  { id: 3, label: "Build + artwork" }
 ] as const;
 
-export function Configurator({
-  product,
-  initialSizes
-}: {
-  product: CatalogProduct;
-  initialSizes?: Record<string, number>;
-}) {
+export function Configurator({ product }: { product: CatalogProduct }) {
   const router = useRouter();
+  const { addItem } = useCart();
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? "");
   const [decorationId, setDecorationId] = useState<DecorationMethod>(product.decorations[0]?.id ?? "screen_print");
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
-    Object.fromEntries(product.sizes.map((size) => [size, initialSizes?.[size] ?? 0]))
+    Object.fromEntries(product.sizes.map((size) => [size, 0]))
   );
   const [fileName, setFileName] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [notes, setNotes] = useState("");
 
   const total = useMemo(
     () => Object.values(sizeQty).reduce((sum, value) => sum + (value || 0), 0),
@@ -65,61 +59,33 @@ export function Configurator({
     setSizeQty(Object.fromEntries(product.sizes.map((size) => [size, 0])));
   }
 
-  const sizeSummary = product.sizes
-    .filter((size) => (sizeQty[size] ?? 0) > 0)
-    .map((size) => `${size}:${sizeQty[size]}`)
-    .join(" ");
-
-  async function submit(formData: FormData) {
-    if (belowMoq) {
-      setError(`Order is below the ${product.moq}-unit minimum. Add ${product.moq - total} more.`);
-      return;
-    }
-    setSubmitting(true);
-    setError("");
-
-    const notes = String(formData.get("artworkNotes") ?? "");
-    const payload = {
-      contactName: String(formData.get("contactName") ?? ""),
-      contactEmail: String(formData.get("contactEmail") ?? ""),
-      contactPhone: String(formData.get("contactPhone") ?? ""),
-      companyName: String(formData.get("companyName") ?? ""),
+  function addToCart() {
+    if (belowMoq) return;
+    addItem({
       productId: product.id,
-      variantId,
+      slug: product.slug,
+      displayName: product.displayName,
+      skuCode: product.skuCode,
+      variantId: variant?.id ?? "",
+      colorLabel: variant?.colorLabel ?? "",
+      image: variant?.frontImage,
       decorationId,
+      decorationLabel: decoration?.label ?? "",
+      sizeQty: Object.fromEntries(product.sizes.filter((s) => (sizeQty[s] ?? 0) > 0).map((s) => [s, sizeQty[s]])),
       quantity: total,
+      perUnitUsd: price.perUnitUsd,
+      decorationAdderUsd: price.decorationAdderUsd,
+      subtotalUsd: price.subtotalUsd,
+      totalUsd: price.totalUsd,
       artworkFileName: fileName || "Artwork file pending",
-      artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${notes ? `\n\n${notes}` : ""}` : notes,
-      shipToName: String(formData.get("shipToName") ?? ""),
-      shipToAddress: {
-        line1: String(formData.get("line1") ?? ""),
-        line2: String(formData.get("line2") ?? ""),
-        city: String(formData.get("city") ?? ""),
-        state: String(formData.get("state") ?? ""),
-        postalCode: String(formData.get("postalCode") ?? ""),
-        country: String(formData.get("country") ?? "United States")
-      }
-    };
-
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      artworkNotes: notes
     });
-
-    if (!response.ok) {
-      setSubmitting(false);
-      setError("Order could not be created. Check the required fields and try again.");
-      return;
-    }
-
-    const order = (await response.json()) as { id: string };
-    router.push(`/orders/${order.id}`);
+    router.push("/cart");
   }
 
   return (
     <div className="config-shell">
-      <form action={submit} className="config-form" id="config-form">
+      <div className="config-form">
         <div className="config-head">
           <nav className="crumbs" aria-label="Breadcrumb">
             <Link href="/">Catalog</Link>
@@ -283,66 +249,15 @@ export function Configurator({
             </label>
             <label className="field full">
               <span className="label">Artwork notes</span>
-              <textarea name="artworkNotes" placeholder="Placement notes, Pantones, file context, or anything Amanda should verify." />
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Placement notes, Pantones, file context, or anything Amanda should verify."
+              />
             </label>
           </div>
         </section>
-
-        <section className="step-block">
-          <header className="step-block-head">
-            <span className="step-pill">04</span>
-            <h2>Contact + ship-to</h2>
-          </header>
-          <div className="form-grid">
-            <label className="field">
-              <span className="label">Contact name</span>
-              <input name="contactName" required />
-            </label>
-            <label className="field">
-              <span className="label">Email</span>
-              <input name="contactEmail" type="email" required />
-            </label>
-            <label className="field">
-              <span className="label">Phone</span>
-              <input name="contactPhone" required />
-            </label>
-            <label className="field">
-              <span className="label">Company</span>
-              <input name="companyName" required />
-            </label>
-            <label className="field">
-              <span className="label">Ship-to name</span>
-              <input name="shipToName" required />
-            </label>
-            <label className="field">
-              <span className="label">Address line 1</span>
-              <input name="line1" required />
-            </label>
-            <label className="field">
-              <span className="label">Address line 2</span>
-              <input name="line2" />
-            </label>
-            <label className="field">
-              <span className="label">City</span>
-              <input name="city" required />
-            </label>
-            <label className="field">
-              <span className="label">State</span>
-              <input name="state" required />
-            </label>
-            <label className="field">
-              <span className="label">Postal code</span>
-              <input name="postalCode" required />
-            </label>
-            <label className="field">
-              <span className="label">Country</span>
-              <input name="country" defaultValue="United States" required />
-            </label>
-          </div>
-
-          {error ? <p className="form-error">{error}</p> : null}
-        </section>
-      </form>
+      </div>
 
       <aside className="price-box panel">
         <div className="price-box-pad">
@@ -351,10 +266,10 @@ export function Configurator({
             <span className="visual-meta">{variant?.colorLabel}</span>
           </div>
 
-          <p className="eyebrow">Live total</p>
+          <p className="eyebrow">Line total</p>
           <div className="price-total-big">
             <span className="price-total-num">{currency(price.totalUsd)}</span>
-            <span className="price-total-sub">{price.quantity.toLocaleString()} units · {decoration?.label}</span>
+            <span className="price-total-sub">{total.toLocaleString()} units · {decoration?.label}</span>
           </div>
 
           <div className="price-stack">
@@ -372,32 +287,24 @@ export function Configurator({
             </div>
             <div className="price-line">
               <span>Quantity</span>
-              <strong>{price.quantity.toLocaleString()}</strong>
+              <strong>{total.toLocaleString()}</strong>
             </div>
             <div className="price-line">
               <span>Subtotal</span>
               <strong>{currency(price.subtotalUsd)}</strong>
             </div>
-            <div className="price-line">
-              <span>Tax</span>
-              <strong>{currency(price.taxUsd)}</strong>
-            </div>
           </div>
 
           <button
             className="button button--lg button--full"
-            disabled={submitting || belowMoq}
-            type="submit"
-            form="config-form"
+            disabled={belowMoq}
+            type="button"
+            onClick={addToCart}
           >
-            {submitting
-              ? "Creating order…"
-              : belowMoq
-                ? `Add ${product.moq - total} more (MOQ ${product.moq})`
-                : `Pay ${currency(price.totalUsd)}`}
+            {belowMoq ? `Add ${product.moq - total} more (MOQ ${product.moq})` : "Add to cart →"}
           </button>
           <p className="trust-note">
-            Simulated Stripe checkout. 100% upfront. Amanda reviews artwork before vendor handoff.
+            Add multiple SKUs, then check out once. 100% upfront · artwork QA before vendor handoff.
           </p>
         </div>
       </aside>
