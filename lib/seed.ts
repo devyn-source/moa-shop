@@ -229,7 +229,7 @@ export const seedProducts: CatalogProduct[] = [
     moq: 75,
     leadTimeDays: 70,
     isPublished: true,
-    sortOrder: 40,
+    sortOrder: 1,
     variants: [
       {
         id: "jacket-duck",
@@ -280,7 +280,7 @@ export const seedProducts: CatalogProduct[] = [
     moq: 75,
     leadTimeDays: 60,
     isPublished: true,
-    sortOrder: 45,
+    sortOrder: 3,
     variants: [
       {
         id: "sherpa-black",
@@ -301,6 +301,47 @@ export const seedProducts: CatalogProduct[] = [
       { minQty: 75, maxQty: 149, perUnitUsd: 106 },
       { minQty: 150, maxQty: 299, perUnitUsd: 94 },
       { minQty: 300, maxQty: null, perUnitUsd: 84 }
+    ]
+  },
+  {
+    id: "prod-down-puffer",
+    slug: "down-puffer",
+    skuCode: "PUF101",
+    category: "outerwear",
+    displayName: "Goose Down Puffer",
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+    fitNotes: "Boxy cropped · hooded · real goose down fill · snap + zip placket",
+    headline: "Hooded goose down puffer with a boxy, cropped cut.",
+    description:
+      "A premium hooded puffer with real goose down fill, a boxy cropped cut, snap-and-zip placket, and zip hand pockets. The catalog's cold-weather hero piece for outerwear-led drops. Decorates best with embroidery, woven patches, and woven labels.",
+    bestFor: "Premium winter drops, outerwear-led brands, elevated staff kits",
+    visual: "jacket",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: 58,
+    moq: 75,
+    leadTimeDays: 70,
+    isPublished: true,
+    sortOrder: 2,
+    variants: [
+      {
+        id: "puffer-black",
+        label: "Hooded down puffer",
+        fabric: "recycled nylon shell / goose down fill",
+        colorLabel: "Black",
+        colorHex: "#161616",
+        mockupTemplateUrl: "/mockups/down-puffer-black.pdf",
+        isAvailable: true,
+        frontImage: "/products/down-puffer/puffer-black-front.png",
+        backImage: "/products/down-puffer/puffer-black-back.png"
+      }
+    ],
+    decorations: coreDecorations.filter((item) =>
+      ["embroidery", "patch", "woven_label"].includes(item.id)
+    ),
+    priceTiers: [
+      { minQty: 75, maxQty: 149, perUnitUsd: 168 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 150 },
+      { minQty: 300, maxQty: null, perUnitUsd: 134 }
     ]
   },
   {
