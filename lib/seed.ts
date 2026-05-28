@@ -71,6 +71,48 @@ export const seedVendors: Vendor[] = [
 
 export const seedProducts: CatalogProduct[] = [
   {
+    id: "prod-knit-sweater",
+    slug: "knit-sweater",
+    skuCode: "KNT101",
+    category: "knitwear",
+    displayName: "Cotton Knit Sweater",
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+    fitNotes: "Relaxed crew · 100% cotton knit · ribbed collar, cuffs + hem",
+    headline: "Midweight 100% cotton crewneck knit.",
+    description:
+      "A midweight crewneck knit in 100% cotton, with a ribbed collar, cuffs, and hem. A clean, elevated layering piece for premium drops and capsule programs. Decorates best with embroidery, woven patches, and woven labels.",
+    bestFor: "Premium capsules, elevated staff kits, creator drops",
+    visual: "tee",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: 22,
+    moq: 50,
+    leadTimeDays: 52,
+    isPublished: true,
+    sortOrder: 8,
+    variants: [
+      {
+        id: "knit-black",
+        label: "Crewneck sweater",
+        fabric: "100% cotton knit",
+        colorLabel: "Black",
+        colorHex: "#141414",
+        mockupTemplateUrl: "/mockups/knit-sweater-black.pdf",
+        isAvailable: true,
+        frontImage: "/products/knit-sweater/knit-black-front.png",
+        backImage: "/products/knit-sweater/knit-black-back.png"
+      }
+    ],
+    decorations: coreDecorations.filter((item) =>
+      ["embroidery", "patch", "woven_label"].includes(item.id)
+    ),
+    priceTiers: [
+      { minQty: 50, maxQty: 99, perUnitUsd: 82 },
+      { minQty: 100, maxQty: 249, perUnitUsd: 72 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 62 },
+      { minQty: 500, maxQty: null, perUnitUsd: 54 }
+    ]
+  },
+  {
     id: "prod-heavyweight-hoodie",
     slug: "heavyweight-hoodie",
     skuCode: "HDY101",

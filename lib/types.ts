@@ -1,6 +1,7 @@
 export type ProductCategory =
   | "hoodie"
   | "tee"
+  | "knitwear"
   | "bottoms"
   | "outerwear"
   | "headwear"

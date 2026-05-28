@@ -8,6 +8,7 @@ import type { CatalogProduct } from "@/lib/types";
 const CATEGORY_LABELS: Record<string, string> = {
   hoodie: "Hoodies",
   tee: "Tees",
+  knitwear: "Knitwear",
   bottoms: "Bottoms",
   outerwear: "Outerwear",
   bag: "Bags",
@@ -37,6 +38,13 @@ function CatIcon({ type }: { type: string }) {
       ) : null}
       {type === "tee" ? (
         <path d="M8 4 4 7l2 2.5V20h12V9.5L20 7l-4-3-2 1.8a3 3 0 0 1-4 0z" />
+      ) : null}
+      {type === "knitwear" ? (
+        <>
+          <path d="M8.5 4 4 8l2.5 2.5V20h11v-9.5L20 8l-4.5-4" />
+          <path d="M9 4a3 3 0 0 0 6 0" />
+          <path d="M6.2 17.5h2.4M15.4 17.5h2.4" />
+        </>
       ) : null}
       {type === "bottoms" ? (
         <>
