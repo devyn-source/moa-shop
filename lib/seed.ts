@@ -345,6 +345,47 @@ export const seedProducts: CatalogProduct[] = [
     ]
   },
   {
+    id: "prod-track-jacket",
+    slug: "track-jacket",
+    skuCode: "TKJ101",
+    category: "outerwear",
+    displayName: "Nylon Track Jacket",
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+    fitNotes: "Relaxed · full zip · stand collar · elastic hem + cuffs",
+    headline: "Lightweight nylon track jacket with a full zip and stand collar.",
+    description:
+      "A lightweight recycled-nylon track jacket with a full zip, stand collar, and elastic hem and cuffs. Clean layering for athleisure drops and warm-up kits. Decorates best with embroidery, woven patches, and woven labels.",
+    bestFor: "Athleisure drops, team kits, creator merch",
+    visual: "jacket",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: 22,
+    moq: 75,
+    leadTimeDays: 50,
+    isPublished: true,
+    sortOrder: 4,
+    variants: [
+      {
+        id: "track-black",
+        label: "Full-zip track jacket",
+        fabric: "recycled nylon shell",
+        colorLabel: "Black",
+        colorHex: "#141414",
+        mockupTemplateUrl: "/mockups/track-jacket-black.pdf",
+        isAvailable: true,
+        frontImage: "/products/track-jacket/track-black-front.png",
+        backImage: "/products/track-jacket/track-black-back.png"
+      }
+    ],
+    decorations: coreDecorations.filter((item) =>
+      ["embroidery", "patch", "woven_label"].includes(item.id)
+    ),
+    priceTiers: [
+      { minQty: 75, maxQty: 149, perUnitUsd: 68 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 60 },
+      { minQty: 300, maxQty: null, perUnitUsd: 52 }
+    ]
+  },
+  {
     id: "prod-standard-tote",
     slug: "standard-tote",
     skuCode: "TOT101",
