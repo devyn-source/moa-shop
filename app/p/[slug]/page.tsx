@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/ProductGallery";
-import { SizeMatrix } from "@/components/SizeMatrix";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { getProductBySlug, getVendors } from "@/lib/store";
 
@@ -136,8 +135,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </aside>
       </section>
-
-      <SizeMatrix product={product} />
     </main>
   );
 }

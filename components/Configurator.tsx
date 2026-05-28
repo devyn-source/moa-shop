@@ -16,41 +16,69 @@ const STEPS = [
 
 export function Configurator({
   product,
-  initialQuantity,
   initialSizes
 }: {
   product: CatalogProduct;
-  initialQuantity?: number;
   initialSizes?: Record<string, number>;
 }) {
   const router = useRouter();
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? "");
   const [decorationId, setDecorationId] = useState<DecorationMethod>(product.decorations[0]?.id ?? "screen_print");
-  const [quantity, setQuantity] = useState(initialQuantity ?? product.moq);
-  const sizeBreakdown = initialSizes && Object.values(initialSizes).some((v) => v > 0) ? initialSizes : null;
+  const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
+    Object.fromEntries(product.sizes.map((size) => [size, initialSizes?.[size] ?? 0]))
+  );
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const total = useMemo(
+    () => Object.values(sizeQty).reduce((sum, value) => sum + (value || 0), 0),
+    [sizeQty]
+  );
+  const belowMoq = total < product.moq;
+
   const variant = product.variants.find((item) => item.id === variantId) ?? product.variants[0];
   const decoration = product.decorations.find((item) => item.id === decorationId) ?? product.decorations[0];
   const price = useMemo(
-    () => calculateOrderPrice(product, quantity, decorationId),
-    [product, quantity, decorationId]
+    () => calculateOrderPrice(product, total, decorationId),
+    [product, total, decorationId]
   );
 
   const activeTierIndex = useMemo(
     () =>
       product.priceTiers.findIndex(
-        (tier) => quantity >= tier.minQty && (tier.maxQty == null || quantity <= tier.maxQty)
+        (tier) => total >= tier.minQty && (tier.maxQty == null || total <= tier.maxQty)
       ),
-    [product, quantity]
+    [product, total]
   );
 
+  function setSize(size: string, value: number) {
+    setSizeQty((prev) => ({ ...prev, [size]: Math.max(0, Math.floor(value || 0)) }));
+  }
+
+  function fillEven() {
+    const per = Math.ceil(product.moq / product.sizes.length);
+    setSizeQty(Object.fromEntries(product.sizes.map((size) => [size, per])));
+  }
+
+  function clearSizes() {
+    setSizeQty(Object.fromEntries(product.sizes.map((size) => [size, 0])));
+  }
+
+  const sizeSummary = product.sizes
+    .filter((size) => (sizeQty[size] ?? 0) > 0)
+    .map((size) => `${size}:${sizeQty[size]}`)
+    .join(" ");
+
   async function submit(formData: FormData) {
+    if (belowMoq) {
+      setError(`Order is below the ${product.moq}-unit minimum. Add ${product.moq - total} more.`);
+      return;
+    }
     setSubmitting(true);
     setError("");
 
+    const notes = String(formData.get("artworkNotes") ?? "");
     const payload = {
       contactName: String(formData.get("contactName") ?? ""),
       contactEmail: String(formData.get("contactEmail") ?? ""),
@@ -59,9 +87,9 @@ export function Configurator({
       productId: product.id,
       variantId,
       decorationId,
-      quantity,
+      quantity: total,
       artworkFileName: fileName || "Artwork file pending",
-      artworkNotes: String(formData.get("artworkNotes") ?? ""),
+      artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${notes ? `\n\n${notes}` : ""}` : notes,
       shipToName: String(formData.get("shipToName") ?? ""),
       shipToAddress: {
         line1: String(formData.get("line1") ?? ""),
@@ -173,38 +201,78 @@ export function Configurator({
         <section className="step-block">
           <header className="step-block-head">
             <span className="step-pill">03</span>
-            <h2>Quantity + artwork</h2>
-          </header>
-          {sizeBreakdown ? (
-            <div className="size-breakdown">
-              <span className="label">Size breakdown from detail page</span>
-              <div className="size-breakdown-chips">
-                {Object.entries(sizeBreakdown).map(([size, value]) => (
-                  <span key={size} className="size-breakdown-chip">
-                    <b>{size}</b> {value}
-                  </span>
-                ))}
-              </div>
+            <h2>Build your run</h2>
+            <div className="size-matrix-actions">
+              <button type="button" className="ghost-button" onClick={fillEven}>Fill MOQ even</button>
+              <button type="button" className="ghost-button" onClick={clearSizes}>Clear</button>
             </div>
-          ) : null}
-          <div className="form-grid">
-            <label className="field">
-              <span className="label">Total quantity</span>
-              <input
-                type="number"
-                min={product.moq}
-                step={25}
-                value={quantity}
-                onChange={(event) => setQuantity(Number(event.target.value))}
-              />
-            </label>
+          </header>
+
+          <div className="size-table" role="table">
+            <div className="size-table-row size-table-row--head" role="row">
+              <div className="size-cell size-cell--label" role="columnheader">Size</div>
+              {product.sizes.map((size) => (
+                <div key={size} className="size-cell size-cell--size" role="columnheader">{size}</div>
+              ))}
+              <div className="size-cell size-cell--total" role="columnheader">Total</div>
+            </div>
+            <div className="size-table-row" role="row">
+              <div className="size-cell size-cell--label" role="cell">Quantity</div>
+              {product.sizes.map((size) => (
+                <div key={size} className="size-cell" role="cell">
+                  <input
+                    type="number"
+                    min={0}
+                    step={10}
+                    value={sizeQty[size] ?? 0}
+                    onChange={(event) => setSize(size, Number(event.target.value))}
+                    aria-label={`${size} quantity`}
+                  />
+                </div>
+              ))}
+              <div className="size-cell size-cell--total" role="cell"><b>{total.toLocaleString()}</b></div>
+            </div>
+            <div className="size-table-row size-table-row--unit" role="row">
+              <div className="size-cell size-cell--label" role="cell">Unit price</div>
+              {product.sizes.map((size) => (
+                <div key={size} className="size-cell size-cell--muted" role="cell">{currency(price.perUnitUsd)}</div>
+              ))}
+              <div className="size-cell size-cell--total size-cell--strong" role="cell">{currency(price.subtotalUsd)}</div>
+            </div>
+          </div>
+
+          {belowMoq ? (
+            <p className="size-msg size-msg--warn">
+              {total === 0
+                ? `Enter quantities by size. MOQ ${product.moq}.`
+                : `${product.moq - total} units below MOQ — add ${product.moq - total} more to qualify.`}
+            </p>
+          ) : (
+            <p className="size-msg size-msg--ok">MOQ met. Current tier: {currency(price.perUnitUsd)}/unit.</p>
+          )}
+
+          <div className="tier-list tier-list--inline">
+            {product.priceTiers.map((tier, idx) => (
+              <div
+                key={tier.minQty}
+                className={`tier-row${idx === activeTierIndex && !belowMoq ? " tier-row--active" : ""}`}
+              >
+                <span>
+                  {tier.minQty}{tier.maxQty ? `–${tier.maxQty}` : "+"} units
+                </span>
+                <strong>{currency(tier.perUnitUsd)}/unit</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="form-grid" style={{ marginTop: 16 }}>
             <div className="field">
               <span className="label">Mockup template</span>
               <a className="secondary-button" href={variant?.mockupTemplateUrl ?? "#"} target="_blank">
                 Download {variant?.colorLabel ?? "variant"} template
               </a>
             </div>
-            <label className="field full">
+            <label className="field">
               <span className="label">Upload completed mockup</span>
               <input
                 type="file"
@@ -217,20 +285,6 @@ export function Configurator({
               <span className="label">Artwork notes</span>
               <textarea name="artworkNotes" placeholder="Placement notes, Pantones, file context, or anything Amanda should verify." />
             </label>
-          </div>
-
-          <div className="tier-list tier-list--inline">
-            {product.priceTiers.map((tier, idx) => (
-              <div
-                key={tier.minQty}
-                className={`tier-row${idx === activeTierIndex ? " tier-row--active" : ""}`}
-              >
-                <span>
-                  {tier.minQty}{tier.maxQty ? `–${tier.maxQty}` : "+"} units
-                </span>
-                <strong>{currency(tier.perUnitUsd)}/unit</strong>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -332,11 +386,15 @@ export function Configurator({
 
           <button
             className="button button--lg button--full"
-            disabled={submitting}
+            disabled={submitting || belowMoq}
             type="submit"
             form="config-form"
           >
-            {submitting ? "Creating order…" : `Pay ${currency(price.totalUsd)}`}
+            {submitting
+              ? "Creating order…"
+              : belowMoq
+                ? `Add ${product.moq - total} more (MOQ ${product.moq})`
+                : `Pay ${currency(price.totalUsd)}`}
           </button>
           <p className="trust-note">
             Simulated Stripe checkout. 100% upfront. Amanda reviews artwork before vendor handoff.
