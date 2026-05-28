@@ -14,8 +14,8 @@ export default async function AdminOrdersPage() {
   return (
     <main className="page">
       <p className="eyebrow">Orders</p>
-      <h1 className="page-title">Amanda Queue</h1>
-      <p className="lede">Artwork QA, revision requests, vendor notification, and shipment confirmation.</p>
+      <h1 className="page-title">Order Queue</h1>
+      <p className="lede">Artwork QA, revision requests, production scheduling, and shipment confirmation.</p>
 
       <section className="table-card" style={{ marginTop: 42 }}>
         {rows.length ? (

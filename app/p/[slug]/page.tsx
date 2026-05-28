@@ -2,18 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/ProductGallery";
 import { currency, formatLeadTime } from "@/lib/pricing";
-import { getProductBySlug, getVendors } from "@/lib/store";
+import { getProductBySlug } from "@/lib/store";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  const vendors = await getVendors();
 
   if (!product || !product.isPublished) {
     notFound();
   }
 
-  const vendor = vendors.find((item) => item.id === product.defaultVendorId);
   const cheapest = product.priceTiers[product.priceTiers.length - 1] ?? product.priceTiers[0];
 
   return (
@@ -53,7 +51,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <p>{product.description}</p>
               {product.fitNotes ? <p><span className="label">Fit</span> {product.fitNotes}</p> : null}
               <p><span className="label">Best for</span> {product.bestFor}</p>
-              <p><span className="label">Origin</span> {vendor?.country ?? "China"} · MOA-audited vendor</p>
+              <p><span className="label">Production</span> Made to order · MOA-managed quality control</p>
             </div>
           </details>
 

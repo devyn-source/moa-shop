@@ -16,7 +16,7 @@ export default async function HomePage() {
           <p className="eyebrow">Magnum Opus Agency</p>
           <h1 className="page-title">Standardized Merch Catalog</h1>
           <p className="lede">
-            Factory-direct merch programs. Fixed MOQ, fixed pricing, bounded options.
+            Premium merch programs, managed end to end by MOA. Fixed MOQ, fixed pricing, bounded options.
             Choose a SKU, set quantities by size, upload artwork, pay upfront.
           </p>
         </div>
@@ -45,13 +45,13 @@ export default async function HomePage() {
       <section className="value-strip" aria-label="What MOA handles">
         <div className="value-card">
           <span className="value-num">01</span>
-          <h3>Factory-direct pricing</h3>
-          <p>No middle-vendor margin. Standardized SKUs use audited MOA vendors with locked unit costs.</p>
+          <h3>Fixed, all-in pricing</h3>
+          <p>One locked price ladder per SKU. No quotes, no back-and-forth — managed end to end by MOA.</p>
         </div>
         <div className="value-card">
           <span className="value-num">02</span>
           <h3>Artwork QA included</h3>
-          <p>Amanda reviews every uploaded mockup before vendor handoff. Two human gates, then production.</p>
+          <p>MOA reviews every uploaded mockup for placement and production readiness before it goes into production.</p>
         </div>
         <div className="value-card">
           <span className="value-num">03</span>
@@ -61,7 +61,7 @@ export default async function HomePage() {
         <div className="value-card">
           <span className="value-num">04</span>
           <h3>Status visibility</h3>
-          <p>Live order timeline from artwork QA through shipment. Tracking emailed at handoff.</p>
+          <p>Live order timeline from artwork QA through shipment. Tracking emailed when it ships.</p>
         </div>
       </section>
 

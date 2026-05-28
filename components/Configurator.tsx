@@ -252,7 +252,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="Placement notes, Pantones, file context, or anything Amanda should verify."
+                placeholder="Placement notes, Pantones, file context, or anything our team should verify."
               />
             </label>
           </div>
@@ -304,7 +304,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
             {belowMoq ? `Add ${product.moq - total} more (MOQ ${product.moq})` : "Add to cart →"}
           </button>
           <p className="trust-note">
-            Add multiple SKUs, then check out once. 100% upfront · artwork QA before vendor handoff.
+            Add multiple SKUs, then check out once. 100% upfront · artwork QA before production.
           </p>
         </div>
       </aside>

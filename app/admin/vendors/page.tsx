@@ -6,7 +6,7 @@ export default async function VendorsPage() {
   return (
     <main className="page">
       <p className="eyebrow">Vendors</p>
-      <h1 className="page-title">Locked Factory Partners</h1>
+      <h1 className="page-title">Production Partners</h1>
       <p className="lede">Vendor data is local to MOA Shop and intentionally not coupled to MoaOS.</p>
       <section className="admin-grid" style={{ marginTop: 42 }}>
         {vendors.map((vendor) => (

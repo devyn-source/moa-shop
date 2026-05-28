@@ -73,7 +73,7 @@ export default function CheckoutPage() {
             <h1 className="page-title">You&apos;re all set</h1>
             <p className="lede">
               {created.length} {created.length === 1 ? "order" : "orders"} created. Each SKU runs as its own
-              production order — artwork QA happens before vendor handoff.
+              production order — MOA quality-checks the artwork before production.
             </p>
             <div className="tier-list" style={{ marginTop: 16 }}>
               {created.map((order) => (

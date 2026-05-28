@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="brand-text">Catalog</span>
           </div>
           <p>
-            Built by Magnum Opus Agency. Fixed-MOQ, fixed-price merch programs · factory-direct · artwork QA included.
+            Built by Magnum Opus Agency. Fixed-MOQ, fixed-price merch programs · managed end to end · artwork QA included.
           </p>
         </footer>
         </CartProvider>

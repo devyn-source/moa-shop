@@ -41,7 +41,7 @@ export function AdminOrderActions({ order }: { order: ShopOrder }) {
 
   return (
     <div className="panel panel-pad">
-      <p className="eyebrow">Amanda Actions</p>
+      <p className="eyebrow">Order Actions</p>
       <div className="form-grid">
         <label className="field full">
           <span className="label">Status</span>

@@ -400,7 +400,7 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Standard Tote",
     sizes: ["ONE"],
     fitNotes: "Single size · 38cm × 42cm × 12cm gusset",
-    headline: "Factory-direct custom tote with premium canvas weight.",
+    headline: "Premium custom tote with heavyweight canvas.",
     description:
       "A proven tote platform with stable panel proportions, reinforced seams, and a bounded decoration menu. Designed for cultural brands, hotels, cafes, conferences, and retail add-ons.",
     bestFor: "Cafes, hotels, galleries, event merch, agencies",
