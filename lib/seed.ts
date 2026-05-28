@@ -85,7 +85,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "hoodie",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 24,
-    moq: 100,
+    moq: 50,
     leadTimeDays: 56,
     isPublished: true,
     sortOrder: 10,
@@ -115,6 +115,7 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "patch", "puff_print", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 99, perUnitUsd: 88 },
       { minQty: 100, maxQty: 249, perUnitUsd: 78 },
       { minQty: 250, maxQty: 499, perUnitUsd: 68 },
       { minQty: 500, maxQty: null, perUnitUsd: 59 }
@@ -135,7 +136,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "tee",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 8.5,
-    moq: 150,
+    moq: 50,
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 20,
@@ -165,6 +166,7 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "puff_print", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 149, perUnitUsd: 39 },
       { minQty: 150, maxQty: 299, perUnitUsd: 34 },
       { minQty: 300, maxQty: 599, perUnitUsd: 29 },
       { minQty: 600, maxQty: null, perUnitUsd: 24 }
@@ -185,7 +187,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "pant",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 20,
-    moq: 100,
+    moq: 50,
     leadTimeDays: 50,
     isPublished: true,
     sortOrder: 30,
@@ -206,6 +208,7 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 99, perUnitUsd: 72 },
       { minQty: 100, maxQty: 199, perUnitUsd: 64 },
       { minQty: 200, maxQty: 399, perUnitUsd: 56 },
       { minQty: 400, maxQty: null, perUnitUsd: 48 }
@@ -226,7 +229,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 48,
-    moq: 75,
+    moq: 50,
     leadTimeDays: 70,
     isPublished: true,
     sortOrder: 1,
@@ -257,6 +260,7 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 74, perUnitUsd: 156 },
       { minQty: 75, maxQty: 149, perUnitUsd: 138 },
       { minQty: 150, maxQty: 299, perUnitUsd: 126 },
       { minQty: 300, maxQty: null, perUnitUsd: 112 }
@@ -277,7 +281,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 34,
-    moq: 75,
+    moq: 50,
     leadTimeDays: 60,
     isPublished: true,
     sortOrder: 3,
@@ -298,6 +302,7 @@ export const seedProducts: CatalogProduct[] = [
       ["patch", "woven_label", "embroidery"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 74, perUnitUsd: 120 },
       { minQty: 75, maxQty: 149, perUnitUsd: 106 },
       { minQty: 150, maxQty: 299, perUnitUsd: 94 },
       { minQty: 300, maxQty: null, perUnitUsd: 84 }
@@ -318,7 +323,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 58,
-    moq: 75,
+    moq: 50,
     leadTimeDays: 70,
     isPublished: true,
     sortOrder: 2,
@@ -339,6 +344,7 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 74, perUnitUsd: 190 },
       { minQty: 75, maxQty: 149, perUnitUsd: 168 },
       { minQty: 150, maxQty: 299, perUnitUsd: 150 },
       { minQty: 300, maxQty: null, perUnitUsd: 134 }
@@ -359,7 +365,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 22,
-    moq: 75,
+    moq: 50,
     leadTimeDays: 50,
     isPublished: true,
     sortOrder: 4,
@@ -380,6 +386,7 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 74, perUnitUsd: 76 },
       { minQty: 75, maxQty: 149, perUnitUsd: 68 },
       { minQty: 150, maxQty: 299, perUnitUsd: 60 },
       { minQty: 300, maxQty: null, perUnitUsd: 52 }
@@ -400,7 +407,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "tote",
     defaultVendorId: "vendor-best-cover",
     vendorUnitCostUsd: 6.5,
-    moq: 250,
+    moq: 50,
     leadTimeDays: 45,
     isPublished: true,
     sortOrder: 50,
@@ -430,6 +437,7 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 32 },
       { minQty: 250, maxQty: 499, perUnitUsd: 28 },
       { minQty: 500, maxQty: 999, perUnitUsd: 22 },
       { minQty: 1000, maxQty: null, perUnitUsd: 18 }
@@ -450,7 +458,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "cap",
     defaultVendorId: "vendor-headwear-one",
     vendorUnitCostUsd: 5.75,
-    moq: 200,
+    moq: 50,
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 60,
@@ -479,6 +487,7 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 199, perUnitUsd: 27 },
       { minQty: 200, maxQty: 499, perUnitUsd: 24 },
       { minQty: 500, maxQty: 999, perUnitUsd: 19 },
       { minQty: 1000, maxQty: null, perUnitUsd: 16 }
@@ -499,7 +508,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "cap",
     defaultVendorId: "vendor-headwear-one",
     vendorUnitCostUsd: 6,
-    moq: 200,
+    moq: 50,
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 62,
@@ -519,6 +528,7 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
+      { minQty: 50, maxQty: 199, perUnitUsd: 28 },
       { minQty: 200, maxQty: 499, perUnitUsd: 25 },
       { minQty: 500, maxQty: 999, perUnitUsd: 20 },
       { minQty: 1000, maxQty: null, perUnitUsd: 17 }
@@ -539,7 +549,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "cap",
     defaultVendorId: "vendor-headwear-one",
     vendorUnitCostUsd: 6,
-    moq: 200,
+    moq: 50,
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 70,
@@ -557,6 +567,7 @@ export const seedProducts: CatalogProduct[] = [
     ],
     decorations: coreDecorations.filter((item) => ["embroidery", "patch"].includes(item.id)),
     priceTiers: [
+      { minQty: 50, maxQty: 199, perUnitUsd: 29 },
       { minQty: 200, maxQty: 499, perUnitUsd: 26 },
       { minQty: 500, maxQty: 999, perUnitUsd: 21 },
       { minQty: 1000, maxQty: null, perUnitUsd: 18 }
@@ -577,7 +588,7 @@ export const seedProducts: CatalogProduct[] = [
     visual: "beanie",
     defaultVendorId: "vendor-headwear-one",
     vendorUnitCostUsd: 4.5,
-    moq: 250,
+    moq: 50,
     leadTimeDays: 38,
     isPublished: true,
     sortOrder: 80,
@@ -604,6 +615,7 @@ export const seedProducts: CatalogProduct[] = [
     ],
     decorations: coreDecorations.filter((item) => ["patch", "woven_label", "embroidery"].includes(item.id)),
     priceTiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 22 },
       { minQty: 250, maxQty: 499, perUnitUsd: 19 },
       { minQty: 500, maxQty: 999, perUnitUsd: 15 },
       { minQty: 1000, maxQty: null, perUnitUsd: 12 }
