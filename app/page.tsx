@@ -14,10 +14,11 @@ export default async function HomePage() {
       <section className="catalog-intro">
         <div className="catalog-intro-text">
           <p className="eyebrow">Magnum Opus Agency</p>
-          <h1 className="page-title">Standardized Merch Catalog</h1>
+          <h1 className="page-title">Made-to-Order Merch Catalog</h1>
           <p className="lede">
-            Premium merch programs, managed end to end by MOA. Fixed MOQ, fixed pricing, bounded options.
-            Choose a SKU, set quantities by size, upload artwork, pay upfront.
+            Made-to-order merch, tailored to your brand and produced to spec by MOA — the way a tailor
+            cuts a suit to measure. Choose a style, build your run by size, upload your artwork.
+            We handle production end to end.
           </p>
         </div>
         <div className="catalog-intro-stats">

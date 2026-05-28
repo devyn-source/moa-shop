@@ -14,8 +14,8 @@ export function NewProductForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         displayName: String(formData.get("displayName") ?? ""),
-        headline: String(formData.get("headline") ?? "Draft standardized product."),
-        moq: Number(formData.get("moq") ?? 100)
+        headline: String(formData.get("headline") ?? "Draft made-to-order product."),
+        moq: Number(formData.get("moq") ?? 50)
       })
     });
     const product = (await response.json()) as { slug?: string };

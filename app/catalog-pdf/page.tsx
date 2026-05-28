@@ -11,10 +11,10 @@ export default async function CatalogPdfPage() {
     <main className="page print-page">
       <section className="print-cover">
         <p className="eyebrow">Magnum Opus Agency</p>
-        <h1 className="page-title">Standardized Merch Catalog</h1>
+        <h1 className="page-title">Made-to-Order Merch Catalog</h1>
         <p className="lede">
-          Fixed-MOQ, fixed-price catalog products for qualified $10K-$25K merch programs.
-          Configure online, upload completed artwork, pay upfront, and route directly into MOA production.
+          Made-to-order merch tailored to your brand and produced to spec by MOA — cut to measure,
+          not off the shelf. Choose a style, build your run by size, upload artwork. We handle production end to end.
         </p>
         <div className="action-row no-print">
           <PrintButton />

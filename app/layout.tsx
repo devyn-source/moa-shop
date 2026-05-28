@@ -6,8 +6,8 @@ import { CartButton } from "@/components/CartButton";
 import { NavLink } from "@/components/NavLink";
 
 export const metadata: Metadata = {
-  title: "MOA Catalog",
-  description: "A self-service standardized merch catalog by Magnum Opus Agency."
+  title: "MOA · Made-to-Order Merch Catalog",
+  description: "Made-to-order merch, tailored to your brand and produced to spec by Magnum Opus Agency."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
