@@ -1,0 +1,215 @@
+import { promises as fs } from "fs";
+import path from "path";
+import { calculateOrderPrice } from "./pricing";
+import { seedProducts, seedVendors } from "./seed";
+import type {
+  CatalogProduct,
+  DecorationMethod,
+  OrderInput,
+  OrderStatus,
+  ProductUpdateInput,
+  ShopOrder,
+  Vendor
+} from "./types";
+
+const dataDir = path.join(process.cwd(), ".data");
+const productsPath = path.join(dataDir, "products.json");
+const vendorsPath = path.join(dataDir, "vendors.json");
+const ordersPath = path.join(dataDir, "orders.json");
+
+async function readJson<T>(filePath: string, fallback: T): Promise<T> {
+  try {
+    const file = await fs.readFile(filePath, "utf8");
+    return JSON.parse(file) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+async function writeJson<T>(filePath: string, value: T): Promise<void> {
+  await fs.mkdir(dataDir, { recursive: true });
+  await fs.writeFile(filePath, JSON.stringify(value, null, 2));
+}
+
+export async function getProducts({ includeDrafts = false } = {}): Promise<CatalogProduct[]> {
+  const products = await readJson<CatalogProduct[]>(productsPath, seedProducts);
+  return products
+    .filter((product) => includeDrafts || product.isPublished)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export async function getProductBySlug(slug: string): Promise<CatalogProduct | null> {
+  const products = await getProducts({ includeDrafts: true });
+  return products.find((product) => product.slug === slug) ?? null;
+}
+
+export async function getProductById(id: string): Promise<CatalogProduct | null> {
+  const products = await getProducts({ includeDrafts: true });
+  return products.find((product) => product.id === id) ?? null;
+}
+
+export async function updateProduct(id: string, input: ProductUpdateInput): Promise<CatalogProduct> {
+  const products = await getProducts({ includeDrafts: true });
+  const index = products.findIndex((product) => product.id === id);
+
+  if (index === -1) {
+    throw new Error("Product not found");
+  }
+
+  const updated = { ...products[index], ...input };
+  products[index] = updated;
+  await writeJson(productsPath, products);
+  return updated;
+}
+
+export async function createProduct(input: ProductUpdateInput & { displayName: string }): Promise<CatalogProduct> {
+  const products = await getProducts({ includeDrafts: true });
+  const slug = input.displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  const nowOrder = Math.max(...products.map((product) => product.sortOrder), 0) + 10;
+  const template = seedProducts[0];
+  const product: CatalogProduct = {
+    ...template,
+    id: `prod-${slug}-${Date.now()}`,
+    slug,
+    skuCode: `NEW${String(nowOrder).padStart(3, "0")}`,
+    displayName: input.displayName,
+    headline: input.headline ?? "New standardized MOA catalog product.",
+    description: input.description ?? "Draft catalog product ready for SKU, variant, and pricing refinement.",
+    bestFor: input.bestFor ?? "Standard merch programs",
+    moq: input.moq ?? 100,
+    leadTimeDays: input.leadTimeDays ?? 56,
+    vendorUnitCostUsd: input.vendorUnitCostUsd ?? 20,
+    isPublished: input.isPublished ?? false,
+    sortOrder: nowOrder
+  };
+
+  products.push(product);
+  await writeJson(productsPath, products);
+  return product;
+}
+
+export async function getVendors(): Promise<Vendor[]> {
+  return readJson<Vendor[]>(vendorsPath, seedVendors);
+}
+
+export async function getOrders(): Promise<ShopOrder[]> {
+  const orders = await readJson<ShopOrder[]>(ordersPath, []);
+  return orders.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function getOrderById(id: string): Promise<ShopOrder | null> {
+  const orders = await getOrders();
+  return orders.find((order) => order.id === id || order.orderNumber === id) ?? null;
+}
+
+export async function createOrder(input: OrderInput): Promise<ShopOrder> {
+  const product = await getProductById(input.productId);
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  const variant = product.variants.find((item) => item.id === input.variantId);
+  if (!variant) {
+    throw new Error("Variant not found");
+  }
+
+  const decoration = product.decorations.find((item) => item.id === input.decorationId);
+  if (!decoration) {
+    throw new Error("Decoration not found");
+  }
+
+  const price = calculateOrderPrice(product, input.quantity, input.decorationId);
+  const now = new Date().toISOString();
+  const orders = await getOrders();
+  const sequence = orders.length + 1;
+  const orderNumber = `MOA-S-${new Date().getFullYear().toString().slice(-2)}${String(
+    new Date().getMonth() + 1
+  ).padStart(2, "0")}-${String(sequence).padStart(4, "0")}`;
+
+  const order: ShopOrder = {
+    id: crypto.randomUUID(),
+    orderNumber,
+    contactName: input.contactName,
+    contactEmail: input.contactEmail,
+    contactPhone: input.contactPhone,
+    companyName: input.companyName,
+    productId: product.id,
+    variantId: variant.id,
+    decorationId: decoration.id as DecorationMethod,
+    quantity: price.quantity,
+    perUnitUsd: price.perUnitUsd,
+    decorationAdderUsd: price.decorationAdderUsd,
+    subtotalUsd: price.subtotalUsd,
+    taxUsd: price.taxUsd,
+    totalUsd: price.totalUsd,
+    artworkFileName: input.artworkFileName,
+    artworkNotes: input.artworkNotes,
+    paymentStatus: "simulated_paid",
+    status: "artwork_qa",
+    shipToName: input.shipToName,
+    shipToAddress: input.shipToAddress,
+    internalNotes: "",
+    statusLog: [
+      {
+        statusFrom: null,
+        statusTo: "paid",
+        note: "Simulated Stripe Checkout completed in MVP mode.",
+        createdAt: now
+      },
+      {
+        statusFrom: "paid",
+        statusTo: "artwork_qa",
+        note: "Order routed to artwork QA.",
+        createdAt: now
+      }
+    ],
+    createdAt: now,
+    updatedAt: now
+  };
+
+  await writeJson(ordersPath, [order, ...orders]);
+  return order;
+}
+
+export async function updateOrderStatus(
+  id: string,
+  status: OrderStatus,
+  note: string,
+  extras?: Partial<Pick<ShopOrder, "trackingCarrier" | "trackingNumber" | "internalNotes">>
+): Promise<ShopOrder> {
+  const orders = await getOrders();
+  const index = orders.findIndex((order) => order.id === id || order.orderNumber === id);
+
+  if (index === -1) {
+    throw new Error("Order not found");
+  }
+
+  const current = orders[index];
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    ...extras,
+    status,
+    updatedAt: now,
+    statusLog: [
+      ...current.statusLog,
+      {
+        statusFrom: current.status,
+        statusTo: status,
+        note,
+        createdAt: now
+      }
+    ]
+  };
+
+  orders[index] = updated;
+  await writeJson(ordersPath, orders);
+  return updated;
+}
+
+export function statusLabel(status: OrderStatus): string {
+  return status.replace(/_/g, " ");
+}
