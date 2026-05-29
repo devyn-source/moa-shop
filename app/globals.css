@@ -3390,6 +3390,40 @@ a.stat-card:hover {
   margin-bottom: 0;
 }
 
+/* editable zone (author mode) */
+.studio-azone {
+  position: absolute;
+  border: 1.5px dashed rgba(176, 71, 49, 0.55);
+  border-radius: 4px;
+  background: rgba(176, 71, 49, 0.06);
+  cursor: move;
+  touch-action: none;
+}
+
+.studio-azone--active {
+  border-style: solid;
+  border-color: var(--terracotta);
+  background: rgba(176, 71, 49, 0.12);
+}
+
+.azone-handle {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  margin: -7px 0 0 -7px;
+  padding: 0;
+  background: #fff;
+  border: 2px solid var(--terracotta);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(30, 30, 30, 0.25);
+  touch-action: none;
+}
+
+.azone-handle--nw { left: 0; top: 0; cursor: nwse-resize; }
+.azone-handle--ne { left: 100%; top: 0; cursor: nesw-resize; }
+.azone-handle--se { left: 100%; top: 100%; cursor: nwse-resize; }
+.azone-handle--sw { left: 0; top: 100%; cursor: nesw-resize; }
+
 .studio-controls {
   position: sticky;
   top: 90px;
