@@ -204,6 +204,12 @@ button {
   min-width: 0;
 }
 
+.brand-logo {
+  display: block;
+  height: clamp(30px, 3.4vw, 40px);
+  width: auto;
+}
+
 .brand-moa {
   color: var(--terracotta);
   font-family: var(--font-display);

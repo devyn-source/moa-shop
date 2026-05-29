@@ -20,10 +20,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <NavLink href="/">Catalog</NavLink>
             <NavLink href="/catalog-pdf">PDF</NavLink>
           </nav>
-          <Link className="brand-lockup" href="/">
-            <span className="brand-moa">MOA</span>
-            <span className="brand-sep" aria-hidden />
-            <span className="brand-text">Catalog</span>
+          <Link className="brand-lockup" href="/" aria-label="MOA — Magnum Opus, made-to-order catalog">
+            <img className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" />
           </Link>
           <div className="site-actions">
             <NavLink href="/admin" muted>Admin</NavLink>
