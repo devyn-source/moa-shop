@@ -23,6 +23,7 @@ export default function StudioPage() {
       </p>
 
       <StudioPreview
+        productSlug="heavyweight-hoodie"
         defaultFront="/products/heavyweight-hoodie/hoodie-black-front.png"
         defaultBack="/products/heavyweight-hoodie/hoodie-black-back.png"
       />

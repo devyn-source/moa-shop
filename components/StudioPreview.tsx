@@ -27,28 +27,55 @@ type ViewKey = "front" | "back";
 type Box = { x0: number; x1: number; y0: number; y1: number };
 type Loc = { id: string; label: string; box: Box; size: number };
 
-const LOCATIONS: Record<ViewKey, Loc[]> = {
-  front: [
-    { id: "left-chest", label: "Left chest", box: { x0: 54, x1: 66, y0: 30, y1: 39 }, size: 11 },
-    { id: "center-chest", label: "Center chest", box: { x0: 42, x1: 58, y0: 31, y1: 48 }, size: 22 },
-    { id: "right-chest", label: "Right chest", box: { x0: 34, x1: 46, y0: 30, y1: 39 }, size: 11 },
-    { id: "full-front", label: "Full front", box: { x0: 33, x1: 67, y0: 34, y1: 64 }, size: 44 },
-    { id: "left-sleeve", label: "Left sleeve", box: { x0: 74, x1: 88, y0: 38, y1: 60 }, size: 12 },
-    { id: "right-sleeve", label: "Right sleeve", box: { x0: 12, x1: 26, y0: 38, y1: 60 }, size: 12 }
-  ],
-  back: [
-    { id: "upper-back", label: "Upper back", box: { x0: 40, x1: 60, y0: 24, y1: 33 }, size: 16 },
-    { id: "center-back", label: "Center back", box: { x0: 40, x1: 60, y0: 32, y1: 56 }, size: 26 },
-    { id: "lower-back", label: "Lower back", box: { x0: 40, x1: 60, y0: 54, y1: 66 }, size: 20 },
-    { id: "left-sleeve", label: "Left sleeve", box: { x0: 74, x1: 88, y0: 38, y1: 60 }, size: 12 },
-    { id: "right-sleeve", label: "Right sleeve", box: { x0: 12, x1: 26, y0: 38, y1: 60 }, size: 12 }
-  ]
+// Per-product placement zones (% of frame). Calibrated against each mockup.
+// Convention: "Left" = wearer's left = viewer's right.
+const PLACEMENT_ZONES: Record<string, Record<ViewKey, Loc[]>> = {
+  "heavyweight-hoodie": {
+    front: [
+      { id: "left-chest", label: "Left chest", box: { x0: 55, x1: 66, y0: 40, y1: 47 }, size: 10 },
+      { id: "center-chest", label: "Center chest", box: { x0: 38, x1: 62, y0: 41, y1: 56 }, size: 22 },
+      { id: "right-chest", label: "Right chest", box: { x0: 34, x1: 45, y0: 40, y1: 47 }, size: 10 },
+      { id: "full-front", label: "Full front", box: { x0: 30, x1: 70, y0: 39, y1: 70 }, size: 42 },
+      { id: "left-sleeve", label: "Left sleeve", box: { x0: 77, x1: 89, y0: 45, y1: 62 }, size: 10 },
+      { id: "right-sleeve", label: "Right sleeve", box: { x0: 11, x1: 23, y0: 45, y1: 62 }, size: 10 }
+    ],
+    back: [
+      { id: "upper-back", label: "Upper back", box: { x0: 38, x1: 62, y0: 36, y1: 43 }, size: 16 },
+      { id: "center-back", label: "Center back", box: { x0: 34, x1: 66, y0: 44, y1: 66 }, size: 28 },
+      { id: "lower-back", label: "Lower back", box: { x0: 38, x1: 62, y0: 66, y1: 77 }, size: 20 },
+      { id: "left-sleeve", label: "Left sleeve", box: { x0: 77, x1: 89, y0: 46, y1: 62 }, size: 10 },
+      { id: "right-sleeve", label: "Right sleeve", box: { x0: 11, x1: 23, y0: 46, y1: 62 }, size: 10 }
+    ]
+  },
+  // Fallback for products without calibrated zones yet.
+  default: {
+    front: [
+      { id: "left-chest", label: "Left chest", box: { x0: 55, x1: 66, y0: 40, y1: 47 }, size: 10 },
+      { id: "center-chest", label: "Center chest", box: { x0: 38, x1: 62, y0: 41, y1: 56 }, size: 22 },
+      { id: "right-chest", label: "Right chest", box: { x0: 34, x1: 45, y0: 40, y1: 47 }, size: 10 },
+      { id: "full-front", label: "Full front", box: { x0: 30, x1: 70, y0: 39, y1: 70 }, size: 42 }
+    ],
+    back: [
+      { id: "upper-back", label: "Upper back", box: { x0: 38, x1: 62, y0: 36, y1: 43 }, size: 16 },
+      { id: "center-back", label: "Center back", box: { x0: 34, x1: 66, y0: 44, y1: 66 }, size: 28 },
+      { id: "lower-back", label: "Lower back", box: { x0: 38, x1: 62, y0: 66, y1: 77 }, size: 20 }
+    ]
+  }
 };
 
 type Placement = { art: string; aspect: number; x: number; y: number; scale: number; rot: number; blend: Blend };
 type Mode = "move" | "scale" | "rotate";
 
-export function StudioPreview({ defaultFront, defaultBack }: { defaultFront: string; defaultBack: string }) {
+export function StudioPreview({
+  productSlug,
+  defaultFront,
+  defaultBack
+}: {
+  productSlug: string;
+  defaultFront: string;
+  defaultBack: string;
+}) {
+  const zones = PLACEMENT_ZONES[productSlug] ?? PLACEMENT_ZONES.default;
   const [view, setView] = useState<ViewKey>("front");
   const [bases, setBases] = useState<Record<ViewKey, string>>({ front: defaultFront, back: defaultBack });
   const [placements, setPlacements] = useState<Record<string, Placement>>({});
@@ -83,7 +110,7 @@ export function StudioPreview({ defaultFront, defaultBack }: { defaultFront: str
   }
   function locFor(key: string): Loc | undefined {
     const [v, locId] = key.split(":") as [ViewKey, string];
-    return LOCATIONS[v].find((l) => l.id === locId);
+    return zones[v].find((l) => l.id === locId);
   }
 
   function selectLocation(loc: Loc) {
@@ -282,7 +309,7 @@ export function StudioPreview({ defaultFront, defaultBack }: { defaultFront: str
           <div className="studio-group">
             <span className="label">Print location</span>
             <div className="studio-locs">
-              {LOCATIONS[view].map((loc) => {
+              {zones[view].map((loc) => {
                 const has = Boolean(placements[keyFor(view, loc.id)]);
                 const isActive = activeKey === keyFor(view, loc.id);
                 return (
