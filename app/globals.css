@@ -3424,6 +3424,33 @@ a.stat-card:hover {
 .azone-handle--se { left: 100%; top: 100%; cursor: nwse-resize; }
 .azone-handle--sw { left: 0; top: 100%; cursor: nesw-resize; }
 
+.azone-rotate {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 15px;
+  height: 15px;
+  margin: -30px 0 0 -7.5px;
+  padding: 0;
+  background: var(--terracotta);
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 1px 5px rgba(30, 30, 30, 0.3);
+  cursor: grab;
+  touch-action: none;
+}
+
+.azone-rotate::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 13px;
+  width: 1.5px;
+  height: 15px;
+  margin-left: -0.75px;
+  background: var(--terracotta);
+}
+
 .studio-controls {
   position: sticky;
   top: 90px;
