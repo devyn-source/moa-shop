@@ -86,6 +86,8 @@ export function StudioPreview({
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [color, setColor] = useState("");
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [stage, setStage] = useState({ w: 0, h: 0 });
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -102,6 +104,20 @@ export function StudioPreview({
     setStage({ w: el.clientWidth, h: el.clientHeight });
     return () => ro.disconnect();
   }, []);
+
+  // load saved zones for this product (falls back to seed defaults)
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/zones/${productSlug}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled && d?.zones?.front && d?.zones?.back) setZoneConfig(d.zones as ViewZones);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [productSlug]);
 
   const keyFor = (v: ViewKey, locId: string) => `${v}:${locId}`;
   const locFor = (key: string) => {
@@ -239,6 +255,24 @@ export function StudioPreview({
       setTimeout(() => setCopied(false), 1800);
     } catch {
       // ignore
+    }
+  }
+
+  async function saveZones() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const r = await fetch(`/api/zones/${productSlug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zones: zoneConfig })
+      });
+      if (r.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2200);
+      }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -425,8 +459,11 @@ export function StudioPreview({
               )}
 
               <div className="studio-group">
-                <button type="button" className="button button--full" onClick={copyConfig}>{copied ? "Copied ✓" : "Copy zone config"}</button>
-                <p className="trust-note">Paste into PLACEMENT_ZONES to save for this SKU.</p>
+                <button type="button" className="button button--lg button--full" onClick={saveZones} disabled={saving}>
+                  {saving ? "Saving…" : saved ? "Saved ✓" : "Save zones for this SKU"}
+                </button>
+                <button type="button" className="ghost-button" style={{ marginTop: 8 }} onClick={copyConfig}>{copied ? "Copied ✓" : "Copy JSON"}</button>
+                <p className="trust-note">Saved to the catalog — these zones load automatically next time and in Place mode.</p>
               </div>
             </>
           )}

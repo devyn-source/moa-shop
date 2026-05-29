@@ -251,3 +251,28 @@ export async function updateOrderStatus(
 export function statusLabel(status: OrderStatus): string {
   return status.replace(/_/g, " ");
 }
+
+export async function getProductZones(slug: string): Promise<unknown | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("product_zones")
+    .select("zones")
+    .eq("product_slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load zones: ${error.message}`);
+  }
+  return data ? data.zones : null;
+}
+
+export async function saveProductZones(slug: string, zones: unknown): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("product_zones")
+    .upsert({ product_slug: slug, zones, updated_at: new Date().toISOString() }, { onConflict: "product_slug" });
+
+  if (error) {
+    throw new Error(`Failed to save zones: ${error.message}`);
+  }
+}
