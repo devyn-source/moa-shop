@@ -3206,46 +3206,73 @@ a.stat-card:hover {
   mix-blend-mode: color;
 }
 
-.studio-zone {
+/* corner-pinned artwork */
+.studio-quad-art {
   position: absolute;
-  border: 1.5px dashed rgba(176, 71, 49, 0.5);
-  border-radius: 4px;
-  background: rgba(176, 71, 49, 0.04);
+  top: 0;
+  left: 0;
   pointer-events: none;
-}
-
-.studio-zone-tag {
-  position: absolute;
-  top: -9px;
-  left: 8px;
-  padding: 2px 6px;
-  background: var(--terracotta);
-  border-radius: 3px;
-  color: #fff;
-  font-family: var(--font-display);
-  font-stretch: 125%;
-  font-size: 0.46rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-.studio-art-img {
-  position: absolute;
-  height: auto;
-  cursor: grab;
-  touch-action: none;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-.studio-art-img:active {
-  cursor: grabbing;
+/* fold shading: garment pixels multiplied over the art inside the quad */
+.studio-shadow {
+  position: absolute;
+  inset: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
-.studio-seg--wrap {
-  flex-wrap: wrap;
+.studio-quad-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.studio-quad-outline polygon {
+  fill: rgba(176, 71, 49, 0.06);
+  stroke: var(--terracotta);
+  stroke-width: 0.4;
+  stroke-dasharray: 1.4 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.studio-handle {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  background: #fff;
+  border: 2px solid var(--terracotta);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(30, 30, 30, 0.25);
+  cursor: grab;
+  touch-action: none;
+}
+
+.studio-handle:active {
+  cursor: grabbing;
+  background: var(--terracotta);
+}
+
+.studio-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.studio-check input {
+  margin-top: 2px;
+  accent-color: var(--terracotta);
 }
 
 .studio-controls {
