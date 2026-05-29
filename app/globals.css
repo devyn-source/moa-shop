@@ -3393,6 +3393,7 @@ a.stat-card:hover {
 /* editable zone (author mode) */
 .studio-azone {
   position: absolute;
+  z-index: 1;
   border: 1.5px dashed rgba(176, 71, 49, 0.55);
   border-radius: 4px;
   background: rgba(176, 71, 49, 0.06);
@@ -3401,6 +3402,7 @@ a.stat-card:hover {
 }
 
 .studio-azone--active {
+  z-index: 6;
   border-style: solid;
   border-color: var(--terracotta);
   background: rgba(176, 71, 49, 0.12);

@@ -384,7 +384,16 @@ export function StudioPreview({
                 })}
             </>
           ) : (
-            zoneConfig[view].map((z) => {
+            [...zoneConfig[view]]
+              .sort((a, b) => {
+                const aa = a.id === activeZone;
+                const ba = b.id === activeZone;
+                if (aa !== ba) return aa ? 1 : -1; // active renders last (on top)
+                const areaA = (a.box.x1 - a.box.x0) * (a.box.y1 - a.box.y0);
+                const areaB = (b.box.x1 - b.box.x0) * (b.box.y1 - b.box.y0);
+                return areaB - areaA; // larger first (underneath), smaller on top
+              })
+              .map((z) => {
               const isActive = z.id === activeZone;
               return (
                 <div key={z.id} className={`studio-azone${isActive ? " studio-azone--active" : ""}`} style={{ left: `${z.box.x0}%`, top: `${z.box.y0}%`, width: `${z.box.x1 - z.box.x0}%`, height: `${z.box.y1 - z.box.y0}%`, transform: `rotate(${z.rot ?? 0}deg)` }} onPointerDown={zDown("move", z.id)} onPointerMove={zMove} onPointerUp={endDrag}>
