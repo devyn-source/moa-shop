@@ -3206,58 +3206,74 @@ a.stat-card:hover {
   mix-blend-mode: color;
 }
 
-/* corner-pinned artwork */
-.studio-quad-art {
+/* transform box: move + aspect-locked resize + rotate (no warp) */
+.studio-tbox {
   position: absolute;
-  top: 0;
-  left: 0;
+  touch-action: none;
+  cursor: grab;
+}
+
+.studio-tbox:active {
+  cursor: grabbing;
+}
+
+.studio-tbox-art {
+  width: 100%;
+  height: 100%;
+  display: block;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* fold shading: garment pixels multiplied over the art inside the quad */
-.studio-shadow {
-  position: absolute;
-  inset: 0;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mix-blend-mode: multiply;
-  pointer-events: none;
+.studio-tbox--on {
+  outline: 1px solid rgba(176, 71, 49, 0.9);
+  outline-offset: 0;
 }
 
-.studio-quad-outline {
+.tbox-handle {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  padding: 0;
+  background: #fff;
+  border: 2px solid var(--terracotta);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(30, 30, 30, 0.25);
+  cursor: nwse-resize;
+  touch-action: none;
 }
 
-.studio-quad-outline polygon {
-  fill: rgba(176, 71, 49, 0.06);
-  stroke: var(--terracotta);
-  stroke-width: 0.4;
-  stroke-dasharray: 1.4 1.2;
-  vector-effect: non-scaling-stroke;
-}
+.tbox-handle--tl { left: 0; top: 0; }
+.tbox-handle--tr { left: 100%; top: 0; }
+.tbox-handle--br { left: 100%; top: 100%; }
+.tbox-handle--bl { left: 0; top: 100%; }
 
-.studio-handle {
+.tbox-rotate {
   position: absolute;
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
+  left: 50%;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  margin: -32px 0 0 -8px;
+  padding: 0;
   background: #fff;
   border: 2px solid var(--terracotta);
   border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(30, 30, 30, 0.25);
+  box-shadow: 0 1px 4px rgba(30, 30, 30, 0.25);
   cursor: grab;
   touch-action: none;
 }
 
-.studio-handle:active {
-  cursor: grabbing;
+.tbox-rotate::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 1.5px;
+  height: 16px;
+  margin-left: -0.75px;
   background: var(--terracotta);
 }
 

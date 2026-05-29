@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { quadTransform } from "@/lib/homography";
 
 const SAMPLE_ART =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 90"><rect width="240" height="90" fill="none"/><text x="120" y="66" font-family="Arial, sans-serif" font-size="60" font-weight="800" letter-spacing="2" text-anchor="middle" fill="#ffffff">MOA</text></svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 90"><text x="120" y="66" font-family="Arial, sans-serif" font-size="60" font-weight="800" letter-spacing="2" text-anchor="middle" fill="#ffffff">MOA</text></svg>`
   );
 
 const SWATCHES = [
@@ -23,88 +22,105 @@ const SWATCHES = [
 const BLENDS = ["multiply", "screen", "normal"] as const;
 type Blend = (typeof BLENDS)[number];
 
-type Corner = { x: number; y: number }; // % of stage
-type Corners = { tl: Corner; tr: Corner; br: Corner; bl: Corner };
-const CORNER_KEYS = ["tl", "tr", "br", "bl"] as const;
-type CornerKey = (typeof CORNER_KEYS)[number];
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const DEFAULT_CORNERS: Corners = {
-  tl: { x: 41, y: 33 },
-  tr: { x: 59, y: 33 },
-  br: { x: 59, y: 54 },
-  bl: { x: 41, y: 54 }
-};
+type Mode = "move" | "scale" | "rotate";
 
 export function StudioPreview({ defaultBase }: { defaultBase: string }) {
   const [base, setBase] = useState(defaultBase);
   const [art, setArt] = useState(SAMPLE_ART);
-  const [artBox, setArtBox] = useState({ w: 240, h: 90 });
-  const [corners, setCorners] = useState<Corners>(DEFAULT_CORNERS);
+  const [aspect, setAspect] = useState(90 / 240); // h / w
+  const [pos, setPos] = useState({ x: 50, y: 42 }); // center %
+  const [scale, setScale] = useState(24); // width as % of stage
+  const [rot, setRot] = useState(0);
   const [color, setColor] = useState("");
   const [blend, setBlend] = useState<Blend>("screen");
-  const [shadow, setShadow] = useState(0.55);
-  const [authoring, setAuthoring] = useState(true);
+  const [controls, setControls] = useState(true);
   const [stage, setStage] = useState({ w: 0, h: 0 });
 
   const stageRef = useRef<HTMLDivElement>(null);
   const baseInput = useRef<HTMLInputElement>(null);
   const artInput = useRef<HTMLInputElement>(null);
-  const activeCorner = useRef<CornerKey | null>(null);
+  const drag = useRef<null | {
+    mode: Mode;
+    startPx: { x: number; y: number };
+    startPos: { x: number; y: number };
+    startScale: number;
+    startRot: number;
+    startDist: number;
+    angleOffset: number;
+  }>(null);
 
-  // measure stage
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setStage({ w: el.clientWidth, h: el.clientHeight });
-    });
+    const ro = new ResizeObserver(() => setStage({ w: el.clientWidth, h: el.clientHeight }));
     ro.observe(el);
     setStage({ w: el.clientWidth, h: el.clientHeight });
     return () => ro.disconnect();
   }, []);
 
-  // measure artwork natural aspect
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
-      if (img.naturalWidth && img.naturalHeight) setArtBox({ w: img.naturalWidth, h: img.naturalHeight });
+      if (img.naturalWidth && img.naturalHeight) setAspect(img.naturalHeight / img.naturalWidth);
     };
     img.src = art;
   }, [art]);
 
-  function px(c: Corner): [number, number] {
-    return [(c.x / 100) * stage.w, (c.y / 100) * stage.h];
+  function rect() {
+    return stageRef.current!.getBoundingClientRect();
   }
 
-  const transform =
-    stage.w > 0
-      ? quadTransform(artBox.w, artBox.h, [
-          ...px(corners.tl),
-          ...px(corners.tr),
-          ...px(corners.br),
-          ...px(corners.bl)
-        ] as [number, number, number, number, number, number, number, number])
-      : "none";
-
-  const polygon = `polygon(${corners.tl.x}% ${corners.tl.y}%, ${corners.tr.x}% ${corners.tr.y}%, ${corners.br.x}% ${corners.br.y}%, ${corners.bl.x}% ${corners.bl.y}%)`;
-
-  function startCorner(key: CornerKey) {
+  function down(mode: Mode) {
     return (event: React.PointerEvent) => {
-      activeCorner.current = key;
+      event.stopPropagation();
+      const r = rect();
+      const ptr = { x: event.clientX - r.left, y: event.clientY - r.top };
+      const centerPx = { x: (pos.x / 100) * r.width, y: (pos.y / 100) * r.height };
+      const dist = Math.hypot(ptr.x - centerPx.x, ptr.y - centerPx.y);
+      const ang = Math.atan2(ptr.y - centerPx.y, ptr.x - centerPx.x);
+      drag.current = {
+        mode,
+        startPx: ptr,
+        startPos: { ...pos },
+        startScale: scale,
+        startRot: rot,
+        startDist: dist,
+        angleOffset: ang - (rot * Math.PI) / 180
+      };
       event.currentTarget.setPointerCapture(event.pointerId);
     };
   }
-  function moveCorner(event: React.PointerEvent) {
-    const key = activeCorner.current;
-    if (!key || !stageRef.current) return;
-    const rect = stageRef.current.getBoundingClientRect();
-    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
-    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
-    setCorners((prev) => ({ ...prev, [key]: { x, y } }));
+
+  function move(event: React.PointerEvent) {
+    const it = drag.current;
+    if (!it) return;
+    const r = rect();
+    const ptr = { x: event.clientX - r.left, y: event.clientY - r.top };
+    const centerPx = { x: (it.startPos.x / 100) * r.width, y: (it.startPos.y / 100) * r.height };
+
+    if (it.mode === "move") {
+      const dx = ((ptr.x - it.startPx.x) / r.width) * 100;
+      const dy = ((ptr.y - it.startPx.y) / r.height) * 100;
+      setPos({ x: clamp(it.startPos.x + dx, 0, 100), y: clamp(it.startPos.y + dy, 0, 100) });
+    } else if (it.mode === "scale") {
+      const dist = Math.hypot(ptr.x - centerPx.x, ptr.y - centerPx.y);
+      const ratio = it.startDist > 0 ? dist / it.startDist : 1;
+      setScale(clamp(it.startScale * ratio, 4, 95));
+    } else if (it.mode === "rotate") {
+      const ang = Math.atan2(ptr.y - centerPx.y, ptr.x - centerPx.x);
+      setRot(((ang - it.angleOffset) * 180) / Math.PI);
+    }
   }
-  function endCorner(event: React.PointerEvent) {
-    activeCorner.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+
+  function up(event: React.PointerEvent) {
+    drag.current = null;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // ignore
+    }
   }
 
   function onUpload(setter: (url: string) => void) {
@@ -113,6 +129,9 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
       if (file) setter(URL.createObjectURL(file));
     };
   }
+
+  const boxW = (scale / 100) * stage.w;
+  const boxH = boxW * aspect;
 
   const maskStyle = {
     WebkitMaskImage: `url("${base}")`,
@@ -129,69 +148,53 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
     <div className="studio">
       <div className="studio-stage" ref={stageRef}>
         <img className="studio-base" src={base} alt="Garment base" />
-
         {color ? <div className="studio-layer studio-recolor" style={{ ...maskStyle, background: color }} /> : null}
 
-        {/* artwork mapped into the placement quad */}
-        <img
-          className="studio-quad-art"
-          src={art}
-          alt="Artwork"
-          draggable={false}
-          style={{ width: `${artBox.w}px`, height: `${artBox.h}px`, transform, transformOrigin: "0 0", mixBlendMode: blend }}
-        />
-
-        {/* fold shading: garment's own pixels multiplied over the art, clipped to the quad */}
-        {shadow > 0 ? (
-          <div
-            className="studio-shadow"
-            style={{
-              backgroundImage: `url("${base}")`,
-              clipPath: polygon,
-              WebkitClipPath: polygon,
-              opacity: shadow
-            }}
-          />
-        ) : null}
-
-        {/* authoring overlay */}
-        {authoring ? (
-          <>
-            <svg className="studio-quad-outline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-              <polygon
-                points={`${corners.tl.x},${corners.tl.y} ${corners.tr.x},${corners.tr.y} ${corners.br.x},${corners.br.y} ${corners.bl.x},${corners.bl.y}`}
-              />
-            </svg>
-            {CORNER_KEYS.map((key) => (
-              <button
-                key={key}
-                type="button"
-                className="studio-handle"
-                style={{ left: `${corners[key].x}%`, top: `${corners[key].y}%` }}
-                onPointerDown={startCorner(key)}
-                onPointerMove={moveCorner}
-                onPointerUp={endCorner}
-                aria-label={`Corner ${key}`}
-              />
-            ))}
-          </>
-        ) : null}
+        <div
+          className={`studio-tbox${controls ? " studio-tbox--on" : ""}`}
+          style={{
+            left: `${pos.x}%`,
+            top: `${pos.y}%`,
+            width: `${boxW}px`,
+            height: `${boxH}px`,
+            transform: `translate(-50%, -50%) rotate(${rot}deg)`
+          }}
+          onPointerDown={down("move")}
+          onPointerMove={move}
+          onPointerUp={up}
+        >
+          <img className="studio-tbox-art" src={art} alt="Artwork" draggable={false} style={{ mixBlendMode: blend }} />
+          {controls ? (
+            <>
+              <button type="button" className="tbox-handle tbox-handle--tl" onPointerDown={down("scale")} onPointerMove={move} onPointerUp={up} aria-label="Resize" />
+              <button type="button" className="tbox-handle tbox-handle--tr" onPointerDown={down("scale")} onPointerMove={move} onPointerUp={up} aria-label="Resize" />
+              <button type="button" className="tbox-handle tbox-handle--br" onPointerDown={down("scale")} onPointerMove={move} onPointerUp={up} aria-label="Resize" />
+              <button type="button" className="tbox-handle tbox-handle--bl" onPointerDown={down("scale")} onPointerMove={move} onPointerUp={up} aria-label="Resize" />
+              <button type="button" className="tbox-rotate" onPointerDown={down("rotate")} onPointerMove={move} onPointerUp={up} aria-label="Rotate" />
+            </>
+          ) : null}
+        </div>
       </div>
 
       <div className="studio-controls panel">
         <div className="panel-pad">
-          <p className="eyebrow">Design studio · corner-pin prototype</p>
+          <p className="eyebrow">Design studio · prototype</p>
 
           <div className="studio-group">
             <label className="studio-check">
-              <input type="checkbox" checked={authoring} onChange={(e) => setAuthoring(e.target.checked)} />
-              <span>Authoring mode — drag the 4 corners to fit the print area</span>
+              <input type="checkbox" checked={controls} onChange={(e) => setControls(e.target.checked)} />
+              <span>Show transform handles (drag to move · corners resize · top dot rotates)</span>
             </label>
           </div>
 
           <div className="studio-group">
-            <span className="label">Fold shading · {Math.round(shadow * 100)}%</span>
-            <input type="range" min={0} max={100} value={Math.round(shadow * 100)} onChange={(e) => setShadow(Number(e.target.value) / 100)} />
+            <span className="label">Graphic size · {Math.round(scale)}%</span>
+            <input type="range" min={4} max={80} value={Math.round(scale)} onChange={(e) => setScale(Number(e.target.value))} />
+          </div>
+
+          <div className="studio-group">
+            <span className="label">Rotation · {Math.round(rot)}°</span>
+            <input type="range" min={-45} max={45} value={Math.round(rot)} onChange={(e) => setRot(Number(e.target.value))} />
           </div>
 
           <div className="studio-group">
@@ -203,7 +206,7 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
                 </button>
               ))}
             </div>
-            <p className="trust-note">Light garment → multiply. Dark garment → screen. Flat decal → normal.</p>
+            <p className="trust-note">Light garment → multiply (sinks into folds). Dark garment → screen. Flat decal → normal.</p>
           </div>
 
           <div className="studio-group">
@@ -222,13 +225,12 @@ export function StudioPreview({ defaultBase }: { defaultBase: string }) {
                 </button>
               ))}
             </div>
-            <p className="trust-note">Recolor + fold shading both shine on a light/grey base — upload one below.</p>
+            <p className="trust-note">Recolor needs a light/grey base — upload one below.</p>
           </div>
 
           <div className="studio-group studio-uploads">
             <button type="button" className="secondary-button" onClick={() => baseInput.current?.click()}>Upload garment base</button>
             <button type="button" className="secondary-button" onClick={() => artInput.current?.click()}>Upload artwork</button>
-            <button type="button" className="ghost-button" onClick={() => setCorners(DEFAULT_CORNERS)}>Reset corners</button>
             <input ref={baseInput} type="file" accept="image/png,image/webp" hidden onChange={onUpload(setBase)} />
             <input ref={artInput} type="file" accept="image/png,image/svg+xml,image/webp" hidden onChange={onUpload(setArt)} />
           </div>
