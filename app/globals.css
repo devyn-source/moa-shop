@@ -2793,34 +2793,39 @@ a.stat-card:hover {
 .pdp-detail-body .spec-list {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  margin-top: 4px;
-  padding-top: 12px;
+  margin-top: 14px;
   border-top: 1px solid var(--border);
 }
 
 .spec-row {
   display: grid;
-  grid-template-columns: 84px 1fr;
-  gap: 12px;
-  align-items: baseline;
+  grid-template-columns: 100px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.spec-row:first-child {
+  border-top: 0;
 }
 
 .spec-row .spec-label {
+  padding-top: 2px;
   color: var(--terracotta);
   font-family: var(--font-display);
   font-stretch: 125%;
-  font-size: 0.52rem;
+  font-size: 0.54rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1.6;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
   text-transform: uppercase;
 }
 
 .spec-row .spec-value {
   margin: 0;
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.5;
 }
 
