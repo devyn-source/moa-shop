@@ -58,9 +58,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </summary>
             <div className="pdp-detail-body">
               <p>{product.description}</p>
-              {product.fitNotes ? <p><span className="label">Fit</span> {product.fitNotes}</p> : null}
-              <p><span className="label">Best for</span> {product.bestFor}</p>
-              <p><span className="label">Production</span> Made to order · MOA-managed quality control</p>
+              <div className="spec-list">
+                {product.fitNotes ? (
+                  <div className="spec-row"><span className="spec-label">Fit</span><span className="spec-value">{product.fitNotes}</span></div>
+                ) : null}
+                <div className="spec-row"><span className="spec-label">Best for</span><span className="spec-value">{product.bestFor}</span></div>
+                <div className="spec-row"><span className="spec-label">Production</span><span className="spec-value">Made to order · MOA-managed quality control</span></div>
+              </div>
             </div>
           </details>
 
@@ -126,9 +130,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <span className="pdp-detail-icon" aria-hidden />
             </summary>
             <div className="pdp-detail-body">
-              <p><span className="label">Production</span> {formatLeadTime(product.leadTimeDays)} from artwork approval</p>
-              <p><span className="label">Artwork QA</span> 1–3 business days</p>
-              <p><span className="label">Shipping</span> DDP air freight default. Sea freight on request for {product.moq * 4}+ unit orders.</p>
+              <div className="spec-list" style={{ paddingTop: 0, borderTop: 0, marginTop: 0 }}>
+                <div className="spec-row"><span className="spec-label">Production</span><span className="spec-value">{formatLeadTime(product.leadTimeDays)} from artwork approval</span></div>
+                <div className="spec-row"><span className="spec-label">Artwork QA</span><span className="spec-value">1–3 business days</span></div>
+                <div className="spec-row"><span className="spec-label">Shipping</span><span className="spec-value">DDP air freight default. Sea freight on request for {product.moq * 4}+ unit orders.</span></div>
+              </div>
             </div>
           </details>
         </aside>

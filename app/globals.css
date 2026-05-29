@@ -2789,6 +2789,41 @@ a.stat-card:hover {
   font-size: 0.54rem;
 }
 
+/* two-column spec rows (Fit / Best for / Production …) */
+.pdp-detail-body .spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.spec-row .spec-label {
+  color: var(--terracotta);
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.spec-row .spec-value {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
 .size-pills {
   display: flex;
   flex-wrap: wrap;
