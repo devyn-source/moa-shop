@@ -18,11 +18,14 @@ export default function StudioPage() {
       </div>
 
       <p className="lede" style={{ marginBottom: 18 }}>
-        2.5D proof: artwork is masked to the garment and blended onto the fabric so it picks up folds; the garment
-        recolors live. Upload your grey hoodie base and a logo to judge the real quality.
+        Industry-standard placement: pick a print location per view, drop artwork into its zone, fine-tune size and
+        rotation. Front and back hold separate artwork. Upload a grey base + logo to see recolor and fold shading.
       </p>
 
-      <StudioPreview defaultBase="/products/heavyweight-hoodie/hoodie-black-front.png" />
+      <StudioPreview
+        defaultFront="/products/heavyweight-hoodie/hoodie-black-front.png"
+        defaultBack="/products/heavyweight-hoodie/hoodie-black-back.png"
+      />
     </main>
   );
 }

@@ -3291,6 +3291,105 @@ a.stat-card:hover {
   accent-color: var(--terracotta);
 }
 
+/* front / back view toggle */
+.studio-views {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 4px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.studio-views .studio-seg-btn {
+  padding: 10px 12px 9px;
+  text-align: center;
+  font-size: 0.6rem;
+}
+
+/* print-location selector */
+.studio-locs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.studio-loc-btn {
+  position: relative;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.studio-loc-btn:hover {
+  border-color: rgba(176, 71, 49, 0.34);
+}
+
+.studio-loc-btn--active {
+  background: rgba(176, 71, 49, 0.08);
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+
+.studio-loc-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--terracotta);
+}
+
+/* active location zone on the garment */
+.studio-locbox {
+  position: absolute;
+  border: 1.5px dashed rgba(176, 71, 49, 0.6);
+  border-radius: 4px;
+  background: rgba(176, 71, 49, 0.05);
+  pointer-events: none;
+}
+
+.studio-locbox-tag {
+  position: absolute;
+  top: -9px;
+  left: 6px;
+  padding: 2px 6px;
+  background: var(--terracotta);
+  border-radius: 3px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-size: 0.44rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.studio-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.studio-group-head .label {
+  margin-bottom: 0;
+}
+
 .studio-controls {
   position: sticky;
   top: 90px;
