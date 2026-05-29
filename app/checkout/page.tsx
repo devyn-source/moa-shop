@@ -5,13 +5,10 @@ import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { currency } from "@/lib/pricing";
 
-type Created = { orderNumber: string; id: string; displayName: string };
-
 export default function CheckoutPage() {
-  const { items, total, count, clear, hydrated } = useCart();
+  const { items, total, count, hydrated } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [created, setCreated] = useState<Created[] | null>(null);
 
   async function submit(formData: FormData) {
     setSubmitting(true);
@@ -33,63 +30,37 @@ export default function CheckoutPage() {
       }
     };
 
-    const results: Created[] = [];
-    for (const item of items) {
-      const sizeSummary = Object.entries(item.sizeQty).map(([s, q]) => `${s}:${q}`).join(" ");
-      const payload = {
-        ...contact,
+    const payloadItems = items.map((item) => {
+      const sizeSummary = Object.entries(item.sizeQty)
+        .map(([s, q]) => `${s}:${q}`)
+        .join(" ");
+      return {
         productId: item.productId,
         variantId: item.variantId,
         decorationIds: item.decorationIds,
         quantity: item.quantity,
+        displayName: item.displayName,
+        colorLabel: item.colorLabel,
+        decorationLabel: item.decorationLabel,
         artworkFileName: item.artworkFileName,
-        artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes
+        artworkNotes: sizeSummary
+          ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}`
+          : item.artworkNotes
       };
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        setSubmitting(false);
-        setError(`Failed to create order for ${item.displayName}. Check the fields and try again.`);
-        return;
-      }
-      const order = (await res.json()) as { id: string; orderNumber: string };
-      results.push({ id: order.id, orderNumber: order.orderNumber, displayName: item.displayName });
+    });
+
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: payloadItems, contact })
+    });
+    const data = (await res.json()) as { url?: string; error?: string };
+    if (!res.ok || !data.url) {
+      setSubmitting(false);
+      setError(data.error || "Checkout could not start. Check the fields and try again.");
+      return;
     }
-
-    clear();
-    setCreated(results);
-    setSubmitting(false);
-  }
-
-  if (created) {
-    return (
-      <main className="page">
-        <div className="checkout-success panel">
-          <div className="panel-pad">
-            <p className="eyebrow">Order received</p>
-            <h1 className="page-title">You&apos;re all set</h1>
-            <p className="lede">
-              {created.length} {created.length === 1 ? "order" : "orders"} created. Each SKU runs as its own
-              production order — MOA quality-checks the artwork before production.
-            </p>
-            <div className="tier-list" style={{ marginTop: 16 }}>
-              {created.map((order) => (
-                <Link key={order.id} href={`/orders/${order.id}`} className="tier-row">
-                  <span>{order.displayName}</span>
-                  <strong>{order.orderNumber} →</strong>
-                </Link>
-              ))}
-            </div>
-            <div className="action-row">
-              <Link href="/" className="button">Back to catalog</Link>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
+    window.location.href = data.url; // hand off to Stripe-hosted checkout
   }
 
   if (hydrated && items.length === 0) {
@@ -154,9 +125,9 @@ export default function CheckoutPage() {
               <span className="price-total-sub">{items.length} orders · {count.toLocaleString()} units</span>
             </div>
             <button className="button button--lg button--full" type="submit" form="checkout-form" disabled={submitting}>
-              {submitting ? "Creating orders…" : `Pay ${currency(total)}`}
+              {submitting ? "Redirecting to checkout…" : `Pay ${currency(total)} · secure checkout`}
             </button>
-            <p className="trust-note">Simulated Stripe checkout. Creates one order per SKU.</p>
+            <p className="trust-note">Secure payment via Stripe. One order is created per SKU.</p>
           </div>
         </aside>
       </div>

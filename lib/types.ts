@@ -18,6 +18,7 @@ export type DecorationMethod =
   | "woven_label";
 
 export type OrderStatus =
+  | "awaiting_payment"
   | "paid"
   | "artwork_qa"
   | "awaiting_revision"
@@ -108,8 +109,9 @@ export type ShopOrder = {
   totalUsd: number;
   artworkFileName: string;
   artworkNotes: string;
-  paymentStatus: "simulated_paid" | "unpaid" | "refunded";
+  paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
+  stripeSessionId?: string;
   shipToName: string;
   shipToAddress: {
     line1: string;

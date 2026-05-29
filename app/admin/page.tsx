@@ -5,7 +5,9 @@ import { statusLabel } from "@/lib/store";
 
 export default async function AdminPage() {
   const [orders, products] = await Promise.all([getOrders(), getProducts({ includeDrafts: true })]);
-  const openOrders = orders.filter((order) => !["shipped", "delivered", "cancelled"].includes(order.status));
+  const openOrders = orders.filter(
+    (order) => !["awaiting_payment", "shipped", "delivered", "cancelled"].includes(order.status)
+  );
   const revenue = orders.reduce((sum, order) => sum + order.totalUsd, 0);
   const publishedCount = products.filter((product) => product.isPublished).length;
   const recent = orders.slice(0, 5);

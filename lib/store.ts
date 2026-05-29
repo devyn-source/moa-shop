@@ -123,7 +123,8 @@ export async function getOrderById(id: string): Promise<ShopOrder | null> {
   return data ? (data.data as ShopOrder) : null;
 }
 
-export async function createOrder(input: OrderInput): Promise<ShopOrder> {
+export async function createOrder(input: OrderInput, opts: { paid?: boolean } = {}): Promise<ShopOrder> {
+  const paid = opts.paid ?? false;
   const product = await getProductById(input.productId);
   if (!product) {
     throw new Error("Product not found");
@@ -168,25 +169,17 @@ export async function createOrder(input: OrderInput): Promise<ShopOrder> {
     totalUsd: price.totalUsd,
     artworkFileName: input.artworkFileName,
     artworkNotes: input.artworkNotes,
-    paymentStatus: "simulated_paid",
-    status: "artwork_qa",
+    paymentStatus: paid ? "paid" : "unpaid",
+    status: paid ? "artwork_qa" : "awaiting_payment",
     shipToName: input.shipToName,
     shipToAddress: input.shipToAddress,
     internalNotes: "",
-    statusLog: [
-      {
-        statusFrom: null,
-        statusTo: "paid",
-        note: "Simulated Stripe Checkout completed in MVP mode.",
-        createdAt: now
-      },
-      {
-        statusFrom: "paid",
-        statusTo: "artwork_qa",
-        note: "Order routed to artwork QA.",
-        createdAt: now
-      }
-    ],
+    statusLog: paid
+      ? [
+          { statusFrom: null, statusTo: "paid", note: "Payment received.", createdAt: now },
+          { statusFrom: "paid", statusTo: "artwork_qa", note: "Order routed to artwork QA.", createdAt: now }
+        ]
+      : [{ statusFrom: null, statusTo: "awaiting_payment", note: "Order created, awaiting payment.", createdAt: now }],
     createdAt: now,
     updatedAt: now
   };
@@ -246,6 +239,35 @@ export async function updateOrderStatus(
   }
 
   return updated;
+}
+
+export async function markOrderPaid(id: string, stripeSessionId: string): Promise<void> {
+  const current = await getOrderById(id);
+  if (!current) return;
+  if (current.paymentStatus === "paid") return; // idempotent — webhook may fire twice
+
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    paymentStatus: "paid",
+    status: "artwork_qa",
+    stripeSessionId,
+    updatedAt: now,
+    statusLog: [
+      ...current.statusLog,
+      { statusFrom: current.status, statusTo: "paid", note: "Payment received via Stripe.", createdAt: now },
+      { statusFrom: "paid", statusTo: "artwork_qa", note: "Order routed to artwork QA.", createdAt: now }
+    ]
+  };
+
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "artwork_qa", data: updated, updated_at: now })
+    .eq("id", id);
+  if (error) {
+    throw new Error(`Failed to mark order paid: ${error.message}`);
+  }
 }
 
 export function statusLabel(status: OrderStatus): string {
