@@ -2594,13 +2594,47 @@ a.stat-card:hover {
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 460px;
+  max-width: 600px;
   margin: 0 auto;
   aspect-ratio: 4 / 5;
   background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
+}
+
+.pdp-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0 0 3px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 1.3rem;
+  line-height: 1;
+  box-shadow: var(--shadow);
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.pdp-nav:hover {
+  color: var(--terracotta);
+  border-color: rgba(176, 71, 49, 0.4);
+}
+
+.pdp-nav--prev {
+  left: 14px;
+}
+
+.pdp-nav--next {
+  right: 14px;
 }
 
 .pdp-main--photo {
@@ -2622,7 +2656,7 @@ a.stat-card:hover {
   display: flex;
   justify-content: center;
   gap: 10px;
-  max-width: 460px;
+  max-width: 600px;
   margin: 14px auto 0;
 }
 
@@ -2701,7 +2735,7 @@ a.stat-card:hover {
 }
 
 .pdp-gallery .pdp-color-row {
-  max-width: 460px;
+  max-width: 600px;
   margin: 14px auto 0;
 }
 
@@ -3733,7 +3767,7 @@ a.stat-card:hover {
     position: static;
   }
   .studio-stage {
-    max-width: 460px;
+    max-width: 600px;
     margin: 0 auto;
   }
 }

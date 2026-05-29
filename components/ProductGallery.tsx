@@ -3,6 +3,9 @@
 import { ProductVisual } from "./ProductVisual";
 import type { CatalogProduct, CatalogVariant } from "@/lib/types";
 
+const VIEWS = ["front", "back"] as const;
+type View = (typeof VIEWS)[number];
+
 function Shot({
   product,
   variant,
@@ -10,7 +13,7 @@ function Shot({
 }: {
   product: CatalogProduct;
   variant?: CatalogVariant;
-  view: "front" | "back";
+  view: View;
 }) {
   const src = view === "front" ? variant?.frontImage : variant?.backImage;
   if (src) {
@@ -27,20 +30,26 @@ export function ProductGallery({
 }: {
   product: CatalogProduct;
   variant?: CatalogVariant;
-  view: "front" | "back";
-  onView: (view: "front" | "back") => void;
+  view: View;
+  onView: (view: View) => void;
 }) {
   const hasPhoto = view === "front" ? Boolean(variant?.frontImage) : Boolean(variant?.backImage);
+  const step = (dir: 1 | -1) => {
+    const i = VIEWS.indexOf(view);
+    onView(VIEWS[(i + dir + VIEWS.length) % VIEWS.length]);
+  };
 
   return (
     <div className="pdp-gallery">
       <div className={`pdp-main${hasPhoto ? " pdp-main--photo" : ""}`}>
-        <Shot product={product} variant={variant} view={view} />
         <span className="pdp-shot-tag">{view}</span>
+        <button type="button" className="pdp-nav pdp-nav--prev" onClick={() => step(-1)} aria-label="Previous view">‹</button>
+        <Shot product={product} variant={variant} view={view} />
+        <button type="button" className="pdp-nav pdp-nav--next" onClick={() => step(1)} aria-label="Next view">›</button>
       </div>
 
       <div className="pdp-thumbs">
-        {(["front", "back"] as const).map((v) => (
+        {VIEWS.map((v) => (
           <button
             key={v}
             type="button"
@@ -54,18 +63,6 @@ export function ProductGallery({
             <span className="pdp-thumb-label">{v}</span>
           </button>
         ))}
-        <a
-          className="pdp-thumb pdp-thumb--mockup"
-          href={variant?.mockupTemplateUrl ?? "#"}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Download mockup template"
-        >
-          <span className="pdp-thumb-img">
-            <span className="pdp-thumb-icon" aria-hidden>↓</span>
-          </span>
-          <span className="pdp-thumb-label">Tech pack</span>
-        </a>
       </div>
     </div>
   );

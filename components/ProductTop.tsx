@@ -60,7 +60,7 @@ export function ProductTop({ product }: { product: CatalogProduct }) {
             Configure order →
           </Link>
           <p className="trust-note">
-            Grab the mockup template from the gallery (left) — inch-grid layout file for placement + sizing.
+            Place your artwork in the design studio at checkout — front + back, by print location.
           </p>
         </div>
 
