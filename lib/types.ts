@@ -50,6 +50,7 @@ export type CatalogVariant = {
   isAvailable: boolean;
   frontImage?: string;
   backImage?: string;
+  recolor?: boolean; // false = show the grey base as-is (natural/heather)
 };
 
 export type CatalogDecoration = {
@@ -86,6 +87,12 @@ export type CatalogProduct = {
   sortOrder: number;
   sizes: string[];
   fitNotes?: string;
+  greyFront?: string;
+  greyBack?: string;
+  // Optional mask (PNG, white = recolor region) confining the live tint to part of
+  // the garment — e.g. a trucker hat whose foam front panel must stay white.
+  recolorMaskFront?: string;
+  recolorMaskBack?: string;
   variants: CatalogVariant[];
   decorations: CatalogDecoration[];
   priceTiers: PriceTier[];
@@ -108,6 +115,7 @@ export type ShopOrder = {
   taxUsd: number;
   totalUsd: number;
   artworkFileName: string;
+  artworkFileUrl?: string;
   artworkNotes: string;
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
@@ -144,6 +152,7 @@ export type OrderInput = {
   decorationIds: DecorationMethod[];
   quantity: number;
   artworkFileName: string;
+  artworkFileUrl?: string;
   artworkNotes: string;
   shipToName: string;
   shipToAddress: ShopOrder["shipToAddress"];

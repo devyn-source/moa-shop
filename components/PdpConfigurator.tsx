@@ -1,0 +1,563 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ProductShot } from "./ProductShot";
+import { DraggableArt, type ArtTransform } from "./DraggableArt";
+import { useCart } from "./CartProvider";
+import { currency, formatLeadTime } from "@/lib/pricing";
+import { getDefaultZones, normaliseZonesPayload, type ProductZones } from "@/lib/zones";
+import type { CatalogProduct } from "@/lib/types";
+
+type Step = "color" | "decoration" | "placement" | "size";
+
+// Spreads a MOQ across every available size as evenly as possible.
+function distributeAcross(sizes: string[], total: number): Record<string, number> {
+  if (!sizes.length) return {};
+  const base = Math.floor(total / sizes.length);
+  const remainder = total - base * sizes.length;
+  return sizes.reduce<Record<string, number>>((acc, s, i) => {
+    acc[s] = base + (i < remainder ? 1 : 0);
+    return acc;
+  }, {});
+}
+
+const STEPS: { key: Step; label: string }[] = [
+  { key: "color", label: "Color" },
+  { key: "placement", label: "Artwork placement" },
+  { key: "decoration", label: "Decoration" },
+  { key: "size", label: "Size & quantity" }
+];
+
+export function PdpConfigurator({ product }: { product: CatalogProduct }) {
+  // Defaults from lib/zones; if /studio has authored a Supabase override for
+  // this slug we swap it in on mount.
+  const [zones, setZones] = useState<ProductZones>(() => getDefaultZones(product));
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/zones/${product.slug}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const override = normaliseZonesPayload(data?.zones);
+        if (override && (override.front.length || override.back.length)) {
+          setZones({
+            front: override.front.length ? override.front : zones.front,
+            back: override.back.length ? override.back : zones.back
+          });
+        }
+      })
+      .catch(() => {
+        // network failure → keep defaults
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.slug]);
+  const defaultVariant = product.variants.find((v) => v.frontImage) ?? product.variants[0];
+  const [variantId, setVariantId] = useState(defaultVariant?.id ?? "");
+  const [view, setView] = useState<"front" | "back">("front");
+  const [step, setStep] = useState<Step>("color");
+  const [decorationIds, setDecorationIds] = useState<string[]>([]);
+  const [artworkUrl, setArtworkUrl] = useState<string | null>(null);
+  const [artworkName, setArtworkName] = useState<string | null>(null);
+  const [placementId, setPlacementId] = useState<string | null>(null);
+  // Free position + size of the artwork WITHIN the chosen bounding box.
+  // Reset to "fill the box" whenever the shopper picks a different zone.
+  const [artTransform, setArtTransform] = useState<ArtTransform>({ ox: 0, oy: 0, sx: 1, sy: 1 });
+  useEffect(() => {
+    setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
+  }, [placementId, view]);
+  const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
+    distributeAcross(product.sizes, product.moq)
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { addItem } = useCart();
+
+  const qty = useMemo(() => Object.values(sizeQty).reduce((s, n) => s + (n || 0), 0), [sizeQty]);
+  const belowMoq = qty < product.moq;
+
+  const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
+  const hasBack = Boolean(product.greyBack) || product.variants.some((v) => v.backImage);
+
+  const tier = useMemo(() => {
+    const sorted = [...product.priceTiers].sort((a, b) => a.minQty - b.minQty);
+    return sorted.find((t) => qty >= t.minQty && (t.maxQty == null || qty <= t.maxQty)) ?? sorted[0];
+  }, [product.priceTiers, qty]);
+
+  const decoSelected = product.decorations.filter((d) => decorationIds.includes(d.id));
+  const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
+  const perUnit = tier.perUnitUsd + decorationAdder;
+  const subtotal = perUnit * qty;
+
+  const placements = view === "back" ? zones.back : zones.front;
+  const placement = placements.find((p) => p.id === placementId) ?? null;
+
+  const stepDone = (s: Step): boolean => {
+    if (s === "color") return Boolean(variant);
+    if (s === "decoration") return decorationIds.length > 0;
+    if (s === "placement") return Boolean(artworkUrl) && Boolean(placement);
+    if (s === "size") return qty >= product.moq;
+    return false;
+  };
+
+  const stepValue = (s: Step): string => {
+    if (s === "color") return variant?.colorLabel ?? "—";
+    if (s === "decoration")
+      return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
+    if (s === "placement") return placement?.label ?? (artworkUrl ? "Pick a location" : "Upload artwork");
+    if (s === "size") return `${qty.toLocaleString()} units`;
+    return "";
+  };
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // --- Configurator-stage motion: cursor parallax + ambient idle breathe ---
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [idle, setIdle] = useState(false);
+  const idleTimer = useRef<number | null>(null);
+  const resetIdle = useCallback(() => {
+    setIdle(false);
+    if (idleTimer.current) window.clearTimeout(idleTimer.current);
+    idleTimer.current = window.setTimeout(() => setIdle(true), 8000);
+  }, []);
+  useEffect(() => {
+    resetIdle();
+    return () => {
+      if (idleTimer.current) window.clearTimeout(idleTimer.current);
+    };
+  }, [resetIdle]);
+  const onStagePointerMove = (e: React.PointerEvent) => {
+    resetIdle();
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1..1
+    const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    setTilt({ x: nx * 2, y: ny * -2 }); // ±2deg
+  };
+  const onStagePointerLeave = () => setTilt({ x: 0, y: 0 });
+
+  const removeArtwork = () => {
+    if (artworkUrl?.startsWith("blob:")) URL.revokeObjectURL(artworkUrl);
+    setArtworkUrl(null);
+    setArtworkName(null);
+    setUploadError(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const mirrorToBack = () => {
+    if (!hasBack || !artworkUrl) return;
+    setView("back");
+    const backZone = zones.back.find((z) => z.id === "center-back") ?? zones.back[0];
+    if (backZone) setPlacementId(backZone.id);
+    setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
+  };
+
+  const handleFile = async (file: File | undefined | null) => {
+    if (!file) return;
+    setUploadError(null);
+    // Show a local preview immediately while the upload runs.
+    const localPreview = URL.createObjectURL(file);
+    setArtworkUrl(localPreview);
+    setArtworkName(file.name);
+    if (!placementId) {
+      setPlacementId(placements[0]?.id ?? null);
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Upload failed");
+      }
+      // Swap the local blob URL for the persisted public URL so it survives
+      // navigation into the cart + ends up on the order.
+      URL.revokeObjectURL(localPreview);
+      setArtworkUrl(data.url);
+    } catch (err) {
+      URL.revokeObjectURL(localPreview);
+      setArtworkUrl(null);
+      setArtworkName(null);
+      setUploadError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (belowMoq || !variant || submitting) return;
+    const decorationLabel = decoSelected.length
+      ? decoSelected.map((d) => d.label).join(" + ")
+      : "Undecorated";
+    const perUnitTotal = tier.perUnitUsd + decorationAdder;
+    addItem({
+      productId: product.id,
+      slug: product.slug,
+      displayName: product.displayName,
+      skuCode: product.skuCode,
+      variantId: variant.id,
+      colorLabel: variant.colorLabel,
+      colorHex: variant.colorHex,
+      image: product.greyFront ?? variant.frontImage,
+      decorationIds,
+      decorationLabel,
+      sizeQty,
+      quantity: qty,
+      perUnitUsd: tier.perUnitUsd,
+      decorationAdderUsd: decorationAdder,
+      subtotalUsd: tier.perUnitUsd * qty,
+      totalUsd: perUnitTotal * qty,
+      artworkFileName: artworkName ?? "Artwork file pending",
+      artworkFileUrl: artworkUrl ?? undefined,
+      artworkNotes: placement
+        ? [
+            `Zone: ${placement.label}${view === "back" ? " (back)" : ""}`,
+            `Box: x=${placement.box.x.toFixed(3)} y=${placement.box.y.toFixed(3)} w=${placement.box.w.toFixed(3)} h=${placement.box.h.toFixed(3)}${placement.box.r ? ` r=${Math.round(placement.box.r)}°` : ""}`,
+            `Art-in-box: ox=${artTransform.ox.toFixed(3)} oy=${artTransform.oy.toFixed(3)} sx=${artTransform.sx.toFixed(3)} sy=${artTransform.sy.toFixed(3)}${artTransform.r ? ` r=${Math.round(artTransform.r)}°` : ""}`
+          ].join("\n")
+        : ""
+    });
+    setSubmitting(true);
+    router.push("/cart");
+  };
+
+  return (
+    <section className="pdpx">
+      <div className="pdpx-stage">
+        <div className="pdpx-stage-toolbar">
+          <span className="pdpx-eyebrow">{product.category}</span>
+          {hasBack ? (
+            <div className="pdpx-view-pills" role="tablist" aria-label="Garment view">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === "front"}
+                className={`pdpx-pill${view === "front" ? " is-on" : ""}`}
+                onClick={() => setView("front")}
+              >
+                Front
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === "back"}
+                className={`pdpx-pill${view === "back" ? " is-on" : ""}`}
+                onClick={() => setView("back")}
+              >
+                Back
+              </button>
+            </div>
+          ) : (
+            <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
+          )}
+        </div>
+
+        {/* Both views stay mounted and crossfade — color changes morph in place
+            via the tint transition, view changes opacity-crossfade between the
+            two image layers, and the entrance keyframe only plays on first load. */}
+        <div
+          ref={stageRef}
+          className="pdpx-canvas"
+          onPointerMove={onStagePointerMove}
+          onPointerLeave={onStagePointerLeave}
+        >
+          <div
+            className="pdpx-canvas-tilt"
+            style={{ transform: `perspective(1400px) rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)` }}
+          >
+            <div className={`pdpx-canvas-breathe${idle ? " is-breathing" : ""}`}>
+              <span className="pdpx-ground-shadow" aria-hidden />
+              <span className={`pdpx-view-layer${view === "front" ? " is-on" : ""}`}>
+                <ProductShot product={product} variant={variant} view="front" />
+              </span>
+              {hasBack ? (
+                <span className={`pdpx-view-layer${view === "back" ? " is-on" : ""}`}>
+                  <ProductShot product={product} variant={variant} view="back" />
+                </span>
+              ) : null}
+              {artworkUrl && placement ? (
+                <span
+                  className="pdpx-place-box"
+                  style={{
+                    left: `${placement.box.x * 100}%`,
+                    top: `${placement.box.y * 100}%`,
+                    width: `${placement.box.w * 100}%`,
+                    height: `${placement.box.h * 100}%`,
+                    transform: `rotate(${placement.box.r ?? 0}deg)`,
+                    transformOrigin: "center center"
+                  }}
+                >
+                  <DraggableArt url={artworkUrl} transform={artTransform} onChange={setArtTransform} />
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <p className="pdpx-shotnote">
+          Live preview · {variant?.colorLabel}{placement ? ` · ${placement.label}` : ""}
+        </p>
+      </div>
+
+      <aside className="pdpx-rail">
+        <div className="pdpx-rail-head">
+          <p className="pdpx-style">Style {product.skuCode}</p>
+          <h1 className="pdpx-title">{product.displayName}</h1>
+          <p className="pdpx-lede">{product.headline}</p>
+        </div>
+
+        <div className="pdpx-steps">
+          {STEPS.map((s, i) => {
+            const open = step === s.key;
+            const done = stepDone(s.key);
+            return (
+              <div key={s.key} className={`pdpx-step${open ? " is-open" : ""}${done ? " is-done" : ""}`}>
+                <button
+                  type="button"
+                  className="pdpx-step-head"
+                  aria-expanded={open}
+                  aria-controls={`pdpx-panel-${s.key}`}
+                  onClick={() => setStep(s.key)}
+                >
+                  <span className="pdpx-step-num">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="pdpx-step-label">{s.label}</span>
+                  <span className="pdpx-step-value">{stepValue(s.key)}</span>
+                </button>
+
+                {open ? (
+                  <div id={`pdpx-panel-${s.key}`} role="region" aria-label={s.label} className="pdpx-step-body">
+                    {s.key === "color" ? (
+                      <div className="pdpx-colors">
+                        {product.variants.map((v) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            className={`pdpx-swatch${variantId === v.id ? " is-on" : ""}`}
+                            style={{ background: v.colorHex }}
+                            data-label={v.colorLabel}
+                            aria-label={v.colorLabel}
+                            onClick={() => setVariantId(v.id)}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {s.key === "decoration" ? (
+                      <div className="pdpx-decos">
+                        {product.decorations.map((d) => {
+                          const on = decorationIds.includes(d.id);
+                          return (
+                            <button
+                              key={d.id}
+                              type="button"
+                              className={`pdpx-deco${on ? " is-on" : ""}`}
+                              onClick={() =>
+                                setDecorationIds((prev) =>
+                                  on ? prev.filter((x) => x !== d.id) : [...prev, d.id]
+                                )
+                              }
+                            >
+                              <span>
+                                <strong>{d.label}</strong>
+                                <em>{d.description}</em>
+                              </span>
+                              <span className="pdpx-deco-adder">+{currency(d.perUnitAdderUsd)}/unit</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+
+                    {s.key === "placement" ? (
+                      <div className="pdpx-place">
+                        <input
+                          ref={fileRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/svg+xml,application/pdf,.ai,.eps"
+                          className="pdpx-file"
+                          onChange={(e) => handleFile(e.target.files?.[0])}
+                        />
+                        <button type="button" className="pdpx-drop" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                          <span className="pdpx-drop-eyebrow">Step 01</span>
+                          <span className="pdpx-drop-cta">
+                            {uploading ? "Uploading…" : artworkName ? artworkName : "Upload artwork"}
+                          </span>
+                          <span className="pdpx-drop-hint">
+                            {uploadError
+                              ? uploadError
+                              : artworkUrl && !uploading
+                              ? "Uploaded · stored on MOA cloud"
+                              : "PNG, JPG, SVG, WEBP, PDF — vector preferred"}
+                          </span>
+                        </button>
+
+                        <p className="pdpx-place-label">Step 02 · Location</p>
+                        <div className="pdpx-locs">
+                          {placements.map((p) => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              className={`pdpx-loc${placementId === p.id ? " is-on" : ""}`}
+                              onClick={() => setPlacementId(p.id)}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                        {artworkUrl ? (
+                          <>
+                            <p className="pdpx-place-hint">
+                              Drag to reposition, corners to resize, top circle to rotate. The dashed outline is the
+                              maximum print area — MOA finalises the spec during artwork QA.
+                            </p>
+                            <div className="pdpx-place-actions">
+                              {hasBack && view === "front" ? (
+                                <button type="button" className="pdpx-link" onClick={mirrorToBack}>
+                                  Mirror to back ↓
+                                </button>
+                              ) : null}
+                              <button type="button" className="pdpx-link pdpx-link--danger" onClick={removeArtwork}>
+                                Remove artwork
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <p className="pdpx-place-hint">Drop a file above to see it on the garment.</p>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {s.key === "size" ? (
+                      <div className="pdpx-size">
+                        <div className="pdpx-matrix">
+                          {product.sizes.map((size) => (
+                            <label key={size} className="pdpx-matrix-cell">
+                              <span className="pdpx-matrix-size">{size}</span>
+                              <input
+                                type="number"
+                                min={0}
+                                step={1}
+                                value={sizeQty[size] ?? 0}
+                                onChange={(e) =>
+                                  setSizeQty((prev) => ({
+                                    ...prev,
+                                    [size]: Math.max(0, parseInt(e.target.value || "0", 10) || 0)
+                                  }))
+                                }
+                                className="pdpx-matrix-input"
+                              />
+                            </label>
+                          ))}
+                        </div>
+                        <div className="pdpx-matrix-foot">
+                          <span>Total · MOQ {product.moq}</span>
+                          <strong className={belowMoq ? "is-warn" : undefined}>
+                            {qty.toLocaleString()} units{belowMoq ? " — below MOQ" : ""}
+                          </strong>
+                        </div>
+                        <div className="pdpx-tiers">
+                          {product.priceTiers.map((t) => {
+                            const active = qty >= t.minQty && (t.maxQty == null || qty <= t.maxQty);
+                            return (
+                              <div key={t.minQty} className={`pdpx-tier${active ? " is-active" : ""}`}>
+                                <span>
+                                  {t.minQty}
+                                  {t.maxQty ? `–${t.maxQty}` : "+"} units
+                                </span>
+                                <strong>{currency(t.perUnitUsd)}/unit</strong>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="pdpx-foot">
+          <div className="pdpx-breakdown">
+            <div className="pdpx-breakdown-row">
+              <span>Base unit</span>
+              <span>{currency(tier.perUnitUsd)}</span>
+            </div>
+            {decoSelected.map((d) => (
+              <div key={d.id} className="pdpx-breakdown-row pdpx-breakdown-row--adder">
+                <span>+ {d.label}</span>
+                <span>+{currency(d.perUnitAdderUsd)}</span>
+              </div>
+            ))}
+            <div className="pdpx-breakdown-row pdpx-breakdown-row--sum">
+              <span>Per unit · {qty.toLocaleString()} units</span>
+              <span>{currency(perUnit)}</span>
+            </div>
+          </div>
+          <div className="pdpx-price">
+            <span className="pdpx-from">Subtotal</span>
+            <strong className="pdpx-total">{currency(subtotal)}</strong>
+          </div>
+          <button
+            type="button"
+            className="pdpx-cta"
+            onClick={handleAddToCart}
+            disabled={belowMoq || submitting}
+          >
+            {belowMoq
+              ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
+              : submitting
+              ? "Adding to order…"
+              : "Add to order →"}
+          </button>
+          <p className="pdpx-foot-note">
+            Lead time {formatLeadTime(product.leadTimeDays)} · MOA-managed quality control · Artwork finalised in QA
+          </p>
+        </div>
+      </aside>
+
+      {/* Persistent configurator bar pinned to the bottom of the viewport on
+          desktop — informational, no CTA. Hidden on mobile where the in-rail
+          sticky CTA covers the same role. */}
+      <div className="pdpx-bottombar" aria-hidden={false}>
+        <div className="pdpx-bottombar-inner">
+          <div className="pdpx-bb-cell">
+            <span>Style</span>
+            <strong>{product.skuCode}</strong>
+          </div>
+          <div className="pdpx-bb-cell">
+            <span>Color</span>
+            <strong>
+              <span className="pdpx-bb-dot" style={{ background: variant?.colorHex }} />
+              {variant?.colorLabel}
+            </strong>
+          </div>
+          {placement ? (
+            <div className="pdpx-bb-cell pdpx-bb-cell--hide-sm">
+              <span>Placement</span>
+              <strong>{placement.label}</strong>
+            </div>
+          ) : null}
+          {decoSelected.length ? (
+            <div className="pdpx-bb-cell pdpx-bb-cell--hide-sm">
+              <span>Decoration</span>
+              <strong>{decoSelected.map((d) => d.label).join(" + ")}</strong>
+            </div>
+          ) : null}
+          <div className="pdpx-bb-cell pdpx-bb-cell--right">
+            <span>{qty.toLocaleString()} units</span>
+            <strong className="pdpx-bb-price">{currency(subtotal)}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

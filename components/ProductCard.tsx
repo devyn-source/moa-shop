@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProductVisual } from "./ProductVisual";
+import { ProductShot } from "./ProductShot";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import type { CatalogProduct } from "@/lib/types";
 
@@ -7,17 +7,17 @@ export function ProductCard({ product, featured = false }: { product: CatalogPro
   const cheapestTier = product.priceTiers[product.priceTiers.length - 1] ?? product.priceTiers[0];
   const startTier = product.priceTiers[0];
   const swatchCount = product.variants.length;
-  const heroVariant = product.variants.find((variant) => variant.frontImage) ?? product.variants[0];
+  const heroVariant =
+    product.variants.find((v) => v.colorLabel === "Black" && v.recolor !== false) ??
+    product.variants.find((v) => v.frontImage) ??
+    product.variants[0];
+  const isPhoto = Boolean(product.greyFront || heroVariant?.frontImage);
 
   return (
     <Link className={`product-card${featured ? " product-card--featured" : ""}`} href={`/p/${product.slug}`}>
       {featured ? <span className="card-ribbon">Featured</span> : null}
-      <div className={`visual-frame${heroVariant?.frontImage ? " visual-frame--photo" : ""}`}>
-        {heroVariant?.frontImage ? (
-          <img className="product-photo" src={heroVariant.frontImage} alt={product.displayName} loading="lazy" />
-        ) : (
-          <ProductVisual type={product.visual} label={product.displayName} swatch={heroVariant?.colorHex} />
-        )}
+      <div className={`visual-frame${isPhoto ? " visual-frame--photo" : ""}`}>
+        <ProductShot product={product} variant={heroVariant} view="front" />
         <span className="visual-meta">{product.category}</span>
       </div>
       <div className="card-body">

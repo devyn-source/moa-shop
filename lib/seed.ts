@@ -1,4 +1,4 @@
-import type { CatalogDecoration, CatalogProduct, Vendor } from "./types";
+import type { CatalogDecoration, CatalogProduct, CatalogVariant, Vendor } from "./types";
 
 const coreDecorations: CatalogDecoration[] = [
   {
@@ -69,6 +69,29 @@ export const seedVendors: Vendor[] = [
   }
 ];
 
+// Shared colorway palette. The grey base is only a recolor source — it is never a
+// sellable color, so every chip is a real color and Black is the default.
+const COLORWAYS: { id: string; label: string; hex: string }[] = [
+  { id: "black", label: "Black", hex: "#1a1a1a" },
+  { id: "charcoal", label: "Charcoal", hex: "#3a3a3c" },
+  { id: "navy", label: "Navy", hex: "#1f2b42" },
+  { id: "olive", label: "Olive", hex: "#4d4b30" },
+  { id: "burgundy", label: "Burgundy", hex: "#5c2128" },
+  { id: "forest", label: "Forest", hex: "#284130" }
+];
+
+function colorways(slug: string, label: string, fabric: string): CatalogVariant[] {
+  return COLORWAYS.map((c) => ({
+    id: `${slug}-${c.id}`,
+    label,
+    fabric,
+    colorLabel: c.label,
+    colorHex: c.hex,
+    mockupTemplateUrl: `/mockups/${slug}-${c.id}.pdf`,
+    isAvailable: true
+  }));
+}
+
 export const seedProducts: CatalogProduct[] = [
   {
     id: "prod-knit-sweater",
@@ -78,6 +101,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Cotton Knit Sweater",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Relaxed crew · 100% cotton knit · ribbed collar, cuffs + hem",
+    greyFront: "/products/knit-sweater/base-front.png",
+    greyBack: "/products/knit-sweater/base-back.png",
     headline: "Midweight 100% cotton crewneck knit.",
     description:
       "A midweight crewneck knit in 100% cotton, with a ribbed collar, cuffs, and hem. A clean, elevated layering piece for premium drops and capsule programs. Decorates best with embroidery, woven patches, and woven labels.",
@@ -89,19 +114,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 52,
     isPublished: true,
     sortOrder: 8,
-    variants: [
-      {
-        id: "knit-black",
-        label: "Crewneck sweater",
-        fabric: "100% cotton knit",
-        colorLabel: "Black",
-        colorHex: "#141414",
-        mockupTemplateUrl: "/mockups/knit-sweater-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/knit-sweater/knit-black-front.png",
-        backImage: "/products/knit-sweater/knit-black-back.png"
-      }
-    ],
+    variants: colorways("knit-sweater", "Crewneck sweater", "100% cotton knit"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -120,6 +133,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Heavyweight Hoodie",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Oversized · runs true to size · check size chart for shoulder/length",
+    greyFront: "/products/heavyweight-hoodie/base-front.png",
+    greyBack: "/products/heavyweight-hoodie/base-back.png",
     headline: "Premium fleece hoodie with a proven oversized fit.",
     description:
       "A bounded MOA hoodie program built around heavyweight fleece, clean construction, and a short menu of decoration options. Designed for brand drops, team capsules, tour merch, and elevated corporate merchandise.",
@@ -131,28 +146,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 56,
     isPublished: true,
     sortOrder: 10,
-    variants: [
-      {
-        id: "hoodie-black",
-        label: "Oversized pullover",
-        fabric: "420gsm cotton/poly fleece",
-        colorLabel: "Washed black",
-        colorHex: "#171717",
-        mockupTemplateUrl: "/mockups/heavyweight-hoodie-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/heavyweight-hoodie/hoodie-black-front.png",
-        backImage: "/products/heavyweight-hoodie/hoodie-black-back.png"
-      },
-      {
-        id: "hoodie-cream",
-        label: "Oversized pullover",
-        fabric: "420gsm cotton/poly fleece",
-        colorLabel: "Bone cream",
-        colorHex: "#e7dfcf",
-        mockupTemplateUrl: "/mockups/heavyweight-hoodie-cream.pdf",
-        isAvailable: true
-      }
-    ],
+    variants: colorways("heavyweight-hoodie", "Oversized pullover", "420gsm cotton/poly fleece"),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "patch", "puff_print", "woven_label"].includes(item.id)
     ),
@@ -171,6 +165,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Heavyweight Tee",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Boxy cut · drop shoulder · pre-shrunk compact jersey",
+    greyFront: "/products/heavyweight-tee/base-front.png",
+    greyBack: "/products/heavyweight-tee/base-back.png",
     headline: "Boxy premium tee for fast, reliable merch programs.",
     description:
       "A heavyweight tee with a clean boxy cut, stable shrinkage, and reliable decoration surfaces. The fastest path to a polished MOA-standard merch drop.",
@@ -182,28 +178,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 20,
-    variants: [
-      {
-        id: "tee-black",
-        label: "Boxy tee",
-        fabric: "260gsm compact cotton jersey",
-        colorLabel: "Black",
-        colorHex: "#101010",
-        mockupTemplateUrl: "/mockups/heavyweight-tee-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/heavyweight-tee/tee-black-front.png",
-        backImage: "/products/heavyweight-tee/tee-black-back.png"
-      },
-      {
-        id: "tee-white",
-        label: "Boxy tee",
-        fabric: "260gsm compact cotton jersey",
-        colorLabel: "Optic white",
-        colorHex: "#f8f6f1",
-        mockupTemplateUrl: "/mockups/heavyweight-tee-white.pdf",
-        isAvailable: true
-      }
-    ],
+    variants: colorways("heavyweight-tee", "Boxy tee", "260gsm compact cotton jersey"),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "puff_print", "woven_label"].includes(item.id)
     ),
@@ -222,6 +197,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Wide Leg Sweatpant",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Wide leg · elastic drawstring waist · 380gsm brushed fleece",
+    greyFront: "/products/wide-leg-sweatpant/base-front.png",
+    greyBack: "/products/wide-leg-sweatpant/base-back.png",
     headline: "Heavyweight wide-leg sweatpant with a relaxed drape.",
     description:
       "A wide-leg heavyweight fleece sweatpant with an elastic drawstring waist and back patch pocket. Clean, drapey, and built to pair with the hoodie program. Designed for brand drops, loungewear capsules, and premium staff kits.",
@@ -233,19 +210,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 50,
     isPublished: true,
     sortOrder: 30,
-    variants: [
-      {
-        id: "sweatpant-black",
-        label: "Wide-leg sweatpant",
-        fabric: "380gsm brushed fleece",
-        colorLabel: "Black",
-        colorHex: "#141414",
-        mockupTemplateUrl: "/mockups/wide-leg-sweatpant-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/wide-leg-sweatpant/sweatpant-black-front.png",
-        backImage: "/products/wide-leg-sweatpant/sweatpant-black-back.png"
-      }
-    ],
+    variants: colorways("wide-leg-sweatpant", "Wide-leg sweatpant", "380gsm brushed fleece"),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -264,6 +229,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Canvas Work Jacket",
     sizes: ["S", "M", "L", "XL", "XXL"],
     fitNotes: "Structured chore · 12oz canvas · room for layering",
+    greyFront: "/products/work-jacket/base-front.png",
+    greyBack: "/products/work-jacket/base-back.png",
     headline: "Structured jacket with premium workwear utility.",
     description:
       "A sturdy canvas jacket with clean paneling, controlled trims, and durable decoration placements. Built for brands that want a hero piece in the catalog.",
@@ -275,29 +242,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 70,
     isPublished: true,
     sortOrder: 1,
-    variants: [
-      {
-        id: "jacket-duck",
-        label: "Chore jacket",
-        fabric: "12oz cotton canvas",
-        colorLabel: "Duck canvas",
-        colorHex: "#b0824b",
-        mockupTemplateUrl: "/mockups/work-jacket-duck.pdf",
-        isAvailable: true,
-        backImage: "/products/work-jacket/jacket-duck-back.png"
-      },
-      {
-        id: "jacket-black",
-        label: "Chore jacket",
-        fabric: "12oz cotton canvas",
-        colorLabel: "Black",
-        colorHex: "#111111",
-        mockupTemplateUrl: "/mockups/work-jacket-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/work-jacket/jacket-black-front.png",
-        backImage: "/products/work-jacket/jacket-black-back.png"
-      }
-    ],
+    variants: colorways("work-jacket", "Chore jacket", "12oz cotton canvas"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -316,6 +261,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Zip Sherpa",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Relaxed fit · heavyweight sherpa fleece · full zip · stand collar",
+    greyFront: "/products/zip-sherpa/base-front.png",
+    greyBack: "/products/zip-sherpa/base-back.png",
     headline: "Plush full-zip sherpa with a clean stand collar.",
     description:
       "A heavyweight sherpa fleece full-zip with a stand collar and zip hand pockets. Premium cozy outerwear for cold-weather drops and elevated layering programs. Decorates best with patches, woven labels, and embroidery.",
@@ -327,19 +274,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 60,
     isPublished: true,
     sortOrder: 3,
-    variants: [
-      {
-        id: "sherpa-black",
-        label: "Full-zip sherpa",
-        fabric: "heavyweight sherpa fleece",
-        colorLabel: "Black",
-        colorHex: "#141414",
-        mockupTemplateUrl: "/mockups/zip-sherpa-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/zip-sherpa/sherpa-black-front.png",
-        backImage: "/products/zip-sherpa/sherpa-black-back.png"
-      }
-    ],
+    variants: colorways("zip-sherpa", "Full-zip sherpa", "heavyweight sherpa fleece"),
     decorations: coreDecorations.filter((item) =>
       ["patch", "woven_label", "embroidery"].includes(item.id)
     ),
@@ -358,6 +293,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Goose Down Puffer",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Boxy cropped · hooded · real goose down fill · snap + zip placket",
+    greyFront: "/products/down-puffer/base-front.png",
+    greyBack: "/products/down-puffer/base-back.png",
     headline: "Hooded goose down puffer with a boxy, cropped cut.",
     description:
       "A premium hooded puffer with real goose down fill, a boxy cropped cut, snap-and-zip placket, and zip hand pockets. The catalog's cold-weather hero piece for outerwear-led drops. Decorates best with embroidery, woven patches, and woven labels.",
@@ -369,19 +306,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 70,
     isPublished: true,
     sortOrder: 2,
-    variants: [
-      {
-        id: "puffer-black",
-        label: "Hooded down puffer",
-        fabric: "recycled nylon shell / goose down fill",
-        colorLabel: "Black",
-        colorHex: "#161616",
-        mockupTemplateUrl: "/mockups/down-puffer-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/down-puffer/puffer-black-front.png",
-        backImage: "/products/down-puffer/puffer-black-back.png"
-      }
-    ],
+    variants: colorways("down-puffer", "Hooded down puffer", "recycled nylon shell / goose down fill"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -400,6 +325,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Nylon Track Jacket",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Relaxed · full zip · stand collar · elastic hem + cuffs",
+    greyFront: "/products/track-jacket/base-front.png",
+    greyBack: "/products/track-jacket/base-back.png",
     headline: "Lightweight nylon track jacket with a full zip and stand collar.",
     description:
       "A lightweight recycled-nylon track jacket with a full zip, stand collar, and elastic hem and cuffs. Clean layering for athleisure drops and warm-up kits. Decorates best with embroidery, woven patches, and woven labels.",
@@ -411,19 +338,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 50,
     isPublished: true,
     sortOrder: 4,
-    variants: [
-      {
-        id: "track-black",
-        label: "Full-zip track jacket",
-        fabric: "recycled nylon shell",
-        colorLabel: "Black",
-        colorHex: "#141414",
-        mockupTemplateUrl: "/mockups/track-jacket-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/track-jacket/track-black-front.png",
-        backImage: "/products/track-jacket/track-black-back.png"
-      }
-    ],
+    variants: colorways("track-jacket", "Full-zip track jacket", "recycled nylon shell"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -442,6 +357,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Nylon Chore Jacket",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
     fitNotes: "Boxy chore · nylon shell · snap placket · chest + hand pockets",
+    greyFront: "/products/nylon-chore/base-front.png",
+    greyBack: "/products/nylon-chore/base-back.png",
     headline: "Lightweight nylon chore jacket with a boxy cut.",
     description:
       "A lightweight nylon chore jacket with a boxy cut, snap placket, spread collar, and chest plus hand pockets. Workwear-inspired layering with a clean shell. Decorates best with embroidery, woven patches, and woven labels.",
@@ -453,19 +370,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 52,
     isPublished: true,
     sortOrder: 5,
-    variants: [
-      {
-        id: "chore-black",
-        label: "Nylon chore jacket",
-        fabric: "nylon shell",
-        colorLabel: "Black",
-        colorHex: "#161616",
-        mockupTemplateUrl: "/mockups/nylon-chore-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/nylon-chore/chore-black-front.png",
-        backImage: "/products/nylon-chore/chore-black-back.png"
-      }
-    ],
+    variants: colorways("nylon-chore-jacket", "Nylon chore jacket", "nylon shell"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -484,6 +389,8 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Standard Tote",
     sizes: ["ONE"],
     fitNotes: "Single size · 38cm × 42cm × 12cm gusset",
+    greyFront: "/products/standard-tote/base-front.png",
+    greyBack: "/products/standard-tote/base-back.png",
     headline: "Premium custom tote with heavyweight canvas.",
     description:
       "A proven tote platform with stable panel proportions, reinforced seams, and a bounded decoration menu. Designed for cultural brands, hotels, cafes, conferences, and retail add-ons.",
@@ -495,28 +402,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 45,
     isPublished: true,
     sortOrder: 50,
-    variants: [
-      {
-        id: "tote-natural",
-        label: "Standard carry tote",
-        fabric: "14oz cotton canvas",
-        colorLabel: "Natural canvas",
-        colorHex: "#d8c8a8",
-        mockupTemplateUrl: "/mockups/standard-tote-natural.pdf",
-        isAvailable: true
-      },
-      {
-        id: "tote-black",
-        label: "Standard carry tote",
-        fabric: "14oz cotton canvas",
-        colorLabel: "Washed black",
-        colorHex: "#171717",
-        mockupTemplateUrl: "/mockups/standard-tote-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/standard-tote/tote-black-front.png",
-        backImage: "/products/standard-tote/tote-black-back.png"
-      }
-    ],
+    variants: colorways("standard-tote", "Standard carry tote", "14oz cotton canvas"),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -535,6 +421,7 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Twill Dad Hat",
     sizes: ["ONE"],
     fitNotes: "6-panel unstructured · cotton twill · adjustable strap · single size",
+    greyFront: "/products/dad-hat/base-front.png",
     headline: "Low-profile cotton twill cap with embroidery-first decoration.",
     description:
       "A reliable cap program with controlled decoration zones and straightforward fulfillment. Good for brands that need polished headwear without a bespoke development cycle.",
@@ -546,27 +433,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 60,
-    variants: [
-      {
-        id: "dadhat-black",
-        label: "6-panel unstructured",
-        fabric: "cotton twill",
-        colorLabel: "Black",
-        colorHex: "#111111",
-        mockupTemplateUrl: "/mockups/dad-hat-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/dad-hat/dadhat-black-front.png"
-      },
-      {
-        id: "dadhat-green",
-        label: "6-panel unstructured",
-        fabric: "cotton twill",
-        colorLabel: "Vintage green",
-        colorHex: "#384b35",
-        mockupTemplateUrl: "/mockups/dad-hat-green.pdf",
-        isAvailable: true
-      }
-    ],
+    variants: colorways("dad-hat", "6-panel unstructured", "cotton twill"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -585,6 +452,7 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Five Panel Cap",
     sizes: ["ONE"],
     fitNotes: "Unstructured · 5-panel · cotton twill · adjustable strap · single size",
+    greyFront: "/products/five-panel/base-front.png",
     headline: "Unstructured cotton-twill five panel with a clean crown.",
     description:
       "An unstructured cotton-twill five-panel cap with a low crown and adjustable strap. A streetwear-leaning headwear option that takes embroidery and front-panel patches cleanly.",
@@ -596,18 +464,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 62,
-    variants: [
-      {
-        id: "fivepanel-black",
-        label: "Unstructured 5-panel",
-        fabric: "cotton twill",
-        colorLabel: "Black",
-        colorHex: "#121212",
-        mockupTemplateUrl: "/mockups/five-panel-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/five-panel/fivepanel-black-front.png"
-      }
-    ],
+    variants: colorways("five-panel", "Unstructured 5-panel", "cotton twill"),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -665,6 +522,7 @@ export const seedProducts: CatalogProduct[] = [
     displayName: "Rib Knit Beanie",
     sizes: ["ONE"],
     fitNotes: "Acrylic rib knit · cuff · single size",
+    greyFront: "/products/rib-knit-beanie/base-front.png",
     headline: "Classic cuff beanie with woven or embroidered branding.",
     description:
       "A simple winter accessory SKU with strong margins and easy repeatability. Designed as a reliable add-on product.",
@@ -676,27 +534,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 38,
     isPublished: true,
     sortOrder: 80,
-    variants: [
-      {
-        id: "beanie-black",
-        label: "Cuff beanie",
-        fabric: "acrylic rib knit",
-        colorLabel: "Black",
-        colorHex: "#121212",
-        mockupTemplateUrl: "/mockups/rib-knit-beanie-black.pdf",
-        isAvailable: true,
-        frontImage: "/products/rib-knit-beanie/beanie-black-front.png"
-      },
-      {
-        id: "beanie-red",
-        label: "Cuff beanie",
-        fabric: "acrylic rib knit",
-        colorLabel: "Washed red",
-        colorHex: "#8d3027",
-        mockupTemplateUrl: "/mockups/rib-knit-beanie-red.pdf",
-        isAvailable: true
-      }
-    ],
+    variants: colorways("rib-knit-beanie", "Cuff beanie", "acrylic rib knit"),
     decorations: coreDecorations.filter((item) => ["patch", "woven_label", "embroidery"].includes(item.id)),
     priceTiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 22 },
