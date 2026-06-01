@@ -38,9 +38,33 @@ export default function CartPage() {
               const sizes = Object.entries(item.sizeQty);
               return (
                 <div className="cart-line" key={item.lineId}>
-                  <div className={`cart-line-visual${item.image ? " cart-line-visual--photo" : ""}`}>
-                    {item.image ? <img src={item.image} alt={item.displayName} loading="lazy" /> : <span className="cart-line-ph">{item.skuCode}</span>}
-                  </div>
+                  <Link href={`/p/${item.slug}`} className="cart-thumb" aria-label={`Reconfigure ${item.displayName}`}>
+                    {item.image ? (
+                      <>
+                        <img className="cart-thumb-base" src={item.image} alt="" loading="lazy" />
+                        {item.colorHex ? (
+                          <span
+                            className="cart-thumb-tint"
+                            style={{
+                              backgroundColor: item.colorHex,
+                              WebkitMaskImage: `url("${item.image}")`,
+                              maskImage: `url("${item.image}")`
+                            }}
+                          />
+                        ) : null}
+                      </>
+                    ) : (
+                      <span className="cart-line-ph">{item.skuCode}</span>
+                    )}
+                    {item.artworkFileUrl ? (
+                      <img
+                        className="cart-thumb-art"
+                        src={item.artworkFileUrl}
+                        alt=""
+                        loading="lazy"
+                      />
+                    ) : null}
+                  </Link>
                   <div className="cart-line-body">
                     <div className="cart-line-top">
                       <div>

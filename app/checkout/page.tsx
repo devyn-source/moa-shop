@@ -43,6 +43,7 @@ export default function CheckoutPage() {
         colorLabel: item.colorLabel,
         decorationLabel: item.decorationLabel,
         artworkFileName: item.artworkFileName,
+        artworkFileUrl: item.artworkFileUrl,
         artworkNotes: sizeSummary
           ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}`
           : item.artworkNotes

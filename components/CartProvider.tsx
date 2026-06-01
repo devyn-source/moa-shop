@@ -10,6 +10,7 @@ export type CartItem = {
   skuCode: string;
   variantId: string;
   colorLabel: string;
+  colorHex?: string;
   image?: string;
   decorationIds: string[];
   decorationLabel: string;
@@ -20,6 +21,7 @@ export type CartItem = {
   subtotalUsd: number;
   totalUsd: number;
   artworkFileName: string;
+  artworkFileUrl?: string;
   artworkNotes: string;
 };
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { markOrderPaid } from "@/lib/store";
+import { getOrderById, markOrderPaid } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
+import { sendOrderConfirmation } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,15 @@ export async function POST(request: Request) {
     const ids = (session.metadata?.orderIds ?? "").split(",").filter(Boolean);
     for (const id of ids) {
       await markOrderPaid(id, session.id);
+      // Send a confirmation email per order. No-ops cleanly if RESEND_API_KEY
+      // isn't set, so missing email config never blocks payment processing.
+      const order = await getOrderById(id);
+      if (order) {
+        const result = await sendOrderConfirmation(order, request);
+        if (!result.sent && result.reason && result.reason !== "RESEND_API_KEY not configured") {
+          console.warn(`[stripe-webhook] email send failed for ${id}: ${result.reason}`);
+        }
+      }
     }
   }
 

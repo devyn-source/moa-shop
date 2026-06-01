@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { StatusTimeline } from "@/components/StatusTimeline";
+import { OrderTracker } from "@/components/OrderTracker";
 import { currency } from "@/lib/pricing";
 import { getOrderById, getProductById, statusLabel } from "@/lib/store";
 
@@ -16,20 +16,13 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
   return (
     <main className="page">
-      <p className="eyebrow">Order received</p>
-      <h1 className="page-title" style={{ fontSize: "clamp(44px, 7vw, 92px)" }}>
-        {order.orderNumber}
-      </h1>
-      <p className="lede">
-        Your order is paid and now sits in MOA artwork QA. The current status is{" "}
-        <strong>{statusLabel(order.status)}</strong>.
-      </p>
+      <p className="eyebrow">Order {order.orderNumber}</p>
 
-      <section className="config-shell" style={{ marginTop: 42 }}>
-        <div className="panel panel-pad">
-          <h2>Production Timeline</h2>
-          <StatusTimeline order={order} />
-        </div>
+      <section className="tracker-hero">
+        <OrderTracker order={order} />
+      </section>
+
+      <section style={{ marginTop: 28, maxWidth: 480 }}>
         <aside className="panel panel-pad">
           <p className="eyebrow">Order Summary</p>
           <div className="order-line">
@@ -42,7 +35,15 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="order-line">
             <span>Artwork</span>
-            <strong>{order.artworkFileName}</strong>
+            <strong>
+              {order.artworkFileUrl ? (
+                <a href={order.artworkFileUrl} target="_blank" rel="noreferrer" className="link-button">
+                  {order.artworkFileName} ↗
+                </a>
+              ) : (
+                order.artworkFileName
+              )}
+            </strong>
           </div>
           <div className="order-line">
             <span>Status</span>
