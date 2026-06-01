@@ -43,7 +43,15 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           </div>
           <div className="order-line">
             <span>Artwork</span>
-            <strong>{order.artworkFileName}</strong>
+            <strong>
+              {order.artworkFileUrl ? (
+                <a href={order.artworkFileUrl} target="_blank" rel="noreferrer" className="link-button">
+                  {order.artworkFileName} ↗
+                </a>
+              ) : (
+                order.artworkFileName
+              )}
+            </strong>
           </div>
           <div className="order-line">
             <span>Total paid</span>

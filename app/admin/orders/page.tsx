@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { OrderTracker } from "@/components/OrderTracker";
 import { currency } from "@/lib/pricing";
-import { getOrders, getProductById, statusLabel } from "@/lib/store";
+import { getOrders, getProductById } from "@/lib/store";
 
 export default async function AdminOrdersPage() {
   const orders = await getOrders();
@@ -15,52 +16,35 @@ export default async function AdminOrdersPage() {
     <main className="page">
       <p className="eyebrow">Orders</p>
       <h1 className="page-title">Order Queue</h1>
-      <p className="lede">Artwork QA, revision requests, production scheduling, and shipment confirmation.</p>
+      <p className="lede">Live status for every active production run — artwork QA, production, and shipping.</p>
 
-      <section className="table-card" style={{ marginTop: 42 }}>
-        {rows.length ? (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Product</th>
-                <th>Status</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ order, product }) => (
-                <tr key={order.id}>
-                  <td>
-                    <Link href={`/admin/orders/${order.id}`}>
-                      <strong>{order.orderNumber}</strong>
-                    </Link>
-                    <br />
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td>
-                    {order.companyName}
-                    <br />
-                    <span style={{ color: "var(--muted)" }}>{order.contactEmail}</span>
-                  </td>
-                  <td>
-                    {product?.displayName ?? "Catalog product"}
-                    <br />
-                    <span style={{ color: "var(--muted)" }}>{order.quantity.toLocaleString()} units</span>
-                  </td>
-                  <td>
-                    <span className="status-pill">{statusLabel(order.status)}</span>
-                  </td>
-                  <td>{currency(order.totalUsd)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
+      {rows.length ? (
+        <section className="tracker-board">
+          {rows.map(({ order, product }) => (
+            <Link key={order.id} className="tracker-card" href={`/admin/orders/${order.id}`}>
+              <header className="tracker-card-meta">
+                <div>
+                  <p className="eyebrow">{new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p className="tracker-card-meta__order">{order.orderNumber}</p>
+                  <p className="tracker-card-meta__sub">{order.companyName} · {order.contactEmail}</p>
+                </div>
+                <div className="tracker-card-meta__right">
+                  <p className="eyebrow">{product?.category ?? "Product"}</p>
+                  <p className="tracker-card-meta__product">{product?.displayName ?? "Catalog product"}</p>
+                  <p className="tracker-card-meta__total">{order.quantity.toLocaleString()} units · {currency(order.totalUsd)}</p>
+                </div>
+              </header>
+              <div className="tracker-hero">
+                <OrderTracker order={order} compact />
+              </div>
+            </Link>
+          ))}
+        </section>
+      ) : (
+        <section className="table-card" style={{ marginTop: 28 }}>
           <div className="empty-state">No orders yet. Create a test order from the public configurator.</div>
-        )}
-      </section>
+        </section>
+      )}
     </main>
   );
 }
