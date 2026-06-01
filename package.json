@@ -9,10 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.4.2",
     "@supabase/supabase-js": "^2.106.2",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "resend": "^6.12.4",
     "stripe": "^22.2.0"
   },
   "devDependencies": {

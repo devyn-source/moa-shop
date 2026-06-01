@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
 import { CartButton } from "@/components/CartButton";
 import { NavLink } from "@/components/NavLink";
+import { ProximityFX } from "@/components/ProximityFX";
+import { HeaderScroll } from "@/components/HeaderScroll";
+
+const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+function MaybeClerk({ children }: { children: React.ReactNode }) {
+  if (!clerkConfigured) return <>{children}</>;
+  return <ClerkProvider>{children}</ClerkProvider>;
+}
 
 export const metadata: Metadata = {
   title: "MOA · Made-to-Order Merch Catalog",
@@ -14,8 +24,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <MaybeClerk>
+        <a href="#main" className="skip-link">Skip to content</a>
+        <HeaderScroll />
+        <ProximityFX />
         <CartProvider>
-        <header className="site-header">
+        <header className="site-header site-header--sticky">
           <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
             <NavLink href="/">Catalog</NavLink>
             <NavLink href="/catalog-pdf">PDF</NavLink>
@@ -26,20 +40,58 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="site-actions">
             <NavLink href="/admin" muted>Admin</NavLink>
             <NavLink href="/admin/orders" muted>Orders</NavLink>
+            <NavLink href="/admin/zones" muted>Zones</NavLink>
             <CartButton />
           </div>
         </header>
-        {children}
-        <footer className="site-footer">
-          <div>
-            <span className="brand-moa" style={{ fontSize: "1.2rem" }}>MOA</span>
-            <span className="brand-text">Catalog</span>
+        <div id="main">{children}</div>
+        <footer className="ft">
+          <div className="ft-top">
+            <div className="ft-brand">
+              <img className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" />
+              <p className="ft-statement">
+                The MOA Catalog is bounded by design — fixed MOQs, fixed price ladders, fixed lead times.
+                Need something the catalog can&apos;t do?
+              </p>
+              <a className="ft-cta" href="https://magnumopus.agency/workwithus" target="_blank" rel="noreferrer">
+                <span className="ft-cta-headline">Start a bespoke program</span>
+                <span className="ft-cta-action">
+                  Inquire with the studio
+                  <span className="ft-cta-arrow" aria-hidden>→</span>
+                </span>
+              </a>
+            </div>
+            <nav className="ft-nav" aria-label="Footer">
+              <div className="ft-col">
+                <p className="ft-h">Catalog</p>
+                <Link href="/">All SKUs</Link>
+                <Link href="/catalog-pdf">PDF catalog</Link>
+                <Link href="/cart">Cart</Link>
+              </div>
+              <div className="ft-col">
+                <p className="ft-h">Programs</p>
+                <span>Brand drops &amp; capsules</span>
+                <span>Event &amp; tour merch</span>
+                <span>Creator collaborations</span>
+                <span>Staff &amp; uniform kits</span>
+              </div>
+              <div className="ft-col">
+                <p className="ft-h">Studio</p>
+                <a href="https://magnumopus.agency" target="_blank" rel="noreferrer">magnumopus.agency</a>
+                <a href="https://instagram.com/magnumopus" target="_blank" rel="noreferrer">Instagram @magnumopus</a>
+              </div>
+            </nav>
           </div>
-          <p>
-            Built by Magnum Opus Agency. Fixed-MOQ, fixed-price merch programs · managed end to end · artwork QA included.
-          </p>
+
+          <div className="ft-rule" aria-hidden />
+
+          <div className="ft-base">
+            <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus Agency · LLC</span>
+            <span className="ft-base-right">Made-to-order · MOA-managed quality control · DDP shipping default</span>
+          </div>
         </footer>
         </CartProvider>
+        </MaybeClerk>
       </body>
     </html>
   );
