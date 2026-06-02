@@ -17,6 +17,7 @@ type CartLine = {
   artworkFileUrl?: string;
   artworkNotes?: string;
   artworkPlacement?: OrderInput["artworkPlacement"];
+  sizeBreakdown?: Record<string, number>;
 };
 
 type Body = {
@@ -54,7 +55,8 @@ export async function POST(request: Request) {
           artworkFileName: item.artworkFileName || "Artwork file pending",
           artworkFileUrl: item.artworkFileUrl,
           artworkNotes: item.artworkNotes || "",
-          artworkPlacement: item.artworkPlacement
+          artworkPlacement: item.artworkPlacement,
+          sizeBreakdown: item.sizeBreakdown
         },
         { paid: false }
       );

@@ -389,3 +389,55 @@ export async function sendProofApproval(
   const subject = `Approve your proof · Order ${order.orderNumber} · MOA`;
   return deliver(order.contactEmail, subject, renderProofHtml(order, product, origin, proofUrl));
 }
+
+function renderShippingHtml(order: ShopOrder, origin: string, tracking: { carrier: string; number: string }): string {
+  const trackerUrl = `${origin}/orders`;
+  const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
+  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Your order shipped · ${esc(order.orderNumber)}</title></head>
+  <body style="margin:0;padding:0;background:${C.cream};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+      <tr><td height="4" bgcolor="${C.terracotta}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+      <tr><td style="padding:26px 40px 8px;"><table role="presentation" width="100%"><tr>
+        <td align="left"><img src="${origin}/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" height="32" style="display:block;border:0;height:32px;width:auto;" /></td>
+        <td align="right">${label("Catalog")}</td>
+      </tr></table></td></tr>
+      <tr><td style="padding:24px 40px 8px;">
+        ${label("Shipped", C.terracotta)}
+        <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:38px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">On its way</h1>
+        <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
+          ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is on the way.
+        </p>
+      </td></tr>
+      <tr><td style="padding:22px 40px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.white}" style="background:${C.white};border:1px solid ${C.creamDark};border-radius:14px;">
+          <tr><td style="padding:20px 24px;">
+            <table role="presentation" width="100%"><tr><td style="padding:6px 0;font-family:${BODY};font-size:13px;color:${C.neutral};">Carrier</td><td style="padding:6px 0;text-align:right;font-family:${BODY};font-size:13px;color:${C.charcoal};">${esc(tracking.carrier)}</td></tr>
+            <tr><td style="padding:6px 0;border-top:1px solid ${C.creamDark};font-family:${BODY};font-size:13px;color:${C.neutral};">Tracking</td><td style="padding:6px 0;border-top:1px solid ${C.creamDark};text-align:right;font-family:${DISPLAY};font-weight:700;font-size:14px;color:${C.charcoal};">${esc(tracking.number)}</td></tr></table>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td align="center" style="padding:26px 40px 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${C.charcoal}" style="border-radius:10px;">
+          <a href="${esc(trackerUrl)}" style="display:inline-block;padding:15px 30px;font-family:${DISPLAY};font-weight:800;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.cream};text-decoration:none;border-radius:10px;">Track your order &rarr;</a>
+        </td></tr></table>
+      </td></tr>
+      <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
+        <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
+        <p style="margin:10px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">Magnum Opus Agency · Order ${esc(order.orderNumber)} · Questions? Reply to this email.</p>
+      </td></tr></table></td></tr>
+      <tr><td height="4" bgcolor="${C.creamDark}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+    </table>
+  </td></tr></table></body></html>`;
+}
+
+export async function sendShippingNotification(
+  order: ShopOrder,
+  tracking: { carrier: string; number: string },
+  req?: { headers?: { get(name: string): string | null } } | null
+): Promise<{ sent: boolean; reason?: string }> {
+  if (!order.contactEmail) return { sent: false, reason: "Order has no contact email" };
+  const origin = originFrom(req);
+  const subject = `Your order ${order.orderNumber} shipped · MOA`;
+  return deliver(order.contactEmail, subject, renderShippingHtml(order, origin, tracking));
+}

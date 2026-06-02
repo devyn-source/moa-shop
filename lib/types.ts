@@ -135,6 +135,7 @@ export type ShopOrder = {
   artworkFileUrl?: string;
   artworkNotes: string;
   artworkPlacement?: ArtworkPlacement;
+  sizeBreakdown?: Record<string, number>; // size run (e.g. { S: 10, M: 20 })
   proofUrl?: string; // auto-generated proof image (garment + placed art)
   proofApprovedAt?: string; // customer sign-off — the QA. Gates the vendor send.
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
@@ -164,6 +165,9 @@ export type ShopOrder = {
     lastSyncedAt?: string;
     dryRunPayload?: unknown; // dry_run mode: what we WOULD have pushed
     lastError?: string;
+    trackingCarrier?: string; // mirrored when shipped
+    trackingNumber?: string;
+    shippedNotifiedAt?: string; // when the customer shipping email went out (idempotency)
   };
   statusLog: Array<{
     statusFrom: OrderStatus | null;
@@ -188,6 +192,7 @@ export type OrderInput = {
   artworkFileUrl?: string;
   artworkNotes: string;
   artworkPlacement?: ArtworkPlacement;
+  sizeBreakdown?: Record<string, number>;
   shipToName: string;
   shipToAddress: ShopOrder["shipToAddress"];
 };

@@ -45,6 +45,7 @@ export default function CheckoutPage() {
         artworkFileName: item.artworkFileName,
         artworkFileUrl: item.artworkFileUrl,
         artworkPlacement: item.artworkPlacement,
+        sizeBreakdown: item.sizeQty,
         artworkNotes: sizeSummary
           ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}`
           : item.artworkNotes

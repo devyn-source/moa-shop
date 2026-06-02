@@ -5,7 +5,8 @@
 // customer tracker stays live.
 // Design: docs/catalog-fulfillment-architecture.md
 import type { ShopOrder } from "./types";
-import { getProductById, setOrderFulfillment } from "./store";
+import { getProductById, setOrderFulfillment, getOrderById, updateOrderStatus } from "./store";
+import { sendShippingNotification } from "./email";
 
 export type FulfillmentMode = "off" | "dry_run" | "draft_only" | "manual_release" | "auto";
 
@@ -61,6 +62,7 @@ async function buildIntakePayload(order: ShopOrder) {
         fabric: variant?.fabric ?? null,
         category: product?.category ?? null,
         sizes: product?.sizes ?? null,
+        sizeBreakdown: order.sizeBreakdown ?? null,
       },
     ],
   };
@@ -112,7 +114,8 @@ export async function pushOrderToMoaOS(order: ShopOrder): Promise<{ pushed: bool
   }
 }
 
-// Pull current MoaOS status for an already-pushed order and mirror it back.
+// Pull current MoaOS status for an already-pushed order, mirror it back, and —
+// when it ships — email the customer their tracking (once). Drives the back half.
 export async function syncOrderFromMoaOS(order: ShopOrder): Promise<void> {
   const { url, secret } = moaosConfig();
   if (!url || !secret) return;
@@ -123,12 +126,30 @@ export async function syncOrderFromMoaOS(order: ShopOrder): Promise<void> {
     if (!res.ok) return;
     const data = await res.json();
     if (!data?.found) return;
+    const now = new Date().toISOString();
     await setOrderFulfillment(order.id, {
       catalogOrderId: data.catalogOrderId,
       catalogStatus: data.status,
       poNumber: data.pos?.[0]?.po_number,
-      lastSyncedAt: new Date().toISOString(),
+      trackingCarrier: data.trackingCarrier ?? undefined,
+      trackingNumber: data.trackingNumber ?? undefined,
+      lastSyncedAt: now,
     });
+
+    const fresh = (await getOrderById(order.id)) ?? order;
+    if (data.status === "shipped" && !fresh.fulfillment?.shippedNotifiedAt) {
+      // Notify the customer once, with tracking.
+      if (data.trackingCarrier && data.trackingNumber) {
+        await sendShippingNotification(fresh, { carrier: data.trackingCarrier, number: data.trackingNumber });
+      }
+      await updateOrderStatus(order.id, "shipped", "Shipped — tracking sent to customer.", {
+        trackingCarrier: data.trackingCarrier,
+        trackingNumber: data.trackingNumber,
+      });
+      await setOrderFulfillment(order.id, { shippedNotifiedAt: new Date().toISOString() });
+    } else if (data.status === "delivered" && fresh.status !== "delivered") {
+      await updateOrderStatus(order.id, "delivered", "Delivered.");
+    }
   } catch {
     /* transient — next cron tick retries */
   }
