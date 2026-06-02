@@ -222,7 +222,19 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
             `Box: x=${placement.box.x.toFixed(3)} y=${placement.box.y.toFixed(3)} w=${placement.box.w.toFixed(3)} h=${placement.box.h.toFixed(3)}${placement.box.r ? ` r=${Math.round(placement.box.r)}°` : ""}`,
             `Art-in-box: ox=${artTransform.ox.toFixed(3)} oy=${artTransform.oy.toFixed(3)} sx=${artTransform.sx.toFixed(3)} sy=${artTransform.sy.toFixed(3)}${artTransform.r ? ` r=${Math.round(artTransform.r)}°` : ""}`
           ].join("\n")
-        : ""
+        : "",
+      // Structured placement — the real spec that threads to the tech pack/proof.
+      artworkPlacement: placement
+        ? {
+            view,
+            zoneId: placement.id,
+            zoneLabel: placement.label,
+            box: placement.box,
+            art: artTransform,
+            method: decorationLabel,
+            maxColors: decoSelected[0]?.maxColors
+          }
+        : undefined
     });
     setSubmitting(true);
     router.push("/cart");

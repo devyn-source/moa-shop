@@ -23,6 +23,7 @@ export type CartItem = {
   artworkFileName: string;
   artworkFileUrl?: string;
   artworkNotes: string;
+  artworkPlacement?: import("@/lib/types").ArtworkPlacement;
 };
 
 type CartContextValue = {

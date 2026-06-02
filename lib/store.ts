@@ -188,6 +188,7 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     artworkFileName: input.artworkFileName,
     artworkFileUrl: input.artworkFileUrl,
     artworkNotes: input.artworkNotes,
+    artworkPlacement: input.artworkPlacement,
     paymentStatus: paid ? "paid" : "unpaid",
     status: paid ? "artwork_qa" : "awaiting_payment",
     shipToName: input.shipToName,

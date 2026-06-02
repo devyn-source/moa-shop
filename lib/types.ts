@@ -98,6 +98,22 @@ export type CatalogProduct = {
   priceTiers: PriceTier[];
 };
 
+// The customer's actual artwork placement — structured (not a string) so it can
+// thread to the tech pack, drive a proof, and be reconstructed. Coordinates are
+// fractional 0..1 on the 4:5 canvas; inches are populated once a zone publishes
+// real-world dimensions.
+export type ArtworkPlacement = {
+  view: "front" | "back";
+  zoneId: string;
+  zoneLabel: string;
+  box: { x: number; y: number; w: number; h: number; r?: number };
+  art: { ox: number; oy: number; sx: number; sy: number; r?: number };
+  method?: string; // decoration method label(s)
+  maxColors?: number; // from the chosen decoration
+  widthIn?: number; // placed art size in inches (when the zone has inch dims)
+  heightIn?: number;
+};
+
 export type ShopOrder = {
   id: string;
   orderNumber: string;
@@ -117,6 +133,7 @@ export type ShopOrder = {
   artworkFileName: string;
   artworkFileUrl?: string;
   artworkNotes: string;
+  artworkPlacement?: ArtworkPlacement;
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
   stripeSessionId?: string;
@@ -167,6 +184,7 @@ export type OrderInput = {
   artworkFileName: string;
   artworkFileUrl?: string;
   artworkNotes: string;
+  artworkPlacement?: ArtworkPlacement;
   shipToName: string;
   shipToAddress: ShopOrder["shipToAddress"];
 };

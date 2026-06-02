@@ -45,8 +45,12 @@ async function buildIntakePayload(order: ShopOrder) {
         skuCode: product?.skuCode ?? null,
         productName: product?.displayName ?? "Catalog product",
         variantLabel: variant?.colorLabel ?? null,
-        decoration: decos.map((d) => d.label).join(" + ") || null,
-        placement: Array.from(new Set(decos.flatMap((d) => d.placementZones))).join(", ") || null,
+        decoration: order.artworkPlacement?.method || decos.map((d) => d.label).join(" + ") || null,
+        // The customer's ACTUAL chosen placement (falls back to the decoration's
+        // default zones only if no placement was captured).
+        placement: order.artworkPlacement?.zoneLabel || Array.from(new Set(decos.flatMap((d) => d.placementZones))).join(", ") || null,
+        placementSpec: order.artworkPlacement ?? null,
+        maxColors: order.artworkPlacement?.maxColors ?? null,
         quantity: order.quantity,
         clientUnitCost: order.perUnitUsd + order.decorationAdderUsd,
         // The standardized catalog cost — lets MoaOS build the draft PO with no quoting.
