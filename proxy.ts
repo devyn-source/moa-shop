@@ -71,11 +71,27 @@ async function refreshSession(request: NextRequest): Promise<NextResponse> {
   return response;
 }
 
+// Background requests (Next.js route prefetch, RSC) must never receive a
+// WWW-Authenticate header, or the browser pops its native Basic Auth dialog on
+// pages that merely link to /admin. For those we 401 silently.
+function isBackgroundRequest(req: NextRequest): boolean {
+  return (
+    (req.headers.get("sec-purpose") || "").includes("prefetch") ||
+    req.headers.get("next-router-prefetch") === "1" ||
+    req.headers.get("purpose") === "prefetch" ||
+    req.headers.get("next-router-state-tree") !== null
+  );
+}
+
 export default async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   if (isAdminRoute(pathname)) {
-    return adminGate(request) ?? NextResponse.next();
+    const denied = adminGate(request);
+    if (denied && isBackgroundRequest(request)) {
+      return new NextResponse(null, { status: 401 }); // no WWW-Authenticate → no popup
+    }
+    return denied ?? NextResponse.next();
   }
 
   // Only pay the refresh round-trip when a Supabase auth cookie is present.

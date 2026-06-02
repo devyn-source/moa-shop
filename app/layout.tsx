@@ -39,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <img className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" />
           </Link>
           <div className="site-actions">
-            <NavLink href="/admin" muted>Admin</NavLink>
             <AccountNav />
             <CartButton />
           </div>
