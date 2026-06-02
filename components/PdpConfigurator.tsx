@@ -115,6 +115,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadWarning, setUploadWarning] = useState<string | null>(null);
 
   // --- Configurator-stage motion: cursor parallax + ambient idle breathe ---
   const stageRef = useRef<HTMLDivElement>(null);
@@ -161,6 +162,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
     setUploadError(null);
+    setUploadWarning(null);
     // Show a local preview immediately while the upload runs.
     const localPreview = URL.createObjectURL(file);
     setArtworkUrl(localPreview);
@@ -173,7 +175,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
-      const data = (await res.json()) as { url?: string; error?: string };
+      const data = (await res.json()) as { url?: string; error?: string; warning?: string };
       if (!res.ok || !data.url) {
         throw new Error(data.error || "Upload failed");
       }
@@ -181,6 +183,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
       // navigation into the cart + ends up on the order.
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(data.url);
+      setUploadWarning(data.warning ?? null);
     } catch (err) {
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(null);
@@ -404,8 +407,10 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
                           <span className="pdpx-drop-hint">
                             {uploadError
                               ? uploadError
+                              : uploadWarning && artworkUrl && !uploading
+                              ? uploadWarning
                               : artworkUrl && !uploading
-                              ? "Uploaded · stored on MOA cloud"
+                              ? "Uploaded · validated for print ✓"
                               : "PNG, JPG, SVG, WEBP, PDF — vector preferred"}
                           </span>
                         </button>
