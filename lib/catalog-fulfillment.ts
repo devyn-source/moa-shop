@@ -25,9 +25,11 @@ function moaosConfig() {
 
 // Map a single-product shop order into the MoaOS intake payload.
 async function buildIntakePayload(order: ShopOrder) {
+  const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
   const product = await getProductById(order.productId);
   const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
   const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
+  const shot = variant?.frontImage || product?.greyFront || null;
   return {
     shopOrderId: order.id,
     orderNumber: order.orderNumber,
@@ -49,6 +51,12 @@ async function buildIntakePayload(order: ShopOrder) {
         clientUnitCost: order.perUnitUsd + order.decorationAdderUsd,
         // The standardized catalog cost — lets MoaOS build the draft PO with no quoting.
         vendorUnitCost: product?.vendorUnitCostUsd ?? null,
+        // Rich display spec for the vendor PO email (stored in tech_pack_data).
+        imageUrl: shot ? `${origin}${shot}` : null,
+        colorHex: variant?.colorHex ?? null,
+        fabric: variant?.fabric ?? null,
+        category: product?.category ?? null,
+        sizes: product?.sizes ?? null,
       },
     ],
   };
