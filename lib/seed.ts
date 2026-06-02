@@ -94,6 +94,54 @@ function colorways(slug: string, label: string, fabric: string): CatalogVariant[
 
 export const seedProducts: CatalogProduct[] = [
   {
+    // HIDDEN internal $1 test SKU — validates the live order pipeline end-to-end
+    // cheaply. isPublished:false keeps it out of the catalog; reach it directly
+    // at /p/test-sku. MOQ 1 × $1, zero decoration adder → ~$1 real Stripe charge.
+    id: "prod-test-sku",
+    slug: "test-sku",
+    skuCode: "TEST001",
+    category: "tee",
+    displayName: "Internal Test SKU",
+    sizes: ["OS"],
+    fitNotes: "Internal pipeline test — not for sale.",
+    greyFront: "/products/heavyweight-tee/base-front.png",
+    headline: "Internal $1 end-to-end test product.",
+    description: "Hidden SKU used to validate the live catalog order pipeline. Not for sale.",
+    bestFor: "Internal testing",
+    visual: "tee",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: 0.5,
+    moq: 1,
+    leadTimeDays: 1,
+    isPublished: false,
+    sortOrder: 999,
+    variants: [
+      {
+        id: "test-black",
+        label: "Black",
+        fabric: "Test fabric",
+        colorLabel: "Black",
+        colorHex: "#1a1a1a",
+        mockupTemplateUrl: "",
+        isAvailable: true,
+        frontImage: "/products/heavyweight-tee/base-front.png",
+        recolor: false
+      }
+    ],
+    decorations: [
+      {
+        id: "screen_print",
+        label: "Screen print (test)",
+        description: "Test decoration — no upcharge.",
+        perUnitAdderUsd: 0,
+        placementZones: ["left-chest", "center-chest", "full-front"],
+        maxColors: 4,
+        isAvailable: true
+      }
+    ],
+    priceTiers: [{ minQty: 1, maxQty: null, perUnitUsd: 1 }]
+  },
+  {
     id: "prod-knit-sweater",
     slug: "knit-sweater",
     skuCode: "KNT101",
