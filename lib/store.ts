@@ -108,6 +108,24 @@ export async function getOrders(): Promise<ShopOrder[]> {
   return (data ?? []).map((row) => row.data as ShopOrder);
 }
 
+// Orders a signed-in customer owns: matched on the email captured at checkout
+// (stored inside the jsonb `data` blob). Case-insensitive on the local part is
+// overkill here — emails are normalised lowercase by Supabase Auth + checkout.
+export async function getOrdersByEmail(email: string): Promise<ShopOrder[]> {
+  if (!email) return [];
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("data")
+    .eq("data->>contactEmail", email)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load orders for ${email}: ${error.message}`);
+  }
+  return (data ?? []).map((row) => row.data as ShopOrder);
+}
+
 export async function getOrderById(id: string): Promise<ShopOrder | null> {
   const supabase = getSupabase();
   const { data, error } = await supabase

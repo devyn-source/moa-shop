@@ -83,7 +83,7 @@ function step(n: number, title: string, body: string): string {
 }
 
 export function renderHtml(order: ShopOrder, product: CatalogProduct | null, origin: string): string {
-  const trackerUrl = `${origin}/orders/${order.id}`;
+  const trackerUrl = `${origin}/orders`;
   const productName = product?.displayName ?? "Catalog product";
   const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
   const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
@@ -235,7 +235,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
 }
 
 function renderText(order: ShopOrder, product: CatalogProduct | null, origin: string): string {
-  const trackerUrl = `${origin}/orders/${order.id}`;
+  const trackerUrl = `${origin}/orders`;
   const productName = product?.displayName ?? "Catalog product";
   const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
   const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));

@@ -7,6 +7,7 @@ import { CartButton } from "@/components/CartButton";
 import { NavLink } from "@/components/NavLink";
 import { ProximityFX } from "@/components/ProximityFX";
 import { HeaderScroll } from "@/components/HeaderScroll";
+import { AccountNav } from "@/components/AccountNav";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -39,8 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </Link>
           <div className="site-actions">
             <NavLink href="/admin" muted>Admin</NavLink>
-            <NavLink href="/admin/orders" muted>Orders</NavLink>
-            <NavLink href="/admin/zones" muted>Zones</NavLink>
+            <AccountNav />
             <CartButton />
           </div>
         </header>
