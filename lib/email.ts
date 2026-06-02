@@ -1,13 +1,33 @@
-// Order-confirmation email via Resend. No-ops gracefully when RESEND_API_KEY
-// is missing — orders never fail because email isn't configured yet. Sender
-// defaults to the Resend sandbox; flip RESEND_FROM_EMAIL to your verified
-// sender (e.g. orders@magnumopus.agency) once the domain is wired in Resend.
+// Order-confirmation email. Two send paths:
+//   1. Resend (if RESEND_API_KEY is set) — sends HTML + plain-text.
+//   2. N8N Gmail relay (fallback) — POSTs the rendered HTML to
+//      N8N_ORDER_EMAIL_WEBHOOK_URL (workflow "Shop Order Confirmation (Gmail)").
+// No-ops cleanly if neither is configured, so orders never fail on email.
+//
+// The HTML is hand-built table layout with fully-inlined styles: bulletproof
+// across Gmail / Apple Mail / Outlook, and designed to still read as MOA even
+// with images disabled (wordmark is text, colorway swatch is a bgcolor cell).
 import { Resend } from "resend";
-import type { ShopOrder } from "./types";
+import type { ShopOrder, CatalogProduct } from "./types";
 import { currency } from "./pricing";
 import { getProductById, statusLabel } from "./store";
 
 const FROM_DEFAULT = "MOA Catalog <onboarding@resend.dev>";
+
+// --- Brand tokens (mirrors app/globals.css / CLAUDE.md) --------------------
+const C = {
+  cream: "#EEEAE3",
+  creamDark: "#E2DED6",
+  charcoal: "#1E1E1E",
+  terracotta: "#B04731",
+  terracottaLight: "#C45A42",
+  neutral: "#8A8680",
+  success: "#3D7A4A",
+  white: "#FFFFFF"
+};
+// Heavy display stack approximates Archivo Expanded where web fonts can't load.
+const DISPLAY = `'Archivo Expanded','Archivo','Arial Black','Helvetica Neue',Arial,sans-serif`;
+const BODY = `-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif`;
 
 let client: Resend | null = null;
 function getResend(): Resend | null {
@@ -23,90 +43,227 @@ function originFrom(req?: { headers?: { get(name: string): string | null } } | n
     fromReq ??
     process.env.NEXT_PUBLIC_SITE_ORIGIN ??
     process.env.SITE_ORIGIN ??
-    "https://moa-shop-amber.vercel.app"
+    "https://shop.magnumopus.agency"
   );
 }
 
-function renderHtml(order: ShopOrder, productName: string, origin: string): string {
+// Escape user-controlled strings so they can't break layout or inject markup.
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Tiny uppercase eyebrow label.
+function label(text: string, color = C.neutral): string {
+  return `<span style="font-family:${BODY};font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:${color};">${esc(text)}</span>`;
+}
+
+function row(k: string, v: string, opts: { strong?: boolean; top?: boolean } = {}): string {
+  const topBorder = opts.top ? `border-top:1px solid ${C.creamDark};` : "";
+  const labelStyle = `padding:7px 0;${topBorder}font-family:${BODY};font-size:13px;color:${C.neutral};vertical-align:top;`;
+  const valWeight = opts.strong ? `font-family:${DISPLAY};font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:${C.charcoal};` : `font-family:${BODY};color:${C.charcoal};`;
+  const valStyle = `padding:7px 0;${topBorder}font-size:13px;text-align:right;${valWeight}`;
+  return `<tr><td style="${labelStyle}">${esc(k)}</td><td style="${valStyle}">${v}</td></tr>`;
+}
+
+// Numbered timeline step as a 2-cell table row.
+function step(n: number, title: string, body: string): string {
+  return `<tr>
+    <td width="34" valign="top" style="padding:0 14px 18px 0;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="28" height="28" align="center" valign="middle" bgcolor="${C.terracotta}" style="width:28px;height:28px;border-radius:14px;font-family:${DISPLAY};font-weight:800;font-size:13px;color:${C.white};">${n}</td></tr></table>
+    </td>
+    <td valign="top" style="padding:0 0 18px 0;">
+      <div style="font-family:${DISPLAY};font-weight:700;font-size:13px;letter-spacing:0.6px;text-transform:uppercase;color:${C.charcoal};margin:4px 0 3px;">${esc(title)}</div>
+      <div style="font-family:${BODY};font-size:13px;line-height:1.5;color:${C.neutral};">${body}</div>
+    </td>
+  </tr>`;
+}
+
+export function renderHtml(order: ShopOrder, product: CatalogProduct | null, origin: string): string {
   const trackerUrl = `${origin}/orders/${order.id}`;
-  const sizes = Object.entries(order["sizeQty" as keyof ShopOrder] as unknown as Record<string, number> | undefined ?? {})
-    .filter(([, q]) => q > 0)
-    .map(([s, q]) => `${s} × ${q}`)
-    .join(" · ");
-  // The shop's brand palette, inlined for max client compatibility.
-  const cream = "#EEEAE3";
-  const charcoal = "#1E1E1E";
-  const terracotta = "#B04731";
-  const neutral = "#8A8680";
-  const border = "#E2DED6";
+  const productName = product?.displayName ?? "Catalog product";
+  const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
+  const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
+  const colorHex = variant?.colorHex || C.charcoal;
+  const colorLabel = variant?.colorLabel || "—";
+  const fabric = variant?.fabric || "";
+  const methodLine = decos.length ? decos.map((d) => d.label).join("  +  ") : "Blank / no decoration";
+  const placement = Array.from(new Set(decos.flatMap((d) => d.placementZones))).join(", ");
+  const perUnitAll = order.perUnitUsd + order.decorationAdderUsd;
+  const leadDays = product?.leadTimeDays ?? null;
+  const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
+
+  // Optional product shot (enhancement; layout holds without it).
+  const shot = variant?.frontImage || product?.greyFront || null;
+  const shotUrl = shot ? `${origin}${shot}` : null;
+
+  const addr = order.shipToAddress;
+  const shipLines = [
+    order.shipToName || order.contactName,
+    order.companyName && order.companyName !== order.shipToName ? order.companyName : "",
+    addr?.line1,
+    addr?.line2,
+    [addr?.city, addr?.state, addr?.postalCode].filter(Boolean).join(", "),
+    addr?.country
+  ].filter(Boolean).map(esc).join("<br/>");
+
+  const colorSwatch = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;vertical-align:middle;"><tr><td width="16" height="16" bgcolor="${esc(colorHex)}" style="width:16px;height:16px;border-radius:4px;border:1px solid rgba(0,0,0,0.12);"></td></tr></table>`;
+
   return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Order ${order.orderNumber} · MOA</title>
-  </head>
-  <body style="margin:0;padding:0;background:${cream};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:${charcoal};">
-    <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-      <div style="font-family:Arial Black,Helvetica,sans-serif;font-weight:800;font-size:24px;letter-spacing:0.5px;color:${terracotta};">MOA</div>
-      <p style="margin:24px 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${terracotta};">Payment received</p>
-      <h1 style="margin:0 0 14px;font-family:Arial Black,Helvetica,sans-serif;font-weight:800;font-size:34px;line-height:1;letter-spacing:0.5px;text-transform:uppercase;color:${charcoal};">We've got your order</h1>
-      <p style="margin:0 0 22px;font-size:15px;line-height:1.5;color:${charcoal};">
-        Order <strong>${order.orderNumber}</strong> is confirmed and routed to MOA artwork QA. You'll get tracking the moment it ships.
-      </p>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="color-scheme" content="light only" />
+  <title>Order ${esc(order.orderNumber)} · MOA</title>
+  <!--[if mso]><style>* { font-family: Arial, sans-serif !important; }</style><![endif]-->
+  <style>
+    @media only screen and (max-width:600px){
+      .container{width:100% !important;}
+      .px{padding-left:22px !important;padding-right:22px !important;}
+      .stack{display:block !important;width:100% !important;}
+    }
+    a{color:${C.terracotta};}
+  </style>
+</head>
+<body style="margin:0;padding:0;background:${C.cream};">
+  <!-- preheader (hidden) -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.cream};font-size:1px;line-height:1px;">Order ${esc(order.orderNumber)} confirmed — ${esc(productName)}, ${order.quantity.toLocaleString()} units. Into MOA artwork QA now.</div>
 
-      <div style="background:#fff;border:1px solid ${border};border-radius:12px;padding:18px 20px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${neutral};">Order summary</p>
-        <p style="margin:0 0 10px;font-family:Arial Black,Helvetica,sans-serif;font-weight:700;font-size:16px;letter-spacing:0.4px;text-transform:uppercase;color:${charcoal};">${productName}</p>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;color:${charcoal};">
-          <tr><td style="padding:4px 0;color:${neutral};">Quantity</td><td style="padding:4px 0;text-align:right;">${order.quantity.toLocaleString()} units</td></tr>
-          ${sizes ? `<tr><td style="padding:4px 0;color:${neutral};">Sizes</td><td style="padding:4px 0;text-align:right;">${sizes}</td></tr>` : ""}
-          <tr><td style="padding:4px 0;color:${neutral};">Per unit</td><td style="padding:4px 0;text-align:right;">${currency(order.perUnitUsd + order.decorationAdderUsd)}</td></tr>
-          ${order.artworkFileName ? `<tr><td style="padding:4px 0;color:${neutral};">Artwork</td><td style="padding:4px 0;text-align:right;">${order.artworkFileName}</td></tr>` : ""}
-          <tr><td style="padding:10px 0 0;border-top:1px solid ${border};font-family:Arial Black,Helvetica,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;">Total paid</td><td style="padding:10px 0 0;border-top:1px solid ${border};text-align:right;font-family:Arial Black,Helvetica,sans-serif;font-weight:700;color:${terracotta};font-size:18px;">${currency(order.totalUsd)}</td></tr>
-        </table>
-      </div>
+  <!-- terracotta signature bar -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}">
+    <tr><td align="center" style="background:${C.cream};">
+      <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+        <tr><td height="4" bgcolor="${C.terracotta}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
 
-      <a href="${trackerUrl}" style="display:inline-block;padding:14px 22px;background:${charcoal};color:${cream};text-decoration:none;border-radius:10px;font-family:Arial Black,Helvetica,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Track your order →</a>
+        <!-- masthead -->
+        <tr><td class="px" style="padding:26px 40px 8px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td align="left" style="font-family:${DISPLAY};font-weight:800;font-size:26px;letter-spacing:1px;color:${C.terracotta};">MOA</td>
+            <td align="right">${label("Catalog")}</td>
+          </tr></table>
+        </td></tr>
 
-      <p style="margin:28px 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${terracotta};">What happens next</p>
-      <ol style="margin:0 0 24px;padding:0 0 0 18px;font-size:14px;line-height:1.55;color:${charcoal};">
-        <li><strong>Artwork QA</strong> (1–3 business days). MOA reviews your art, mockup, and production specs.</li>
-        <li><strong>Production.</strong> Once approved, your run goes into production with MOA quality control.</li>
-        <li><strong>Ship.</strong> Tracking lands in your inbox. The live tracker on this site keeps you posted in real time.</li>
-      </ol>
+        <!-- hero -->
+        <tr><td class="px" style="padding:26px 40px 8px;">
+          ${label("Payment received", C.terracotta)}
+          <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:38px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Order<br/>confirmed</h1>
+          <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
+            ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong style="color:${C.charcoal};">${esc(order.orderNumber)}</strong> is paid and routed straight into MOA artwork QA. No back-and-forth — we take it from here and you'll have tracking the moment it ships.
+          </p>
+        </td></tr>
 
-      <p style="margin:28px 0 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${neutral};">Magnum Opus Agency · Made-to-order · MOA-managed quality control · Order ${order.orderNumber} · Status: ${statusLabel(order.status)}</p>
-    </div>
-  </body>
+        <!-- order card -->
+        <tr><td class="px" style="padding:24px 40px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.white}" style="background:${C.white};border:1px solid ${C.creamDark};border-radius:14px;">
+            ${shotUrl ? `<tr><td align="center" style="padding:20px 20px 4px;">
+              <img src="${esc(shotUrl)}" width="240" alt="${esc(productName)}" style="display:block;width:240px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
+            </td></tr>` : ""}
+            <tr><td style="padding:20px 24px 8px;">
+              ${label(product?.skuCode ? `${product.skuCode} · ${product.category ?? ""}` : "Your build")}
+              <div style="margin:7px 0 0;font-family:${DISPLAY};font-weight:800;font-size:20px;letter-spacing:0.4px;text-transform:uppercase;color:${C.charcoal};">${esc(productName)}</div>
+            </td></tr>
+            <tr><td style="padding:6px 24px 18px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${row("Colorway", `${colorSwatch}&nbsp;&nbsp;<span style="vertical-align:middle;">${esc(colorLabel)}</span>`)}
+                ${fabric ? row("Fabric", esc(fabric)) : ""}
+                ${row("Decoration", esc(methodLine))}
+                ${placement ? row("Placement", esc(placement)) : ""}
+                ${row("Quantity", `${order.quantity.toLocaleString()} units`)}
+                ${order.artworkFileName ? row("Artwork", esc(order.artworkFileName)) : ""}
+                ${row("Per unit", currency(perUnitAll))}
+                ${order.taxUsd ? row("Subtotal", currency(order.subtotalUsd), { top: true }) : ""}
+                ${order.taxUsd ? row("Tax", currency(order.taxUsd)) : ""}
+                ${row("Total paid", `<span style="color:${C.terracotta};font-size:17px;">${currency(order.totalUsd)}</span>`, { strong: true, top: true })}
+              </table>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td class="px" align="center" style="padding:24px 40px 4px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td align="center" bgcolor="${C.charcoal}" style="border-radius:10px;">
+              <a href="${esc(trackerUrl)}" style="display:inline-block;padding:15px 30px;font-family:${DISPLAY};font-weight:800;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.cream};text-decoration:none;border-radius:10px;">Track your order &rarr;</a>
+            </td>
+          </tr></table>
+          <div style="margin:10px 0 0;font-family:${BODY};font-size:11px;color:${C.neutral};">Live status, anytime — ${esc(statusLabel(order.status))} now.</div>
+        </td></tr>
+
+        <!-- what happens next -->
+        <tr><td class="px" style="padding:30px 40px 6px;">${label("What happens next", C.terracotta)}</td></tr>
+        <tr><td class="px" style="padding:14px 40px 6px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            ${step(1, "Artwork QA", "1–3 business days. MOA reviews your art, builds the production mockup, and locks specs — no charge, no chasing.")}
+            ${step(2, "Production", `Your run goes to the floor with MOA-managed quality control${leadDays ? ` — about <strong style="color:${C.charcoal};">${leadDays} days</strong> for this style.` : "."}`)}
+            ${step(3, "Ship", "DDP by default. Tracking lands in your inbox and the live tracker updates in real time.")}
+          </table>
+        </td></tr>
+
+        <!-- ship to -->
+        ${shipLines ? `<tr><td class="px" style="padding:18px 40px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:18px 0 0;">
+            ${label("Shipping to")}
+            <div style="margin:8px 0 0;font-family:${BODY};font-size:13px;line-height:1.6;color:${C.charcoal};">${shipLines}</div>
+          </td></tr></table>
+        </td></tr>` : ""}
+
+        <!-- footer -->
+        <tr><td class="px" style="padding:34px 40px 40px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
+            <div style="font-family:${DISPLAY};font-weight:800;font-size:18px;letter-spacing:1px;color:${C.terracotta};">MOA</div>
+            <p style="margin:10px 0 0;font-family:${BODY};font-size:12px;line-height:1.6;color:${C.neutral};">
+              Made-to-order merch, managed end to end — fixed MOQs, fixed price ladders, MOA-managed quality control, DDP shipping default.
+            </p>
+            <p style="margin:14px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">
+              Questions on this order? Reply to this email.<br/>
+              Magnum Opus Agency · Order ${esc(order.orderNumber)} · <a href="${esc(origin)}" style="color:${C.terracotta};text-decoration:none;">shop.magnumopus.agency</a>
+            </p>
+          </td></tr></table>
+        </td></tr>
+
+        <tr><td height="4" bgcolor="${C.creamDark}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
 </html>`;
 }
 
-function renderText(order: ShopOrder, productName: string, origin: string): string {
+function renderText(order: ShopOrder, product: CatalogProduct | null, origin: string): string {
   const trackerUrl = `${origin}/orders/${order.id}`;
+  const productName = product?.displayName ?? "Catalog product";
+  const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
+  const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
   return [
-    `MOA — We've got your order`,
+    `MOA CATALOG — ORDER CONFIRMED`,
     ``,
-    `Order ${order.orderNumber} is confirmed and routed to MOA artwork QA.`,
+    `${order.contactName ? order.contactName.split(" ")[0] + " — your" : "Your"} order ${order.orderNumber} is paid and routed into MOA artwork QA.`,
     ``,
     `${productName}`,
-    `${order.quantity.toLocaleString()} units · Total paid ${currency(order.totalUsd)}`,
+    variant ? `Colorway: ${variant.colorLabel}` : "",
+    decos.length ? `Decoration: ${decos.map((d) => d.label).join(" + ")}` : "",
+    `Quantity: ${order.quantity.toLocaleString()} units`,
+    `Total paid: ${currency(order.totalUsd)}`,
     ``,
     `Track your order: ${trackerUrl}`,
     ``,
-    `What happens next:`,
+    `WHAT HAPPENS NEXT`,
     `  1. Artwork QA (1–3 business days)`,
-    `  2. Production with MOA quality control`,
-    `  3. Ship — tracking lands in your inbox`,
+    product?.leadTimeDays ? `  2. Production with MOA QC (~${product.leadTimeDays} days)` : `  2. Production with MOA quality control`,
+    `  3. Ship — DDP, tracking to your inbox`,
     ``,
-    `Magnum Opus Agency`
-  ].join("\n");
+    `Magnum Opus Agency · shop.magnumopus.agency`
+  ].filter((l) => l !== "").join("\n");
 }
 
 // Fallback send path: POST the rendered email to an N8N webhook that relays it
 // through MOA's existing Gmail (workflow "Shop Order Confirmation (Gmail)").
-// Used when Resend isn't configured. From-address is whatever the N8N Gmail
-// OAuth account is (MOA Accounting / info@) — OAuth dictates From, see memory.
+// From-address is whatever the N8N Gmail OAuth account is — OAuth dictates From.
 async function sendViaN8n(
   to: string,
   subject: string,
@@ -134,10 +291,9 @@ export async function sendOrderConfirmation(
   if (!order.contactEmail) return { sent: false, reason: "Order has no contact email" };
 
   const product = await getProductById(order.productId);
-  const productName = product?.displayName ?? "Catalog product";
   const origin = originFrom(req);
   const subject = `Order ${order.orderNumber} confirmed · MOA`;
-  const html = renderHtml(order, productName, origin);
+  const html = renderHtml(order, product, origin);
 
   // Prefer Resend when configured; otherwise relay through N8N Gmail.
   const resend = getResend();
@@ -149,7 +305,7 @@ export async function sendOrderConfirmation(
         to: order.contactEmail,
         subject,
         html,
-        text: renderText(order, productName, origin)
+        text: renderText(order, product, origin)
       });
       return { sent: true };
     } catch (err) {
