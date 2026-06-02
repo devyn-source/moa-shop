@@ -132,6 +132,19 @@ export type ShopOrder = {
   trackingCarrier?: string;
   trackingNumber?: string;
   internalNotes: string;
+  // Mirror of the order's life in MoaOS's catalog pipeline (pushed on paid).
+  // The storefront never authors a PO — it only reflects MoaOS state here.
+  fulfillment?: {
+    mode: string; // CATALOG_FULFILLMENT_MODE at push time
+    pushedAt?: string;
+    catalogOrderId?: string;
+    poIds?: string[];
+    poNumber?: string;
+    catalogStatus?: string; // mirrored from MoaOS
+    lastSyncedAt?: string;
+    dryRunPayload?: unknown; // dry_run mode: what we WOULD have pushed
+    lastError?: string;
+  };
   statusLog: Array<{
     statusFrom: OrderStatus | null;
     statusTo: OrderStatus;

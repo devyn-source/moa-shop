@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrderById, markOrderPaid } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
 import { sendOrderConfirmation } from "@/lib/email";
+import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 
 export const runtime = "nodejs";
 
@@ -34,6 +35,16 @@ export async function POST(request: Request) {
         const result = await sendOrderConfirmation(order, request);
         if (!result.sent && result.reason && result.reason !== "RESEND_API_KEY not configured") {
           console.warn(`[stripe-webhook] email send failed for ${id}: ${result.reason}`);
+        }
+        // Push into MoaOS catalog pipeline (mode-gated; creates a DRAFT PO only,
+        // never sends to a vendor). Failures self-heal via the reconcile cron.
+        try {
+          const pushed = await pushOrderToMoaOS(order);
+          if (!pushed.pushed && pushed.reason && pushed.reason !== "mode=off") {
+            console.warn(`[stripe-webhook] MoaOS push for ${id}: ${pushed.reason}`);
+          }
+        } catch (err) {
+          console.warn(`[stripe-webhook] MoaOS push threw for ${id}: ${err instanceof Error ? err.message : err}`);
         }
       }
     }

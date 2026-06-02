@@ -289,6 +289,36 @@ export async function markOrderPaid(id: string, stripeSessionId: string): Promis
   }
 }
 
+// Merge a patch into the order's fulfillment mirror (MoaOS pipeline state).
+export async function setOrderFulfillment(
+  id: string,
+  patch: Partial<NonNullable<ShopOrder["fulfillment"]>>
+): Promise<void> {
+  const current = await getOrderById(id);
+  if (!current) return;
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    fulfillment: { mode: "off", ...current.fulfillment, ...patch },
+    updatedAt: now,
+  };
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("orders")
+    .update({ data: updated, updated_at: now })
+    .eq("id", id);
+  if (error) throw new Error(`Failed to set fulfillment: ${error.message}`);
+}
+
+// Paid orders that still need attention from the reconcile cron: either never
+// pushed to MoaOS, or pushed and awaiting a status sync.
+export async function getOrdersNeedingFulfillment(): Promise<ShopOrder[]> {
+  const orders = await getOrders();
+  return orders.filter(
+    (o) => o.paymentStatus === "paid" && o.status !== "cancelled"
+  );
+}
+
 export function statusLabel(status: OrderStatus): string {
   return status.replace(/_/g, " ");
 }
