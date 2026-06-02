@@ -5,6 +5,7 @@ import "server-only";
 import sharp from "sharp";
 import { getSupabase } from "./supabase";
 import { getProductById } from "./store";
+import { hexToRgb } from "./pantones";
 import type { ShopOrder } from "./types";
 
 const W = 1000;
@@ -48,10 +49,27 @@ export async function generateProof(order: ShopOrder, origin: string): Promise<s
         const bh = p.box.h * H;
         const aw = Math.max(1, Math.round(p.art.sx * bw));
         const ah = Math.max(1, Math.round(p.art.sy * bh));
+        // Single-color spot print on transparent art → reproduce the art shape in
+        // the chosen PMS ink (true 1-color screen print look). Multi-color or opaque
+        // art shows as-is (its colors are the declared spot spec).
+        const origMeta = await sharp(artBuf).metadata();
+        const onePms = p.pantones?.length === 1 ? p.pantones[0] : null;
+        const recolor = onePms && origMeta.hasAlpha;
+
         let art = sharp(artBuf).resize(aw, ah, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } });
         const rot = (p.art.r ?? 0) + (p.box.r ?? 0);
         if (rot) art = art.rotate(rot, { background: { r: 0, g: 0, b: 0, alpha: 0 } });
-        const artPng = await art.png().toBuffer();
+        let artPng = await art.png().toBuffer();
+
+        if (recolor && onePms) {
+          const rm = await sharp(artPng).metadata();
+          const { r, g, b } = hexToRgb(onePms.hex);
+          const alpha = await sharp(artPng).ensureAlpha().extractChannel(3).toColourspace("b-w").toBuffer();
+          artPng = await sharp({ create: { width: rm.width ?? aw, height: rm.height ?? ah, channels: 3, background: { r, g, b } } })
+            .joinChannel(alpha)
+            .png()
+            .toBuffer();
+        }
         const m = await sharp(artPng).metadata();
         const cx = bx + p.art.ox * bw + aw / 2;
         const cy = by + p.art.oy * bh + ah / 2;

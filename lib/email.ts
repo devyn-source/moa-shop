@@ -341,6 +341,15 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
   const p = order.artworkPlacement;
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
   const specLine = p ? [p.zoneLabel, p.method, p.colors ? `${p.colors}-color` : null].filter(Boolean).join(" · ") : null;
+  const pms = p?.pantones ?? [];
+  const pmsRow = pms.length
+    ? `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>${pms
+        .map(
+          (c) =>
+            `<td style="padding:0 8px;text-align:center;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr><td width="22" height="22" bgcolor="${esc(c.hex)}" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.15);"></td></tr></table><div style="font-family:${BODY};font-size:9px;color:${C.neutral};margin-top:5px;white-space:nowrap;">${esc(c.code)}</div></td>`
+        )
+        .join("")}</tr></table>`
+    : "";
   return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Approve your proof · ${esc(order.orderNumber)}</title></head>
   <body style="margin:0;padding:0;background:${C.cream};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
@@ -360,7 +369,8 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
       <tr><td style="padding:22px 40px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.white}" style="background:${C.white};border:1px solid ${C.creamDark};border-radius:14px;">
           <tr><td align="center" style="padding:18px;"><img src="${esc(proofUrl)}" width="380" alt="Your proof" style="display:block;width:100%;max-width:380px;height:auto;border:0;border-radius:8px;" /></td></tr>
-          ${specLine ? `<tr><td align="center" style="padding:0 18px 18px;"><span style="font-family:${BODY};font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${C.neutral};">${esc(specLine)}</span></td></tr>` : ""}
+          ${specLine ? `<tr><td align="center" style="padding:0 18px 6px;"><span style="font-family:${BODY};font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${C.neutral};">${esc(specLine)}</span></td></tr>` : ""}
+          ${pmsRow ? `<tr><td align="center" style="padding:6px 18px 18px;">${pmsRow}</td></tr>` : ""}
         </table>
       </td></tr>
       <tr><td align="center" style="padding:26px 40px 4px;">

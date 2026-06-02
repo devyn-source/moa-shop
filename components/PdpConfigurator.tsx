@@ -7,6 +7,7 @@ import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, type ProductZones } from "@/lib/zones";
+import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 
 type Step = "color" | "decoration" | "placement" | "size";
@@ -60,7 +61,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
   const [view, setView] = useState<"front" | "back">("front");
   const [step, setStep] = useState<Step>("color");
   const [decorationIds, setDecorationIds] = useState<string[]>([]);
-  const [inkColors, setInkColors] = useState(1);
+  const [pantones, setPantones] = useState<PmsColor[]>([]);
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null);
   const [artworkName, setArtworkName] = useState<string | null>(null);
   const [placementId, setPlacementId] = useState<string | null>(null);
@@ -94,8 +95,9 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
   // Ink-color cap = the most restrictive selected method's max (default 8 for
   // methods without a max, e.g. embroidery thread colors). Clamp the pick to it.
   const colorCap = decoSelected.length ? Math.min(...decoSelected.map((d) => d.maxColors ?? 8)) : 1;
+  // Trim the spot-color selection if the method changes to a tighter cap.
   useEffect(() => {
-    setInkColors((c) => Math.min(Math.max(1, c), colorCap));
+    setPantones((p) => p.slice(0, colorCap));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decorationIds]);
   const perUnit = tier.perUnitUsd + decorationAdder;
@@ -243,7 +245,8 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
             box: placement.box,
             art: artTransform,
             method: decorationLabel,
-            colors: inkColors,
+            colors: pantones.length || undefined,
+            pantones: pantones.length ? pantones : undefined,
             maxColors: decoSelected[0]?.maxColors
           }
         : undefined
@@ -396,24 +399,47 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
                             </button>
                           );
                         })}
-                        {decorationIds.length > 0 && colorCap > 1 ? (
+                        {decorationIds.length > 0 ? (
                           <div className="pdpx-inkcolors" style={{ marginTop: 16 }}>
-                            <p className="pdpx-place-label">Ink colors</p>
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-                              {Array.from({ length: colorCap }, (_, i) => i + 1).map((n) => (
-                                <button
-                                  key={n}
-                                  type="button"
-                                  className={`pdpx-pill${inkColors === n ? " is-on" : ""}`}
-                                  onClick={() => setInkColors(n)}
-                                >
-                                  {n}
-                                </button>
-                              ))}
-                            </div>
-                            <p style={{ fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
-                              {inkColors === 1 ? "1 color" : `${inkColors} colors`} · up to {colorCap} for {decoSelected.map((d) => d.label).join(" / ")}. More colors can affect price and lead time.
+                            <p className="pdpx-place-label">
+                              Ink colors{pantones.length ? ` · ${pantones.length} of ${colorCap}` : ` · pick up to ${colorCap}`}
                             </p>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+                              {PMS_PALETTE.map((c) => {
+                                const on = pantones.some((p) => p.code === c.code);
+                                const full = pantones.length >= colorCap;
+                                return (
+                                  <button
+                                    key={c.code}
+                                    type="button"
+                                    title={`${c.name} · ${c.code}`}
+                                    aria-pressed={on}
+                                    disabled={!on && full}
+                                    onClick={() =>
+                                      setPantones((prev) =>
+                                        on ? prev.filter((p) => p.code !== c.code) : prev.length < colorCap ? [...prev, c] : prev
+                                      )
+                                    }
+                                    style={{
+                                      width: 30,
+                                      height: 30,
+                                      borderRadius: 8,
+                                      background: c.hex,
+                                      border: on ? "2px solid var(--color-charcoal)" : "1px solid rgba(0,0,0,0.18)",
+                                      boxShadow: on ? "0 0 0 2px var(--color-cream)" : "none",
+                                      cursor: !on && full ? "not-allowed" : "pointer",
+                                      opacity: !on && full ? 0.4 : 1
+                                    }}
+                                  />
+                                );
+                              })}
+                            </div>
+                            {pantones.length > 0 && (
+                              <p style={{ fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
+                                {pantones.map((p) => `${p.name} (${p.code})`).join(" · ")}
+                                {pantones.length === 1 ? " — your art prints in this ink." : " — your art's spot colors."}
+                              </p>
+                            )}
                           </div>
                         ) : null}
                       </div>
