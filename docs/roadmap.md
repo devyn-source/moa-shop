@@ -8,6 +8,13 @@ to "self-service merch program that runs the factory for us."
 - **DB:** dedicated Supabase project `moa-shop` (ref `ntppmyydbmwweosuavuw`), isolated from MoaOS
 - **Done:** catalog, filters, product detail, configurator, size matrix, product-shot
   pipeline, orders persisted to Supabase
+- **Done (Jun 1):** Phase 1 artwork tool committed (constrained placement + per-SKU
+  zone authoring + upload→Supabase storage); **Phase 2 Stripe checkout LIVE** (real
+  key from the N8N invoice flow, live webhook on `checkout.session.completed`);
+  `/admin` secured with HTTP Basic Auth (Clerk-ready); domain `shop.magnumopus.agency`
+  attached to the Vercel project (DNS record pending).
+- **Open user actions:** (1) add DNS `A shop 76.76.21.21` at registrar; (2) set
+  `RESEND_API_KEY` to turn on confirmation emails (orders work without it).
 
 ---
 
@@ -100,13 +107,14 @@ hurt at that size).
 **Sub-requirement — artwork upload:** today we only capture the filename. Real flow
 must store the file (Supabase Storage bucket on the moa-shop project).
 
-- [ ] Stripe account + keys in Vercel env (test first)
-- [ ] Supabase Storage bucket for artwork; real upload from configurator
-- [ ] `/api/checkout` creates a Checkout Session (full upfront; ACH enabled)
-- [ ] Success / cancel pages
-- [ ] `/api/webhooks/stripe` verifies signature → marks order `paid`
-- [ ] Order confirmation email (Resend)
-- [ ] Order status machine: pending → paid → artwork_qa → … (already modeled)
+- [x] Stripe account + keys in Vercel env — LIVE key (shared w/ N8N invoice flow)
+- [x] Supabase Storage bucket for artwork; real upload from configurator (`/api/upload-artwork`)
+- [x] `/api/checkout` creates a Checkout Session (full upfront)
+- [x] Success / cancel pages
+- [x] `/api/webhooks/stripe` verifies signature → marks order `paid` (live webhook created)
+- [ ] Order confirmation email (Resend) — code done, **needs `RESEND_API_KEY`**
+- [x] Order status machine: pending → paid → … (modeled; webhook flips to paid)
+- [ ] ACH for large orders (cards only today; revisit for $10–25k orders)
 
 ---
 
