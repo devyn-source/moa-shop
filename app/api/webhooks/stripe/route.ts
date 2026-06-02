@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { getOrderById, markOrderPaid } from "@/lib/store";
+import { getOrderById, markOrderPaid, setOrderProof } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
-import { sendOrderConfirmation } from "@/lib/email";
-import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
+import { sendOrderConfirmation, sendProofApproval } from "@/lib/email";
+import { generateProof } from "@/lib/proof";
 
 export const runtime = "nodejs";
+
+const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
 export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -32,19 +34,22 @@ export async function POST(request: Request) {
       // isn't set, so missing email config never blocks payment processing.
       const order = await getOrderById(id);
       if (order) {
-        const result = await sendOrderConfirmation(order, request);
+        // Generate the proof, then email the customer to approve it. The MoaOS
+        // push + vendor send happen ONLY after the customer approves their proof
+        // (see /api/orders/[id]/approve) — the approval IS the QA.
+        let proofUrl: string | null = null;
+        try {
+          proofUrl = await generateProof(order, SITE_ORIGIN);
+          if (proofUrl) await setOrderProof(id, proofUrl);
+        } catch (err) {
+          console.warn(`[stripe-webhook] proof generation failed for ${id}: ${err instanceof Error ? err.message : err}`);
+        }
+        const fresh = (await getOrderById(id)) ?? order;
+        const result = proofUrl
+          ? await sendProofApproval(fresh, proofUrl, request)
+          : await sendOrderConfirmation(fresh, request); // fallback: no placement → plain confirmation
         if (!result.sent && result.reason && result.reason !== "RESEND_API_KEY not configured") {
           console.warn(`[stripe-webhook] email send failed for ${id}: ${result.reason}`);
-        }
-        // Push into MoaOS catalog pipeline (mode-gated; creates a DRAFT PO only,
-        // never sends to a vendor). Failures self-heal via the reconcile cron.
-        try {
-          const pushed = await pushOrderToMoaOS(order);
-          if (!pushed.pushed && pushed.reason && pushed.reason !== "mode=off") {
-            console.warn(`[stripe-webhook] MoaOS push for ${id}: ${pushed.reason}`);
-          }
-        } catch (err) {
-          console.warn(`[stripe-webhook] MoaOS push threw for ${id}: ${err instanceof Error ? err.message : err}`);
         }
       }
     }

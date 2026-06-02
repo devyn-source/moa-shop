@@ -311,12 +311,47 @@ export async function setOrderFulfillment(
   if (error) throw new Error(`Failed to set fulfillment: ${error.message}`);
 }
 
-// Paid orders that still need attention from the reconcile cron: either never
-// pushed to MoaOS, or pushed and awaiting a status sync.
+// Store the auto-generated proof URL on the order.
+export async function setOrderProof(id: string, proofUrl: string): Promise<void> {
+  const current = await getOrderById(id);
+  if (!current) return;
+  const now = new Date().toISOString();
+  const updated: ShopOrder = { ...current, proofUrl, updatedAt: now };
+  const supabase = getSupabase();
+  await supabase.from("orders").update({ data: updated, updated_at: now }).eq("id", id);
+}
+
+// Record the customer's proof approval — this is the QA sign-off that authorizes
+// the vendor send. Idempotent.
+export async function recordProofApproval(id: string): Promise<ShopOrder | null> {
+  const current = await getOrderById(id);
+  if (!current) return null;
+  if (current.proofApprovedAt) return current; // already approved
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    proofApprovedAt: now,
+    status: "approved",
+    updatedAt: now,
+    statusLog: [
+      ...current.statusLog,
+      { statusFrom: current.status, statusTo: "approved", note: "Customer approved the proof.", createdAt: now },
+    ],
+  };
+  const supabase = getSupabase();
+  await supabase.from("orders").update({ status: "approved", data: updated, updated_at: now }).eq("id", id);
+  return updated;
+}
+
+// Reconcile cron targets: only orders the customer has APPROVED (gate) that
+// either haven't been pushed to MoaOS yet, or are pushed and awaiting a sync.
 export async function getOrdersNeedingFulfillment(): Promise<ShopOrder[]> {
   const orders = await getOrders();
   return orders.filter(
-    (o) => o.paymentStatus === "paid" && o.status !== "cancelled"
+    (o) =>
+      o.paymentStatus === "paid" &&
+      o.status !== "cancelled" &&
+      (Boolean(o.proofApprovedAt) || Boolean(o.fulfillment?.catalogOrderId))
   );
 }
 

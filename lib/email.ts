@@ -315,3 +315,77 @@ export async function sendOrderConfirmation(
 
   return sendViaN8n(order.contactEmail, subject, html);
 }
+
+// Shared channel: prefer Resend, else relay through N8N Gmail.
+async function deliver(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ sent: boolean; reason?: string }> {
+  const resend = getResend();
+  if (resend) {
+    const from = process.env.RESEND_FROM_EMAIL || FROM_DEFAULT;
+    try {
+      await resend.emails.send({ from, to, subject, html });
+      return { sent: true };
+    } catch (err) {
+      return { sent: false, reason: err instanceof Error ? err.message : "send failed" };
+    }
+  }
+  return sendViaN8n(to, subject, html);
+}
+
+function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origin: string, proofUrl: string): string {
+  const approveUrl = `${origin}/api/orders/${order.id}/approve`;
+  const productName = product?.displayName ?? "Catalog product";
+  const p = order.artworkPlacement;
+  const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
+  const specLine = p ? [p.zoneLabel, p.method, p.maxColors ? `${p.maxColors}-color` : null].filter(Boolean).join(" · ") : null;
+  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Approve your proof · ${esc(order.orderNumber)}</title></head>
+  <body style="margin:0;padding:0;background:${C.cream};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+      <tr><td height="4" bgcolor="${C.terracotta}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+      <tr><td style="padding:26px 40px 8px;"><table role="presentation" width="100%"><tr>
+        <td align="left" style="font-family:${DISPLAY};font-weight:800;font-size:26px;letter-spacing:1px;color:${C.terracotta};">MOA</td>
+        <td align="right">${label("Catalog")}</td>
+      </tr></table></td></tr>
+      <tr><td style="padding:24px 40px 8px;">
+        ${label("Payment received · One quick step", C.terracotta)}
+        <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:36px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Approve<br/>your proof</h1>
+        <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
+          ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is paid. Here's exactly how <strong>${esc(productName)}</strong> will be produced. Give it a look and approve — that's the only thing between you and production. Nothing goes to the factory until you do.
+        </p>
+      </td></tr>
+      <tr><td style="padding:22px 40px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.white}" style="background:${C.white};border:1px solid ${C.creamDark};border-radius:14px;">
+          <tr><td align="center" style="padding:18px;"><img src="${esc(proofUrl)}" width="380" alt="Your proof" style="display:block;width:100%;max-width:380px;height:auto;border:0;border-radius:8px;" /></td></tr>
+          ${specLine ? `<tr><td align="center" style="padding:0 18px 18px;"><span style="font-family:${BODY};font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${C.neutral};">${esc(specLine)}</span></td></tr>` : ""}
+        </table>
+      </td></tr>
+      <tr><td align="center" style="padding:26px 40px 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${C.terracotta}" style="border-radius:10px;">
+          <a href="${esc(approveUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Approve &amp; send to production &rarr;</a>
+        </td></tr></table>
+        <div style="margin:12px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? Just reply to this email and we'll adjust before anything is made.</div>
+      </td></tr>
+      <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
+        <div style="font-family:${DISPLAY};font-weight:800;font-size:18px;letter-spacing:1px;color:${C.terracotta};">MOA</div>
+        <p style="margin:10px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">Magnum Opus Agency · Order ${esc(order.orderNumber)} · Your approval is the final QA — we produce exactly what you approve.</p>
+      </td></tr></table></td></tr>
+      <tr><td height="4" bgcolor="${C.creamDark}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+    </table>
+  </td></tr></table></body></html>`;
+}
+
+export async function sendProofApproval(
+  order: ShopOrder,
+  proofUrl: string,
+  req?: { headers?: { get(name: string): string | null } } | null
+): Promise<{ sent: boolean; reason?: string }> {
+  if (!order.contactEmail) return { sent: false, reason: "Order has no contact email" };
+  const product = await getProductById(order.productId);
+  const origin = originFrom(req);
+  const subject = `Approve your proof · Order ${order.orderNumber} · MOA`;
+  return deliver(order.contactEmail, subject, renderProofHtml(order, product, origin, proofUrl));
+}

@@ -134,6 +134,8 @@ export type ShopOrder = {
   artworkFileUrl?: string;
   artworkNotes: string;
   artworkPlacement?: ArtworkPlacement;
+  proofUrl?: string; // auto-generated proof image (garment + placed art)
+  proofApprovedAt?: string; // customer sign-off — the QA. Gates the vendor send.
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
   stripeSessionId?: string;
