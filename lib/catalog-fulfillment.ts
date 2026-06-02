@@ -7,6 +7,7 @@
 import type { ShopOrder } from "./types";
 import { getProductById, setOrderFulfillment, getOrderById, updateOrderStatus } from "./store";
 import { sendShippingNotification } from "./email";
+import { seedVendors } from "./seed";
 
 export type FulfillmentMode = "off" | "dry_run" | "draft_only" | "manual_release" | "auto";
 
@@ -64,6 +65,10 @@ async function buildIntakePayload(order: ShopOrder) {
         category: product?.category ?? null,
         sizes: product?.sizes ?? null,
         sizeBreakdown: order.sizeBreakdown ?? null,
+        // Vendor reference → MoaOS resolves it to a real factory via the
+        // catalog_vendor_map (unmapped falls back to the TEST vendor).
+        vendorRef: product?.defaultVendorId ?? null,
+        vendorName: seedVendors.find((v) => v.id === product?.defaultVendorId)?.name ?? null,
       },
     ],
   };
