@@ -103,29 +103,59 @@ function renderText(order: ShopOrder, productName: string, origin: string): stri
   ].join("\n");
 }
 
+// Fallback send path: POST the rendered email to an N8N webhook that relays it
+// through MOA's existing Gmail (workflow "Shop Order Confirmation (Gmail)").
+// Used when Resend isn't configured. From-address is whatever the N8N Gmail
+// OAuth account is (MOA Accounting / info@) — OAuth dictates From, see memory.
+async function sendViaN8n(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ sent: boolean; reason?: string }> {
+  const url = process.env.N8N_ORDER_EMAIL_WEBHOOK_URL;
+  if (!url) return { sent: false, reason: "N8N_ORDER_EMAIL_WEBHOOK_URL not configured" };
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ to, subject, html })
+    });
+    if (!res.ok) return { sent: false, reason: `N8N webhook ${res.status}` };
+    return { sent: true };
+  } catch (err) {
+    return { sent: false, reason: err instanceof Error ? err.message : "N8N send failed" };
+  }
+}
+
 export async function sendOrderConfirmation(
   order: ShopOrder,
   req?: { headers?: { get(name: string): string | null } } | null
 ): Promise<{ sent: boolean; reason?: string }> {
-  const resend = getResend();
-  if (!resend) return { sent: false, reason: "RESEND_API_KEY not configured" };
   if (!order.contactEmail) return { sent: false, reason: "Order has no contact email" };
 
   const product = await getProductById(order.productId);
   const productName = product?.displayName ?? "Catalog product";
   const origin = originFrom(req);
-  const from = process.env.RESEND_FROM_EMAIL || FROM_DEFAULT;
+  const subject = `Order ${order.orderNumber} confirmed · MOA`;
+  const html = renderHtml(order, productName, origin);
 
-  try {
-    await resend.emails.send({
-      from,
-      to: order.contactEmail,
-      subject: `Order ${order.orderNumber} confirmed · MOA`,
-      html: renderHtml(order, productName, origin),
-      text: renderText(order, productName, origin)
-    });
-    return { sent: true };
-  } catch (err) {
-    return { sent: false, reason: err instanceof Error ? err.message : "send failed" };
+  // Prefer Resend when configured; otherwise relay through N8N Gmail.
+  const resend = getResend();
+  if (resend) {
+    const from = process.env.RESEND_FROM_EMAIL || FROM_DEFAULT;
+    try {
+      await resend.emails.send({
+        from,
+        to: order.contactEmail,
+        subject,
+        html,
+        text: renderText(order, productName, origin)
+      });
+      return { sent: true };
+    } catch (err) {
+      return { sent: false, reason: err instanceof Error ? err.message : "send failed" };
+    }
   }
+
+  return sendViaN8n(order.contactEmail, subject, html);
 }
