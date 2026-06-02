@@ -373,6 +373,15 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
                             onClick={() => setVariantId(v.id)}
                           />
                         ))}
+                        {(() => {
+                          const sv = product.variants.find((v) => v.id === variantId);
+                          return sv ? (
+                            <p style={{ width: "100%", fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 10 }}>
+                              {sv.colorLabel}
+                              {sv.colorTcx ? ` · Pantone ${sv.colorTcx}` : ""}
+                            </p>
+                          ) : null;
+                        })()}
                       </div>
                     ) : null}
 

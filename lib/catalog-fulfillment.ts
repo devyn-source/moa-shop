@@ -59,6 +59,7 @@ async function buildIntakePayload(order: ShopOrder) {
         // Rich display spec for the vendor PO email (stored in tech_pack_data).
         imageUrl: shot ? `${origin}${shot}` : null,
         colorHex: variant?.colorHex ?? null,
+        colorTcx: variant?.colorTcx ?? null,
         fabric: variant?.fabric ?? null,
         category: product?.category ?? null,
         sizes: product?.sizes ?? null,

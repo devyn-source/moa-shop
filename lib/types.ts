@@ -46,6 +46,7 @@ export type CatalogVariant = {
   fabric: string;
   colorLabel: string;
   colorHex: string;
+  colorTcx?: string; // Pantone TCX fabric color code (textile spec)
   mockupTemplateUrl: string;
   isAvailable: boolean;
   frontImage?: string;

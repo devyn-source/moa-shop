@@ -71,13 +71,16 @@ export const seedVendors: Vendor[] = [
 
 // Shared colorway palette. The grey base is only a recolor source — it is never a
 // sellable color, so every chip is a real color and Black is the default.
-const COLORWAYS: { id: string; label: string; hex: string }[] = [
-  { id: "black", label: "Black", hex: "#1a1a1a" },
-  { id: "charcoal", label: "Charcoal", hex: "#3a3a3c" },
-  { id: "navy", label: "Navy", hex: "#1f2b42" },
-  { id: "olive", label: "Olive", hex: "#4d4b30" },
-  { id: "burgundy", label: "Burgundy", hex: "#5c2128" },
-  { id: "forest", label: "Forest", hex: "#284130" }
+// Garment fabric colors are specified in Pantone TCX (the textile standard).
+// These TCX codes are a starter set — refine to MOA's actual approved fabric
+// colors. Hex is for on-screen preview only; the TCX code is the production spec.
+const COLORWAYS: { id: string; label: string; hex: string; tcx: string }[] = [
+  { id: "black", label: "Black", hex: "#1a1a1a", tcx: "19-0303 TCX" },
+  { id: "charcoal", label: "Charcoal", hex: "#3a3a3c", tcx: "18-0601 TCX" },
+  { id: "navy", label: "Navy", hex: "#1f2b42", tcx: "19-3920 TCX" },
+  { id: "olive", label: "Olive", hex: "#4d4b30", tcx: "18-0316 TCX" },
+  { id: "burgundy", label: "Burgundy", hex: "#5c2128", tcx: "19-1617 TCX" },
+  { id: "forest", label: "Forest", hex: "#284130", tcx: "19-5513 TCX" }
 ];
 
 function colorways(slug: string, label: string, fabric: string): CatalogVariant[] {
@@ -87,6 +90,7 @@ function colorways(slug: string, label: string, fabric: string): CatalogVariant[
     fabric,
     colorLabel: c.label,
     colorHex: c.hex,
+    colorTcx: c.tcx,
     mockupTemplateUrl: `/mockups/${slug}-${c.id}.pdf`,
     isAvailable: true
   }));
