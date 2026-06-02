@@ -31,11 +31,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProductPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
+}) {
   const { slug } = await params;
+  const { preview } = await searchParams;
   const product = await getProductBySlug(slug);
 
-  if (!product || !product.isPublished) {
+  // Unpublished SKUs (e.g. the internal test SKU) render only with a valid
+  // preview token, so they stay out of the public catalog but are reachable
+  // for QA at /p/<slug>?preview=<CATALOG_PREVIEW_TOKEN>.
+  const previewOk = Boolean(process.env.CATALOG_PREVIEW_TOKEN) && preview === process.env.CATALOG_PREVIEW_TOKEN;
+
+  if (!product || (!product.isPublished && !previewOk)) {
     notFound();
   }
 
