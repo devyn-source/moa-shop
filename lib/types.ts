@@ -109,7 +109,8 @@ export type ArtworkPlacement = {
   box: { x: number; y: number; w: number; h: number; r?: number };
   art: { ox: number; oy: number; sx: number; sy: number; r?: number };
   method?: string; // decoration method label(s)
-  maxColors?: number; // from the chosen decoration
+  colors?: number; // customer-declared ink-color count (≤ maxColors)
+  maxColors?: number; // the chosen decoration's max allowed colors (the cap)
   widthIn?: number; // placed art size in inches (when the zone has inch dims)
   heightIn?: number;
 };

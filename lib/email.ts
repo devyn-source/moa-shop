@@ -143,7 +143,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
         <!-- masthead -->
         <tr><td class="px" style="padding:26px 40px 8px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td align="left" style="font-family:${DISPLAY};font-weight:800;font-size:26px;letter-spacing:1px;color:${C.terracotta};">MOA</td>
+            <td align="left"><img src="${origin}/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" height="32" style="display:block;border:0;height:32px;width:auto;" /></td>
             <td align="right">${label("Catalog")}</td>
           </tr></table>
         </td></tr>
@@ -215,7 +215,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
         <!-- footer -->
         <tr><td class="px" style="padding:34px 40px 40px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
-            <div style="font-family:${DISPLAY};font-weight:800;font-size:18px;letter-spacing:1px;color:${C.terracotta};">MOA</div>
+            <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
             <p style="margin:10px 0 0;font-family:${BODY};font-size:12px;line-height:1.6;color:${C.neutral};">
               Made-to-order merch, managed end to end — fixed MOQs, fixed price ladders, MOA-managed quality control, DDP shipping default.
             </p>
@@ -340,14 +340,14 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
   const productName = product?.displayName ?? "Catalog product";
   const p = order.artworkPlacement;
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
-  const specLine = p ? [p.zoneLabel, p.method, p.maxColors ? `${p.maxColors}-color` : null].filter(Boolean).join(" · ") : null;
+  const specLine = p ? [p.zoneLabel, p.method, p.colors ? `${p.colors}-color` : null].filter(Boolean).join(" · ") : null;
   return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Approve your proof · ${esc(order.orderNumber)}</title></head>
   <body style="margin:0;padding:0;background:${C.cream};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
       <tr><td height="4" bgcolor="${C.terracotta}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
       <tr><td style="padding:26px 40px 8px;"><table role="presentation" width="100%"><tr>
-        <td align="left" style="font-family:${DISPLAY};font-weight:800;font-size:26px;letter-spacing:1px;color:${C.terracotta};">MOA</td>
+        <td align="left"><img src="${origin}/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" height="32" style="display:block;border:0;height:32px;width:auto;" /></td>
         <td align="right">${label("Catalog")}</td>
       </tr></table></td></tr>
       <tr><td style="padding:24px 40px 8px;">
@@ -370,7 +370,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
         <div style="margin:12px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? Just reply to this email and we'll adjust before anything is made.</div>
       </td></tr>
       <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
-        <div style="font-family:${DISPLAY};font-weight:800;font-size:18px;letter-spacing:1px;color:${C.terracotta};">MOA</div>
+        <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
         <p style="margin:10px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">Magnum Opus Agency · Order ${esc(order.orderNumber)} · Your approval is the final QA — we produce exactly what you approve.</p>
       </td></tr></table></td></tr>
       <tr><td height="4" bgcolor="${C.creamDark}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>

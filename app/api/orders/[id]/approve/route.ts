@@ -8,14 +8,21 @@ import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 
 export const runtime = "nodejs";
 
+const ORIGIN = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
+
 function page(eyebrow: string, title: string, body: string): NextResponse {
-  const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${title}</title></head>
-  <body style="margin:0;background:#EEEAE3;font-family:-apple-system,Helvetica,Arial,sans-serif;color:#1E1E1E;">
-    <div style="max-width:520px;margin:0 auto;padding:80px 24px;text-align:center;">
-      <div style="height:4px;background:#B04731;border-radius:2px;margin-bottom:36px;"></div>
-      <div style="font-family:'Arial Black',Arial;font-weight:800;font-size:28px;letter-spacing:1px;color:#B04731;">MOA</div>
-      <p style="font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#B04731;margin:28px 0 8px;">${eyebrow}</p>
-      <h1 style="font-family:'Arial Black',Arial;font-weight:800;font-size:30px;line-height:1.05;text-transform:uppercase;margin:0 0 14px;">${title}</h1>
+  const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${title}</title>
+  <style>
+    @font-face{font-family:'Archivo Expanded';src:url('${ORIGIN}/brand/fonts/Archivo_Expanded-ExtraBold.ttf') format('truetype');font-weight:800;font-display:swap;}
+    body{margin:0;background:#EEEAE3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1E1E1E;}
+    .display{font-family:'Archivo Expanded','Arial Black',Arial,sans-serif;font-weight:800;}
+  </style></head>
+  <body>
+    <div style="max-width:520px;margin:0 auto;padding:72px 24px;text-align:center;">
+      <div style="height:4px;background:#B04731;border-radius:2px;margin-bottom:40px;"></div>
+      <img src="${ORIGIN}/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" height="40" style="height:40px;width:auto;display:inline-block;" />
+      <p style="font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#B04731;margin:34px 0 8px;">${eyebrow}</p>
+      <h1 class="display" style="font-size:32px;line-height:1.05;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 14px;">${title}</h1>
       <p style="font-size:15px;line-height:1.6;color:#5C5954;">${body}</p>
     </div>
   </body></html>`;
