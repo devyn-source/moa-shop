@@ -60,6 +60,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
   const [view, setView] = useState<"front" | "back">("front");
   const [step, setStep] = useState<Step>("color");
   const [decorationIds, setDecorationIds] = useState<string[]>([]);
+  const [inkColors, setInkColors] = useState(1);
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null);
   const [artworkName, setArtworkName] = useState<string | null>(null);
   const [placementId, setPlacementId] = useState<string | null>(null);
@@ -90,6 +91,13 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
 
   const decoSelected = product.decorations.filter((d) => decorationIds.includes(d.id));
   const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
+  // Ink-color cap = the most restrictive selected method's max (default 8 for
+  // methods without a max, e.g. embroidery thread colors). Clamp the pick to it.
+  const colorCap = decoSelected.length ? Math.min(...decoSelected.map((d) => d.maxColors ?? 8)) : 1;
+  useEffect(() => {
+    setInkColors((c) => Math.min(Math.max(1, c), colorCap));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decorationIds]);
   const perUnit = tier.perUnitUsd + decorationAdder;
   const subtotal = perUnit * qty;
 
@@ -235,6 +243,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
             box: placement.box,
             art: artTransform,
             method: decorationLabel,
+            colors: inkColors,
             maxColors: decoSelected[0]?.maxColors
           }
         : undefined
@@ -387,6 +396,26 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
                             </button>
                           );
                         })}
+                        {decorationIds.length > 0 && colorCap > 1 ? (
+                          <div className="pdpx-inkcolors" style={{ marginTop: 16 }}>
+                            <p className="pdpx-place-label">Ink colors</p>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                              {Array.from({ length: colorCap }, (_, i) => i + 1).map((n) => (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  className={`pdpx-pill${inkColors === n ? " is-on" : ""}`}
+                                  onClick={() => setInkColors(n)}
+                                >
+                                  {n}
+                                </button>
+                              ))}
+                            </div>
+                            <p style={{ fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
+                              {inkColors === 1 ? "1 color" : `${inkColors} colors`} · up to {colorCap} for {decoSelected.map((d) => d.label).join(" / ")}. More colors can affect price and lead time.
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
 
