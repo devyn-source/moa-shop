@@ -19,8 +19,8 @@ import {
 } from "@/lib/zones";
 import type { CatalogProduct } from "@/lib/types";
 
-type GuideKind = "hps" | "cf" | "scaleA" | "scaleB";
-const RULER_Y = 0.42; // where the chest-width ruler line sits on the canvas
+type GuideKind = "hps" | "cf" | "scaleA" | "scaleB" | "scaleY";
+const RULER_Y = 0.5; // default vertical position of the chest-width ruler
 
 type DragMode = "move" | "nw" | "ne" | "sw" | "se" | "rotate";
 type DragState = {
@@ -99,6 +99,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
   const [calibration, setCalibration] = useState<ProductCalibration>({});
   const [guideDrag, setGuideDrag] = useState<GuideKind | null>(null);
   const cal: ViewCalibration = calibration[view] ?? defaultCalibration();
+  const rulerY = cal.scaleY ?? RULER_Y;
   const setCal = useCallback(
     (patch: Partial<ViewCalibration>) => {
       setCalibration((prev) => ({ ...prev, [view]: { ...(prev[view] ?? defaultCalibration()), ...patch } }));
@@ -186,6 +187,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
       else if (guideDrag === "cf") setCal({ cfX: fx });
       else if (guideDrag === "scaleA") setCal({ scaleAx: fx });
       else if (guideDrag === "scaleB") setCal({ scaleBx: fx });
+      else if (guideDrag === "scaleY") setCal({ scaleY: fy });
     };
     const onUp = () => setGuideDrag(null);
     window.addEventListener("pointermove", onMove);
@@ -514,17 +516,21 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
                 <span style={{ position: "absolute", top: 6, left: 11, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, color: "#8A8680", background: "rgba(255,255,255,0.88)", padding: "1px 5px", borderRadius: 3 }}>CF</span>
               </div>
 
-              {/* Chest-width ruler */}
-              <div style={{ position: "absolute", top: `${RULER_Y * 100}%`, left: `${Math.min(cal.scaleAx, cal.scaleBx) * 100}%`, width: `${Math.abs(cal.scaleBx - cal.scaleAx) * 100}%`, borderTop: "2px solid #1E1E1E", zIndex: 21 }}>
-                <span style={{ position: "absolute", left: "50%", top: -20, transform: "translateX(-50%)", fontSize: 10, fontWeight: 700, background: "#1E1E1E", color: "#fff", padding: "2px 7px", borderRadius: 3, whiteSpace: "nowrap" }}>{cal.realInches}&quot; across</span>
-              </div>
+              {/* Chest-width ruler — drag the chip up/down to the chest line (1" below armhole); drag the end stops in/out to the garment edges */}
+              <div style={{ position: "absolute", top: `${rulerY * 100}%`, left: `${Math.min(cal.scaleAx, cal.scaleBx) * 100}%`, width: `${Math.abs(cal.scaleBx - cal.scaleAx) * 100}%`, borderTop: "2px solid #1E1E1E", zIndex: 21 }} />
+              <span
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("scaleY"); }}
+                style={{ position: "absolute", top: `${rulerY * 100}%`, left: "50%", transform: "translate(-50%,-50%)", cursor: "ns-resize", fontSize: 10, fontWeight: 700, background: "#1E1E1E", color: "#fff", padding: "3px 8px", borderRadius: 4, whiteSpace: "nowrap", zIndex: 24 }}
+              >
+                ↕ {cal.realInches}&quot; chest
+              </span>
               <div
                 onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("scaleA"); }}
-                style={{ position: "absolute", top: `${RULER_Y * 100}%`, left: `${cal.scaleAx * 100}%`, transform: "translate(-50%,-50%)", width: 13, height: 22, background: "#1E1E1E", borderRadius: 3, cursor: "ew-resize", zIndex: 22, border: "2px solid #fff" }}
+                style={{ position: "absolute", top: `${rulerY * 100}%`, left: `${cal.scaleAx * 100}%`, transform: "translate(-50%,-50%)", width: 13, height: 22, background: "#1E1E1E", borderRadius: 3, cursor: "ew-resize", zIndex: 22, border: "2px solid #fff" }}
               />
               <div
                 onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("scaleB"); }}
-                style={{ position: "absolute", top: `${RULER_Y * 100}%`, left: `${cal.scaleBx * 100}%`, transform: "translate(-50%,-50%)", width: 13, height: 22, background: "#1E1E1E", borderRadius: 3, cursor: "ew-resize", zIndex: 22, border: "2px solid #fff" }}
+                style={{ position: "absolute", top: `${rulerY * 100}%`, left: `${cal.scaleBx * 100}%`, transform: "translate(-50%,-50%)", width: 13, height: 22, background: "#1E1E1E", borderRadius: 3, cursor: "ew-resize", zIndex: 22, border: "2px solid #fff" }}
               />
             </>
           )}

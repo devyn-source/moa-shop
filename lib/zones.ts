@@ -30,6 +30,7 @@ export type ViewCalibration = {
   cfX: number; // center-front line — fraction of canvas WIDTH
   scaleAx: number; // chest-width ruler endpoint A — fraction of canvas WIDTH
   scaleBx: number; // chest-width ruler endpoint B — fraction of canvas WIDTH
+  scaleY?: number; // ruler's vertical position — fraction of canvas HEIGHT (place it on the chest line, 1" below armhole). Display-only; not used in derivation.
   realInches: number; // the real garment width the A→B span represents
 };
 export type ProductCalibration = Partial<Record<View, ViewCalibration>>;
@@ -39,7 +40,7 @@ export type ProductCalibration = Partial<Record<View, ViewCalibration>>;
 export const CANVAS_H_OVER_W = 5 / 4;
 
 export function defaultCalibration(): ViewCalibration {
-  return { hpsY: 0.13, cfX: 0.5, scaleAx: 0.3, scaleBx: 0.7, realInches: 20 };
+  return { hpsY: 0.13, cfX: 0.5, scaleAx: 0.3, scaleBx: 0.7, scaleY: 0.5, realInches: 20 };
 }
 
 export function normaliseCalibration(raw: unknown): ProductCalibration | null {
@@ -55,6 +56,7 @@ export function normaliseCalibration(raw: unknown): ProductCalibration | null {
       cfX: num("cfX", def.cfX),
       scaleAx: num("scaleAx", def.scaleAx),
       scaleBx: num("scaleBx", def.scaleBx),
+      scaleY: num("scaleY", def.scaleY ?? 0.5),
       realInches: num("realInches", def.realInches),
     };
   };

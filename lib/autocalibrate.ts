@@ -10,7 +10,7 @@ import sharp from "sharp";
 import { getProductMeasurements } from "./store";
 import { normaliseMeasurements, type ProductCalibration } from "./zones";
 
-type Analysis = { W: number; H: number; bbox: { l: number; t: number; r: number; b: number }; chestFrac: number };
+type Analysis = { W: number; H: number; bbox: { l: number; t: number; r: number; b: number }; chest: { y: number; l: number; r: number } };
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 const quarter = (n: number) => Math.round(n * 4) / 4;
@@ -46,13 +46,13 @@ async function analyze(buf: Buffer): Promise<Analysis | null> {
   }
   if (maxX < 0) return null;
 
-  // chest line ≈ 28% down from the top of the silhouette
-  const cy = Math.round(minY + 0.28 * (maxY - minY));
+  // chest line ≈ 42% down from the top of the silhouette (≈ 1" below armhole)
+  const cy = Math.round(minY + 0.42 * (maxY - minY));
   let cl = W, cr = -1;
   for (let x = 0; x < W; x++) if (on(x, cy)) { if (x < cl) cl = x; if (x > cr) cr = x; }
-  const chestFrac = cr >= 0 ? (cr - cl) / W : 0;
+  if (cr < 0) { cl = minX; cr = maxX; }
 
-  return { W, H, bbox: { l: minX / W, t: minY / H, r: maxX / W, b: maxY / H }, chestFrac };
+  return { W, H, bbox: { l: minX / W, t: minY / H, r: maxX / W, b: maxY / H }, chest: { y: cy / H, l: cl / W, r: cr / W } };
 }
 
 export type AutoCalResult =
@@ -98,13 +98,14 @@ export async function autoCalibrate(slug: string, origin: string): Promise<AutoC
     }
     if (view === "front") frontA = a;
     const ippLen = bodyLen / ((a.bbox.b - a.bbox.t) * a.H); // inches per pixel
-    const widthPx = (a.bbox.r - a.bbox.l) * a.W;
+    const chestWpx = (a.chest.r - a.chest.l) * a.W;
     cal[view] = {
       hpsY: round3(a.bbox.t),
-      cfX: round3((a.bbox.l + a.bbox.r) / 2),
-      scaleAx: round3(a.bbox.l),
-      scaleBx: round3(a.bbox.r),
-      realInches: quarter(widthPx * ippLen),
+      cfX: round3((a.chest.l + a.chest.r) / 2),
+      scaleAx: round3(a.chest.l),
+      scaleBx: round3(a.chest.r),
+      scaleY: round3(a.chest.y), // ruler sits on the detected chest line
+      realInches: quarter(chestWpx * ippLen),
     };
   }
   if (!cal.front) return { ok: false, error: `No base mockup at /products/${slug}/base-front.png to detect the garment.` };
@@ -114,9 +115,9 @@ export async function autoCalibrate(slug: string, origin: string): Promise<AutoC
   // flat-vs-circumference reading of the chest spec that best agrees.
   let confidence: "high" | "medium" | "low" | "unknown" = "unknown";
   let ratio = 0;
-  if (chest && frontA && frontA.chestFrac > 0) {
+  if (chest && frontA && frontA.chest.r > frontA.chest.l) {
     const ippLen = bodyLen / ((frontA.bbox.b - frontA.bbox.t) * frontA.H);
-    const chestPx = frontA.chestFrac * frontA.W;
+    const chestPx = (frontA.chest.r - frontA.chest.l) * frontA.W;
     let bestErr = Infinity;
     for (const c of [chest, chest / 2]) {
       const rr = c / chestPx / ippLen;
