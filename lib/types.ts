@@ -140,6 +140,14 @@ export type ShopOrder = {
   sizeBreakdown?: Record<string, number>; // size run (e.g. { S: 10, M: 20 })
   proofUrl?: string; // auto-generated proof image (garment + placed art)
   proofApprovedAt?: string; // customer sign-off — the QA. Gates the vendor send.
+  // Proof-approval follow-through (orders that are paid but not yet approved).
+  approvalRemindersSent?: number; // auto-nudges sent so far
+  lastApprovalReminderAt?: string;
+  changesRequestedAt?: string; // customer asked for revisions instead of approving
+  changesRequestedNote?: string;
+  cancelledAt?: string;
+  refundedAt?: string;
+  refundId?: string;
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
   stripeSessionId?: string;

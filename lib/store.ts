@@ -360,6 +360,65 @@ export function statusLabel(status: OrderStatus): string {
   return status.replace(/_/g, " ");
 }
 
+// Paid orders whose proof the customer hasn't approved (or rejected) yet, due
+// for a nudge: older than 2 days, no reminder in the last 2 days, max 3 nudges.
+export async function getProofReminderCandidates(): Promise<ShopOrder[]> {
+  const orders = await getOrders();
+  const now = Date.now();
+  const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+  return orders.filter((o) => {
+    if (o.paymentStatus !== "paid") return false;
+    if (o.proofApprovedAt || o.changesRequestedAt || o.cancelledAt) return false;
+    if (o.status === "cancelled") return false;
+    if (!o.proofUrl) return false;
+    if ((o.approvalRemindersSent ?? 0) >= 3) return false;
+    if (now - Date.parse(o.createdAt) < TWO_DAYS) return false;
+    if (o.lastApprovalReminderAt && now - Date.parse(o.lastApprovalReminderAt) < TWO_DAYS) return false;
+    return true;
+  });
+}
+
+export async function recordProofReminder(id: string): Promise<void> {
+  const current = await getOrderById(id);
+  if (!current) return;
+  const now = new Date().toISOString();
+  const updated: ShopOrder = { ...current, approvalRemindersSent: (current.approvalRemindersSent ?? 0) + 1, lastApprovalReminderAt: now, updatedAt: now };
+  await getSupabase().from("orders").update({ data: updated, updated_at: now }).eq("id", id);
+}
+
+export async function recordChangesRequested(id: string, note: string): Promise<ShopOrder | null> {
+  const current = await getOrderById(id);
+  if (!current) return null;
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    changesRequestedAt: now,
+    changesRequestedNote: note || current.changesRequestedNote,
+    updatedAt: now,
+    statusLog: [...current.statusLog, { statusFrom: current.status, statusTo: current.status, note: `Customer requested changes: ${note || "(no detail)"}`, createdAt: now }],
+  };
+  await getSupabase().from("orders").update({ data: updated, updated_at: now }).eq("id", id);
+  return updated;
+}
+
+export async function markOrderCancelledRefunded(id: string, refundId: string | null): Promise<ShopOrder | null> {
+  const current = await getOrderById(id);
+  if (!current) return null;
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    status: "cancelled",
+    paymentStatus: refundId ? "refunded" : current.paymentStatus,
+    cancelledAt: now,
+    refundedAt: refundId ? now : current.refundedAt,
+    refundId: refundId || current.refundId,
+    updatedAt: now,
+    statusLog: [...current.statusLog, { statusFrom: current.status, statusTo: "cancelled", note: refundId ? `Cancelled + refunded (${refundId}).` : "Cancelled.", createdAt: now }],
+  };
+  await getSupabase().from("orders").update({ status: "cancelled", data: updated, updated_at: now }).eq("id", id);
+  return updated;
+}
+
 export async function getProductZones(slug: string): Promise<unknown | null> {
   const supabase = getSupabase();
   const { data, error } = await supabase

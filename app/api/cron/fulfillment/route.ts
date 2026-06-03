@@ -3,8 +3,9 @@
 //  - Paid orders already pushed          → sync MoaOS status back to the tracker.
 // Mode-gated (off/dry_run never push). Protected by CRON_SECRET.
 import { NextResponse } from "next/server";
-import { getOrdersNeedingFulfillment } from "@/lib/store";
+import { getOrdersNeedingFulfillment, getProofReminderCandidates, recordProofReminder } from "@/lib/store";
 import { pushOrderToMoaOS, syncOrderFromMoaOS, fulfillmentMode } from "@/lib/catalog-fulfillment";
+import { sendProofApproval } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -37,5 +38,22 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ mode, scanned: orders.length, pushed, synced });
+  // Proof-approval nudges: paid orders the customer hasn't approved/rejected,
+  // older than 2 days, ≤3 reminders, ≥2 days apart. Stops money sitting silently.
+  let reminded = 0;
+  try {
+    const candidates = await getProofReminderCandidates();
+    for (const o of candidates) {
+      if (!o.proofUrl) continue;
+      const r = await sendProofApproval(o, o.proofUrl, null, { reminder: true });
+      if (r.sent) {
+        await recordProofReminder(o.id);
+        reminded++;
+      }
+    }
+  } catch {
+    /* reminders are best-effort */
+  }
+
+  return NextResponse.json({ mode, scanned: orders.length, pushed, synced, reminded });
 }

@@ -339,8 +339,20 @@ async function deliver(
   return sendViaN8n(to, subject, html);
 }
 
-function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origin: string, proofUrl: string, sheetUrl?: string | null): string {
+// Internal ops notification (e.g. a customer requested changes) — to the MOA
+// catalog ops inbox, via the same accounting/production sender + channel.
+const OPS_EMAIL = process.env.CATALOG_OPS_EMAIL || "production@magnumopus.agency";
+export async function notifyOps(subject: string, html: string): Promise<void> {
+  try {
+    await deliver(OPS_EMAIL, subject, html);
+  } catch {
+    /* best-effort */
+  }
+}
+
+function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origin: string, proofUrl: string, sheetUrl?: string | null, reminder?: boolean): string {
   const approveUrl = `${origin}/api/orders/${order.id}/approve`;
+  const changesUrl = `${origin}/api/orders/${order.id}/request-changes`;
   const productName = product?.displayName ?? "Catalog product";
   const p = order.artworkPlacement;
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
@@ -364,7 +376,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
         <td align="right">${label("Catalog")}</td>
       </tr></table></td></tr>
       <tr><td style="padding:24px 40px 8px;">
-        ${label("Payment received · One quick step", C.terracotta)}
+        ${label(reminder ? "Friendly reminder · still awaiting your approval" : "Payment received · One quick step", C.terracotta)}
         <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:36px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Approve<br/>your proof</h1>
         <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
           ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is paid. Here's exactly how <strong>${esc(productName)}</strong> will be produced. Give it a look and approve — that's the only thing between you and production. Nothing goes to the factory until you do.
@@ -382,7 +394,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
           <a href="${esc(approveUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Approve &amp; send to production &rarr;</a>
         </td></tr></table>
         ${sheetUrl ? `<div style="margin:16px 0 0;"><a href="${esc(sheetUrl)}" style="font-family:${DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${C.terracotta};text-decoration:none;">View full spec sheet (PDF) &rarr;</a><div style="font-family:${BODY};font-size:11px;color:${C.neutral};margin-top:4px;">Exact print size, placement (inches from HPS &amp; center), colors and method.</div></div>` : ""}
-        <div style="margin:12px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? Just reply to this email and we'll adjust before anything is made.</div>
+        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? <a href="${esc(changesUrl)}" style="color:${C.terracotta};font-weight:700;text-decoration:none;">Request changes &rarr;</a> — tell us what to adjust and we'll resend a new proof. Nothing is made until you approve.</div>
       </td></tr>
       <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
         <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
@@ -396,16 +408,19 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
 export async function sendProofApproval(
   order: ShopOrder,
   proofUrl: string,
-  req?: { headers?: { get(name: string): string | null } } | null
+  req?: { headers?: { get(name: string): string | null } } | null,
+  opts?: { reminder?: boolean }
 ): Promise<{ sent: boolean; reason?: string }> {
   if (!order.contactEmail) return { sent: false, reason: "Order has no contact email" };
   const product = await getProductById(order.productId);
   const origin = originFrom(req);
-  const subject = `Approve your proof · Order ${order.orderNumber} · MOA`;
+  const subject = opts?.reminder
+    ? `Reminder · approve your proof · Order ${order.orderNumber}`
+    : `Approve your proof · Order ${order.orderNumber} · MOA`;
   // Attach the decoration spec sheet (real inch placement) so the client's
   // approval covers the spec, not just the image. Null if not calibrated.
   const sheetUrl = await buildDecorationSheetUrl(order, proofUrl).catch(() => null);
-  return deliver(order.contactEmail, subject, renderProofHtml(order, product, origin, proofUrl, sheetUrl));
+  return deliver(order.contactEmail, subject, renderProofHtml(order, product, origin, proofUrl, sheetUrl, opts?.reminder));
 }
 
 function renderShippingHtml(order: ShopOrder, origin: string, tracking: { carrier: string; number: string }): string {
