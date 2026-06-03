@@ -109,6 +109,10 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
   // Garment measurements (spec-sheet points of measure × sizes).
   const [measurements, setMeasurements] = useState<ProductMeasurements | null>(null);
 
+  // Spec-driven auto-calibration.
+  const [autoBusy, setAutoBusy] = useState(false);
+  const [autoMsg, setAutoMsg] = useState<string | null>(null);
+
   // Load zones whenever the SKU changes.
   useEffect(() => {
     if (!product) return;
@@ -323,6 +327,27 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
     ]);
   const removePom = (id: string) => setMeasRows((measurements?.rows ?? []).filter((r) => r.id !== id));
 
+  const autoCalibrate = async () => {
+    setAutoBusy(true);
+    setAutoMsg(null);
+    try {
+      const res = await fetch(`/api/admin/auto-calibrate/${slug}`, { method: "POST" });
+      const d = await res.json();
+      if (d?.ok && d.calibration) {
+        setCalibration(normaliseCalibration(d.calibration) ?? {});
+        setSavedAt(new Date().toISOString());
+        const conf = String(d.confidence).toUpperCase();
+        setAutoMsg(`Auto-calibrated from spec · confidence ${conf} (chest/length ${d.ratio}). Front + back set & saved — review the guides${conf === "HIGH" ? "." : ", nudge if needed."}`);
+      } else {
+        setAutoMsg(d?.error || "Auto-calibrate failed.");
+      }
+    } catch {
+      setAutoMsg("Auto-calibrate failed.");
+    } finally {
+      setAutoBusy(false);
+    }
+  };
+
   return (
     <div className="ze">
       <aside className="ze-sidebar">
@@ -524,6 +549,14 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
               <p className="eyebrow">Calibration · {view}</p>
             </header>
             <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 2px" }}>
+              <button type="button" className="pdpx-cta" onClick={autoCalibrate} disabled={autoBusy} style={{ width: "100%" }}>
+                {autoBusy ? "Detecting garment…" : "⚡ Auto-calibrate from spec"}
+              </button>
+              {autoMsg ? (
+                <p style={{ fontSize: "0.72rem", lineHeight: 1.5, color: autoMsg.includes("failed") || autoMsg.includes("No ") || autoMsg.includes("no ") ? "#B04731" : "#8A8680" }}>{autoMsg}</p>
+              ) : (
+                <p style={{ fontSize: "0.68rem", lineHeight: 1.45, color: "#8A8680" }}>Uses the SKU&apos;s base mockup + stored spec (body length / chest) to set the ruler automatically. Or set it by hand below.</p>
+              )}
               <label className="ze-field">
                 <span>Ruler width (inches)</span>
                 <input
