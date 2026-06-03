@@ -63,10 +63,14 @@ async function buildIntakePayload(order: ShopOrder) {
   // placement. This is what makes the decoration spec sheet's callouts real.
   const placement = order.artworkPlacement ?? null;
   let derived: ReturnType<typeof derivePlacement> | null = null;
+  let cfX: number | null = null;
   if (placement && product) {
     const calRaw = await getProductCalibration(product.slug).catch(() => null);
     const vcal = normaliseCalibration(calRaw)?.[placement.view];
-    if (vcal) derived = derivePlacement(vcal, placement.box, placement.art);
+    if (vcal) {
+      derived = derivePlacement(vcal, placement.box, placement.art, placement.view);
+      cfX = vcal.cfX;
+    }
   }
 
   return {
@@ -97,6 +101,8 @@ async function buildIntakePayload(order: ShopOrder) {
         topBelowCollarIn: derived?.topBelowCollarIn ?? null,
         horizontal: derived?.horizontal ?? null,
         hpsY: derived?.hpsY ?? null,
+        cfX,
+        fromOffsetIn: derived ? Math.abs(derived.fromCenterIn) : null,
         printBox: derived?.printBox ?? placement?.box ?? null,
         proofUrl: order.proofUrl ?? null,
         underbase: needsUnderbase(variant?.colorHex, placement?.pantones),

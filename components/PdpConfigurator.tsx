@@ -6,7 +6,7 @@ import { ProductShot } from "./ProductShot";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime } from "@/lib/pricing";
-import { getDefaultZones, normaliseZonesPayload, type ProductZones } from "@/lib/zones";
+import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 
@@ -34,6 +34,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
   // Defaults from lib/zones; if /studio has authored a Supabase override for
   // this slug we swap it in on mount.
   const [zones, setZones] = useState<ProductZones>(() => getDefaultZones(product));
+  const [calibration, setCalibration] = useState<ProductCalibration | null>(null);
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/zones/${product.slug}`)
@@ -47,6 +48,7 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
             back: override.back.length ? override.back : zones.back
           });
         }
+        setCalibration(normaliseCalibration(data?.calibration));
       })
       .catch(() => {
         // network failure → keep defaults
@@ -103,7 +105,13 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
   const perUnit = tier.perUnitUsd + decorationAdder;
   const subtotal = perUnit * qty;
 
-  const placements = view === "back" ? zones.back : zones.front;
+  // Only offer placements we can spec to ~95% (calibrated + supported reference
+  // frame). Uncalibrated SKUs and unsupported zones (sleeves/hats/etc.) are
+  // hidden until their reference is built — so we never quote a placement we
+  // can't put exact numbers on.
+  const placements = (view === "back" ? zones.back : zones.front).filter((p) =>
+    isZoneSpecable(p.id, view, product.category, calibration)
+  );
   const placement = placements.find((p) => p.id === placementId) ?? null;
 
   const stepDone = (s: Step): boolean => {
@@ -480,18 +488,24 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
                         </button>
 
                         <p className="pdpx-place-label">Step 02 · Location</p>
-                        <div className="pdpx-locs">
-                          {placements.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              className={`pdpx-loc${placementId === p.id ? " is-on" : ""}`}
-                              onClick={() => setPlacementId(p.id)}
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
+                        {placements.length === 0 ? (
+                          <p className="pdpx-place-hint">
+                            Placement options for this {view} are being finalised. We only show locations we can spec to the inch — more open up as each style is calibrated.
+                          </p>
+                        ) : (
+                          <div className="pdpx-locs">
+                            {placements.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                className={`pdpx-loc${placementId === p.id ? " is-on" : ""}`}
+                                onClick={() => setPlacementId(p.id)}
+                              >
+                                {p.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         {artworkUrl ? (
                           <>
                             <p className="pdpx-place-hint">

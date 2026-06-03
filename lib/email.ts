@@ -11,6 +11,7 @@ import { Resend } from "resend";
 import type { ShopOrder, CatalogProduct } from "./types";
 import { currency } from "./pricing";
 import { getProductById, statusLabel } from "./store";
+import { buildDecorationSheetUrl } from "./decoration-sheet";
 
 const FROM_DEFAULT = "MOA Catalog <onboarding@resend.dev>";
 
@@ -335,7 +336,7 @@ async function deliver(
   return sendViaN8n(to, subject, html);
 }
 
-function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origin: string, proofUrl: string): string {
+function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origin: string, proofUrl: string, sheetUrl?: string | null): string {
   const approveUrl = `${origin}/api/orders/${order.id}/approve`;
   const productName = product?.displayName ?? "Catalog product";
   const p = order.artworkPlacement;
@@ -377,6 +378,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${C.terracotta}" style="border-radius:10px;">
           <a href="${esc(approveUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Approve &amp; send to production &rarr;</a>
         </td></tr></table>
+        ${sheetUrl ? `<div style="margin:16px 0 0;"><a href="${esc(sheetUrl)}" style="font-family:${DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${C.terracotta};text-decoration:none;">View full spec sheet (PDF) &rarr;</a><div style="font-family:${BODY};font-size:11px;color:${C.neutral};margin-top:4px;">Exact print size, placement (inches from HPS &amp; center), colors and method.</div></div>` : ""}
         <div style="margin:12px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? Just reply to this email and we'll adjust before anything is made.</div>
       </td></tr>
       <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
@@ -397,7 +399,10 @@ export async function sendProofApproval(
   const product = await getProductById(order.productId);
   const origin = originFrom(req);
   const subject = `Approve your proof · Order ${order.orderNumber} · MOA`;
-  return deliver(order.contactEmail, subject, renderProofHtml(order, product, origin, proofUrl));
+  // Attach the decoration spec sheet (real inch placement) so the client's
+  // approval covers the spec, not just the image. Null if not calibrated.
+  const sheetUrl = await buildDecorationSheetUrl(order, proofUrl).catch(() => null);
+  return deliver(order.contactEmail, subject, renderProofHtml(order, product, origin, proofUrl, sheetUrl));
 }
 
 function renderShippingHtml(order: ShopOrder, origin: string, tracking: { carrier: string; number: string }): string {

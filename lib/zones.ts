@@ -86,7 +86,8 @@ export type DerivedPlacement = {
 export function derivePlacement(
   cal: ViewCalibration,
   box: Box,
-  art: { ox: number; oy: number; sx: number; sy: number; r?: number }
+  art: { ox: number; oy: number; sx: number; sy: number; r?: number },
+  view: View = "front"
 ): DerivedPlacement {
   const span = Math.abs(cal.scaleBx - cal.scaleAx) || 0.0001;
   const inPerWFrac = cal.realInches / span;
@@ -105,10 +106,20 @@ export function derivePlacement(
   const topBelowCollarIn = quarter(Math.max(0, (printBox.y - cal.hpsY) * inPerHFrac));
   const centerX = printBox.x + printBox.w / 2;
   const fromCenterIn = quarter((centerX - cal.cfX) * inPerWFrac);
-  const horizontal =
-    Math.abs(fromCenterIn) < 0.26
-      ? "Centered"
-      : `${Math.abs(fromCenterIn).toFixed(2).replace(/\.?0+$/, "")}" ${fromCenterIn > 0 ? "R" : "L"} of CF`;
+
+  // Horizontal datum: CF on the front, CB on the back. Left/right is reported
+  // WEARER-relative (garment convention), not viewer-relative. On a front view
+  // the wearer's left is screen-right; on a back view it's screen-left.
+  const datum = view === "back" ? "CB" : "CF";
+  let horizontal: string;
+  if (Math.abs(fromCenterIn) < 0.26) {
+    horizontal = "Centered";
+  } else {
+    const screenRight = fromCenterIn > 0;
+    const wearerLeft = view === "back" ? !screenRight : screenRight;
+    const abs = Math.abs(fromCenterIn).toFixed(2).replace(/\.?0+$/, "");
+    horizontal = `${abs}" ${wearerLeft ? "wearer's L" : "wearer's R"} of ${datum}`;
+  }
 
   return { widthIn, heightIn, topBelowCollarIn, fromCenterIn, horizontal, hpsY: cal.hpsY, printBox };
 }
@@ -333,6 +344,34 @@ const SKU_OVERRIDES: Record<string, Partial<ProductZones>> = {
     ]
   }
 };
+
+// ---------- Placement certainty gating ----------
+// A placement is only offered when we can spec it to ~95% — i.e. its reference
+// frame is supported AND the SKU is calibrated for that view. Front/back body
+// (HPS + CF/CB datum) are supported today; sleeves/hats/bottoms/bags need their
+// own reference frames (planned) and stay hidden until built.
+
+export type ZoneFamily = "front-body" | "back-body" | "sleeve" | "hat" | "bottom" | "bag";
+
+export function zoneFamily(zoneId: string, view: View, category: ProductCategory): ZoneFamily {
+  if (category === "headwear") return "hat";
+  if (category === "bag" || category === "accessory") return "bag";
+  if (category === "bottoms") return "bottom";
+  if (zoneId.toLowerCase().includes("sleeve")) return "sleeve"; // apparel sleeves
+  return view === "back" ? "back-body" : "front-body";
+}
+
+const SUPPORTED_FAMILIES: ZoneFamily[] = ["front-body", "back-body"];
+
+export function isZoneSpecable(
+  zoneId: string,
+  view: View,
+  category: ProductCategory,
+  calibration: ProductCalibration | null
+): boolean {
+  if (!SUPPORTED_FAMILIES.includes(zoneFamily(zoneId, view, category))) return false;
+  return Boolean(calibration && calibration[view]);
+}
 
 // ---------- Resolution ----------
 
