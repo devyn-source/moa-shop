@@ -353,7 +353,6 @@ export async function notifyOps(subject: string, html: string): Promise<void> {
 function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origin: string, proofUrl: string, sheetUrl?: string | null, reminder?: boolean): string {
   const approveUrl = `${origin}/api/orders/${order.id}/approve`;
   const adjustUrl = `${origin}/adjust/${order.id}`;
-  const changesUrl = `${origin}/api/orders/${order.id}/request-changes`;
   const productName = product?.displayName ?? "Catalog product";
   const p = order.artworkPlacement;
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
@@ -395,7 +394,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
           <a href="${esc(approveUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Approve &amp; send to production &rarr;</a>
         </td></tr></table>
         ${sheetUrl ? `<div style="margin:16px 0 0;"><a href="${esc(sheetUrl)}" style="font-family:${DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${C.terracotta};text-decoration:none;">View full spec sheet (PDF) &rarr;</a><div style="font-family:${BODY};font-size:11px;color:${C.neutral};margin-top:4px;">Exact print size, placement (inches from HPS &amp; center), colors and method.</div></div>` : ""}
-        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? <a href="${esc(adjustUrl)}" style="color:${C.terracotta};font-weight:700;text-decoration:none;">Adjust it yourself &rarr;</a> — change placement, color, ink, artwork or sizes and your proof updates instantly. Need something custom? <a href="${esc(changesUrl)}" style="color:${C.neutral};text-decoration:underline;">Tell us what to change</a>.</div>
+        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? <a href="${esc(adjustUrl)}" style="color:${C.terracotta};font-weight:700;text-decoration:none;">Redo it yourself &rarr;</a> — change placement, color, ink, artwork or sizes and your proof updates instantly. As many times as you like, until it's perfect.</div>
       </td></tr>
       <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
         <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
