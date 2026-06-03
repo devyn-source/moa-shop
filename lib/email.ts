@@ -13,7 +13,10 @@ import { currency } from "./pricing";
 import { getProductById, statusLabel } from "./store";
 import { buildDecorationSheetUrl } from "./decoration-sheet";
 
-const FROM_DEFAULT = "MOA Catalog <onboarding@resend.dev>";
+// All customer-facing catalog email sends from the MOA accounting address —
+// never a personal inbox. (Resend honors this From once the domain is verified;
+// the N8N Gmail fallback's From is dictated by its OAuth account.)
+const FROM_DEFAULT = "Magnum Opus Agency <accounting@magnumopus.agency>";
 
 // --- Brand tokens (mirrors app/globals.css / CLAUDE.md) --------------------
 const C = {
