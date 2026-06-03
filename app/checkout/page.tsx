@@ -1,61 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { currency } from "@/lib/pricing";
+import { BrandSelect } from "@/components/BrandSelect";
+import { createBrowserSupabase } from "@/lib/supabase-browser";
+
+const US_STATES = [
+  { value: "", label: "Select state" },
+  ...[
+    ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"], ["CA", "California"],
+    ["CO", "Colorado"], ["CT", "Connecticut"], ["DE", "Delaware"], ["DC", "District of Columbia"],
+    ["FL", "Florida"], ["GA", "Georgia"], ["HI", "Hawaii"], ["ID", "Idaho"], ["IL", "Illinois"],
+    ["IN", "Indiana"], ["IA", "Iowa"], ["KS", "Kansas"], ["KY", "Kentucky"], ["LA", "Louisiana"],
+    ["ME", "Maine"], ["MD", "Maryland"], ["MA", "Massachusetts"], ["MI", "Michigan"], ["MN", "Minnesota"],
+    ["MS", "Mississippi"], ["MO", "Missouri"], ["MT", "Montana"], ["NE", "Nebraska"], ["NV", "Nevada"],
+    ["NH", "New Hampshire"], ["NJ", "New Jersey"], ["NM", "New Mexico"], ["NY", "New York"],
+    ["NC", "North Carolina"], ["ND", "North Dakota"], ["OH", "Ohio"], ["OK", "Oklahoma"], ["OR", "Oregon"],
+    ["PA", "Pennsylvania"], ["RI", "Rhode Island"], ["SC", "South Carolina"], ["SD", "South Dakota"],
+    ["TN", "Tennessee"], ["TX", "Texas"], ["UT", "Utah"], ["VT", "Vermont"], ["VA", "Virginia"],
+    ["WA", "Washington"], ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
+    ["PR", "Puerto Rico"],
+  ].map(([value, label]) => ({ value, label })),
+];
+
+const COUNTRIES = [
+  "United States", "Canada", "United Kingdom", "Australia", "New Zealand", "Ireland", "Germany",
+  "France", "Netherlands", "Belgium", "Spain", "Italy", "Sweden", "Denmark", "Switzerland", "Mexico",
+  "Brazil", "Japan", "South Korea", "Singapore", "Hong Kong", "United Arab Emirates", "India", "Other",
+].map((c) => ({ value: c, label: c }));
+
+type Form = {
+  contactName: string; contactEmail: string; contactPhone: string; companyName: string;
+  shipToName: string; line1: string; line2: string; city: string; state: string; postalCode: string; country: string;
+};
 
 export default function CheckoutPage() {
   const { items, total, count, hydrated } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [f, setF] = useState<Form>({
+    contactName: "", contactEmail: "", contactPhone: "", companyName: "",
+    shipToName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "United States",
+  });
+  const on = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
+  const setVal = (k: keyof Form, v: string) => setF((p) => ({ ...p, [k]: v }));
 
-  async function submit(formData: FormData) {
+  // Signed-in account → offer their info or a different address.
+  const [account, setAccount] = useState<{ email: string; name: string | null } | null>(null);
+  const [useAccount, setUseAccount] = useState(true);
+
+  useEffect(() => {
+    const sb = createBrowserSupabase();
+    sb.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (u?.email) {
+        const name = (u.user_metadata?.full_name || u.user_metadata?.name || "") as string;
+        setAccount({ email: u.email, name: name || null });
+        setF((p) => ({ ...p, contactEmail: u.email!, contactName: name || p.contactName }));
+      }
+    }).catch(() => {});
+  }, []);
+
+  function chooseAccount() {
+    setUseAccount(true);
+    if (account) setF((p) => ({ ...p, contactEmail: account.email, contactName: account.name || p.contactName }));
+  }
+  function chooseDifferent() {
+    setUseAccount(false);
+    setF((p) => ({ ...p, contactEmail: "", contactName: "" }));
+  }
+
+  const isUS = f.country === "United States";
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
     setSubmitting(true);
     setError("");
 
     const contact = {
-      contactName: String(formData.get("contactName") ?? ""),
-      contactEmail: String(formData.get("contactEmail") ?? ""),
-      contactPhone: String(formData.get("contactPhone") ?? ""),
-      companyName: String(formData.get("companyName") ?? ""),
-      shipToName: String(formData.get("shipToName") ?? ""),
-      shipToAddress: {
-        line1: String(formData.get("line1") ?? ""),
-        line2: String(formData.get("line2") ?? ""),
-        city: String(formData.get("city") ?? ""),
-        state: String(formData.get("state") ?? ""),
-        postalCode: String(formData.get("postalCode") ?? ""),
-        country: String(formData.get("country") ?? "United States")
-      }
+      contactName: f.contactName, contactEmail: f.contactEmail, contactPhone: f.contactPhone, companyName: f.companyName,
+      shipToName: f.shipToName,
+      shipToAddress: { line1: f.line1, line2: f.line2, city: f.city, state: f.state, postalCode: f.postalCode, country: f.country },
     };
 
     const payloadItems = items.map((item) => {
-      const sizeSummary = Object.entries(item.sizeQty)
-        .map(([s, q]) => `${s}:${q}`)
-        .join(" ");
+      const sizeSummary = Object.entries(item.sizeQty).map(([s, q]) => `${s}:${q}`).join(" ");
       return {
-        productId: item.productId,
-        variantId: item.variantId,
-        decorationIds: item.decorationIds,
-        quantity: item.quantity,
-        displayName: item.displayName,
-        colorLabel: item.colorLabel,
-        decorationLabel: item.decorationLabel,
-        artworkFileName: item.artworkFileName,
-        artworkFileUrl: item.artworkFileUrl,
-        artworkPlacement: item.artworkPlacement,
-        sizeBreakdown: item.sizeQty,
-        artworkNotes: sizeSummary
-          ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}`
-          : item.artworkNotes
+        productId: item.productId, variantId: item.variantId, decorationIds: item.decorationIds,
+        quantity: item.quantity, displayName: item.displayName, colorLabel: item.colorLabel,
+        decorationLabel: item.decorationLabel, artworkFileName: item.artworkFileName, artworkFileUrl: item.artworkFileUrl,
+        artworkPlacement: item.artworkPlacement, sizeBreakdown: item.sizeQty,
+        artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes,
       };
     });
 
     const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: payloadItems, contact })
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: payloadItems, contact }),
     });
     const data = (await res.json()) as { url?: string; error?: string };
     if (!res.ok || !data.url) {
@@ -63,15 +106,13 @@ export default function CheckoutPage() {
       setError(data.error || "Checkout could not start. Check the fields and try again.");
       return;
     }
-    window.location.href = data.url; // hand off to Stripe-hosted checkout
+    window.location.href = data.url;
   }
 
   if (hydrated && items.length === 0) {
     return (
       <main className="page">
-        <div className="empty-state">
-          Your cart is empty. <Link href="/" className="link-button">Browse the catalog →</Link>
-        </div>
+        <div className="empty-state">Your cart is empty. <Link href="/" className="link-button">Browse the catalog →</Link></div>
       </main>
     );
   }
@@ -79,36 +120,95 @@ export default function CheckoutPage() {
   return (
     <main className="page">
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/">Catalog</Link>
-        <span aria-hidden>/</span>
-        <Link href="/cart">Cart</Link>
-        <span aria-hidden>/</span>
+        <Link href="/">Catalog</Link><span aria-hidden>/</span>
+        <Link href="/cart">Cart</Link><span aria-hidden>/</span>
         <span className="crumb-current">Checkout</span>
       </nav>
 
       <div className="config-shell">
-        <form action={submit} className="config-form" id="checkout-form">
+        <form onSubmit={submit} className="config-form" id="checkout-form">
           <div className="config-head">
             <p className="eyebrow">Checkout</p>
-            <h1 className="page-title">Contact + ship-to</h1>
-            <p className="lede">Entered once and applied to every SKU in your cart.</p>
+            <h1 className="page-title">Contact &amp; shipping</h1>
+            <p className="lede">Entered once and applied to every SKU in your order.</p>
           </div>
 
-          <section className="step-block">
-            <div className="form-grid">
-              <label className="field"><span className="label">Contact name</span><input name="contactName" required /></label>
-              <label className="field"><span className="label">Email</span><input name="contactEmail" type="email" required /></label>
-              <label className="field"><span className="label">Phone</span><input name="contactPhone" required /></label>
-              <label className="field"><span className="label">Company</span><input name="companyName" required /></label>
-              <label className="field"><span className="label">Ship-to name</span><input name="shipToName" required /></label>
-              <label className="field"><span className="label">Address line 1</span><input name="line1" required /></label>
-              <label className="field"><span className="label">Address line 2</span><input name="line2" /></label>
-              <label className="field"><span className="label">City</span><input name="city" required /></label>
-              <label className="field"><span className="label">State</span><input name="state" required /></label>
-              <label className="field"><span className="label">Postal code</span><input name="postalCode" required /></label>
-              <label className="field"><span className="label">Country</span><input name="country" defaultValue="United States" required /></label>
+          {account && (
+            <div className="co-account">
+              <div>
+                <p className="co-account-label">Signed in</p>
+                <p className="co-account-email">{account.email}</p>
+              </div>
+              <div className="co-toggle" role="tablist" aria-label="Use account info">
+                <button type="button" className={useAccount ? "is-on" : ""} onClick={chooseAccount}>Use my account</button>
+                <button type="button" className={!useAccount ? "is-on" : ""} onClick={chooseDifferent}>Different info</button>
+              </div>
             </div>
-            {error ? <p className="form-error">{error}</p> : null}
+          )}
+
+          <section className="co-section">
+            <p className="co-section-title">Contact</p>
+            <div className="co-grid">
+              <label className="co-field">
+                <span className="label">Contact name</span>
+                <input className="co-input" value={f.contactName} onChange={on("contactName")} required autoComplete="name" />
+              </label>
+              <label className="co-field">
+                <span className="label">Email</span>
+                <input className="co-input" type="email" value={f.contactEmail} onChange={on("contactEmail")} required autoComplete="email" readOnly={Boolean(account) && useAccount} />
+              </label>
+              <label className="co-field">
+                <span className="label">Phone</span>
+                <input className="co-input" value={f.contactPhone} onChange={on("contactPhone")} autoComplete="tel" inputMode="tel" />
+              </label>
+              <label className="co-field">
+                <span className="label">Company</span>
+                <input className="co-input" value={f.companyName} onChange={on("companyName")} autoComplete="organization" />
+              </label>
+            </div>
+          </section>
+
+          <section className="co-section">
+            <p className="co-section-title">Ship to</p>
+            <div className="co-grid">
+              <label className="co-field co-field--full">
+                <span className="label">Recipient / attention</span>
+                <input className="co-input" value={f.shipToName} onChange={on("shipToName")} autoComplete="name" placeholder="Name on the shipment" />
+              </label>
+              <label className="co-field co-field--full">
+                <span className="label">Address line 1</span>
+                <input className="co-input" value={f.line1} onChange={on("line1")} required autoComplete="address-line1" />
+              </label>
+              <label className="co-field co-field--full">
+                <span className="label">Address line 2</span>
+                <input className="co-input" value={f.line2} onChange={on("line2")} autoComplete="address-line2" placeholder="Suite, floor, unit (optional)" />
+              </label>
+              <label className="co-field">
+                <span className="label">City</span>
+                <input className="co-input" value={f.city} onChange={on("city")} required autoComplete="address-level2" />
+              </label>
+              <div className="co-field">
+                <span className="label">{isUS ? "State" : "State / Province"}</span>
+                {isUS ? (
+                  <div className="co-select">
+                    <BrandSelect value={f.state} options={US_STATES} ariaLabel="State" onChange={(v) => setVal("state", v)} />
+                  </div>
+                ) : (
+                  <input className="co-input" value={f.state} onChange={on("state")} placeholder="State / Province / Region" />
+                )}
+              </div>
+              <label className="co-field">
+                <span className="label">Postal code</span>
+                <input className="co-input" value={f.postalCode} onChange={on("postalCode")} required autoComplete="postal-code" />
+              </label>
+              <div className="co-field">
+                <span className="label">Country</span>
+                <div className="co-select">
+                  <BrandSelect value={f.country} options={COUNTRIES} ariaLabel="Country" onChange={(v) => setVal("country", v)} />
+                </div>
+              </div>
+            </div>
+            {error ? <p className="form-error" style={{ marginTop: 16 }}>{error}</p> : null}
           </section>
         </form>
 
