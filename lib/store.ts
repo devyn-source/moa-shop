@@ -401,6 +401,25 @@ export async function recordChangesRequested(id: string, note: string): Promise<
   return updated;
 }
 
+// Self-serve config edit (placement/color/ink/art/sizes) on an unapproved order.
+// Clears any pending change request; the caller regenerates the proof + re-emails.
+export async function updateOrderConfig(id: string, patch: Partial<ShopOrder>): Promise<ShopOrder | null> {
+  const current = await getOrderById(id);
+  if (!current) return null;
+  if (current.proofApprovedAt) return current; // already in production — no edits
+  const now = new Date().toISOString();
+  const updated: ShopOrder = {
+    ...current,
+    ...patch,
+    changesRequestedAt: undefined,
+    changesRequestedNote: undefined,
+    updatedAt: now,
+    statusLog: [...current.statusLog, { statusFrom: current.status, statusTo: current.status, note: "Customer adjusted the configuration; proof regenerated.", createdAt: now }],
+  };
+  await getSupabase().from("orders").update({ data: updated, updated_at: now }).eq("id", id);
+  return updated;
+}
+
 export async function markOrderCancelledRefunded(id: string, refundId: string | null): Promise<ShopOrder | null> {
   const current = await getOrderById(id);
   if (!current) return null;

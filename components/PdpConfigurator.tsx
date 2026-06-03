@@ -30,7 +30,23 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "size", label: "Size & quantity" }
 ];
 
-export function PdpConfigurator({ product }: { product: CatalogProduct }) {
+// When present, the configurator opens in EDIT mode — pre-filled from an
+// existing order, and the CTA regenerates that order's proof instead of adding
+// a new cart line. This is the self-serve "request changes" → re-proof loop.
+export type EditSeed = {
+  orderId: string;
+  variantId?: string;
+  decorationIds?: string[];
+  pantones?: PmsColor[];
+  view?: "front" | "back";
+  zoneId?: string;
+  art?: ArtTransform;
+  artworkFileUrl?: string;
+  artworkFileName?: string;
+  sizeQty?: Record<string, number>;
+};
+
+export function PdpConfigurator({ product, editOrder }: { product: CatalogProduct; editOrder?: EditSeed }) {
   // Defaults from lib/zones; if /studio has authored a Supabase override for
   // this slug we swap it in on mount.
   const [zones, setZones] = useState<ProductZones>(() => getDefaultZones(product));
@@ -59,22 +75,28 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.slug]);
   const defaultVariant = product.variants.find((v) => v.frontImage) ?? product.variants[0];
-  const [variantId, setVariantId] = useState(defaultVariant?.id ?? "");
-  const [view, setView] = useState<"front" | "back">("front");
-  const [step, setStep] = useState<Step>("color");
-  const [decorationIds, setDecorationIds] = useState<string[]>([]);
-  const [pantones, setPantones] = useState<PmsColor[]>([]);
-  const [artworkUrl, setArtworkUrl] = useState<string | null>(null);
-  const [artworkName, setArtworkName] = useState<string | null>(null);
-  const [placementId, setPlacementId] = useState<string | null>(null);
+  const [variantId, setVariantId] = useState(editOrder?.variantId ?? defaultVariant?.id ?? "");
+  const [view, setView] = useState<"front" | "back">(editOrder?.view ?? "front");
+  const [step, setStep] = useState<Step>(editOrder ? "placement" : "color");
+  const [decorationIds, setDecorationIds] = useState<string[]>(editOrder?.decorationIds ?? []);
+  const [pantones, setPantones] = useState<PmsColor[]>(editOrder?.pantones ?? []);
+  const [artworkUrl, setArtworkUrl] = useState<string | null>(editOrder?.artworkFileUrl ?? null);
+  const [artworkName, setArtworkName] = useState<string | null>(editOrder?.artworkFileName ?? null);
+  const [placementId, setPlacementId] = useState<string | null>(editOrder?.zoneId ?? null);
   // Free position + size of the artwork WITHIN the chosen bounding box.
-  // Reset to "fill the box" whenever the shopper picks a different zone.
-  const [artTransform, setArtTransform] = useState<ArtTransform>({ ox: 0, oy: 0, sx: 1, sy: 1 });
+  // Reset to "fill the box" whenever the shopper picks a different zone — but
+  // NOT on the initial mount in edit mode (we'd wipe the seeded placement).
+  const [artTransform, setArtTransform] = useState<ArtTransform>(editOrder?.art ?? { ox: 0, oy: 0, sx: 1, sy: 1 });
+  const skipArtReset = useRef(Boolean(editOrder));
   useEffect(() => {
+    if (skipArtReset.current) {
+      skipArtReset.current = false;
+      return;
+    }
     setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
   }, [placementId, view]);
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
-    distributeAcross(product.sizes, product.moq)
+    editOrder?.sizeQty ?? distributeAcross(product.sizes, product.moq)
   );
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -262,6 +284,71 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
     setSubmitting(true);
     router.push("/cart");
   };
+
+  // EDIT MODE — regenerate the existing order's proof from the adjusted config.
+  const [done, setDone] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const handleUpdate = async () => {
+    if (!editOrder || belowMoq || !variant || submitting) return;
+    setSubmitting(true);
+    setUpdateError(null);
+    const decorationLabel = decoSelected.length ? decoSelected.map((d) => d.label).join(" + ") : "Undecorated";
+    const artworkPlacement = placement
+      ? {
+          view,
+          zoneId: placement.id,
+          zoneLabel: placement.label,
+          box: placement.box,
+          art: artTransform,
+          method: decorationLabel,
+          colors: pantones.length || undefined,
+          pantones: pantones.length ? pantones : undefined,
+          maxColors: decoSelected[0]?.maxColors,
+        }
+      : undefined;
+    try {
+      const res = await fetch(`/api/orders/${editOrder.orderId}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          variantId: variant.id,
+          colorLabel: variant.colorLabel,
+          colorHex: variant.colorHex,
+          decorationIds,
+          decorationLabel,
+          artworkFileUrl: artworkUrl ?? undefined,
+          artworkFileName: artworkName ?? undefined,
+          sizeBreakdown: sizeQty,
+          quantity: qty,
+          artworkPlacement,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => null);
+        setUpdateError(d?.error || "Couldn't update — try again.");
+        setSubmitting(false);
+        return;
+      }
+      setDone(true);
+    } catch {
+      setUpdateError("Couldn't update — try again.");
+      setSubmitting(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <section className="pdpx">
+        <div className="pdpx-stage" style={{ textAlign: "center", padding: "64px 24px" }}>
+          <p className="pdpx-eyebrow" style={{ color: "var(--color-terracotta)" }}>Updated</p>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.8rem", textTransform: "uppercase", letterSpacing: "0.5px", margin: "10px 0 12px" }}>Fresh proof on the way</h2>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--color-neutral)", maxWidth: 460, margin: "0 auto" }}>
+            We&apos;ve regenerated your proof with the changes and emailed it for approval. Nothing goes to production until you approve the new version.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="pdpx">
@@ -604,15 +691,20 @@ export function PdpConfigurator({ product }: { product: CatalogProduct }) {
           <button
             type="button"
             className="pdpx-cta"
-            onClick={handleAddToCart}
+            onClick={editOrder ? handleUpdate : handleAddToCart}
             disabled={belowMoq || submitting}
           >
             {belowMoq
               ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
+              : editOrder
+              ? submitting
+                ? "Updating proof…"
+                : "Update proof →"
               : submitting
               ? "Adding to order…"
               : "Add to order →"}
           </button>
+          {updateError ? <p className="pdpx-foot-note" style={{ color: "var(--color-terracotta)" }}>{updateError}</p> : null}
           <p className="pdpx-foot-note">
             Lead time {formatLeadTime(product.leadTimeDays)} · MOA-managed quality control · Artwork finalised in QA
           </p>
