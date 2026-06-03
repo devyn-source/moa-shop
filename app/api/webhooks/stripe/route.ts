@@ -3,6 +3,7 @@ import { getOrderById, markOrderPaid, setOrderProof } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
 import { sendOrderConfirmation, sendProofApproval } from "@/lib/email";
 import { generateProof } from "@/lib/proof";
+import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 
 export const runtime = "nodejs";
 
@@ -50,6 +51,14 @@ export async function POST(request: Request) {
           : await sendOrderConfirmation(fresh, request); // fallback: no placement → plain confirmation
         if (!result.sent && result.reason && result.reason !== "RESEND_API_KEY not configured") {
           console.warn(`[stripe-webhook] email send failed for ${id}: ${result.reason}`);
+        }
+        // Surface the paid order on the MoaOS board immediately as
+        // awaiting_approval (money-in is never invisible). No PO / no vendor
+        // send happens until the customer approves their proof.
+        try {
+          await pushOrderToMoaOS(fresh);
+        } catch (err) {
+          console.warn(`[stripe-webhook] MoaOS pre-push failed for ${id}: ${err instanceof Error ? err.message : err}`);
         }
       }
     }

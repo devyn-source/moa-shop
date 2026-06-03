@@ -75,6 +75,9 @@ async function buildIntakePayload(order: ShopOrder) {
 
   return {
     shopOrderId: order.id,
+    // Drives the intake stage: false on the payment push (creates an
+    // awaiting_approval card, no PO/send); true once the customer approves.
+    approved: Boolean(order.proofApprovedAt),
     orderNumber: order.orderNumber,
     customer: { name: order.contactName, email: order.contactEmail, company: order.companyName },
     subtotalUsd: order.subtotalUsd,
