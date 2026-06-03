@@ -7,10 +7,13 @@ import {
   normaliseZonesPayload,
   defaultCalibration,
   normaliseCalibration,
+  defaultMeasurements,
+  normaliseMeasurements,
   type Box,
   type ProductZones,
   type ProductCalibration,
   type ViewCalibration,
+  type ProductMeasurements,
   type View,
   type Zone
 } from "@/lib/zones";
@@ -92,7 +95,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Calibration ("ruler") authoring — collar/HPS, center-front, chest-width.
-  const [mode, setMode] = useState<"zones" | "calibrate">("zones");
+  const [mode, setMode] = useState<"zones" | "calibrate" | "measure">("zones");
   const [calibration, setCalibration] = useState<ProductCalibration>({});
   const [guideDrag, setGuideDrag] = useState<GuideKind | null>(null);
   const cal: ViewCalibration = calibration[view] ?? defaultCalibration();
@@ -102,6 +105,9 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
     },
     [view]
   );
+
+  // Garment measurements (spec-sheet points of measure × sizes).
+  const [measurements, setMeasurements] = useState<ProductMeasurements | null>(null);
 
   // Load zones whenever the SKU changes.
   useEffect(() => {
@@ -124,10 +130,12 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
           setZones(getDefaultZones(product));
         }
         setCalibration(normaliseCalibration(data?.calibration) ?? {});
+        setMeasurements(normaliseMeasurements(data?.measurements) ?? defaultMeasurements(product.category, product.sizes));
       })
       .catch(() => {
         setZones(getDefaultZones(product));
         setCalibration({});
+        setMeasurements(defaultMeasurements(product.category, product.sizes));
       });
     return () => {
       cancelled = true;
@@ -267,7 +275,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
       const res = await fetch(`/api/zones/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zones, calibration })
+        body: JSON.stringify({ zones, calibration, measurements })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -293,6 +301,27 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
     product.variants.find((v) => v.colorLabel === "Black") ??
     product.variants.find((v) => v.frontImage) ??
     product.variants[0];
+
+  // Measurement table helpers (size columns from the SKU's size run).
+  const sizeCols = product.sizes?.length ? product.sizes : ["OS"];
+  const setMeasRows = (rows: ProductMeasurements["rows"]) =>
+    setMeasurements((m) => (m ? { ...m, rows } : m));
+  const setPom = (id: string, pom: string) =>
+    setMeasRows((measurements?.rows ?? []).map((r) => (r.id === id ? { ...r, pom } : r)));
+  const setVal = (id: string, size: string, raw: string) => {
+    const n = raw === "" ? null : parseFloat(raw);
+    setMeasRows(
+      (measurements?.rows ?? []).map((r) =>
+        r.id === id ? { ...r, values: { ...r.values, [size]: Number.isFinite(n as number) ? (n as number) : null } } : r
+      )
+    );
+  };
+  const addPom = () =>
+    setMeasRows([
+      ...(measurements?.rows ?? []),
+      { id: `pom-${Date.now()}`, pom: "New measure", values: Object.fromEntries(sizeCols.map((s) => [s, null])) },
+    ]);
+  const removePom = (id: string) => setMeasRows((measurements?.rows ?? []).filter((r) => r.id !== id));
 
   return (
     <div className="ze">
@@ -329,6 +358,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
             <div className="pdpx-view-pills">
               <button type="button" className={`pdpx-pill${mode === "zones" ? " is-on" : ""}`} onClick={() => setMode("zones")}>Zones</button>
               <button type="button" className={`pdpx-pill${mode === "calibrate" ? " is-on" : ""}`} onClick={() => setMode("calibrate")}>Calibrate</button>
+              <button type="button" className={`pdpx-pill${mode === "measure" ? " is-on" : ""}`} onClick={() => setMode("measure")}>Measure</button>
             </div>
             {hasBack ? (
               <div className="pdpx-view-pills">
@@ -339,6 +369,69 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
           </div>
         </header>
 
+        {mode === "measure" ? (
+          <div style={{ overflowX: "auto", padding: "6px 2px 2px" }}>
+            {!measurements ? (
+              <p className="ze-hint">Loading measurements…</p>
+            ) : (
+              <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.78rem" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "8px 10px", borderBottom: `2px solid ${"#1E1E1E"}`, fontSize: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase", color: "#8A8680", whiteSpace: "nowrap" }}>
+                      Point of measure ({measurements.unit})
+                    </th>
+                    {sizeCols.map((sz) => (
+                      <th
+                        key={sz}
+                        style={{
+                          padding: "8px 8px",
+                          borderBottom: `2px solid #1E1E1E`,
+                          fontSize: "0.68rem",
+                          textTransform: "uppercase",
+                          color: sz === measurements.sampleSize ? "#B04731" : "#1E1E1E",
+                          minWidth: 56,
+                        }}
+                      >
+                        {sz}
+                        {sz === measurements.sampleSize ? <span style={{ display: "block", fontSize: "0.5rem", color: "#B04731" }}>sample</span> : null}
+                      </th>
+                    ))}
+                    <th style={{ width: 28, borderBottom: `2px solid #1E1E1E` }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {measurements.rows.map((row) => (
+                    <tr key={row.id}>
+                      <td style={{ padding: "3px 6px 3px 0", borderBottom: "1px solid #E2DED6" }}>
+                        <input
+                          type="text"
+                          value={row.pom}
+                          onChange={(e) => setPom(row.id, e.target.value)}
+                          style={{ width: "100%", minWidth: 180, border: "1px solid transparent", background: "transparent", padding: "5px 6px", fontSize: "0.8rem", color: "#1E1E1E", borderRadius: 4 }}
+                        />
+                      </td>
+                      {sizeCols.map((sz) => (
+                        <td key={sz} style={{ padding: "3px 4px", borderBottom: "1px solid #E2DED6", textAlign: "center", background: sz === measurements.sampleSize ? "rgba(176,71,49,0.05)" : "transparent" }}>
+                          <input
+                            type="number"
+                            step={0.25}
+                            value={row.values[sz] ?? ""}
+                            onChange={(e) => setVal(row.id, sz, e.target.value)}
+                            style={{ width: 50, border: "1px solid #E2DED6", background: "#fff", padding: "5px 4px", fontSize: "0.8rem", color: "#1E1E1E", borderRadius: 4, textAlign: "center" }}
+                          />
+                        </td>
+                      ))}
+                      <td style={{ textAlign: "center", borderBottom: "1px solid #E2DED6" }}>
+                        <button type="button" onClick={() => removePom(row.id)} title="Remove" style={{ border: "none", background: "transparent", color: "#8A8680", cursor: "pointer", fontSize: "1rem", lineHeight: 1 }}>×</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        ) : (
+        <>
         <div
           ref={canvasRef}
           className="ze-canvas"
@@ -417,6 +510,11 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
             ? "Click + drag inside a box to move · drag the corners to resize · click empty canvas to deselect."
             : "Drag the COLLAR line to the seam, the CF line to garment center, and the two ruler stops to a known width — then type that width at right. Set front + back."}
         </p>
+        </>
+        )}
+        {mode === "measure" ? (
+          <p className="ze-hint">Type each garment measurement per size off your spec sheet. Add or remove rows as needed. The highlighted column is the sample size. Stored per SKU — not on the customer sheet yet, this seeds the full tech pack.</p>
+        ) : null}
       </section>
 
       <aside className="ze-rail">
@@ -457,6 +555,46 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
                   Copy {view} → {view === "front" ? "back" : "front"}
                 </button>
               ) : null}
+            </div>
+          </div>
+        ) : mode === "measure" ? (
+          <div>
+            <header className="ze-rail-head">
+              <p className="eyebrow">Measurements</p>
+              <button type="button" className="ze-add" onClick={addPom}>+ Add POM</button>
+            </header>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 2px" }}>
+              <label className="ze-field">
+                <span>Unit</span>
+                <select
+                  value={measurements?.unit ?? "in"}
+                  onChange={(e) => setMeasurements((m) => (m ? { ...m, unit: e.target.value === "cm" ? "cm" : "in" } : m))}
+                >
+                  <option value="in">inches</option>
+                  <option value="cm">cm</option>
+                </select>
+              </label>
+              <label className="ze-field">
+                <span>Sample size</span>
+                <select
+                  value={measurements?.sampleSize ?? ""}
+                  onChange={(e) => setMeasurements((m) => (m ? { ...m, sampleSize: e.target.value } : m))}
+                >
+                  {sizeCols.map((sz) => (
+                    <option key={sz} value={sz}>{sz}</option>
+                  ))}
+                </select>
+              </label>
+              <p style={{ fontSize: "0.72rem", color: "#8A8680", lineHeight: 1.5 }}>
+                {measurements?.rows.length ?? 0} points of measure · {sizeCols.length} sizes. Filled from your spec sheet, stored per SKU.
+              </p>
+              <button
+                type="button"
+                className="ze-reset"
+                onClick={() => setMeasurements(defaultMeasurements(product.category, product.sizes))}
+              >
+                Reset to default POM list
+              </button>
             </div>
           </div>
         ) : (

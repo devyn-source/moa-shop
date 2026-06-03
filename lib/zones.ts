@@ -111,6 +111,93 @@ export function derivePlacement(
   return { widthIn, heightIn, topBelowCollarIn, fromCenterIn, horizontal, hpsY: cal.hpsY, printBox };
 }
 
+// ---------- Garment measurements (points of measure × sizes) ----------
+// Per-SKU spec-sheet data. Documents the calibration source and seeds the full
+// garment tech pack (size chart / grading) later. NOT used by the decoration
+// sheet yet — just captured. Filled in /admin/zones → Measure.
+
+export type PointOfMeasure = { id: string; pom: string; values: Record<string, number | null> };
+export type ProductMeasurements = { unit: "in" | "cm"; sampleSize?: string; rows: PointOfMeasure[] };
+
+const POM_TOPS = [
+  'Body Length (HPS)',
+  'Chest Width (1" below armhole)',
+  "Bottom Hem Width",
+  "Shoulder Width",
+  "Sleeve Length (from shoulder)",
+  "Sleeve Opening",
+  "Armhole (straight)",
+  "Neck Width (seam to seam)",
+  "Front Neck Drop",
+];
+const POM_BOTTOMS = [
+  "Waist (relaxed)",
+  "Waist (extended)",
+  "Hip (seat)",
+  "Front Rise",
+  "Back Rise",
+  "Inseam",
+  "Outseam",
+  "Thigh",
+  "Knee",
+  "Leg Opening",
+];
+const POM_HEADWEAR = ["Crown Height", "Brim Length", "Brim Width", "Circumference (relaxed)"];
+const POM_BAG = ["Width", "Height", "Depth / Gusset", "Handle Length", "Handle Drop"];
+const POM_ACCESSORY = ["Width", "Height"];
+
+const POM_BY_CATEGORY: Record<ProductCategory, string[]> = {
+  hoodie: [...POM_TOPS, "Pocket Width", "Pocket Height", "Hood Height", "Hood Width"],
+  tee: POM_TOPS,
+  knitwear: POM_TOPS,
+  outerwear: [...POM_TOPS, "Placket Length"],
+  bottoms: POM_BOTTOMS,
+  headwear: POM_HEADWEAR,
+  bag: POM_BAG,
+  accessory: POM_ACCESSORY,
+};
+
+export function defaultMeasurements(category: ProductCategory, sizes: string[]): ProductMeasurements {
+  const list = POM_BY_CATEGORY[category] ?? POM_TOPS;
+  const cols = sizes.length ? sizes : ["OS"];
+  return {
+    unit: "in",
+    sampleSize: cols[Math.floor(cols.length / 2)],
+    rows: list.map((pom, i) => ({
+      id: `pom-${i}`,
+      pom,
+      values: Object.fromEntries(cols.map((s) => [s, null])),
+    })),
+  };
+}
+
+export function normaliseMeasurements(raw: unknown): ProductMeasurements | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (!Array.isArray(r.rows)) return null;
+  const rows: PointOfMeasure[] = [];
+  for (const row of r.rows) {
+    if (!row || typeof row !== "object") continue;
+    const o = row as Record<string, unknown>;
+    const pom = typeof o.pom === "string" ? o.pom : null;
+    if (!pom) continue;
+    const id = typeof o.id === "string" ? o.id : `pom-${rows.length}`;
+    const values: Record<string, number | null> = {};
+    if (o.values && typeof o.values === "object") {
+      for (const [k, v] of Object.entries(o.values as Record<string, unknown>)) {
+        values[k] = typeof v === "number" && Number.isFinite(v) ? v : null;
+      }
+    }
+    rows.push({ id, pom, values });
+  }
+  if (!rows.length) return null;
+  return {
+    unit: r.unit === "cm" ? "cm" : "in",
+    sampleSize: typeof r.sampleSize === "string" ? r.sampleSize : undefined,
+    rows,
+  };
+}
+
 // ---------- Category defaults ----------
 
 const APPAREL_FRONT: Zone[] = [

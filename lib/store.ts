@@ -412,3 +412,30 @@ export async function saveProductCalibration(slug: string, calibration: unknown)
     throw new Error(`Failed to save calibration: ${error.message}`);
   }
 }
+
+// Per-SKU garment measurements (spec-sheet points of measure) — stored in the
+// same product_zones row. Seeds the full garment tech pack later.
+export async function getProductMeasurements(slug: string): Promise<unknown | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("product_zones")
+    .select("measurements")
+    .eq("product_slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load measurements: ${error.message}`);
+  }
+  return data ? data.measurements : null;
+}
+
+export async function saveProductMeasurements(slug: string, measurements: unknown): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("product_zones")
+    .upsert({ product_slug: slug, measurements, updated_at: new Date().toISOString() }, { onConflict: "product_slug" });
+
+  if (error) {
+    throw new Error(`Failed to save measurements: ${error.message}`);
+  }
+}
