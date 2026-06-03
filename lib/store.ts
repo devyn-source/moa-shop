@@ -384,3 +384,31 @@ export async function saveProductZones(slug: string, zones: unknown): Promise<vo
     throw new Error(`Failed to save zones: ${error.message}`);
   }
 }
+
+// Per-SKU calibration (the inches "ruler") — stored alongside zones in the same
+// product_zones row. Upsert only touches the calibration column, leaving zones
+// intact (and vice-versa).
+export async function getProductCalibration(slug: string): Promise<unknown | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("product_zones")
+    .select("calibration")
+    .eq("product_slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load calibration: ${error.message}`);
+  }
+  return data ? data.calibration : null;
+}
+
+export async function saveProductCalibration(slug: string, calibration: unknown): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("product_zones")
+    .upsert({ product_slug: slug, calibration, updated_at: new Date().toISOString() }, { onConflict: "product_slug" });
+
+  if (error) {
+    throw new Error(`Failed to save calibration: ${error.message}`);
+  }
+}

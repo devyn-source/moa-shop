@@ -5,12 +5,19 @@ import { ProductShot } from "./ProductShot";
 import {
   getDefaultZones,
   normaliseZonesPayload,
+  defaultCalibration,
+  normaliseCalibration,
   type Box,
   type ProductZones,
+  type ProductCalibration,
+  type ViewCalibration,
   type View,
   type Zone
 } from "@/lib/zones";
 import type { CatalogProduct } from "@/lib/types";
+
+type GuideKind = "hps" | "cf" | "scaleA" | "scaleB";
+const RULER_Y = 0.42; // where the chest-width ruler line sits on the canvas
 
 type DragMode = "move" | "nw" | "ne" | "sw" | "se" | "rotate";
 type DragState = {
@@ -84,6 +91,18 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Calibration ("ruler") authoring — collar/HPS, center-front, chest-width.
+  const [mode, setMode] = useState<"zones" | "calibrate">("zones");
+  const [calibration, setCalibration] = useState<ProductCalibration>({});
+  const [guideDrag, setGuideDrag] = useState<GuideKind | null>(null);
+  const cal: ViewCalibration = calibration[view] ?? defaultCalibration();
+  const setCal = useCallback(
+    (patch: Partial<ViewCalibration>) => {
+      setCalibration((prev) => ({ ...prev, [view]: { ...(prev[view] ?? defaultCalibration()), ...patch } }));
+    },
+    [view]
+  );
+
   // Load zones whenever the SKU changes.
   useEffect(() => {
     if (!product) return;
@@ -104,9 +123,11 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
         } else {
           setZones(getDefaultZones(product));
         }
+        setCalibration(normaliseCalibration(data?.calibration) ?? {});
       })
       .catch(() => {
         setZones(getDefaultZones(product));
+        setCalibration({});
       });
     return () => {
       cancelled = true;
@@ -140,6 +161,28 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
       window.removeEventListener("pointerup", onUp);
     };
   }, [drag, updateZone]);
+
+  // Calibration guide dragging — collar/CF lines and the chest-width endpoints.
+  useEffect(() => {
+    if (!guideDrag) return;
+    const onMove = (e: PointerEvent) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const fx = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+      const fy = clamp((e.clientY - rect.top) / rect.height, 0, 1);
+      if (guideDrag === "hps") setCal({ hpsY: fy });
+      else if (guideDrag === "cf") setCal({ cfX: fx });
+      else if (guideDrag === "scaleA") setCal({ scaleAx: fx });
+      else if (guideDrag === "scaleB") setCal({ scaleBx: fx });
+    };
+    const onUp = () => setGuideDrag(null);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [guideDrag, setCal]);
 
   const startDrag = (zone: Zone, mode: DragMode) => (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -224,7 +267,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
       const res = await fetch(`/api/zones/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zones })
+        body: JSON.stringify({ zones, calibration })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -282,12 +325,18 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
               {savedAt ? ` · last saved ${new Date(savedAt).toLocaleTimeString()}` : ""}
             </p>
           </div>
-          {hasBack ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
             <div className="pdpx-view-pills">
-              <button type="button" className={`pdpx-pill${view === "front" ? " is-on" : ""}`} onClick={() => setView("front")}>Front</button>
-              <button type="button" className={`pdpx-pill${view === "back" ? " is-on" : ""}`} onClick={() => setView("back")}>Back</button>
+              <button type="button" className={`pdpx-pill${mode === "zones" ? " is-on" : ""}`} onClick={() => setMode("zones")}>Zones</button>
+              <button type="button" className={`pdpx-pill${mode === "calibrate" ? " is-on" : ""}`} onClick={() => setMode("calibrate")}>Calibrate</button>
             </div>
-          ) : null}
+            {hasBack ? (
+              <div className="pdpx-view-pills">
+                <button type="button" className={`pdpx-pill${view === "front" ? " is-on" : ""}`} onClick={() => setView("front")}>Front</button>
+                <button type="button" className={`pdpx-pill${view === "back" ? " is-on" : ""}`} onClick={() => setView("back")}>Back</button>
+              </div>
+            ) : null}
+          </div>
         </header>
 
         <div
@@ -296,7 +345,7 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
           onPointerDown={() => setActiveId(null)}
         >
           <ProductShot product={product} variant={heroVariant} view={view} />
-          {currentView.map((zone) => {
+          {mode === "zones" && currentView.map((zone) => {
             const on = zone.id === activeId;
             return (
               <div
@@ -326,14 +375,92 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
               </div>
             );
           })}
+
+          {mode === "calibrate" && (
+            <>
+              {/* Collar / HPS line */}
+              <div
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("hps"); }}
+                style={{ position: "absolute", left: 0, right: 0, top: `${cal.hpsY * 100}%`, transform: "translateY(-8px)", height: 16, cursor: "ns-resize", zIndex: 20, display: "flex", alignItems: "center" }}
+              >
+                <div style={{ width: "100%", borderTop: "2px dashed #B04731" }} />
+                <span style={{ position: "absolute", left: 6, top: -1, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, color: "#B04731", background: "rgba(255,255,255,0.88)", padding: "1px 5px", borderRadius: 3 }}>COLLAR / HPS</span>
+              </div>
+
+              {/* Center-front line */}
+              <div
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("cf"); }}
+                style={{ position: "absolute", top: 0, bottom: 0, left: `${cal.cfX * 100}%`, transform: "translateX(-8px)", width: 16, cursor: "ew-resize", zIndex: 20, display: "flex", justifyContent: "center" }}
+              >
+                <div style={{ height: "100%", borderLeft: "2px dashed #8A8680" }} />
+                <span style={{ position: "absolute", top: 6, left: 11, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, color: "#8A8680", background: "rgba(255,255,255,0.88)", padding: "1px 5px", borderRadius: 3 }}>CF</span>
+              </div>
+
+              {/* Chest-width ruler */}
+              <div style={{ position: "absolute", top: `${RULER_Y * 100}%`, left: `${Math.min(cal.scaleAx, cal.scaleBx) * 100}%`, width: `${Math.abs(cal.scaleBx - cal.scaleAx) * 100}%`, borderTop: "2px solid #1E1E1E", zIndex: 21 }}>
+                <span style={{ position: "absolute", left: "50%", top: -20, transform: "translateX(-50%)", fontSize: 10, fontWeight: 700, background: "#1E1E1E", color: "#fff", padding: "2px 7px", borderRadius: 3, whiteSpace: "nowrap" }}>{cal.realInches}&quot; across</span>
+              </div>
+              <div
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("scaleA"); }}
+                style={{ position: "absolute", top: `${RULER_Y * 100}%`, left: `${cal.scaleAx * 100}%`, transform: "translate(-50%,-50%)", width: 13, height: 22, background: "#1E1E1E", borderRadius: 3, cursor: "ew-resize", zIndex: 22, border: "2px solid #fff" }}
+              />
+              <div
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setGuideDrag("scaleB"); }}
+                style={{ position: "absolute", top: `${RULER_Y * 100}%`, left: `${cal.scaleBx * 100}%`, transform: "translate(-50%,-50%)", width: 13, height: 22, background: "#1E1E1E", borderRadius: 3, cursor: "ew-resize", zIndex: 22, border: "2px solid #fff" }}
+              />
+            </>
+          )}
         </div>
 
         <p className="ze-hint">
-          Click + drag inside a box to move · drag the corners to resize · click empty canvas to deselect.
+          {mode === "zones"
+            ? "Click + drag inside a box to move · drag the corners to resize · click empty canvas to deselect."
+            : "Drag the COLLAR line to the seam, the CF line to garment center, and the two ruler stops to a known width — then type that width at right. Set front + back."}
         </p>
       </section>
 
       <aside className="ze-rail">
+        {mode === "calibrate" ? (
+          <div>
+            <header className="ze-rail-head">
+              <p className="eyebrow">Calibration · {view}</p>
+            </header>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 2px" }}>
+              <label className="ze-field">
+                <span>Ruler width (inches)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={72}
+                  step={0.5}
+                  value={cal.realInches}
+                  onChange={(e) => setCal({ realInches: parseFloat(e.target.value) || 0 })}
+                />
+              </label>
+              <div className="ze-coords">
+                <span>collar {cal.hpsY.toFixed(2)}</span>
+                <span>cf {cal.cfX.toFixed(2)}</span>
+                <span>ruler {cal.scaleAx.toFixed(2)}–{cal.scaleBx.toFixed(2)}</span>
+              </div>
+              <p style={{ fontSize: "0.72rem", color: "#8A8680", lineHeight: 1.5 }}>
+                Scale ≈ {(cal.realInches / (Math.abs(cal.scaleBx - cal.scaleAx) || 1)).toFixed(1)}&quot; per canvas width. A full-front print (40% of width) ≈ {(0.4 * cal.realInches / (Math.abs(cal.scaleBx - cal.scaleAx) || 1)).toFixed(1)}&quot; wide.
+              </p>
+              {hasBack ? (
+                <button
+                  type="button"
+                  className="ze-reset"
+                  onClick={() => {
+                    const other: View = view === "front" ? "back" : "front";
+                    setCalibration((prev) => ({ ...prev, [other]: { ...cal } }));
+                  }}
+                >
+                  Copy {view} → {view === "front" ? "back" : "front"}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+        <>
         <header className="ze-rail-head">
           <p className="eyebrow">Zones · {view}</p>
           <button type="button" className="ze-add" onClick={addZone}>+ Add zone</button>
@@ -396,14 +523,18 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
             <li className="ze-empty">No zones for this view yet. Click + Add zone.</li>
           ) : null}
         </ol>
+        </>
+        )}
 
         <div className="ze-actions">
           <button type="button" className="pdpx-cta ze-save" onClick={save} disabled={saving}>
-            {saving ? "Saving…" : `Save ${product.displayName} zones`}
+            {saving ? "Saving…" : `Save ${product.displayName}`}
           </button>
-          <button type="button" className="ze-reset" onClick={resetToDefaults}>
-            Reset to defaults
-          </button>
+          {mode === "zones" ? (
+            <button type="button" className="ze-reset" onClick={resetToDefaults}>
+              Reset to defaults
+            </button>
+          ) : null}
           {error ? <p className="ze-error">{error}</p> : null}
         </div>
       </aside>

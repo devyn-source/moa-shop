@@ -19,6 +19,98 @@ export type Zone = { id: string; label: string; box: Box };
 export type View = "front" | "back";
 export type ProductZones = Record<View, Zone[]>;
 
+// ---------- Calibration (per SKU, per view) ----------
+// The one-time "ruler" that converts canvas fractions into real garment inches.
+// Set visually in /admin/zones: drag the collar/HPS line, the center-front line,
+// and a chest-width ruler whose real width (in) you type. Everything downstream
+// (decoration spec sheet inch callouts) derives from this — no per-order typing.
+
+export type ViewCalibration = {
+  hpsY: number; // collar / high-point-shoulder line — fraction of canvas HEIGHT
+  cfX: number; // center-front line — fraction of canvas WIDTH
+  scaleAx: number; // chest-width ruler endpoint A — fraction of canvas WIDTH
+  scaleBx: number; // chest-width ruler endpoint B — fraction of canvas WIDTH
+  realInches: number; // the real garment width the A→B span represents
+};
+export type ProductCalibration = Partial<Record<View, ViewCalibration>>;
+
+// The PDP canvas is 4:5 (width:height), so one unit of HEIGHT spans 1.25× the
+// real distance of one unit of WIDTH. Vertical inch conversion scales by this.
+export const CANVAS_H_OVER_W = 5 / 4;
+
+export function defaultCalibration(): ViewCalibration {
+  return { hpsY: 0.13, cfX: 0.5, scaleAx: 0.3, scaleBx: 0.7, realInches: 20 };
+}
+
+export function normaliseCalibration(raw: unknown): ProductCalibration | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const one = (v: unknown): ViewCalibration | null => {
+    if (!v || typeof v !== "object") return null;
+    const o = v as Record<string, unknown>;
+    const num = (k: string, d: number) => (typeof o[k] === "number" && Number.isFinite(o[k]) ? (o[k] as number) : d);
+    const def = defaultCalibration();
+    return {
+      hpsY: num("hpsY", def.hpsY),
+      cfX: num("cfX", def.cfX),
+      scaleAx: num("scaleAx", def.scaleAx),
+      scaleBx: num("scaleBx", def.scaleBx),
+      realInches: num("realInches", def.realInches),
+    };
+  };
+  const out: ProductCalibration = {};
+  const f = one(r.front);
+  const b = one(r.back);
+  if (f) out.front = f;
+  if (b) out.back = b;
+  return f || b ? out : null;
+}
+
+const quarter = (n: number) => Math.round(n * 4) / 4; // nearest 1/4" — factory-friendly
+
+export type DerivedPlacement = {
+  widthIn: number;
+  heightIn: number;
+  topBelowCollarIn: number;
+  fromCenterIn: number;
+  horizontal: string;
+  hpsY: number; // passed through for drawing the collar reference on the sheet
+  printBox: Box; // the TRUE printed-art box in canvas fractions (frames callouts)
+};
+
+// Derive real-inch print specs from a calibrated view + the customer's placement.
+// `box` is the zone box; `art` positions/sizes the art WITHIN the box (fractions
+// of the box), so the true printed extent = box scaled by the art transform.
+export function derivePlacement(
+  cal: ViewCalibration,
+  box: Box,
+  art: { ox: number; oy: number; sx: number; sy: number; r?: number }
+): DerivedPlacement {
+  const span = Math.abs(cal.scaleBx - cal.scaleAx) || 0.0001;
+  const inPerWFrac = cal.realInches / span;
+  const inPerHFrac = inPerWFrac * CANVAS_H_OVER_W;
+
+  const printBox: Box = {
+    x: box.x + art.ox * box.w,
+    y: box.y + art.oy * box.h,
+    w: box.w * art.sx,
+    h: box.h * art.sy,
+    r: box.r,
+  };
+
+  const widthIn = quarter(printBox.w * inPerWFrac);
+  const heightIn = quarter(printBox.h * inPerHFrac);
+  const topBelowCollarIn = quarter(Math.max(0, (printBox.y - cal.hpsY) * inPerHFrac));
+  const centerX = printBox.x + printBox.w / 2;
+  const fromCenterIn = quarter((centerX - cal.cfX) * inPerWFrac);
+  const horizontal =
+    Math.abs(fromCenterIn) < 0.26
+      ? "Centered"
+      : `${Math.abs(fromCenterIn).toFixed(2).replace(/\.?0+$/, "")}" ${fromCenterIn > 0 ? "R" : "L"} of CF`;
+
+  return { widthIn, heightIn, topBelowCollarIn, fromCenterIn, horizontal, hpsY: cal.hpsY, printBox };
+}
+
 // ---------- Category defaults ----------
 
 const APPAREL_FRONT: Zone[] = [

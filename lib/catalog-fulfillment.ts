@@ -5,9 +5,10 @@
 // customer tracker stays live.
 // Design: docs/catalog-fulfillment-architecture.md
 import type { ShopOrder } from "./types";
-import { getProductById, setOrderFulfillment, getOrderById, updateOrderStatus } from "./store";
+import { getProductById, setOrderFulfillment, getOrderById, updateOrderStatus, getProductCalibration } from "./store";
 import { sendShippingNotification } from "./email";
 import { seedVendors } from "./seed";
+import { derivePlacement, normaliseCalibration } from "./zones";
 
 export type FulfillmentMode = "off" | "dry_run" | "draft_only" | "manual_release" | "auto";
 
@@ -25,6 +26,31 @@ function moaosConfig() {
   };
 }
 
+// Relative luminance of a hex color (0 = black, 1 = white). Null if unparseable.
+function hexLum(hex?: string | null): number | null {
+  if (!hex) return null;
+  const m = hex.replace("#", "");
+  if (m.length < 6) return null;
+  const r = parseInt(m.slice(0, 2), 16) / 255;
+  const g = parseInt(m.slice(2, 4), 16) / 255;
+  const b = parseInt(m.slice(4, 6), 16) / 255;
+  if ([r, g, b].some((v) => Number.isNaN(v))) return null;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Screen-print underbase is needed when a non-white ink is printed on a dark
+// garment (so the colored ink reads opaque). White ink on dark needs none.
+function needsUnderbase(garmentHex?: string | null, inks?: { hex: string }[] | null): boolean {
+  const lum = hexLum(garmentHex);
+  if (lum === null || lum > 0.4) return false; // light garment
+  const list = inks ?? [];
+  if (!list.length) return true; // dark garment, ink unknown → flag to be safe
+  return list.some((i) => {
+    const l = hexLum(i.hex);
+    return l === null || l < 0.92; // any ink that isn't near-white
+  });
+}
+
 // Map a single-product shop order into the MoaOS intake payload.
 async function buildIntakePayload(order: ShopOrder) {
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
@@ -32,6 +58,17 @@ async function buildIntakePayload(order: ShopOrder) {
   const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
   const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
   const shot = variant?.frontImage || product?.greyFront || null;
+
+  // Derive real-inch print specs from the SKU's calibration + the customer's
+  // placement. This is what makes the decoration spec sheet's callouts real.
+  const placement = order.artworkPlacement ?? null;
+  let derived: ReturnType<typeof derivePlacement> | null = null;
+  if (placement && product) {
+    const calRaw = await getProductCalibration(product.slug).catch(() => null);
+    const vcal = normaliseCalibration(calRaw)?.[placement.view];
+    if (vcal) derived = derivePlacement(vcal, placement.box, placement.art);
+  }
+
   return {
     shopOrderId: order.id,
     orderNumber: order.orderNumber,
@@ -53,6 +90,16 @@ async function buildIntakePayload(order: ShopOrder) {
         placement: order.artworkPlacement?.zoneLabel || Array.from(new Set(decos.flatMap((d) => d.placementZones))).join(", ") || null,
         placementSpec: order.artworkPlacement ?? null,
         maxColors: order.artworkPlacement?.maxColors ?? null,
+        // Derived decoration-sheet spec (real inches from per-SKU calibration).
+        view: placement?.view ?? null,
+        widthIn: derived?.widthIn ?? placement?.widthIn ?? null,
+        heightIn: derived?.heightIn ?? placement?.heightIn ?? null,
+        topBelowCollarIn: derived?.topBelowCollarIn ?? null,
+        horizontal: derived?.horizontal ?? null,
+        hpsY: derived?.hpsY ?? null,
+        printBox: derived?.printBox ?? placement?.box ?? null,
+        proofUrl: order.proofUrl ?? null,
+        underbase: needsUnderbase(variant?.colorHex, placement?.pantones),
         quantity: order.quantity,
         clientUnitCost: order.perUnitUsd + order.decorationAdderUsd,
         // The standardized catalog cost — lets MoaOS build the draft PO with no quoting.
