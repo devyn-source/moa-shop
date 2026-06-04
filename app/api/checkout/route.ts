@@ -22,6 +22,7 @@ type CartLine = {
 
 type Body = {
   items: CartLine[];
+  ipAttested?: boolean;
   contact: {
     contactName: string;
     contactEmail: string;
@@ -34,9 +35,13 @@ type Body = {
 
 export async function POST(request: Request) {
   try {
-    const { items, contact } = (await request.json()) as Body;
+    const { items, contact, ipAttested } = (await request.json()) as Body;
     if (!items?.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    }
+    // Artwork IP attestation — the customer must certify they hold the rights.
+    if (!ipAttested) {
+      return NextResponse.json({ error: "Please confirm you own or have the rights to use this artwork." }, { status: 400 });
     }
 
     // Validate Stripe is configured before creating any orders (avoids orphans).
@@ -79,6 +84,11 @@ export async function POST(request: Request) {
         }
       })),
       metadata: { orderIds: created.map(({ order }) => order.id).join(",") },
+      // Stripe Tax — ready, but OFF until you activate Tax + registrations in
+      // the Stripe dashboard and set STRIPE_TAX_ENABLED=true (else it'd error).
+      ...(process.env.STRIPE_TAX_ENABLED === "true"
+        ? { automatic_tax: { enabled: true }, billing_address_collection: "required" as const }
+        : {}),
       success_url: `${origin}/checkout/success?orders=${created.map(({ order }) => order.id).join(",")}`,
       cancel_url: `${origin}/cart`
     });

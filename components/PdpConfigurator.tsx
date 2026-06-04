@@ -6,7 +6,7 @@ import { ProductShot } from "./ProductShot";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime } from "@/lib/pricing";
-import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, type ProductZones, type ProductCalibration } from "@/lib/zones";
+import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 
@@ -82,6 +82,9 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
   const [pantones, setPantones] = useState<PmsColor[]>(editOrder?.pantones ?? []);
   const [artworkUrl, setArtworkUrl] = useState<string | null>(editOrder?.artworkFileUrl ?? null);
   const [artworkName, setArtworkName] = useState<string | null>(editOrder?.artworkFileName ?? null);
+  // Native pixel dims of a raster upload — for print-resolution QA against the
+  // ACTUAL physical print size (the 1200px upload floor only knows absolute px).
+  const [artMeta, setArtMeta] = useState<{ width: number; height: number } | null>(null);
   const [placementId, setPlacementId] = useState<string | null>(editOrder?.zoneId ?? null);
   // Free position + size of the artwork WITHIN the chosen bounding box.
   // Reset to "fill the box" whenever the shopper picks a different zone — but
@@ -136,6 +139,20 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
   );
   const placement = placements.find((p) => p.id === placementId) ?? null;
 
+  // Print-resolution QA: native art pixels spread across the REAL printed width
+  // (derived from this SKU's calibration). Vectors skip it (scalable). <150 DPI
+  // warns; <100 DPI blocks — it would print visibly blurry at that size.
+  const printDpi = useMemo(() => {
+    if (!artMeta || !placement) return null;
+    const cal = calibration?.[view];
+    if (!cal) return null;
+    const d = derivePlacement(cal, placement.box, artTransform, view);
+    if (!d.widthIn || d.widthIn <= 0) return null;
+    return Math.round(artMeta.width / d.widthIn);
+  }, [artMeta, placement, calibration, view, artTransform]);
+  const lowRes = printDpi != null && printDpi < 150;
+  const blockRes = printDpi != null && printDpi < 100;
+
   const stepDone = (s: Step): boolean => {
     if (s === "color") return Boolean(variant);
     if (s === "decoration") return decorationIds.length > 0;
@@ -187,6 +204,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
     if (artworkUrl?.startsWith("blob:")) URL.revokeObjectURL(artworkUrl);
     setArtworkUrl(null);
     setArtworkName(null);
+    setArtMeta(null);
     setUploadError(null);
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -215,7 +233,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
-      const data = (await res.json()) as { url?: string; error?: string; warning?: string };
+      const data = (await res.json()) as { url?: string; error?: string; warning?: string; kind?: string; meta?: { width?: number; height?: number } };
       if (!res.ok || !data.url) {
         throw new Error(data.error || "Upload failed");
       }
@@ -224,6 +242,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(data.url);
       setUploadWarning(data.warning ?? null);
+      setArtMeta(data.kind === "raster" && data.meta?.width && data.meta?.height ? { width: data.meta.width, height: data.meta.height } : null);
     } catch (err) {
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(null);
@@ -235,7 +254,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
   };
 
   const handleAddToCart = () => {
-    if (belowMoq || !variant || submitting) return;
+    if (belowMoq || !variant || submitting || blockRes) return;
     const decorationLabel = decoSelected.length
       ? decoSelected.map((d) => d.label).join(" + ")
       : "Undecorated";
@@ -289,7 +308,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
   const [done, setDone] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const handleUpdate = async () => {
-    if (!editOrder || belowMoq || !variant || submitting) return;
+    if (!editOrder || belowMoq || !variant || submitting || blockRes) return;
     setSubmitting(true);
     setUpdateError(null);
     const decorationLabel = decoSelected.length ? decoSelected.map((d) => d.label).join(" + ") : "Undecorated";
@@ -688,13 +707,22 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
             <span className="pdpx-from">Subtotal</span>
             <strong className="pdpx-total">{currency(subtotal)}</strong>
           </div>
+          {printDpi != null && (lowRes || blockRes) ? (
+            <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 600 }}>
+              {blockRes
+                ? `Artwork is too low-resolution for this print size (~${printDpi} DPI). Make the print smaller, or upload a higher-res image or vector (SVG/PDF).`
+                : `Low resolution at this size (~${printDpi} DPI) — it may look soft. A higher-res image or vector prints sharper.`}
+            </p>
+          ) : null}
           <button
             type="button"
             className="pdpx-cta"
             onClick={editOrder ? handleUpdate : handleAddToCart}
-            disabled={belowMoq || submitting}
+            disabled={belowMoq || submitting || blockRes}
           >
-            {belowMoq
+            {blockRes
+              ? "Resolution too low for this size"
+              : belowMoq
               ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
               : editOrder
               ? submitting

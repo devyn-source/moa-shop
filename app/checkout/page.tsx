@@ -50,6 +50,7 @@ export default function CheckoutPage() {
   // Signed-in account → offer their info or a different address.
   const [account, setAccount] = useState<{ email: string; name: string | null } | null>(null);
   const [useAccount, setUseAccount] = useState(true);
+  const [ipAttested, setIpAttested] = useState(false);
 
   useEffect(() => {
     const sb = createBrowserSupabase();
@@ -76,6 +77,10 @@ export default function CheckoutPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!ipAttested) {
+      setError("Please confirm you own or have the rights to use this artwork.");
+      return;
+    }
     setSubmitting(true);
     setError("");
 
@@ -98,7 +103,7 @@ export default function CheckoutPage() {
 
     const res = await fetch("/api/checkout", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: payloadItems, contact }),
+      body: JSON.stringify({ items: payloadItems, contact, ipAttested }),
     });
     const data = (await res.json()) as { url?: string; error?: string };
     if (!res.ok || !data.url) {
@@ -227,7 +232,13 @@ export default function CheckoutPage() {
               <span className="price-total-num">{currency(total)}</span>
               <span className="price-total-sub">{items.length} orders · {count.toLocaleString()} units</span>
             </div>
-            <button className="button button--lg button--full" type="submit" form="checkout-form" disabled={submitting}>
+            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "4px 0 14px", cursor: "pointer" }}>
+              <input type="checkbox" checked={ipAttested} onChange={(e) => setIpAttested(e.target.checked)} style={{ marginTop: 3, accentColor: "var(--color-terracotta)", width: 16, height: 16 }} />
+              <span style={{ fontSize: "0.72rem", lineHeight: 1.5, color: "var(--color-neutral)" }}>
+                I own or have the rights to use this artwork, and agree to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "var(--color-terracotta)" }}>Terms</a> &amp; <a href="/refund-policy" target="_blank" rel="noreferrer" style={{ color: "var(--color-terracotta)" }}>Refund Policy</a>.
+              </span>
+            </label>
+            <button className="button button--lg button--full" type="submit" form="checkout-form" disabled={submitting || !ipAttested}>
               {submitting ? "Redirecting to checkout…" : `Pay ${currency(total)} · secure checkout`}
             </button>
             <p className="trust-note">Secure payment via Stripe. One order is created per SKU.</p>
