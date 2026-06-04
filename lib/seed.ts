@@ -161,7 +161,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Premium capsules, elevated staff kits, creator drops",
     visual: "tee",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 22,
+    vendorUnitCostUsd: 31,
     moq: 50,
     leadTimeDays: 52,
     isPublished: true,
@@ -171,10 +171,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 99, perUnitUsd: 82 },
-      { minQty: 100, maxQty: 249, perUnitUsd: 72 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 62 },
-      { minQty: 500, maxQty: null, perUnitUsd: 54 }
+      { minQty: 50, maxQty: 99, perUnitUsd: 97 },
+      { minQty: 100, maxQty: 249, perUnitUsd: 86 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 82 },
+      { minQty: 500, maxQty: null, perUnitUsd: 78 }
     ]
   },
   {
@@ -193,7 +193,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Brand drops, music merch, creator capsules",
     visual: "hoodie",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 24,
+    vendorUnitCostUsd: 32,
     moq: 50,
     leadTimeDays: 56,
     isPublished: true,
@@ -203,10 +203,10 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "patch", "puff_print", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 99, perUnitUsd: 88 },
-      { minQty: 100, maxQty: 249, perUnitUsd: 78 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 68 },
-      { minQty: 500, maxQty: null, perUnitUsd: 59 }
+      { minQty: 50, maxQty: 99, perUnitUsd: 100 },
+      { minQty: 100, maxQty: 249, perUnitUsd: 89 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 84 },
+      { minQty: 500, maxQty: null, perUnitUsd: 80 }
     ]
   },
   {
@@ -225,7 +225,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Launch merch, events, uniforms, artist drops",
     visual: "tee",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 8.5,
+    vendorUnitCostUsd: 14,
     moq: 50,
     leadTimeDays: 42,
     isPublished: true,
@@ -235,10 +235,10 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "puff_print", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 149, perUnitUsd: 39 },
-      { minQty: 150, maxQty: 299, perUnitUsd: 34 },
-      { minQty: 300, maxQty: 599, perUnitUsd: 29 },
-      { minQty: 600, maxQty: null, perUnitUsd: 24 }
+      { minQty: 50, maxQty: 149, perUnitUsd: 44 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 39 },
+      { minQty: 300, maxQty: 599, perUnitUsd: 37 },
+      { minQty: 600, maxQty: null, perUnitUsd: 35 }
     ]
   },
   {
@@ -257,7 +257,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Loungewear capsules, creator drops, premium staff kits",
     visual: "pant",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 20,
+    vendorUnitCostUsd: 28,
     moq: 50,
     leadTimeDays: 50,
     isPublished: true,
@@ -267,10 +267,10 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 99, perUnitUsd: 72 },
-      { minQty: 100, maxQty: 199, perUnitUsd: 64 },
-      { minQty: 200, maxQty: 399, perUnitUsd: 56 },
-      { minQty: 400, maxQty: null, perUnitUsd: 48 }
+      { minQty: 50, maxQty: 99, perUnitUsd: 88 },
+      { minQty: 100, maxQty: 199, perUnitUsd: 78 },
+      { minQty: 200, maxQty: 399, perUnitUsd: 74 },
+      { minQty: 400, maxQty: null, perUnitUsd: 70 }
     ]
   },
   {
@@ -299,10 +299,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 74, perUnitUsd: 156 },
-      { minQty: 75, maxQty: 149, perUnitUsd: 138 },
-      { minQty: 150, maxQty: 299, perUnitUsd: 126 },
-      { minQty: 300, maxQty: null, perUnitUsd: 112 }
+      { minQty: 50, maxQty: 74, perUnitUsd: 150 },
+      { minQty: 75, maxQty: 149, perUnitUsd: 135 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 125 },
+      { minQty: 300, maxQty: null, perUnitUsd: 120 }
     ]
   },
   {
@@ -321,7 +321,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Cold-weather drops, retail capsules, premium staff kits",
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 34,
+    vendorUnitCostUsd: 40,
     moq: 50,
     leadTimeDays: 60,
     isPublished: true,
@@ -331,10 +331,10 @@ export const seedProducts: CatalogProduct[] = [
       ["patch", "woven_label", "embroidery"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 74, perUnitUsd: 120 },
-      { minQty: 75, maxQty: 149, perUnitUsd: 106 },
-      { minQty: 150, maxQty: 299, perUnitUsd: 94 },
-      { minQty: 300, maxQty: null, perUnitUsd: 84 }
+      { minQty: 50, maxQty: 74, perUnitUsd: 125 },
+      { minQty: 75, maxQty: 149, perUnitUsd: 110 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 105 },
+      { minQty: 300, maxQty: null, perUnitUsd: 100 }
     ]
   },
   {
@@ -353,7 +353,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Premium winter drops, outerwear-led brands, elevated staff kits",
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 58,
+    vendorUnitCostUsd: 100,
     moq: 50,
     leadTimeDays: 70,
     isPublished: true,
@@ -363,10 +363,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 74, perUnitUsd: 190 },
-      { minQty: 75, maxQty: 149, perUnitUsd: 168 },
-      { minQty: 150, maxQty: 299, perUnitUsd: 150 },
-      { minQty: 300, maxQty: null, perUnitUsd: 134 }
+      { minQty: 50, maxQty: 74, perUnitUsd: 250 },
+      { minQty: 75, maxQty: 149, perUnitUsd: 225 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 200 },
+      { minQty: 300, maxQty: null, perUnitUsd: 175 }
     ]
   },
   {
@@ -385,7 +385,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Athleisure drops, team kits, creator merch",
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 22,
+    vendorUnitCostUsd: 28,
     moq: 50,
     leadTimeDays: 50,
     isPublished: true,
@@ -395,10 +395,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 74, perUnitUsd: 76 },
-      { minQty: 75, maxQty: 149, perUnitUsd: 68 },
-      { minQty: 150, maxQty: 299, perUnitUsd: 60 },
-      { minQty: 300, maxQty: null, perUnitUsd: 52 }
+      { minQty: 50, maxQty: 74, perUnitUsd: 88 },
+      { minQty: 75, maxQty: 149, perUnitUsd: 78 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 74 },
+      { minQty: 300, maxQty: null, perUnitUsd: 70 }
     ]
   },
   {
@@ -417,7 +417,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Workwear-inspired drops, team kits, creator merch",
     visual: "jacket",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 28,
+    vendorUnitCostUsd: 32,
     moq: 50,
     leadTimeDays: 52,
     isPublished: true,
@@ -427,10 +427,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 74, perUnitUsd: 94 },
-      { minQty: 75, maxQty: 149, perUnitUsd: 84 },
-      { minQty: 150, maxQty: 299, perUnitUsd: 74 },
-      { minQty: 300, maxQty: null, perUnitUsd: 66 }
+      { minQty: 50, maxQty: 74, perUnitUsd: 100 },
+      { minQty: 75, maxQty: 149, perUnitUsd: 89 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 84 },
+      { minQty: 300, maxQty: null, perUnitUsd: 80 }
     ]
   },
   {
@@ -449,7 +449,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Cafes, hotels, galleries, event merch, agencies",
     visual: "tote",
     defaultVendorId: "vendor-best-cover",
-    vendorUnitCostUsd: 6.5,
+    vendorUnitCostUsd: 12,
     moq: 50,
     leadTimeDays: 45,
     isPublished: true,
@@ -459,10 +459,10 @@ export const seedProducts: CatalogProduct[] = [
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 32 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 28 },
-      { minQty: 500, maxQty: 999, perUnitUsd: 22 },
-      { minQty: 1000, maxQty: null, perUnitUsd: 18 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 38 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 33 },
+      { minQty: 500, maxQty: 999, perUnitUsd: 32 },
+      { minQty: 1000, maxQty: null, perUnitUsd: 30 }
     ]
   },
   {
@@ -480,7 +480,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Brand uniforms, cafe merch, creator drops",
     visual: "cap",
     defaultVendorId: "vendor-headwear-one",
-    vendorUnitCostUsd: 5.75,
+    vendorUnitCostUsd: 11,
     moq: 50,
     leadTimeDays: 42,
     isPublished: true,
@@ -490,10 +490,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 199, perUnitUsd: 27 },
-      { minQty: 200, maxQty: 499, perUnitUsd: 24 },
-      { minQty: 500, maxQty: 999, perUnitUsd: 19 },
-      { minQty: 1000, maxQty: null, perUnitUsd: 16 }
+      { minQty: 50, maxQty: 199, perUnitUsd: 34 },
+      { minQty: 200, maxQty: 499, perUnitUsd: 31 },
+      { minQty: 500, maxQty: 999, perUnitUsd: 29 },
+      { minQty: 1000, maxQty: null, perUnitUsd: 28 }
     ]
   },
   {
@@ -511,7 +511,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Streetwear drops, creator merch, events",
     visual: "cap",
     defaultVendorId: "vendor-headwear-one",
-    vendorUnitCostUsd: 6,
+    vendorUnitCostUsd: 12,
     moq: 50,
     leadTimeDays: 42,
     isPublished: true,
@@ -521,10 +521,10 @@ export const seedProducts: CatalogProduct[] = [
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
     priceTiers: [
-      { minQty: 50, maxQty: 199, perUnitUsd: 28 },
-      { minQty: 200, maxQty: 499, perUnitUsd: 25 },
-      { minQty: 500, maxQty: 999, perUnitUsd: 20 },
-      { minQty: 1000, maxQty: null, perUnitUsd: 17 }
+      { minQty: 50, maxQty: 199, perUnitUsd: 38 },
+      { minQty: 200, maxQty: 499, perUnitUsd: 33 },
+      { minQty: 500, maxQty: 999, perUnitUsd: 32 },
+      { minQty: 1000, maxQty: null, perUnitUsd: 30 }
     ]
   },
   {
@@ -541,7 +541,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Outdoor brands, sports activations, events",
     visual: "cap",
     defaultVendorId: "vendor-headwear-one",
-    vendorUnitCostUsd: 6,
+    vendorUnitCostUsd: 11,
     moq: 50,
     leadTimeDays: 42,
     isPublished: true,
@@ -560,10 +560,10 @@ export const seedProducts: CatalogProduct[] = [
     ],
     decorations: coreDecorations.filter((item) => ["embroidery", "patch"].includes(item.id)),
     priceTiers: [
-      { minQty: 50, maxQty: 199, perUnitUsd: 29 },
-      { minQty: 200, maxQty: 499, perUnitUsd: 26 },
-      { minQty: 500, maxQty: 999, perUnitUsd: 21 },
-      { minQty: 1000, maxQty: null, perUnitUsd: 18 }
+      { minQty: 50, maxQty: 199, perUnitUsd: 34 },
+      { minQty: 200, maxQty: 499, perUnitUsd: 31 },
+      { minQty: 500, maxQty: 999, perUnitUsd: 29 },
+      { minQty: 1000, maxQty: null, perUnitUsd: 28 }
     ]
   },
   {
@@ -581,7 +581,7 @@ export const seedProducts: CatalogProduct[] = [
     bestFor: "Seasonal drops, resort merch, staff gifts",
     visual: "beanie",
     defaultVendorId: "vendor-headwear-one",
-    vendorUnitCostUsd: 4.5,
+    vendorUnitCostUsd: 10,
     moq: 50,
     leadTimeDays: 38,
     isPublished: true,
@@ -589,10 +589,10 @@ export const seedProducts: CatalogProduct[] = [
     variants: colorways("rib-knit-beanie", "Cuff beanie", "acrylic rib knit"),
     decorations: coreDecorations.filter((item) => ["patch", "woven_label", "embroidery"].includes(item.id)),
     priceTiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 22 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 19 },
-      { minQty: 500, maxQty: 999, perUnitUsd: 15 },
-      { minQty: 1000, maxQty: null, perUnitUsd: 12 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 31 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 28 },
+      { minQty: 500, maxQty: 999, perUnitUsd: 26 },
+      { minQty: 1000, maxQty: null, perUnitUsd: 25 }
     ]
   }
 ];
