@@ -69,31 +69,39 @@ export const seedVendors: Vendor[] = [
   }
 ];
 
-// Shared colorway palette. The grey base is only a recolor source — it is never a
-// sellable color, so every chip is a real color and Black is the default.
-// Garment fabric colors are specified in Pantone TCX (the textile standard).
-// These TCX codes are a starter set — refine to MOA's actual approved fabric
-// colors. Hex is for on-screen preview only; the TCX code is the production spec.
-const COLORWAYS: { id: string; label: string; hex: string; tcx: string }[] = [
-  { id: "black", label: "Black", hex: "#1a1a1a", tcx: "19-0303 TCX" },
-  { id: "charcoal", label: "Charcoal", hex: "#3a3a3c", tcx: "18-0601 TCX" },
-  { id: "navy", label: "Navy", hex: "#1f2b42", tcx: "19-3920 TCX" },
-  { id: "olive", label: "Olive", hex: "#4d4b30", tcx: "18-0316 TCX" },
-  { id: "burgundy", label: "Burgundy", hex: "#5c2128", tcx: "19-1617 TCX" },
-  { id: "forest", label: "Forest", hex: "#284130", tcx: "19-5513 TCX" }
-];
+// Canonical MOA Catalog colorway system — 9 colors (6 core neutrals + 3 accents).
+// One vocabulary across the whole catalog so a brand can match a hoodie + tee + hat.
+// Each SKU offers a category-appropriate, hero-ordered subset (see colorSet calls).
+// Hex = approved on-screen mockup target; TCX = the production textile spec.
+const PALETTE = {
+  jetBlack:    { label: "Jet Black",    hex: "#2D2C2F", tcx: "19-0303 TCX" },
+  bone:        { label: "Bone",         hex: "#D6D1C0", tcx: "12-0105 TCX" },
+  natural:     { label: "Natural",      hex: "#CBC3B4", tcx: "13-0401 TCX" },
+  heatherGray: { label: "Heather Gray", hex: "#C5C6C7", tcx: "14-4102 TCX" },
+  ink:         { label: "Ink",          hex: "#3C3F4A", tcx: "19-4019 TCX" },
+  navy:        { label: "Navy",         hex: "#2B2E43", tcx: "19-3920 TCX" },
+  forest:      { label: "Forest",       hex: "#264E36", tcx: "19-6050 TCX" },
+  oxblood:     { label: "Oxblood",      hex: "#70393F", tcx: "19-1524 TCX" },
+  walnut:      { label: "Walnut",       hex: "#776A5F", tcx: "18-1112 TCX" }
+} as const;
 
-function colorways(slug: string, label: string, fabric: string): CatalogVariant[] {
-  return COLORWAYS.map((c) => ({
-    id: `${slug}-${c.id}`,
-    label,
-    fabric,
-    colorLabel: c.label,
-    colorHex: c.hex,
-    colorTcx: c.tcx,
-    mockupTemplateUrl: `/mockups/${slug}-${c.id}.pdf`,
-    isAvailable: true
-  }));
+type PaletteId = keyof typeof PALETTE;
+
+// First id in `ids` is the hero (default) color for that SKU.
+function colorways(slug: string, label: string, fabric: string, ids: PaletteId[]): CatalogVariant[] {
+  return ids.map((id) => {
+    const c = PALETTE[id];
+    return {
+      id: `${slug}-${id}`,
+      label,
+      fabric,
+      colorLabel: c.label,
+      colorHex: c.hex,
+      colorTcx: c.tcx,
+      mockupTemplateUrl: `/mockups/${slug}-${id}.pdf`,
+      isAvailable: true
+    };
+  });
 }
 
 export const seedProducts: CatalogProduct[] = [
@@ -166,7 +174,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 52,
     isPublished: true,
     sortOrder: 8,
-    variants: colorways("knit-sweater", "Crewneck sweater", "100% cotton knit"),
+    variants: colorways("knit-sweater", "Crewneck sweater", "100% cotton knit", ["heatherGray", "jetBlack", "bone", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -198,7 +206,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 56,
     isPublished: true,
     sortOrder: 10,
-    variants: colorways("heavyweight-hoodie", "Oversized pullover", "420gsm cotton/poly fleece"),
+    variants: colorways("heavyweight-hoodie", "Oversized pullover", "420gsm cotton/poly fleece", ["jetBlack", "heatherGray", "bone", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "patch", "puff_print", "woven_label"].includes(item.id)
     ),
@@ -230,7 +238,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 20,
-    variants: colorways("heavyweight-tee", "Boxy tee", "260gsm compact cotton jersey"),
+    variants: colorways("heavyweight-tee", "Boxy tee", "260gsm compact cotton jersey", ["bone", "jetBlack", "heatherGray", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "puff_print", "woven_label"].includes(item.id)
     ),
@@ -262,7 +270,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 50,
     isPublished: true,
     sortOrder: 30,
-    variants: colorways("wide-leg-sweatpant", "Wide-leg sweatpant", "380gsm brushed fleece"),
+    variants: colorways("wide-leg-sweatpant", "Wide-leg sweatpant", "380gsm brushed fleece", ["heatherGray", "jetBlack", "ink", "bone"]),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -294,7 +302,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 70,
     isPublished: true,
     sortOrder: 1,
-    variants: colorways("work-jacket", "Chore jacket", "12oz cotton canvas"),
+    variants: colorways("work-jacket", "Chore jacket", "12oz cotton canvas", ["walnut", "jetBlack", "natural", "forest"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -326,7 +334,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 60,
     isPublished: true,
     sortOrder: 3,
-    variants: colorways("zip-sherpa", "Full-zip sherpa", "heavyweight sherpa fleece"),
+    variants: colorways("zip-sherpa", "Full-zip sherpa", "heavyweight sherpa fleece", ["jetBlack", "navy", "ink", "forest", "bone"]),
     decorations: coreDecorations.filter((item) =>
       ["patch", "woven_label", "embroidery"].includes(item.id)
     ),
@@ -358,7 +366,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 70,
     isPublished: true,
     sortOrder: 2,
-    variants: colorways("down-puffer", "Hooded down puffer", "recycled nylon shell / goose down fill"),
+    variants: colorways("down-puffer", "Hooded down puffer", "recycled nylon shell / goose down fill", ["jetBlack", "navy", "ink", "forest"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -390,7 +398,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 50,
     isPublished: true,
     sortOrder: 4,
-    variants: colorways("track-jacket", "Full-zip track jacket", "recycled nylon shell"),
+    variants: colorways("track-jacket", "Full-zip track jacket", "recycled nylon shell", ["jetBlack", "navy", "ink", "forest"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -422,7 +430,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 52,
     isPublished: true,
     sortOrder: 5,
-    variants: colorways("nylon-chore-jacket", "Nylon chore jacket", "nylon shell"),
+    variants: colorways("nylon-chore-jacket", "Nylon chore jacket", "nylon shell", ["jetBlack", "navy", "ink", "forest"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -454,7 +462,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 45,
     isPublished: true,
     sortOrder: 50,
-    variants: colorways("standard-tote", "Standard carry tote", "14oz cotton canvas"),
+    variants: colorways("standard-tote", "Standard carry tote", "14oz cotton canvas", ["natural", "walnut", "jetBlack"]),
     decorations: coreDecorations.filter((item) =>
       ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -485,7 +493,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 60,
-    variants: colorways("dad-hat", "6-panel unstructured", "cotton twill"),
+    variants: colorways("dad-hat", "6-panel unstructured", "cotton twill", ["jetBlack", "bone", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -516,7 +524,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 42,
     isPublished: true,
     sortOrder: 62,
-    variants: colorways("five-panel", "Unstructured 5-panel", "cotton twill"),
+    variants: colorways("five-panel", "Unstructured 5-panel", "cotton twill", ["bone", "jetBlack", "navy", "forest"]),
     decorations: coreDecorations.filter((item) =>
       ["embroidery", "patch", "woven_label"].includes(item.id)
     ),
@@ -586,7 +594,7 @@ export const seedProducts: CatalogProduct[] = [
     leadTimeDays: 38,
     isPublished: true,
     sortOrder: 80,
-    variants: colorways("rib-knit-beanie", "Cuff beanie", "acrylic rib knit"),
+    variants: colorways("rib-knit-beanie", "Cuff beanie", "acrylic rib knit", ["heatherGray", "ink", "jetBlack", "navy", "forest", "natural"]),
     decorations: coreDecorations.filter((item) => ["patch", "woven_label", "embroidery"].includes(item.id)),
     priceTiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 31 },
