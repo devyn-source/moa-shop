@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESC,
     url: SITE,
-    images: [{ url: "/brand/logos/moa-logo.png", alt: "MOA Catalog · Magnum Opus Agency" }],
+    // Social card auto-provided by app/opengraph-image.tsx
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC },
   robots: { index: true, follow: true },
