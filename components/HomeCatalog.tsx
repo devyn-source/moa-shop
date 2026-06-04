@@ -201,10 +201,10 @@ export function HomeCatalog({ products }: { products: CatalogProduct[] }) {
             </svg>
             <input
               type="search"
-              placeholder="Search by name"
+              placeholder="Filter by name or SKU"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              aria-label="Search by name"
+              aria-label="Filter by name or SKU"
             />
           </div>
         </div>
@@ -214,9 +214,9 @@ export function HomeCatalog({ products }: { products: CatalogProduct[] }) {
         <div className="section-head">
           <div>
             <p className="eyebrow">Catalog</p>
-            <h2>{category ? CATEGORY_LABELS[category] ?? category : "The Collection"}</h2>
+            <h2>{category ? CATEGORY_LABELS[category] ?? category : "All SKUs"}</h2>
           </div>
-          <span className="label">{filtered.length} {filtered.length === 1 ? "style" : "styles"}</span>
+          <span className="label">{filtered.length} {filtered.length === 1 ? "product" : "products"}</span>
         </div>
 
         {filtered.length === 0 ? (

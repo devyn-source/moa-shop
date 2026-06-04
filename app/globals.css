@@ -1163,8 +1163,7 @@ button {
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 26px;
-  row-gap: 34px;
+  gap: 14px;
 }
 
 .product-card {
@@ -1172,17 +1171,21 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  /* Gallery tile — no white box, no border chrome. The image sits on the cream
-     canvas and the text sits quietly beneath it. */
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  transition: transform 200ms ease;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid rgba(226, 222, 214, 0.72);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition: border-color 150ms ease, box-shadow 200ms ease, transform 160ms ease;
   /* proximity interaction: --prox (0..1) is driven by ProximityFX from cursor distance */
-  transform: translateY(calc(var(--prox, 0) * -5px));
+  transform: translateY(calc(var(--prox, 0) * -6px)) scale(calc(1 + var(--prox, 0) * 0.04));
   transform-origin: center;
   will-change: transform;
+}
+
+.product-card:hover {
+  border-color: rgba(176, 71, 49, 0.34);
+  box-shadow: var(--shadow-hover);
 }
 
 .product-card .visual-frame {
@@ -1193,14 +1196,10 @@ button {
   aspect-ratio: 4 / 5;
   margin-bottom: 0;
   overflow: hidden;
-  background: linear-gradient(155deg, #f4efe8 0%, #e9e2d7 100%);
+  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
   border: 0;
-  border-radius: 10px;
-  transition: box-shadow 220ms ease;
-}
-
-.product-card:hover .visual-frame {
-  box-shadow: 0 18px 40px -22px rgba(30, 30, 30, 0.32);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
 }
 
 .product-card .product-visual {
@@ -1248,13 +1247,13 @@ button {
 .card-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 2px 4px;
+  gap: 8px;
+  padding: 16px 16px 18px;
 }
 
 .card-headline-row {
   display: flex;
-  align-items: baseline;
+  align-items: start;
   justify-content: space-between;
   gap: 12px;
 }
@@ -1262,46 +1261,60 @@ button {
 .product-card h3 {
   margin: 0;
   color: var(--foreground);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  line-height: 1.15;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
   text-transform: uppercase;
-}
-
-.card-price {
-  flex-shrink: 0;
-  color: var(--muted-foreground);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
 }
 
 .card-blurb {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+}
+
+.from-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 5px 9px 4px;
+  background: rgba(176, 71, 49, 0.08);
+  border: 1px solid rgba(176, 71, 49, 0.2);
+  border-radius: 6px;
+  color: var(--terracotta);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.from-pill span {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.from-pill b {
+  margin-top: 3px;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
 .swatch-row {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 2px;
+  gap: 6px;
 }
 
 .swatch-dot {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   border-radius: 999px;
-  border: 1px solid rgba(30, 30, 30, 0.16);
+  border: 1px solid var(--line-strong);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
@@ -1310,15 +1323,38 @@ button {
   color: var(--muted-foreground);
   font-size: 0.7rem;
   font-weight: 500;
+}
+
+.card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 9px 5px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
 }
 
-.card-spec {
-  color: var(--muted-foreground);
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
+.meta-tag .label {
+  font-size: 0.5rem;
+}
+
+.meta-tag b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.meta-tag--ghost {
+  background: transparent;
 }
 
 /* ===== Crumbs ===== */
