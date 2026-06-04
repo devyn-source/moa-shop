@@ -17,8 +17,8 @@ function MaybeClerk({ children }: { children: React.ReactNode }) {
 }
 
 export const metadata: Metadata = {
-  title: "MOA · Made-to-Order Merch Catalog",
-  description: "Made-to-order merch, tailored to your brand and produced to spec by Magnum Opus Agency."
+  title: "MOA Catalog · Production-grade merch, made to order",
+  description: "Premium merch made to your brand. Self-serve blanks, instant proofs, no quotes — produced to spec and shipped by Magnum Opus Agency."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -86,7 +86,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <div className="ft-base">
             <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus Agency · LLC</span>
-            <span className="ft-base-right">Made-to-order · MOA-managed quality control · DDP shipping default</span>
+            <span style={{ display: "inline-flex", gap: 16, alignItems: "center" }}>
+              <span className="ft-base-right">Made to order · Produced to spec · Tracked to your door</span>
+              <span style={{ display: "inline-flex", gap: 12, fontSize: "0.72rem" }}>
+                <Link href="/terms">Terms</Link>
+                <Link href="/refund-policy">Refunds</Link>
+                <Link href="/privacy">Privacy</Link>
+              </span>
+            </span>
           </div>
         </footer>
         </CartProvider>

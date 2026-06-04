@@ -13,29 +13,29 @@ export default async function HomePage() {
     <main className="page">
       <section className="catalog-intro">
         <div className="catalog-intro-text">
-          <p className="eyebrow">Magnum Opus Agency</p>
-          <h1 className="page-title">Made-to-Order Merch Catalog</h1>
+          <p className="eyebrow">The MOA Catalog</p>
+          <h1 className="page-title">Production-grade merch, made to order.</h1>
           <p className="lede">
-            Made-to-order merch, tailored to your brand and produced to spec by MOA — the way a tailor
-            cuts a suit to measure. Choose a style, build your run by size, upload your artwork.
-            We handle production end to end.
+            Choose a premium blank, build your run by size, and upload your artwork. MOA manufactures it
+            to spec and ships it to you — no quotes, no sales calls, no minimums runaround. The self-serve
+            side of the studio brands trust for their best merch.
           </p>
         </div>
         <div className="catalog-intro-stats">
           <div className="intro-stat">
-            <span>SKUs</span>
+            <span>Styles</span>
             <strong>{products.length}</strong>
           </div>
           <div className="intro-stat">
-            <span>Min order</span>
+            <span>From</span>
             <strong>{currency(minOrder)}</strong>
           </div>
           <div className="intro-stat">
-            <span>From MOQ</span>
+            <span>Min run</span>
             <strong>{minMoq}</strong>
           </div>
           <div className="intro-stat">
-            <span>Lead</span>
+            <span>Lead time</span>
             <strong>{minLead}d+</strong>
           </div>
         </div>
@@ -43,33 +43,33 @@ export default async function HomePage() {
 
       <HomeCatalog products={products} />
 
-      <section className="value-strip" aria-label="What MOA handles">
+      <section className="value-strip" aria-label="How it works">
         <div className="value-card">
           <span className="value-num">01</span>
-          <h3>Fixed, all-in pricing</h3>
-          <p>One locked price ladder per SKU. No quotes, no back-and-forth — managed end to end by MOA.</p>
+          <h3>No quotes, ever</h3>
+          <p>One transparent price ladder per style. What you see is what you pay — no RFQs, no sales calls, no back-and-forth.</p>
         </div>
         <div className="value-card">
           <span className="value-num">02</span>
-          <h3>Artwork QA included</h3>
-          <p>MOA reviews every uploaded mockup for placement and production readiness before it goes into production.</p>
+          <h3>Your proof, instantly</h3>
+          <p>Upload your art and see exactly how it prints. Adjust placement, color and size yourself until it&apos;s right — then approve. Nothing is made until you do.</p>
         </div>
         <div className="value-card">
           <span className="value-num">03</span>
-          <h3>Bounded options</h3>
-          <p>One variant menu, one decoration menu, one price ladder. No custom dev cycle, no surprises.</p>
+          <h3>Production-grade blanks</h3>
+          <p>Every style is a garment we already make for top brands — curated and decoration-ready, not an endless generic catalog.</p>
         </div>
         <div className="value-card">
           <span className="value-num">04</span>
-          <h3>Status visibility</h3>
-          <p>Live order timeline from artwork QA through shipment. Tracking emailed when it ships.</p>
+          <h3>Tracked to your door</h3>
+          <p>Live status from approval through production to delivery, with carrier tracking emailed the moment it ships.</p>
         </div>
       </section>
 
       <section className="cta-strip">
         <div>
-          <p className="eyebrow">Need the deck</p>
-          <h2>Download the full catalog PDF</h2>
+          <p className="eyebrow">The full range</p>
+          <h2>Browse the complete catalog as a PDF</h2>
         </div>
         <Link className="button button--lg" href="/catalog-pdf">
           View PDF →
