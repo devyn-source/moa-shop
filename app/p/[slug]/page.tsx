@@ -51,8 +51,43 @@ export default async function ProductPage({
     notFound();
   }
 
+  // --- SEO: Product + Breadcrumb structured data (rich snippets) ---
+  const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
+  const prices = product.priceTiers.map((t) => t.perUnitUsd);
+  const img = product.greyFront ?? product.variants.find((v) => v.frontImage)?.frontImage;
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.displayName,
+    description: product.headline || product.description,
+    sku: product.skuCode,
+    category: product.category,
+    brand: { "@type": "Brand", name: "Magnum Opus Agency" },
+    ...(img ? { image: [img.startsWith("http") ? img : `${SITE}${img}`] } : {}),
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "USD",
+      lowPrice: Math.min(...prices),
+      highPrice: Math.max(...prices),
+      offerCount: product.priceTiers.length,
+      availability: "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: "Magnum Opus Agency" },
+    },
+  };
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Catalog", item: SITE },
+      { "@type": "ListItem", position: 2, name: product.category },
+      { "@type": "ListItem", position: 3, name: product.displayName, item: `${SITE}/p/${product.slug}` },
+    ],
+  };
+
   return (
     <main className="page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <nav className="crumbs" aria-label="Breadcrumb">
         <Link href="/">Catalog</Link>
         <span aria-hidden>/</span>

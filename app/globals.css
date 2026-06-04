@@ -600,12 +600,7 @@ button {
 /* ===== Catalog intro (compact hero before tiles) ===== */
 
 .catalog-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 420px);
-  gap: 22px;
-  align-items: end;
-  padding: clamp(10px, 2vw, 18px) 0 22px;
-  border-bottom: 1px solid rgba(226, 222, 214, 0.7);
+  padding: clamp(10px, 2vw, 18px) 0 20px;
 }
 
 .catalog-intro-text .lede {
@@ -652,9 +647,8 @@ button {
 /* ===== Filter bar ===== */
 
 .filter-bar {
-  margin: 18px 0 6px;
-  padding: 16px 0 18px;
-  border-top: 1px solid rgba(226, 222, 214, 0.9);
+  margin: 8px 0 6px;
+  padding: 4px 0 18px;
   border-bottom: 1px solid rgba(226, 222, 214, 0.9);
 }
 

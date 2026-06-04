@@ -1,13 +1,9 @@
 import Link from "next/link";
 import { HomeCatalog } from "@/components/HomeCatalog";
-import { currency } from "@/lib/pricing";
 import { getProducts } from "@/lib/store";
 
 export default async function HomePage() {
   const products = await getProducts();
-  const minOrder = Math.min(...products.map((product) => product.moq * product.priceTiers[0].perUnitUsd));
-  const minLead = Math.min(...products.map((product) => product.leadTimeDays));
-  const minMoq = Math.min(...products.map((product) => product.moq));
 
   return (
     <main className="page">
@@ -20,24 +16,6 @@ export default async function HomePage() {
             to spec and ships it to you — no quotes, no sales calls, no minimums runaround. The self-serve
             side of the studio brands trust for their best merch.
           </p>
-        </div>
-        <div className="catalog-intro-stats">
-          <div className="intro-stat">
-            <span>Styles</span>
-            <strong>{products.length}</strong>
-          </div>
-          <div className="intro-stat">
-            <span>From</span>
-            <strong>{currency(minOrder)}</strong>
-          </div>
-          <div className="intro-stat">
-            <span>Min run</span>
-            <strong>{minMoq}</strong>
-          </div>
-          <div className="intro-stat">
-            <span>Lead time</span>
-            <strong>{minLead}d+</strong>
-          </div>
         </div>
       </section>
 

@@ -16,15 +16,49 @@ function MaybeClerk({ children }: { children: React.ReactNode }) {
   return <ClerkProvider>{children}</ClerkProvider>;
 }
 
+const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
+const TITLE = "MOA Catalog · Production-grade merch, made to order";
+const DESC = "Premium merch made to your brand. Self-serve premium blanks, instant proofs, no quotes — produced to spec and shipped by Magnum Opus Agency.";
+
 export const metadata: Metadata = {
-  title: "MOA Catalog · Production-grade merch, made to order",
-  description: "Premium merch made to your brand. Self-serve blanks, instant proofs, no quotes — produced to spec and shipped by Magnum Opus Agency."
+  metadataBase: new URL(SITE),
+  title: TITLE,
+  description: DESC,
+  applicationName: "MOA Catalog",
+  keywords: [
+    "custom merch", "branded merchandise", "made to order merch", "premium blanks",
+    "custom apparel", "screen printing", "embroidery", "custom hoodies", "custom t-shirts",
+    "custom hats", "merch manufacturing", "brand merch", "Magnum Opus Agency", "MOA",
+  ],
+  alternates: { canonical: SITE },
+  openGraph: {
+    type: "website",
+    siteName: "MOA Catalog",
+    title: TITLE,
+    description: DESC,
+    url: SITE,
+    images: [{ url: "/brand/logos/moa-logo.png", alt: "MOA Catalog · Magnum Opus Agency" }],
+  },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESC },
+  robots: { index: true, follow: true },
+};
+
+const ORG_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Magnum Opus Agency",
+  alternateName: "MOA",
+  url: "https://magnumopus.agency",
+  logo: `${SITE}/brand/logos/moa-logo.png`,
+  sameAs: ["https://instagram.com/magnumopus"],
+  email: "production@magnumopus.agency",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
         <MaybeClerk>
         <a href="#main" className="skip-link">Skip to content</a>
         <HeaderScroll />
