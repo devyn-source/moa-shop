@@ -97,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="ft-nav" aria-label="Footer">
               <div className="ft-col">
                 <p className="ft-h">Catalog</p>
-                <Link href="/">All SKUs</Link>
+                <Link href="/">The Collection</Link>
                 <Link href="/catalog-pdf">PDF catalog</Link>
                 <Link href="/cart">Cart</Link>
               </div>
