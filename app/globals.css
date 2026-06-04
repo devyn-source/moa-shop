@@ -2404,6 +2404,44 @@ button {
   }
 }
 
+/* ===== 3D Studio (configurator preview) ===== */
+
+.studio3d-page { max-width: 1100px; }
+.studio3d-head { margin: 4px 0 10px; }
+.g3d { display: flex; flex-direction: column; gap: 18px; }
+.g3d-stage {
+  height: min(72vh, 760px);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f1ede6 0%, #e7e1d7 100%);
+  border: 1px solid var(--border);
+  touch-action: none;
+}
+.g3d-stage canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; }
+.g3d-stage canvas:active { cursor: grabbing; }
+.g3d-swatches { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.g3d-dot {
+  width: 26px; height: 26px; border-radius: 999px; cursor: pointer; padding: 0;
+  border: 1px solid rgba(30,30,30,0.18);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.g3d-dot:hover { transform: scale(1.12); }
+.g3d-dot.is-active { box-shadow: 0 0 0 2px var(--background), 0 0 0 3.5px var(--terracotta); }
+.g3d-colorname {
+  margin-left: 6px; font-family: var(--font-display); font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-foreground);
+}
+.g3d-loading, .studio3d-empty {
+  display: flex; align-items: center; justify-content: center; height: min(72vh, 760px);
+  border-radius: 16px; background: var(--muted); color: var(--muted-foreground);
+  font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.studio3d-empty { padding: 24px; text-align: center; line-height: 2; }
+.studio3d-empty code { background: #fff; padding: 2px 6px; border-radius: 4px; text-transform: none; letter-spacing: 0; }
+.studio3d-note { margin-top: 14px; text-align: center; font-size: 0.82rem; color: var(--muted-foreground); }
+.studio3d-note a { color: var(--terracotta); font-weight: 600; }
+
 /* ===== Timeline ===== */
 
 .timeline {
