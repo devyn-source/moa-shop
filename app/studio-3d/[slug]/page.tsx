@@ -30,7 +30,7 @@ export default async function Studio3DPage({ params }: { params: Promise<{ slug:
       </div>
 
       {hasModel ? (
-        <Garment3DClient url={`/models/${slug}.glb`} swatches={swatches} />
+        <Garment3DClient url={`/models/${slug}.glb?v=2`} swatches={swatches} />
       ) : (
         <div className="studio3d-empty">
           No 3D model yet for <code>{slug}</code>. Drop <code>public/models/{slug}.glb</code> and reload.
