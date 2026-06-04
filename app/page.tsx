@@ -83,14 +83,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="faq" aria-label="Frequently asked questions" style={{ margin: "8px 0 4px" }}>
-        <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Questions</p>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.4rem", textTransform: "uppercase", letterSpacing: "0.04em", margin: "6px 0 18px" }}>How it works</h2>
-        <div style={{ display: "grid", gap: 18, maxWidth: 760 }}>
+      <section className="faq" aria-label="Frequently asked questions">
+        <div className="faq-head">
+          <p className="eyebrow">Before you ask</p>
+          <h2>Good to know</h2>
+        </div>
+        <div className="faq-grid">
           {FAQS.map((f) => (
-            <div key={f.q}>
-              <h3 style={{ fontSize: "0.98rem", fontWeight: 700, color: "var(--color-charcoal)", margin: "0 0 4px" }}>{f.q}</h3>
-              <p style={{ fontSize: "0.9rem", lineHeight: 1.6, color: "var(--color-neutral)", margin: 0 }}>{f.a}</p>
+            <div className="faq-item" key={f.q}>
+              <h3>{f.q}</h3>
+              <p>{f.a}</p>
             </div>
           ))}
         </div>
