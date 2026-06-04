@@ -1248,8 +1248,15 @@ button {
 .card-body {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
   padding: 14px 2px 4px;
+}
+
+.card-headline-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .product-card h3 {
@@ -1262,13 +1269,6 @@ button {
   text-transform: uppercase;
 }
 
-.card-footline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .card-price {
   flex-shrink: 0;
   color: var(--muted-foreground);
@@ -1279,10 +1279,22 @@ button {
   letter-spacing: 0.01em;
 }
 
+.card-blurb {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .swatch-row {
   display: flex;
   align-items: center;
   gap: 5px;
+  margin-top: 2px;
 }
 
 .swatch-dot {
@@ -1294,10 +1306,18 @@ button {
 }
 
 .swatch-count {
-  margin-left: 3px;
+  margin-left: 4px;
   color: var(--muted-foreground);
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-spec {
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2233,20 +2253,73 @@ button {
   line-height: 1.5;
 }
 
-/* ===== FAQ — compact, scannable objection-handling for B2B buyers ===== */
+/* ===== FAQ page — editorial, sidebar-labelled groups ===== */
 
-.faq {
-  margin: 40px 0 8px;
-  padding-top: 30px;
-  border-top: 1px solid rgba(226, 222, 214, 0.6);
+.faq-page-head {
+  max-width: 640px;
+  margin: 8px 0 44px;
 }
 
-.faq-head {
-  margin-bottom: 22px;
+.faq-page-body {
+  display: flex;
+  flex-direction: column;
 }
 
-.faq-head h2 {
-  margin: 6px 0 0;
+.faq-page-group {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  padding: 32px 0;
+  border-top: 1px solid rgba(226, 222, 214, 0.7);
+}
+
+.faq-page-group-label h2 {
+  position: sticky;
+  top: 96px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+}
+
+.faq-page-items {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 720px;
+}
+
+.faq-page-item h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--color-charcoal);
+}
+
+.faq-page-item p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--color-neutral);
+}
+
+.faq-page-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 36px 0 12px;
+  border-top: 1px solid rgba(226, 222, 214, 0.7);
+}
+
+.faq-page-foot h2 {
+  margin: 6px 0 8px;
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 800;
@@ -2255,31 +2328,26 @@ button {
   color: var(--ink);
 }
 
-.faq-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 48px;
-  row-gap: 22px;
-}
-
-.faq-item h3 {
-  margin: 0 0 4px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-charcoal);
-}
-
-.faq-item p {
+.faq-page-foot-copy {
+  max-width: 560px;
   margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.6;
   color: var(--color-neutral);
 }
 
+.faq-page-foot-copy a {
+  color: var(--color-terracotta);
+  font-weight: 600;
+}
+
 @media (max-width: 720px) {
-  .faq-grid {
+  .faq-page-group {
     grid-template-columns: 1fr;
-    row-gap: 18px;
+    gap: 18px;
+  }
+  .faq-page-group-label h2 {
+    position: static;
   }
 }
 

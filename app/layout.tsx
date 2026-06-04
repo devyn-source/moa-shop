@@ -67,7 +67,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="site-header site-header--sticky">
           <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
             <NavLink href="/">Catalog</NavLink>
-            <NavLink href="/catalog-pdf">PDF</NavLink>
+            <NavLink href="/catalog-pdf">Catalog PDF</NavLink>
+            <NavLink href="/faq">FAQ</NavLink>
           </nav>
           <Link className="brand-lockup" href="/" aria-label="MOA — Magnum Opus, made-to-order catalog">
             <img className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" />
@@ -98,7 +99,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="ft-col">
                 <p className="ft-h">Catalog</p>
                 <Link href="/">The Collection</Link>
-                <Link href="/catalog-pdf">PDF catalog</Link>
+                <Link href="/catalog-pdf">Catalog PDF</Link>
+                <Link href="/faq">FAQ</Link>
                 <Link href="/cart">Cart</Link>
               </div>
               <div className="ft-col">
