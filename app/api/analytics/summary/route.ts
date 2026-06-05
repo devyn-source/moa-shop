@@ -11,10 +11,17 @@ export const dynamic = "force-dynamic";
 const RANGES: Record<string, number | null> = { "7d": 7, "30d": 30, "90d": 90, "365d": 365, all: null };
 
 function authed(req: Request): boolean {
-  const secret = process.env.MOAOS_INTAKE_SECRET;
-  if (!secret) return true; // not configured → open (dev)
-  const got = req.headers.get("x-moa-secret") || new URL(req.url).searchParams.get("key");
-  return got === secret;
+  // Accept any of the shared secrets MOA already uses for cross-app calls, under
+  // either header (mirrors the proven refund integration: MoaOS sends
+  // x-moa-internal-secret = INTERNAL_API_SECRET). Open only if none configured.
+  const secrets = [process.env.MOAOS_INTAKE_SECRET, process.env.INTERNAL_API_SECRET].filter(Boolean) as string[];
+  if (!secrets.length) return true;
+  const url = new URL(req.url);
+  const got =
+    req.headers.get("x-moa-secret") ||
+    req.headers.get("x-moa-internal-secret") ||
+    url.searchParams.get("key");
+  return Boolean(got && secrets.includes(got));
 }
 
 const day = (iso: string) => iso.slice(0, 10);
