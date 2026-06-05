@@ -773,7 +773,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
           <span className="pdpx-bespoke-link">Inquire now →</span>
         </a>
 
-        <p className="pdpx-delivered"><span aria-hidden>📦</span> Delivered in {formatLeadTime(product.leadTimeDays)}</p>
+        <p className="pdpx-delivered">Delivered in {formatLeadTime(product.leadTimeDays)}</p>
 
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">

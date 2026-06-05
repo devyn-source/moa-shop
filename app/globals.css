@@ -5874,8 +5874,8 @@ a.stat-card:hover {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: var(--color-charcoal);
-  color: var(--color-cream);
+  background: var(--color-terracotta);
+  color: #fff;
   border-radius: 12px;
   text-decoration: none;
   font-family: var(--font-display);
@@ -5887,7 +5887,7 @@ a.stat-card:hover {
 }
 
 .pdpx-cta:hover {
-  background: var(--color-terracotta);
+  background: #8a3826;
   transform: translateY(-1px);
 }
 
