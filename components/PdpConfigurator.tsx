@@ -777,20 +777,29 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
 
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">
-            <div className="pdpx-breakdown-row">
-              <span>Base unit</span>
-              <span>{currency(tier.perUnitUsd)}</span>
-            </div>
-            {decoSelected.map((d) => (
-              <div key={d.id} className="pdpx-breakdown-row pdpx-breakdown-row--adder">
-                <span>+ {d.label}</span>
-                <span>+{currency(d.perUnitAdderUsd)}</span>
+            {decoSelected.length > 0 ? (
+              <>
+                <div className="pdpx-breakdown-row">
+                  <span>Base unit</span>
+                  <span>{currency(tier.perUnitUsd)}</span>
+                </div>
+                {decoSelected.map((d) => (
+                  <div key={d.id} className="pdpx-breakdown-row pdpx-breakdown-row--adder">
+                    <span>+ {d.label}</span>
+                    <span>+{currency(d.perUnitAdderUsd)}</span>
+                  </div>
+                ))}
+                <div className="pdpx-breakdown-row pdpx-breakdown-row--sum">
+                  <span>Per unit · {qty.toLocaleString()} units</span>
+                  <span>{currency(perUnit)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="pdpx-breakdown-row pdpx-breakdown-row--sum">
+                <span>Per unit · {qty.toLocaleString()} units</span>
+                <span>{currency(perUnit)}</span>
               </div>
-            ))}
-            <div className="pdpx-breakdown-row pdpx-breakdown-row--sum">
-              <span>Per unit · {qty.toLocaleString()} units</span>
-              <span>{currency(perUnit)}</span>
-            </div>
+            )}
           </div>
           <div className="pdpx-price">
             <span className="pdpx-from">Subtotal</span>
