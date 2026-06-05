@@ -262,6 +262,28 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
     }
   };
 
+  // Quick size-run presets — fill the matrix to MOQ instead of typing each size.
+  const applyPreset = (kind: "even" | "curve" | "clear") => {
+    const sizes = product.sizes;
+    if (kind === "clear") return setSizeQty({});
+    const target = Math.max(product.moq, qty || 0);
+    if (sizes.length === 1) return setSizeQty({ [sizes[0]]: target });
+    const next: Record<string, number> = {};
+    if (kind === "even") {
+      const base = Math.floor(target / sizes.length);
+      sizes.forEach((s) => (next[s] = base));
+    } else {
+      const W: Record<string, number> = { XS: 0.05, S: 0.15, M: 0.3, L: 0.3, XL: 0.15, XXL: 0.05, "2XL": 0.05, "3XL": 0.03 };
+      const w = sizes.map((s) => W[s] ?? 1 / sizes.length);
+      const sum = w.reduce((a, b) => a + b, 0);
+      sizes.forEach((s, i) => (next[s] = Math.round((target * w[i]) / sum)));
+    }
+    // true up rounding so the run hits the target exactly, on the middle size
+    const mid = sizes.includes("M") ? "M" : sizes[Math.floor(sizes.length / 2)];
+    next[mid] = Math.max(0, (next[mid] || 0) + (target - Object.values(next).reduce((a, b) => a + b, 0)));
+    setSizeQty(next);
+  };
+
   const handleAddToCart = () => {
     if (belowMoq || !variant || submitting || blockRes) return;
     const decorationLabel = decoSelected.length
@@ -596,13 +618,13 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
                           <span className="pdpx-drop-cta">
                             {uploading ? "Uploading…" : artworkName ? artworkName : "Upload artwork"}
                           </span>
-                          <span className="pdpx-drop-hint">
+                          <span className={`pdpx-drop-hint${uploadError ? " is-error" : uploadWarning && artworkUrl && !uploading ? " is-warn" : artworkUrl && !uploading ? " is-ok" : ""}`}>
                             {uploadError
-                              ? uploadError
+                              ? `⚠ ${uploadError}`
                               : uploadWarning && artworkUrl && !uploading
-                              ? uploadWarning
+                              ? `⚠ ${uploadWarning}`
                               : artworkUrl && !uploading
-                              ? "Uploaded · validated for print ✓"
+                              ? "Uploaded · high-resolution, print-ready ✓"
                               : "PNG, JPG, SVG, WEBP, PDF — vector preferred"}
                           </span>
                         </button>
@@ -651,6 +673,14 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
 
                     {s.key === "size" ? (
                       <div className="pdpx-size">
+                        {product.sizes.length > 1 ? (
+                          <div className="pdpx-size-presets">
+                            <span className="pdpx-size-presets-label">Quick fill to {product.moq}</span>
+                            <button type="button" onClick={() => applyPreset("curve")}>Standard curve</button>
+                            <button type="button" onClick={() => applyPreset("even")}>Even split</button>
+                            <button type="button" onClick={() => applyPreset("clear")}>Clear</button>
+                          </div>
+                        ) : null}
                         <div className="pdpx-matrix">
                           {product.sizes.map((size) => (
                             <label key={size} className="pdpx-matrix-cell">

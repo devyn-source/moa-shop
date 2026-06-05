@@ -5493,6 +5493,47 @@ a.stat-card:hover {
   font-size: 0.78rem;
   color: var(--color-neutral);
 }
+/* upload feedback states — a rejection should be loud */
+.pdpx-drop-hint.is-error { color: var(--color-terracotta); font-weight: 600; }
+.pdpx-drop-hint.is-warn { color: var(--color-warning); font-weight: 600; }
+.pdpx-drop-hint.is-ok { color: var(--color-success); font-weight: 600; }
+
+/* size-run quick-fill presets */
+.pdpx-size-presets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.pdpx-size-presets-label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+  margin-right: 2px;
+}
+.pdpx-size-presets button {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+.pdpx-size-presets button:hover {
+  border-color: rgba(176, 71, 49, 0.4);
+  color: var(--color-terracotta);
+  background: #fff;
+}
 
 .pdpx-place-label {
   margin: 6px 0 0;
