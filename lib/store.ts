@@ -171,7 +171,13 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     throw new Error("No valid decoration method selected");
   }
 
-  const price = calculateOrderPrice(product, input.quantity, decorationIds);
+  // Server-side pricing of upsells: placement count comes from the structured
+  // placement set (trustworthy); woven from the chosen flag. The client never
+  // dictates the total — pricing.ts does.
+  const price = calculateOrderPrice(product, input.quantity, decorationIds, {
+    placementCount: input.artworkPlacements?.length,
+    wovenLabel: input.wovenLabel,
+  });
   const now = new Date().toISOString();
   const supabase = getSupabase();
   const { count } = await supabase.from("orders").select("*", { count: "exact", head: true });
@@ -200,6 +206,8 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     artworkFileUrl: input.artworkFileUrl,
     artworkNotes: input.artworkNotes,
     artworkPlacement: input.artworkPlacement,
+    artworkPlacements: input.artworkPlacements,
+    wovenLabel: input.wovenLabel,
     sizeBreakdown: input.sizeBreakdown,
     paymentStatus: paid ? "paid" : "unpaid",
     status: paid ? "artwork_qa" : "awaiting_payment",

@@ -24,7 +24,21 @@ export default async function AdjustPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  const p = order.artworkPlacement;
+  // Full placement set (multi-placement orders); the primary leads, extras
+  // re-seed the saved-placement list so re-proofing keeps every location.
+  const all = order.artworkPlacements ?? (order.artworkPlacement ? [order.artworkPlacement] : []);
+  const p = all[0] ?? order.artworkPlacement;
+  const extras = all.slice(1).map((pl, i) => ({
+    id: `seed-${i}`,
+    view: pl.view,
+    zoneId: pl.zoneId,
+    zoneLabel: pl.zoneLabel,
+    box: pl.box,
+    art: pl.art,
+    artworkUrl: pl.artworkFileUrl ?? order.artworkFileUrl ?? "",
+    artworkName: pl.artworkFileName ?? null,
+    artMeta: null,
+  })).filter((e) => e.artworkUrl);
   const seed: EditSeed = {
     orderId: order.id,
     variantId: order.variantId,
@@ -33,9 +47,10 @@ export default async function AdjustPage({ params }: { params: Promise<{ id: str
     view: p?.view,
     zoneId: p?.zoneId,
     art: p?.art,
-    artworkFileUrl: order.artworkFileUrl,
-    artworkFileName: order.artworkFileName,
+    artworkFileUrl: p?.artworkFileUrl ?? order.artworkFileUrl,
+    artworkFileName: p?.artworkFileName ?? order.artworkFileName,
     sizeQty: order.sizeBreakdown,
+    extraPlacements: extras.length ? extras : undefined,
   };
 
   return (

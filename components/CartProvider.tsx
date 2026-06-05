@@ -24,6 +24,8 @@ export type CartItem = {
   artworkFileUrl?: string;
   artworkNotes: string;
   artworkPlacement?: import("@/lib/types").ArtworkPlacement;
+  artworkPlacements?: import("@/lib/types").ArtworkPlacement[];
+  wovenLabel?: boolean;
 };
 
 type CartContextValue = {

@@ -5,15 +5,33 @@ import { useRouter } from "next/navigation";
 import { ProductShot } from "./ProductShot";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
-import { currency, formatLeadTime } from "@/lib/pricing";
+import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
 import { WovenLabelModal, type WovenLabel } from "./WovenLabelModal";
 
-// Flat per-unit upsell for a custom woven label (cost + margin). Configurable.
-const WOVEN_LABEL_ADDER = 2;
+// Upsell rates mirror the server's pricing source (lib/pricing.ts) so the live
+// breakdown and the charged total can never disagree. The first placement is
+// included; each extra location (full back, sleeve) adds the flat per-unit fee.
+const WOVEN_LABEL_ADDER = WOVEN_LABEL_ADDER_USD;
+const EXTRA_PLACEMENT_ADDER = EXTRA_PLACEMENT_ADDER_USD;
+
+// A finalised additional placement (beyond the one in the live editor). Each
+// carries its own artwork + zone so a buyer can put a chest logo on the front
+// and a different graphic on the back.
+type ExtraPlacement = {
+  id: string;
+  view: "front" | "back";
+  zoneId: string;
+  zoneLabel: string;
+  box: { x: number; y: number; w: number; h: number; r?: number };
+  art: ArtTransform;
+  artworkUrl: string;
+  artworkName: string | null;
+  artMeta: { width: number; height: number } | null;
+};
 
 type Step = "color" | "decoration" | "placement" | "size";
 
@@ -49,6 +67,7 @@ export type EditSeed = {
   artworkFileUrl?: string;
   artworkFileName?: string;
   sizeQty?: Record<string, number>;
+  extraPlacements?: ExtraPlacement[];
 };
 
 export function PdpConfigurator({ product, editOrder, seed }: { product: CatalogProduct; editOrder?: EditSeed; seed?: EditSeed }) {
@@ -114,6 +133,10 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
   const [downloading, setDownloading] = useState(false);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [wovenOpen, setWovenOpen] = useState(false);
+  // Additional placements beyond the one being edited in the live stage. The
+  // editor below always edits the "current" placement; saving it pushes a
+  // finalised copy here and clears the editor for the next location.
+  const [savedPlacements, setSavedPlacements] = useState<ExtraPlacement[]>(seed0?.extraPlacements ?? []);
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addItem } = useCart();
@@ -147,8 +170,6 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decorationIds]);
   const wovenAdder = wovenLabel ? WOVEN_LABEL_ADDER : 0;
-  const perUnit = tier.perUnitUsd + decorationAdder + wovenAdder;
-  const subtotal = perUnit * qty;
 
   // Only offer placements we can spec to ~95% (calibrated + supported reference
   // frame). Uncalibrated SKUs and unsupported zones (sleeves/hats/etc.) are
@@ -158,6 +179,88 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     isZoneSpecable(p.id, view, product.category, calibration)
   );
   const placement = placements.find((p) => p.id === placementId) ?? null;
+
+  // The live editor counts as a placement once it has both art and a zone.
+  // First placement is included in the decoration price; each additional one
+  // (saved below, or the editor on top of saved ones) adds the flat fee.
+  const editorComplete = Boolean(artworkUrl && placement);
+  const placementCount = savedPlacements.length + (editorComplete ? 1 : 0);
+  const extraPlacementCount = Math.max(0, placementCount - 1);
+  const extraPlacementAdder = extraPlacementCount * EXTRA_PLACEMENT_ADDER;
+  const perUnit = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder;
+  const subtotal = perUnit * qty;
+
+  // Snapshot the live editor into the saved list and clear it for the next
+  // location. Requires art + a chosen zone (editorComplete).
+  const saveCurrentPlacement = () => {
+    if (!editorComplete || !placement || !artworkUrl) return;
+    setSavedPlacements((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        view,
+        zoneId: placement.id,
+        zoneLabel: placement.label,
+        box: placement.box,
+        art: artTransform,
+        artworkUrl,
+        artworkName,
+        artMeta,
+      },
+    ]);
+    // Clear the editor (keep the current view) so the next placement starts fresh.
+    setPlacementId(null);
+    setArtworkUrl(null);
+    setArtworkName(null);
+    setArtMeta(null);
+    setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
+    if (fileRef.current) fileRef.current.value = "";
+    analytics.track("placement_added", { slug: product.slug });
+  };
+
+  const removeSavedPlacement = (id: string) =>
+    setSavedPlacements((prev) => prev.filter((p) => p.id !== id));
+
+  // All placements as structured ArtworkPlacement records, in creation order:
+  // saved (banked first) lead, the live editor placement (most recent) trails.
+  // out[0] is the primary — what the proof renders + downstream singular
+  // consumers read.
+  const allPlacements = useMemo(() => {
+    const method = decoSelected.map((d) => d.label).join(" + ") || undefined;
+    const colors = pantones.length || undefined;
+    const pms = pantones.length ? pantones : undefined;
+    const maxColors = decoSelected[0]?.maxColors;
+    const out: import("@/lib/types").ArtworkPlacement[] = savedPlacements.map((s) => ({
+      view: s.view,
+      zoneId: s.zoneId,
+      zoneLabel: s.zoneLabel,
+      box: s.box,
+      art: s.art,
+      method,
+      colors,
+      pantones: pms,
+      maxColors,
+      artworkFileUrl: s.artworkUrl,
+      artworkFileName: s.artworkName ?? undefined,
+    }));
+    if (editorComplete && placement) {
+      out.push({
+        view,
+        zoneId: placement.id,
+        zoneLabel: placement.label,
+        box: placement.box,
+        art: artTransform,
+        method,
+        colors,
+        pantones: pms,
+        maxColors,
+        artworkFileUrl: artworkUrl ?? undefined,
+        artworkFileName: artworkName ?? undefined,
+      });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements]);
 
   // Print-resolution QA: native art pixels spread across the REAL printed width
   // (derived from this SKU's calibration). Vectors skip it (scalable). <150 DPI
@@ -176,7 +279,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
   const stepDone = (s: Step): boolean => {
     if (s === "color") return Boolean(variant);
     if (s === "decoration") return decorationIds.length > 0;
-    if (s === "placement") return Boolean(artworkUrl) && Boolean(placement);
+    if (s === "placement") return placementCount > 0;
     if (s === "size") return qty >= product.moq;
     return false;
   };
@@ -185,7 +288,10 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     if (s === "color") return variant?.colorLabel ?? "—";
     if (s === "decoration")
       return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
-    if (s === "placement") return placement?.label ?? (artworkUrl ? "Pick a location" : "Upload artwork");
+    if (s === "placement")
+      return placementCount > 1
+        ? `${placementCount} placements`
+        : placement?.label ?? (savedPlacements[0]?.zoneLabel ?? (artworkUrl ? "Pick a location" : "Upload artwork"));
     if (s === "size") return `${qty.toLocaleString()} units`;
     return "";
   };
@@ -342,6 +448,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
         variantId, decorationIds, pantones, view,
         zoneId: placementId ?? undefined, art: artTransform,
         artworkFileUrl: artworkUrl ?? undefined, artworkFileName: artworkName ?? undefined, sizeQty,
+        extraPlacements: savedPlacements.length ? savedPlacements : undefined,
       };
       const res = await fetch("/api/config/share", {
         method: "POST", headers: { "content-type": "application/json" },
@@ -363,11 +470,20 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     const decorationLabel = (decoSelected.length
       ? decoSelected.map((d) => d.label).join(" + ")
       : "Undecorated") + (wovenLabel ? " + Woven label" : "");
-    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder;
+    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder;
+    const decorationLabelFull = decorationLabel + (placementCount > 1 ? ` · ${placementCount} placements` : "");
     analytics.addToCart({
       slug: product.slug, name: product.displayName, category: product.category,
-      color: variant.colorLabel, decoration: decorationLabel, quantity: qty,
+      color: variant.colorLabel, decoration: decorationLabelFull, quantity: qty,
       unit_price: perUnitTotal, value: perUnitTotal * qty,
+    });
+    const primary = allPlacements[0];
+    const placementNotes = allPlacements.map((p, i) => {
+      const head = `Placement ${i + 1} — ${p.zoneLabel}${p.view === "back" ? " (back)" : " (front)"}${i === 0 ? " · included" : ` · +${currency(EXTRA_PLACEMENT_ADDER)}/unit`}`;
+      const box = `  Box: x=${p.box.x.toFixed(3)} y=${p.box.y.toFixed(3)} w=${p.box.w.toFixed(3)} h=${p.box.h.toFixed(3)}${p.box.r ? ` r=${Math.round(p.box.r)}°` : ""}`;
+      const art = `  Art-in-box: ox=${p.art.ox.toFixed(3)} oy=${p.art.oy.toFixed(3)} sx=${p.art.sx.toFixed(3)} sy=${p.art.sy.toFixed(3)}${p.art.r ? ` r=${Math.round(p.art.r)}°` : ""}`;
+      const file = p.artworkFileUrl ? `  Art file: ${p.artworkFileName ?? "uploaded"} (${p.artworkFileUrl})` : "";
+      return [head, box, art, file].filter(Boolean).join("\n");
     });
     addItem({
       productId: product.id,
@@ -379,39 +495,24 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
       colorHex: variant.colorHex,
       image: product.greyFront ?? variant.frontImage,
       decorationIds,
-      decorationLabel,
+      decorationLabel: decorationLabelFull,
       sizeQty,
       quantity: qty,
       perUnitUsd: tier.perUnitUsd,
-      decorationAdderUsd: decorationAdder + wovenAdder,
+      decorationAdderUsd: decorationAdder + wovenAdder + extraPlacementAdder,
       subtotalUsd: tier.perUnitUsd * qty,
       totalUsd: perUnitTotal * qty,
-      artworkFileName: artworkName ?? "Artwork file pending",
-      artworkFileUrl: artworkUrl ?? undefined,
+      artworkFileName: primary?.artworkFileName ?? artworkName ?? "Artwork file pending",
+      artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
       artworkNotes: [
-        ...(placement
-          ? [
-              `Zone: ${placement.label}${view === "back" ? " (back)" : ""}`,
-              `Box: x=${placement.box.x.toFixed(3)} y=${placement.box.y.toFixed(3)} w=${placement.box.w.toFixed(3)} h=${placement.box.h.toFixed(3)}${placement.box.r ? ` r=${Math.round(placement.box.r)}°` : ""}`,
-              `Art-in-box: ox=${artTransform.ox.toFixed(3)} oy=${artTransform.oy.toFixed(3)} sx=${artTransform.sx.toFixed(3)} sy=${artTransform.sy.toFixed(3)}${artTransform.r ? ` r=${Math.round(artTransform.r)}°` : ""}`,
-            ]
-          : []),
+        ...placementNotes,
         ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · ${wovenLabel.fold} fold · ${wovenLabel.placement} · thread ${wovenLabel.thread}`] : []),
       ].join("\n"),
-      // Structured placement — the real spec that threads to the tech pack/proof.
-      artworkPlacement: placement
-        ? {
-            view,
-            zoneId: placement.id,
-            zoneLabel: placement.label,
-            box: placement.box,
-            art: artTransform,
-            method: decorationLabel,
-            colors: pantones.length || undefined,
-            pantones: pantones.length ? pantones : undefined,
-            maxColors: decoSelected[0]?.maxColors
-          }
-        : undefined
+      // Structured placement — primary threads to the tech pack/proof; the full
+      // set rides along for multi-placement orders.
+      artworkPlacement: primary,
+      artworkPlacements: allPlacements.length ? allPlacements : undefined,
+      wovenLabel: Boolean(wovenLabel),
     });
     setSubmitting(true);
     router.push("/cart");
@@ -425,19 +526,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     setSubmitting(true);
     setUpdateError(null);
     const decorationLabel = decoSelected.length ? decoSelected.map((d) => d.label).join(" + ") : "Undecorated";
-    const artworkPlacement = placement
-      ? {
-          view,
-          zoneId: placement.id,
-          zoneLabel: placement.label,
-          box: placement.box,
-          art: artTransform,
-          method: decorationLabel,
-          colors: pantones.length || undefined,
-          pantones: pantones.length ? pantones : undefined,
-          maxColors: decoSelected[0]?.maxColors,
-        }
-      : undefined;
+    const primary = allPlacements[0];
     try {
       const res = await fetch(`/api/orders/${editOrder.orderId}/update`, {
         method: "POST",
@@ -448,11 +537,12 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
           colorHex: variant.colorHex,
           decorationIds,
           decorationLabel,
-          artworkFileUrl: artworkUrl ?? undefined,
-          artworkFileName: artworkName ?? undefined,
+          artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
+          artworkFileName: primary?.artworkFileName ?? artworkName ?? undefined,
           sizeBreakdown: sizeQty,
           quantity: qty,
-          artworkPlacement,
+          artworkPlacement: primary,
+          artworkPlacements: allPlacements.length ? allPlacements : undefined,
         }),
       });
       if (!res.ok) {
@@ -539,6 +629,37 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
                   <ProductShot product={product} variant={variant} view="back" />
                 </span>
               ) : null}
+              {/* Saved placements on this view — static (the editor above is the
+                  one you're actively positioning). */}
+              {savedPlacements
+                .filter((s) => s.view === view)
+                .map((s) => (
+                  <span
+                    key={s.id}
+                    className="pdpx-place-box pdpx-place-box--saved"
+                    style={{
+                      left: `${s.box.x * 100}%`,
+                      top: `${s.box.y * 100}%`,
+                      width: `${s.box.w * 100}%`,
+                      height: `${s.box.h * 100}%`,
+                      transform: `rotate(${s.box.r ?? 0}deg)`,
+                      transformOrigin: "center center"
+                    }}
+                  >
+                    <span
+                      className="pdpx-art-static"
+                      style={{
+                        left: `${s.art.ox * 100}%`,
+                        top: `${s.art.oy * 100}%`,
+                        width: `${s.art.sx * 100}%`,
+                        height: `${s.art.sy * 100}%`,
+                        transform: `rotate(${s.art.r ?? 0}deg)`,
+                        transformOrigin: "center center",
+                        backgroundImage: `url("${s.artworkUrl}")`
+                      }}
+                    />
+                  </span>
+                ))}
               {artworkUrl && placement ? (
                 <span
                   className="pdpx-place-box"
@@ -748,6 +869,50 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
                         ) : (
                           <p className="pdpx-place-hint">Drop a file above to see it on the garment.</p>
                         )}
+
+                        {/* Multi-placement — bank the current location, build more.
+                            First placement is included; each extra is a flat add-on. */}
+                        <div className="pdpx-places-multi">
+                          {savedPlacements.length > 0 ? (
+                            <ul className="pdpx-saved-list">
+                              {savedPlacements.map((s) => (
+                                <li key={s.id} className="pdpx-saved-chip">
+                                  <span
+                                    className="pdpx-saved-thumb"
+                                    style={{ backgroundImage: `url("${s.artworkUrl}")` }}
+                                    aria-hidden
+                                  />
+                                  <span className="pdpx-saved-meta">
+                                    <strong>{s.zoneLabel}</strong>
+                                    <em>{s.view === "back" ? "Back" : "Front"}</em>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="pdpx-saved-x"
+                                    onClick={() => removeSavedPlacement(s.id)}
+                                    aria-label={`Remove ${s.zoneLabel}`}
+                                  >
+                                    ✕
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="pdpx-add-placement"
+                            disabled={!editorComplete}
+                            onClick={saveCurrentPlacement}
+                          >
+                            <span className="pdpx-add-placement-label">+ Save &amp; add another placement</span>
+                            <span className="pdpx-add-placement-price">+{currency(EXTRA_PLACEMENT_ADDER)}/unit each</span>
+                          </button>
+                          <p className="pdpx-place-hint">
+                            {editorComplete
+                              ? `Bank this location, then put a different graphic on the back, a sleeve, or anywhere we can spec. First placement included; each extra +${currency(EXTRA_PLACEMENT_ADDER)}/unit.`
+                              : `Want it in more than one spot? Add artwork + a location above, then save it to start another. First placement included; each extra +${currency(EXTRA_PLACEMENT_ADDER)}/unit.`}
+                          </p>
+                        </div>
                       </div>
                     ) : null}
 
@@ -860,7 +1025,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
 
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">
-            {decoSelected.length > 0 || wovenLabel ? (
+            {decoSelected.length > 0 || wovenLabel || extraPlacementCount > 0 ? (
               <>
                 <div className="pdpx-breakdown-row">
                   <span>Base unit</span>
@@ -872,6 +1037,12 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
                     <span>+{currency(d.perUnitAdderUsd)}</span>
                   </div>
                 ))}
+                {extraPlacementCount > 0 ? (
+                  <div className="pdpx-breakdown-row pdpx-breakdown-row--adder">
+                    <span>+ {extraPlacementCount} extra placement{extraPlacementCount > 1 ? "s" : ""}</span>
+                    <span>+{currency(extraPlacementAdder)}</span>
+                  </div>
+                ) : null}
                 {wovenLabel ? (
                   <div className="pdpx-breakdown-row pdpx-breakdown-row--adder">
                     <span>+ Woven label</span>

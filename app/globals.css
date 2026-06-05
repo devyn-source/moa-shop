@@ -5076,6 +5076,132 @@ a.stat-card:hover {
   animation: pdpx-art-in 300ms ease both;
 }
 
+/* A saved (already-banked) placement, rendered statically on the canvas while
+   the editor above positions the active one. */
+.pdpx-place-box--saved {
+  outline-color: rgba(138, 134, 128, 0.5);
+  animation: none;
+}
+.pdpx-art-static {
+  position: absolute;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  pointer-events: none;
+}
+
+/* Multi-placement — saved-location chips + the "save & add another" action. */
+.pdpx-places-multi {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-cream-dark);
+}
+.pdpx-saved-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pdpx-saved-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--color-cream);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: 8px;
+}
+.pdpx-saved-thumb {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: 1px solid var(--color-cream-dark);
+}
+.pdpx-saved-meta {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pdpx-saved-meta strong {
+  font-size: 0.82rem;
+  color: var(--color-charcoal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pdpx-saved-meta em {
+  font-style: normal;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+  margin-top: 2px;
+}
+.pdpx-saved-x {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--color-neutral);
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 140ms ease, color 140ms ease;
+}
+.pdpx-saved-x:hover {
+  background: var(--color-cream-dark);
+  color: var(--color-terracotta);
+}
+.pdpx-add-placement {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  background: #fff;
+  border: 1px dashed var(--color-terracotta);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 140ms ease, opacity 140ms ease;
+}
+.pdpx-add-placement:hover:not(:disabled) {
+  background: var(--color-cream);
+}
+.pdpx-add-placement:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--color-cream-dark);
+}
+.pdpx-add-placement-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+}
+.pdpx-add-placement:disabled .pdpx-add-placement-label {
+  color: var(--color-neutral);
+}
+.pdpx-add-placement-price {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+  white-space: nowrap;
+}
+
 /* The actual artwork — draggable, resizable within the bounding box. */
 .pdpx-art-handle {
   position: absolute;

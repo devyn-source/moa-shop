@@ -93,7 +93,7 @@ export default function CheckoutPage() {
         productId: item.productId, variantId: item.variantId, decorationIds: item.decorationIds,
         quantity: item.quantity, displayName: item.displayName, colorLabel: item.colorLabel,
         decorationLabel: item.decorationLabel, artworkFileName: item.artworkFileName, artworkFileUrl: item.artworkFileUrl,
-        artworkPlacement: item.artworkPlacement, sizeBreakdown: item.sizeQty,
+        artworkPlacement: item.artworkPlacement, artworkPlacements: item.artworkPlacements, wovenLabel: item.wovenLabel, sizeBreakdown: item.sizeQty,
         artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes,
       };
     });

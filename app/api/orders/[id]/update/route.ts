@@ -27,6 +27,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     artworkFileName: body.artworkFileName ?? order.artworkFileName,
     sizeBreakdown: body.sizeBreakdown ?? order.sizeBreakdown,
     artworkPlacement: body.artworkPlacement ?? order.artworkPlacement,
+    artworkPlacements: body.artworkPlacements ?? order.artworkPlacements,
   };
   const updated = await updateOrderConfig(id, patch);
   if (!updated) return NextResponse.json({ error: "Update failed" }, { status: 500 });
