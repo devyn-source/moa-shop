@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/supabase-server";
+import { currentUser } from "@clerk/nextjs/server";
 import { getOrdersByEmail, getProducts, statusLabel } from "@/lib/store";
 import { currency } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
-  const user = await getCurrentUser();
-  if (!user?.email) {
-    redirect("/login?next=/orders");
+  const user = await currentUser();
+  const email = user?.primaryEmailAddress?.emailAddress;
+  if (!email) {
+    redirect("/sign-in");
   }
 
-  const [orders, products] = await Promise.all([getOrdersByEmail(user.email), getProducts({ includeDrafts: true })]);
+  const [orders, products] = await Promise.all([getOrdersByEmail(email), getProducts({ includeDrafts: true })]);
   const nameById = new Map(products.map((p) => [p.id, p.displayName]));
 
   return (
@@ -33,11 +34,8 @@ export default async function OrdersPage() {
           >
             Your orders
           </h1>
-          <p style={{ fontSize: 13, color: "var(--color-neutral)", margin: "6px 0 0" }}>{user.email}</p>
+          <p style={{ fontSize: 13, color: "var(--color-neutral)", margin: "6px 0 0" }}>{email}</p>
         </div>
-        <form action="/auth/signout" method="post">
-          <button type="submit" className="btn-secondary" style={signOutBtn}>Sign out</button>
-        </form>
       </div>
 
       {orders.length === 0 ? (
@@ -84,8 +82,4 @@ const badge: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase",
   color: "var(--color-charcoal)", background: "var(--color-cream)", border: "1px solid var(--color-cream-dark)",
   borderRadius: 999, padding: "5px 11px", whiteSpace: "nowrap"
-};
-const signOutBtn: React.CSSProperties = {
-  padding: "9px 16px", fontSize: 11, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase",
-  background: "#fff", border: "1px solid var(--color-cream-dark)", borderRadius: 8, color: "var(--color-charcoal)", cursor: "pointer"
 };

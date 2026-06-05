@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { analytics } from "@/lib/analytics";
 import { currency } from "@/lib/pricing";
 import { BrandSelect } from "@/components/BrandSelect";
-import { createBrowserSupabase } from "@/lib/supabase-browser";
+import { useUser } from "@clerk/nextjs";
 
 const US_STATES = [
   { value: "", label: "Select state" },
@@ -52,31 +52,22 @@ export default function CheckoutPage() {
   const on = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
   const setVal = (k: keyof Form, v: string) => setF((p) => ({ ...p, [k]: v }));
 
-  // Signed-in account → offer their info or a different address.
-  const [account, setAccount] = useState<{ email: string; name: string | null } | null>(null);
-  const [useAccount, setUseAccount] = useState(true);
   const [ipAttested, setIpAttested] = useState(false);
 
+  // Pre-fill contact from the signed-in Clerk account (sign-in is required to
+  // reach checkout). Fields stay editable — the order contact may differ.
+  const { user } = useUser();
+  const accountEmail = user?.primaryEmailAddress?.emailAddress ?? null;
+  const prefilled = useRef(false);
   useEffect(() => {
-    const sb = createBrowserSupabase();
-    sb.auth.getUser().then(({ data }) => {
-      const u = data.user;
-      if (u?.email) {
-        const name = (u.user_metadata?.full_name || u.user_metadata?.name || "") as string;
-        setAccount({ email: u.email, name: name || null });
-        setF((p) => ({ ...p, contactEmail: u.email!, contactName: name || p.contactName }));
-      }
-    }).catch(() => {});
-  }, []);
-
-  function chooseAccount() {
-    setUseAccount(true);
-    if (account) setF((p) => ({ ...p, contactEmail: account.email, contactName: account.name || p.contactName }));
-  }
-  function chooseDifferent() {
-    setUseAccount(false);
-    setF((p) => ({ ...p, contactEmail: "", contactName: "" }));
-  }
+    if (prefilled.current || !user) return;
+    prefilled.current = true;
+    setF((p) => ({
+      ...p,
+      contactEmail: accountEmail || p.contactEmail,
+      contactName: user.fullName || p.contactName,
+    }));
+  }, [user, accountEmail]);
 
   const isUS = f.country === "United States";
 
@@ -144,15 +135,11 @@ export default function CheckoutPage() {
             <p className="lede">Entered once and applied to every SKU in your order.</p>
           </div>
 
-          {account && (
+          {accountEmail && (
             <div className="co-account">
               <div>
                 <p className="co-account-label">Signed in</p>
-                <p className="co-account-email">{account.email}</p>
-              </div>
-              <div className="co-toggle" role="tablist" aria-label="Use account info">
-                <button type="button" className={useAccount ? "is-on" : ""} onClick={chooseAccount}>Use my account</button>
-                <button type="button" className={!useAccount ? "is-on" : ""} onClick={chooseDifferent}>Different info</button>
+                <p className="co-account-email">{accountEmail}</p>
               </div>
             </div>
           )}
@@ -166,7 +153,7 @@ export default function CheckoutPage() {
               </label>
               <label className="co-field">
                 <span className="label">Email</span>
-                <input className="co-input" type="email" value={f.contactEmail} onChange={on("contactEmail")} required autoComplete="email" readOnly={Boolean(account) && useAccount} />
+                <input className="co-input" type="email" value={f.contactEmail} onChange={on("contactEmail")} required autoComplete="email" />
               </label>
               <label className="co-field">
                 <span className="label">Phone</span>

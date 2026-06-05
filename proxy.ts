@@ -1,10 +1,9 @@
-// Next.js 16 proxy (formerly middleware). Two responsibilities:
+// Next.js 16 proxy (middleware). Two responsibilities:
 //   1. Gate /admin + /api/admin with HTTP Basic Auth (back-office).
-//   2. Refresh the customer's Supabase Auth session cookie on every other
-//      request that carries one, so Server Components see a fresh user.
-// Customer auth = Supabase (email OTP + Google). Admin auth = Basic Auth.
+//   2. Require a Clerk account to ORDER (checkout / order history / order API).
+//      Browsing + pricing stay public. Customer auth = Clerk.
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
 // ---- Admin Basic Auth ------------------------------------------------------
 const ADMIN_USER = process.env.ADMIN_USER || "moa";
@@ -17,7 +16,7 @@ function isAdminRoute(path: string): boolean {
 function unauthorized() {
   return new NextResponse("Authentication required", {
     status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="MOA Catalog Admin"' }
+    headers: { "WWW-Authenticate": 'Basic realm="MOA Catalog Admin"' },
   });
 }
 
@@ -45,35 +44,8 @@ function adminGate(req: NextRequest): NextResponse | null {
   return unauthorized();
 }
 
-// ---- Supabase session refresh ----------------------------------------------
-async function refreshSession(request: NextRequest): Promise<NextResponse> {
-  const response = NextResponse.next({ request });
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return response;
-
-  const supabase = createServerClient(url, anon, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      }
-    }
-  });
-
-  // Touch the user to trigger a token refresh if needed.
-  await supabase.auth.getUser();
-  return response;
-}
-
-// Background requests (Next.js route prefetch, RSC) must never receive a
-// WWW-Authenticate header, or the browser pops its native Basic Auth dialog on
-// pages that merely link to /admin. For those we 401 silently.
+// Prefetch/RSC requests must never get a WWW-Authenticate header (it pops the
+// browser's native Basic Auth dialog on pages that merely link to /admin).
 function isBackgroundRequest(req: NextRequest): boolean {
   return (
     (req.headers.get("sec-purpose") || "").includes("prefetch") ||
@@ -83,28 +55,30 @@ function isBackgroundRequest(req: NextRequest): boolean {
   );
 }
 
-export default async function proxy(request: NextRequest): Promise<NextResponse> {
-  const { pathname } = request.nextUrl;
+// Routes that REQUIRE a signed-in customer ("sign up to order").
+const requiresAccount = createRouteMatcher(["/checkout(.*)", "/orders(.*)", "/api/checkout(.*)"]);
 
+export default clerkMiddleware(async (auth, req) => {
+  const { pathname } = req.nextUrl;
+
+  // 1. Admin gate (Basic Auth) — independent of customer auth.
   if (isAdminRoute(pathname)) {
-    const denied = adminGate(request);
-    if (denied && isBackgroundRequest(request)) {
-      return new NextResponse(null, { status: 401 }); // no WWW-Authenticate → no popup
-    }
+    const denied = adminGate(req);
+    if (denied && isBackgroundRequest(req)) return new NextResponse(null, { status: 401 });
     return denied ?? NextResponse.next();
   }
 
-  // Only pay the refresh round-trip when a Supabase auth cookie is present.
-  const hasSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
-  if (hasSession) return refreshSession(request);
+  // 2. Order gate — must have a Clerk account to reach checkout/orders.
+  if (requiresAccount(req)) {
+    await auth.protect(); // redirects unauthenticated users to sign-in
+  }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
-    // Skip static, image optimisation, and public asset folders.
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|webmanifest)).*)",
-    "/(api|trpc)(.*)"
-  ]
+    "/(api|trpc)(.*)",
+  ],
 };
