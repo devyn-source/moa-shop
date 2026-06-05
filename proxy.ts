@@ -70,7 +70,17 @@ export default clerkMiddleware(async (auth, req) => {
 
   // 2. Order gate — must have a Clerk account to reach checkout/orders.
   if (requiresAccount(req)) {
-    await auth.protect(); // redirects unauthenticated users to sign-in
+    const { userId } = await auth();
+    if (!userId) {
+      // API calls get a 401; pages bounce to sign-up (the "sign up to order"
+      // intent) with a return URL back to where they were headed.
+      if (pathname.startsWith("/api")) {
+        return new NextResponse("Sign in required to order", { status: 401 });
+      }
+      const signUp = new URL("/sign-up", req.url);
+      signUp.searchParams.set("redirect_url", pathname + req.nextUrl.search);
+      return NextResponse.redirect(signUp);
+    }
   }
 
   return NextResponse.next();
