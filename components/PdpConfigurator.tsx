@@ -10,6 +10,10 @@ import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibr
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
+import { WovenLabelModal, type WovenLabel } from "./WovenLabelModal";
+
+// Flat per-unit upsell for a custom woven label (cost + margin). Configurable.
+const WOVEN_LABEL_ADDER = 2;
 
 type Step = "color" | "decoration" | "placement" | "size";
 
@@ -108,6 +112,8 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
   const [submitting, setSubmitting] = useState(false);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
+  const [wovenOpen, setWovenOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addItem } = useCart();
@@ -140,7 +146,8 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     setPantones((p) => p.slice(0, colorCap));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decorationIds]);
-  const perUnit = tier.perUnitUsd + decorationAdder;
+  const wovenAdder = wovenLabel ? WOVEN_LABEL_ADDER : 0;
+  const perUnit = tier.perUnitUsd + decorationAdder + wovenAdder;
   const subtotal = perUnit * qty;
 
   // Only offer placements we can spec to ~95% (calibrated + supported reference
@@ -338,10 +345,10 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
 
   const handleAddToCart = () => {
     if (belowMoq || !variant || submitting || blockRes) return;
-    const decorationLabel = decoSelected.length
+    const decorationLabel = (decoSelected.length
       ? decoSelected.map((d) => d.label).join(" + ")
-      : "Undecorated";
-    const perUnitTotal = tier.perUnitUsd + decorationAdder;
+      : "Undecorated") + (wovenLabel ? " + Woven label" : "");
+    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder;
     analytics.addToCart({
       slug: product.slug, name: product.displayName, category: product.category,
       color: variant.colorLabel, decoration: decorationLabel, quantity: qty,
@@ -361,18 +368,21 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
       sizeQty,
       quantity: qty,
       perUnitUsd: tier.perUnitUsd,
-      decorationAdderUsd: decorationAdder,
+      decorationAdderUsd: decorationAdder + wovenAdder,
       subtotalUsd: tier.perUnitUsd * qty,
       totalUsd: perUnitTotal * qty,
       artworkFileName: artworkName ?? "Artwork file pending",
       artworkFileUrl: artworkUrl ?? undefined,
-      artworkNotes: placement
-        ? [
-            `Zone: ${placement.label}${view === "back" ? " (back)" : ""}`,
-            `Box: x=${placement.box.x.toFixed(3)} y=${placement.box.y.toFixed(3)} w=${placement.box.w.toFixed(3)} h=${placement.box.h.toFixed(3)}${placement.box.r ? ` r=${Math.round(placement.box.r)}°` : ""}`,
-            `Art-in-box: ox=${artTransform.ox.toFixed(3)} oy=${artTransform.oy.toFixed(3)} sx=${artTransform.sx.toFixed(3)} sy=${artTransform.sy.toFixed(3)}${artTransform.r ? ` r=${Math.round(artTransform.r)}°` : ""}`
-          ].join("\n")
-        : "",
+      artworkNotes: [
+        ...(placement
+          ? [
+              `Zone: ${placement.label}${view === "back" ? " (back)" : ""}`,
+              `Box: x=${placement.box.x.toFixed(3)} y=${placement.box.y.toFixed(3)} w=${placement.box.w.toFixed(3)} h=${placement.box.h.toFixed(3)}${placement.box.r ? ` r=${Math.round(placement.box.r)}°` : ""}`,
+              `Art-in-box: ox=${artTransform.ox.toFixed(3)} oy=${artTransform.oy.toFixed(3)} sx=${artTransform.sx.toFixed(3)} sy=${artTransform.sy.toFixed(3)}${artTransform.r ? ` r=${Math.round(artTransform.r)}°` : ""}`,
+            ]
+          : []),
+        ...(wovenLabel ? [`Woven label: "${wovenLabel.text}" · ${wovenLabel.fold} fold · ${wovenLabel.placement} · thread ${wovenLabel.thread}`] : []),
+      ].join("\n"),
       // Structured placement — the real spec that threads to the tech pack/proof.
       artworkPlacement: placement
         ? {
@@ -801,9 +811,24 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
 
         <p className="pdpx-delivered">Delivered in {formatLeadTime(product.leadTimeDays)}</p>
 
+        {/* Woven-label upsell */}
+        <button type="button" className={`pdpx-woven${wovenLabel ? " is-on" : ""}`} onClick={() => setWovenOpen(true)}>
+          {wovenLabel ? (
+            <>
+              <span className="pdpx-woven-text"><strong>Woven label</strong> · “{wovenLabel.text}”</span>
+              <span className="pdpx-woven-edit">Edit</span>
+            </>
+          ) : (
+            <>
+              <span className="pdpx-woven-text"><strong>+ Add a woven label</strong> — your brand, sewn in</span>
+              <span className="pdpx-woven-price">+{currency(WOVEN_LABEL_ADDER)}/unit</span>
+            </>
+          )}
+        </button>
+
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">
-            {decoSelected.length > 0 ? (
+            {decoSelected.length > 0 || wovenLabel ? (
               <>
                 <div className="pdpx-breakdown-row">
                   <span>Base unit</span>
@@ -815,6 +840,12 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
                     <span>+{currency(d.perUnitAdderUsd)}</span>
                   </div>
                 ))}
+                {wovenLabel ? (
+                  <div className="pdpx-breakdown-row pdpx-breakdown-row--adder">
+                    <span>+ Woven label</span>
+                    <span>+{currency(WOVEN_LABEL_ADDER)}</span>
+                  </div>
+                ) : null}
                 <div className="pdpx-breakdown-row pdpx-breakdown-row--sum">
                   <span>Per unit · {qty.toLocaleString()} units</span>
                   <span>{currency(perUnit)}</span>
@@ -902,6 +933,15 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
           </div>
         </div>
       </div>
+
+      <WovenLabelModal
+        open={wovenOpen}
+        initial={wovenLabel}
+        adderUsd={WOVEN_LABEL_ADDER}
+        onClose={() => setWovenOpen(false)}
+        onSave={(label) => { setWovenLabel(label); setWovenOpen(false); analytics.track("woven_label_added", { slug: product.slug }); }}
+        onRemove={() => { setWovenLabel(null); setWovenOpen(false); }}
+      />
     </section>
   );
 }
