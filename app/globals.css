@@ -4247,12 +4247,13 @@ a.stat-card:hover {
 
 .ft-statement {
   margin: 0;
-  max-width: 46ch;
+  max-width: 50ch;
   font-family: var(--font-display);
-  font-size: 0.82rem;
-  line-height: 1.6;
-  letter-spacing: 0.01em;
-  color: rgba(238, 234, 227, 0.7);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(238, 234, 227, 0.62);
 }
 
 /* Editorial CTA — two-line: bold headline + action row with sliding arrow.
@@ -4336,9 +4337,10 @@ a.stat-card:hover {
 .ft-col a,
 .ft-col span {
   font-family: var(--font-display);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  line-height: 1.55;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+  text-transform: uppercase;
   color: rgba(238, 234, 227, 0.82);
   text-decoration: none;
   transition: color 140ms ease;
@@ -4930,6 +4932,22 @@ a.stat-card:hover {
   align-items: center;
   padding: 0 4px;
 }
+
+.pdpx-download {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+  padding: 4px 0;
+  transition: opacity 140ms ease;
+}
+.pdpx-download:hover { opacity: 0.7; }
+.pdpx-download:disabled { opacity: 0.5; cursor: default; }
 
 .pdpx-eyebrow {
   font-family: var(--font-display);
@@ -5918,21 +5936,26 @@ a.stat-card:hover {
 }
 
 .pdpx-share-link {
-  align-self: flex-start;
-  margin-top: 2px;
-  padding: 0;
-  background: none;
-  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 13px 20px;
+  background: transparent;
+  border: 1.5px solid var(--color-terracotta);
+  border-radius: 12px;
   cursor: pointer;
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-terracotta);
-  transition: opacity 140ms ease;
+  transition: background 150ms ease, color 150ms ease;
 }
-.pdpx-share-link:hover { opacity: 0.7; }
+.pdpx-share-link:hover { background: var(--color-terracotta); color: #fff; }
 
 @media (max-width: 900px) {
   .pdpx {

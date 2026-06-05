@@ -107,6 +107,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
   );
   const [submitting, setSubmitting] = useState(false);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addItem } = useCart();
@@ -288,6 +289,28 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     setSizeQty(next);
   };
 
+  // Download the live preview as a PNG mockup. Flatten the 3D tilt first for a
+  // clean capture; lazy-load html-to-image so it's off the main bundle.
+  const handleDownload = async () => {
+    if (!stageRef.current) return;
+    setDownloading(true);
+    setTilt({ x: 0, y: 0 });
+    try {
+      await new Promise((r) => setTimeout(r, 60));
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(stageRef.current, { pixelRatio: 2, cacheBust: true, backgroundColor: "#EEEAE3" });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${product.slug}-${variant?.colorLabel ?? "mockup"}.png`.replace(/\s+/g, "-").toLowerCase();
+      a.click();
+      analytics.track("mockup_downloaded", { slug: product.slug });
+    } catch {
+      /* ignore — download is best-effort */
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   // Shareable config link — persist the current configuration, copy a /c/<id>
   // URL a buyer can send to a teammate/approver for sign-off.
   const handleShare = async () => {
@@ -463,6 +486,9 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
           ) : (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
           )}
+          <button type="button" className="pdpx-download" onClick={handleDownload} disabled={downloading}>
+            {downloading ? "Saving…" : "Download ↓"}
+          </button>
         </div>
 
         {/* Both views stay mounted and crossfade — color changes morph in place
