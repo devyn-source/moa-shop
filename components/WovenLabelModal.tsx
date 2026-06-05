@@ -79,7 +79,6 @@ export function WovenLabelModal({
   };
 
   if (!open) return null;
-  const lightThread = thread.toUpperCase() === "#FFFFFF" || thread === "#C5C6C7";
 
   return (
     <div className="wl-overlay" onClick={onClose}>
@@ -92,14 +91,23 @@ export function WovenLabelModal({
           <button type="button" className="wl-x" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        {/* live mockup */}
+        {/* live mockup — real woven-fabric label; thread color tints the woven
+            text/logo (single-color thread, masked from the uploaded art). */}
         <div className="wl-preview" aria-hidden>
-          <span className={`wl-tag wl-tag--${fold}`} style={{ background: thread, color: lightThread ? "#1E1E1E" : "#FFFFFF" }}>
+          <span className={`wl-tag wl-tag--${fold}`}>
             {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="wl-tag-logo" src={logoUrl} alt="" style={{ filter: lightThread ? "none" : "invert(1) brightness(2)" }} />
+              <span
+                className="wl-tag-logo"
+                style={{
+                  backgroundColor: thread,
+                  WebkitMaskImage: `url("${logoUrl}")`,
+                  maskImage: `url("${logoUrl}")`,
+                }}
+              />
             ) : (
-              text || "YOUR BRAND"
+              <span className="wl-tag-text" style={{ color: thread }}>
+                {text || "YOUR BRAND"}
+              </span>
             )}
           </span>
         </div>
