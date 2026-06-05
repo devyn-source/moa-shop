@@ -636,6 +636,7 @@ function packagingAsset(opts: {
   sortOrder: number;
   required?: boolean;
   moq?: number;
+  image?: string; // hero/thumb for the builder's packaging picker
 }): CatalogProduct {
   return {
     id: `pkg-${opts.slug}`,
@@ -656,6 +657,7 @@ function packagingAsset(opts: {
     sizes: ["ONE"],
     assetKind: opts.assetKind,
     packagingRequired: opts.required ?? false,
+    greyFront: opts.image,
     variants: [
       {
         id: `pkg-${opts.slug}-default`,
@@ -665,6 +667,7 @@ function packagingAsset(opts: {
         colorHex: "#D6D1C0",
         mockupTemplateUrl: "",
         isAvailable: true,
+        frontImage: opts.image,
         recolor: false
       }
     ],
@@ -685,6 +688,7 @@ export const packagingAssets: CatalogProduct[] = [
     vendorUnitCostUsd: 4.5,
     required: true,
     sortOrder: 900,
+    image: "/products/pkg-rigid-box/base-front.png",
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 11.25 },
       { minQty: 250, maxQty: 499, perUnitUsd: 9.75 },
@@ -783,13 +787,65 @@ export const packagingAssets: CatalogProduct[] = [
   })
 ];
 
-// The catalog seed: apparel SKUs + hidden packaging assets. Packaging is filtered
-// out of the storefront grid by `isPublished:false`; the box builder pulls it
-// explicitly via its category.
-export const seedProducts: CatalogProduct[] = [...apparelProducts, ...packagingAssets];
+// ---------------------------------------------------------------------------
+// The PR Box — a published catalog PRODUCT whose PDP is the box builder.
+// Shows as a card in the catalog grid; `isBundleBuilder` tells routing to render
+// the builder instead of the standard configurator. It is NOT itself bundle-
+// eligible (no box-inside-a-box) and carries no real price tier — the card shows
+// a computed "starting at" price (see bundleStartingPriceUsd in pricing.ts).
+// ---------------------------------------------------------------------------
+export const PR_BOX_PRODUCT_ID = "prod-pr-box";
 
-// Eligibility helper for the box builder: published, non-packaging, real SKUs.
+const bundleBuilderProduct: CatalogProduct = {
+  id: PR_BOX_PRODUCT_ID,
+  slug: "pr-box",
+  skuCode: "PRBOX",
+  category: "bundle",
+  displayName: "PR Box",
+  sizes: ["ONE"],
+  greyFront: "/products/pr-box/base-front.png",
+  headline: "Build a branded PR box — items + packaging, one price.",
+  description:
+    "A buyer-built promotional box: choose catalog items, decorate each, and add branded packaging. Configure contents and quantity — pricing is itemized into one per-box price. Bundle 3+ items with packaging and save 10%.",
+  bestFor: "Influencer seeding, press kits, launch gifting, VIP mailers",
+  visual: "tote",
+  defaultVendorId: "vendor-best-cover",
+  vendorUnitCostUsd: 0,
+  moq: 50,
+  leadTimeDays: 56,
+  isPublished: true,
+  sortOrder: 0, // featured first in the grid
+  isBundleBuilder: true,
+  variants: [
+    {
+      id: "pr-box-default",
+      label: "PR Box",
+      fabric: "—",
+      colorLabel: "Custom",
+      colorHex: "#B04731",
+      mockupTemplateUrl: "",
+      isAvailable: true,
+      recolor: false
+    }
+  ],
+  decorations: [],
+  priceTiers: [{ minQty: 1, maxQty: null, perUnitUsd: 0 }] // nominal; real price is built in the builder
+};
+
+// The catalog seed: the PR Box product + apparel SKUs + hidden packaging assets.
+// Packaging is filtered out of the storefront grid by `isPublished:false`; the
+// box builder pulls it explicitly via its category.
+export const seedProducts: CatalogProduct[] = [
+  bundleBuilderProduct,
+  ...apparelProducts,
+  ...packagingAssets
+];
+
+// Eligibility helper for the box builder: published real SKUs only.
+// Excludes the PR Box itself (no box-in-a-box) and packaging assets.
 export function isBundleEligible(product: CatalogProduct): boolean {
+  if (product.isBundleBuilder) return false;
+  if (product.category === "packaging" || product.category === "bundle") return false;
   if (product.bundleEligible !== undefined) return product.bundleEligible;
-  return product.isPublished && product.category !== "packaging";
+  return product.isPublished;
 }

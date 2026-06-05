@@ -1,11 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
   bundleMinBoxes,
+  bundleStartingPriceUsd,
   calculateBundlePrice,
   type BundleComponentInput,
   type BundlePackagingInput
 } from "@/lib/pricing";
 import { evaluatePromo, type PrBoxPromo } from "@/lib/promo";
+import { isBundleEligible, packagingAssets, PR_BOX_PRODUCT_ID, seedProducts } from "@/lib/seed";
 import type { CatalogProduct } from "@/lib/types";
 
 // --- fixtures (pricing reads id/displayName/moq/priceTiers/decorations) ---
@@ -166,6 +168,36 @@ describe("calculateBundlePrice — box-qty clamping", () => {
     expect(r.boxQty).toBe(10);
     expect(r.normalizedBoxQty).toBe(50);
     expect(r.lines[0].effectiveQty).toBe(50);
+  });
+});
+
+describe("bundleStartingPriceUsd", () => {
+  it("prices the cheapest qualifying box at the volume floor, discounted", () => {
+    // cheapest 3 of [tee 44, cap 34, tote 38] = all three; + box 11.25 @ 50 boxes
+    // subtotal 127.25, 10% off -> 12.73 -> 114.52/box
+    expect(bundleStartingPriceUsd([tee, cap, tote], [box], promo, NOW)).toBe(114.52);
+  });
+  it("returns 0 when there aren't enough eligible items", () => {
+    expect(bundleStartingPriceUsd([tee], [box], promo, NOW)).toBe(0);
+  });
+});
+
+describe("PR Box catalog product", () => {
+  it("is a published bundle-builder product in the seed", () => {
+    const prBox = seedProducts.find((p) => p.id === PR_BOX_PRODUCT_ID);
+    expect(prBox).toBeDefined();
+    expect(prBox?.isPublished).toBe(true);
+    expect(prBox?.isBundleBuilder).toBe(true);
+    expect(prBox?.category).toBe("bundle");
+  });
+  it("is not itself bundle-eligible, and neither is packaging", () => {
+    const prBox = seedProducts.find((p) => p.id === PR_BOX_PRODUCT_ID)!;
+    expect(isBundleEligible(prBox)).toBe(false);
+    expect(isBundleEligible(packagingAssets[0])).toBe(false);
+  });
+  it("treats published apparel SKUs as eligible", () => {
+    const apparel = seedProducts.find((p) => p.id === "prod-heavyweight-tee")!;
+    expect(isBundleEligible(apparel)).toBe(true);
   });
 });
 

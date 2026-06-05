@@ -13,7 +13,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   outerwear: "Outerwear",
   bag: "Bags",
   headwear: "Headwear",
-  accessory: "Accessories"
+  accessory: "Accessories",
+  bundle: "PR Box"
 };
 
 function CatIcon({ type }: { type: string }) {
@@ -89,7 +90,13 @@ const PRICE_OPTIONS = [
   { value: "gt75", label: "$75+/unit" }
 ];
 
-export function HomeCatalog({ products }: { products: CatalogProduct[] }) {
+export function HomeCatalog({
+  products,
+  bundleStartFromUsd
+}: {
+  products: CatalogProduct[];
+  bundleStartFromUsd?: number;
+}) {
   const [category, setCategory] = useState<string | null>(null);
   const [method, setMethod] = useState("");
   const [minOrder, setMinOrder] = useState("");
@@ -227,7 +234,11 @@ export function HomeCatalog({ products }: { products: CatalogProduct[] }) {
         ) : (
           <div className="catalog-grid">
             {filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                bundleStartFromUsd={product.isBundleBuilder ? bundleStartFromUsd : undefined}
+              />
             ))}
           </div>
         )}

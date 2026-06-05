@@ -7,7 +7,8 @@ export type ProductCategory =
   | "headwear"
   | "bag"
   | "accessory"
-  | "packaging"; // PR Box packaging assets — hidden from the catalog grid, surfaced in the box builder
+  | "packaging" // PR Box packaging assets — hidden from the catalog grid, surfaced in the box builder
+  | "bundle"; // the PR Box itself — a published catalog product whose PDP is the box builder
 
 // Physical packaging assets that compose a PR Box (the box itself + fillers/branding).
 export type PackagingAssetKind =
@@ -116,6 +117,9 @@ export type CatalogProduct = {
   // Set on `category: "packaging"` products only.
   assetKind?: PackagingAssetKind;
   packagingRequired?: boolean; // auto-included + non-removable in the box (e.g. the box itself)
+  // True on the single `category: "bundle"` PR Box product. Routing renders the
+  // box builder for this product instead of the standard PdpConfigurator.
+  isBundleBuilder?: boolean;
 };
 
 // The customer's actual artwork placement — structured (not a string) so it can

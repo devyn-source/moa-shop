@@ -190,3 +190,34 @@ export function calculateBundlePrice(
     promo: promoEval
   };
 }
+
+// "From $X / box" for the PR Box product card: the cheapest qualifying box at the
+// volume floor — the `minComponents` lowest-priced eligible items (undecorated) +
+// the required packaging (or the cheapest packaging asset if none are flagged
+// required), priced at `minBoxes` with the promo discount applied. Returns 0 when
+// there aren't enough eligible items to form a box.
+export function bundleStartingPriceUsd(
+  eligible: CatalogProduct[],
+  packaging: CatalogProduct[],
+  promo: PrBoxPromo = PR_BOX_PROMO,
+  now: Date = new Date()
+): number {
+  const floor = promo.qualify.minBoxes;
+  const entryUnit = (p: CatalogProduct) => getPriceTier(p, floor).perUnitUsd;
+
+  const cheapestItems = [...eligible]
+    .sort((a, b) => entryUnit(a) - entryUnit(b))
+    .slice(0, promo.qualify.minComponents)
+    .map((product) => ({ product, decorationIds: [] as DecorationMethod[] }));
+  if (cheapestItems.length < promo.qualify.minComponents) return 0;
+
+  const required = packaging.filter((p) => p.packagingRequired);
+  const pkgSel = (required.length
+    ? required
+    : packaging.length
+      ? [[...packaging].sort((a, b) => entryUnit(a) - entryUnit(b))[0]]
+      : []
+  ).map((product) => ({ product }));
+
+  return calculateBundlePrice(cheapestItems, pkgSel, floor, promo, now).boxUnitUsd;
+}

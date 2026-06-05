@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { HomeCatalog } from "@/components/HomeCatalog";
 import { getProducts } from "@/lib/store";
+import { isBundleEligible } from "@/lib/seed";
+import { bundleStartingPriceUsd } from "@/lib/pricing";
 
 export default async function HomePage() {
   const products = await getProducts();
+  // Packaging assets are hidden (unpublished), so read the full catalog to price
+  // the PR Box card's "from $X/box".
+  const all = await getProducts({ includeDrafts: true });
+  const bundleStartFromUsd = bundleStartingPriceUsd(
+    all.filter(isBundleEligible),
+    all.filter((p) => p.category === "packaging")
+  );
 
   return (
     <main className="page">
@@ -19,7 +28,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeCatalog products={products} />
+      <HomeCatalog products={products} bundleStartFromUsd={bundleStartFromUsd} />
 
       <section className="value-strip" aria-label="How it works">
         <div className="value-card">

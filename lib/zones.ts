@@ -169,6 +169,7 @@ const POM_BY_CATEGORY: Record<ProductCategory, string[]> = {
   bag: POM_BAG,
   accessory: POM_ACCESSORY,
   packaging: [], // PR Box packaging assets have no garment points of measure
+  bundle: [], // the PR Box product has no points of measure (it's a builder)
 };
 
 export function defaultMeasurements(category: ProductCategory, sizes: string[]): ProductMeasurements {
@@ -281,7 +282,8 @@ const CATEGORY_DEFAULTS: Record<ProductCategory, ProductZones> = {
   headwear: { front: HEADWEAR_FRONT, back: HEADWEAR_BACK },
   bag: { front: BAG_FRONT, back: BAG_BACK },
   accessory: { front: ACCESSORY_FRONT, back: ACCESSORY_BACK },
-  packaging: { front: [], back: [] } // no decoration zones on packaging assets
+  packaging: { front: [], back: [] }, // no decoration zones on packaging assets
+  bundle: { front: [], back: [] } // the PR Box product has no decoration zones
 };
 
 // ---------- SKU-specific overrides ----------

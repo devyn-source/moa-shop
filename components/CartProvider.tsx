@@ -24,6 +24,14 @@ export type CartItem = {
   artworkFileUrl?: string;
   artworkNotes: string;
   artworkPlacement?: import("@/lib/types").ArtworkPlacement;
+  // --- PR Box (bundle) --- set on lines that belong to a box; absent on singles.
+  bundleId?: string;
+  bundleLabel?: string;
+  bundleRole?: "component" | "packaging";
+  perBoxQty?: number; // units of this line per box
+  perBoxUsd?: number; // this line's gross contribution to one box
+  bundleDiscountUsd?: number; // this line's share of the box discount (already in totalUsd)
+  promoId?: string;
 };
 
 type CartContextValue = {
@@ -32,7 +40,9 @@ type CartContextValue = {
   count: number;
   total: number;
   addItem: (item: Omit<CartItem, "lineId">) => void;
+  addBundle: (lines: Omit<CartItem, "lineId">[]) => void;
   removeItem: (lineId: string) => void;
+  removeBundle: (bundleId: string) => void;
   clear: () => void;
 };
 
@@ -62,8 +72,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => [...prev, { ...item, lineId: crypto.randomUUID() }]);
   }, []);
 
+  // Add a whole PR Box atomically — all lines share the bundleId set by the caller.
+  const addBundle = useCallback((lines: Omit<CartItem, "lineId">[]) => {
+    setItems((prev) => [...prev, ...lines.map((line) => ({ ...line, lineId: crypto.randomUUID() }))]);
+  }, []);
+
   const removeItem = useCallback((lineId: string) => {
     setItems((prev) => prev.filter((item) => item.lineId !== lineId));
+  }, []);
+
+  const removeBundle = useCallback((bundleId: string) => {
+    setItems((prev) => prev.filter((item) => item.bundleId !== bundleId));
   }, []);
 
   const clear = useCallback(() => setItems([]), []);
@@ -72,8 +91,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const total = useMemo(() => items.reduce((sum, item) => sum + item.totalUsd, 0), [items]);
 
   const value = useMemo(
-    () => ({ items, hydrated, count, total, addItem, removeItem, clear }),
-    [items, hydrated, count, total, addItem, removeItem, clear]
+    () => ({ items, hydrated, count, total, addItem, addBundle, removeItem, removeBundle, clear }),
+    [items, hydrated, count, total, addItem, addBundle, removeItem, removeBundle, clear]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

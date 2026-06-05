@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PdpConfigurator } from "@/components/PdpConfigurator";
+import { BoxBuilder } from "@/components/BoxBuilder";
 import { currency } from "@/lib/pricing";
-import { getProductBySlug } from "@/lib/store";
+import { getProductBySlug, getProducts } from "@/lib/store";
+import { isBundleEligible } from "@/lib/seed";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -49,6 +51,25 @@ export default async function ProductPage({
 
   if (!product || (!product.isPublished && !previewOk)) {
     notFound();
+  }
+
+  // --- PR Box: this product's PDP IS the box builder ---
+  if (product.isBundleBuilder) {
+    const all = await getProducts({ includeDrafts: true });
+    const eligible = all.filter(isBundleEligible).sort((a, b) => a.sortOrder - b.sortOrder);
+    const packaging = all
+      .filter((p) => p.category === "packaging")
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return (
+      <main className="page">
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <Link href="/">Catalog</Link>
+          <span aria-hidden>/</span>
+          <span className="crumb-current">{product.displayName}</span>
+        </nav>
+        <BoxBuilder product={product} eligible={eligible} packaging={packaging} />
+      </main>
+    );
   }
 
   // --- SEO: Product + Breadcrumb structured data (rich snippets) ---
