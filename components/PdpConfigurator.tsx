@@ -10,7 +10,7 @@ import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibr
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
-import { WovenLabelModal, wovenSizeLabel, type WovenLabel } from "./WovenLabelModal";
+import { WovenLabelModal, type WovenLabel } from "./WovenLabelModal";
 
 // Upsell rates mirror the server's pricing source (lib/pricing.ts) so the live
 // breakdown and the charged total can never disagree. The first placement is
@@ -506,7 +506,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
       artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
       artworkNotes: [
         ...placementNotes,
-        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · size ${wovenSizeLabel(wovenLabel.size)} · label fabric ${wovenLabel.labelColor} · thread ${wovenLabel.thread} · ${wovenLabel.placement}${wovenLabel.logoTransform ? ` · logo box ox=${wovenLabel.logoTransform.ox.toFixed(2)} oy=${wovenLabel.logoTransform.oy.toFixed(2)} w=${wovenLabel.logoTransform.sx.toFixed(2)} h=${wovenLabel.logoTransform.sy.toFixed(2)}` : ""}`] : []),
+        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · label fabric ${wovenLabel.labelColor} · thread ${wovenLabel.thread} · ${wovenLabel.placement}${wovenLabel.logoTransform ? ` · logo box ox=${wovenLabel.logoTransform.ox.toFixed(2)} oy=${wovenLabel.logoTransform.oy.toFixed(2)} w=${wovenLabel.logoTransform.sx.toFixed(2)} h=${wovenLabel.logoTransform.sy.toFixed(2)}` : ""}`] : []),
       ].join("\n"),
       // Structured placement — primary threads to the tech pack/proof; the full
       // set rides along for multi-placement orders.
