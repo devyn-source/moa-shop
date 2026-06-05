@@ -30,8 +30,27 @@ async function writeJson<T>(filePath: string, value: T): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(value, null, 2));
 }
 
+// Products live in Supabase (table `products`, full product as `data` jsonb).
+// Lazy-seeds from the canonical seed on first read; hard-falls-back to the seed
+// on any error so the catalog can never go blank.
+function productRow(p: CatalogProduct, i = 0) {
+  return { id: p.id, slug: p.slug, data: p, is_published: p.isPublished ?? true, sort_order: p.sortOrder ?? i };
+}
+
 export async function getProducts({ includeDrafts = false } = {}): Promise<CatalogProduct[]> {
-  const products = await readJson<CatalogProduct[]>(productsPath, seedProducts);
+  let products: CatalogProduct[];
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from("products").select("data").order("sort_order", { ascending: true });
+    if (error) throw error;
+    products = (data ?? []).map((r) => r.data as CatalogProduct);
+    if (!products.length) {
+      products = seedProducts;
+      await supabase.from("products").upsert(seedProducts.map(productRow), { onConflict: "id" });
+    }
+  } catch {
+    products = seedProducts; // never break the catalog
+  }
   return products
     .filter((product) => includeDrafts || product.isPublished)
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -48,16 +67,13 @@ export async function getProductById(id: string): Promise<CatalogProduct | null>
 }
 
 export async function updateProduct(id: string, input: ProductUpdateInput): Promise<CatalogProduct> {
-  const products = await getProducts({ includeDrafts: true });
-  const index = products.findIndex((product) => product.id === id);
-
-  if (index === -1) {
-    throw new Error("Product not found");
-  }
-
-  const updated = { ...products[index], ...input };
-  products[index] = updated;
-  await writeJson(productsPath, products);
+  const existing = await getProductById(id);
+  if (!existing) throw new Error("Product not found");
+  const updated = { ...existing, ...input };
+  const { error } = await getSupabase()
+    .from("products")
+    .upsert({ ...productRow(updated), updated_at: new Date().toISOString() }, { onConflict: "id" });
+  if (error) throw new Error(`Failed to update product: ${error.message}`);
   return updated;
 }
 
@@ -85,8 +101,8 @@ export async function createProduct(input: ProductUpdateInput & { displayName: s
     sortOrder: nowOrder
   };
 
-  products.push(product);
-  await writeJson(productsPath, products);
+  const { error } = await getSupabase().from("products").insert(productRow(product));
+  if (error) throw new Error(`Failed to create product: ${error.message}`);
   return product;
 }
 
