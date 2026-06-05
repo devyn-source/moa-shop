@@ -6150,15 +6150,22 @@ a.stat-card:hover {
 .wl-tag {
   position: relative;
   display: flex; align-items: center; justify-content: center;
-  width: 248px; aspect-ratio: 600 / 280;
-  padding: 0 16%;
+  width: 250px; aspect-ratio: 1774 / 887;
+  padding: 0 13%;
+  /* Fabric tinted to the chosen label color: background-color is set inline,
+     the fabric image multiplies onto it so texture + stitching survive, and the
+     mask clips to the fabric shape so the transparent margin shows the preview
+     behind it (no white box). */
   background-image: url("/woven-label.png");
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  filter: drop-shadow(0 5px 12px rgba(0,0,0,0.20));
+  background-blend-mode: multiply;
+  -webkit-mask-image: url("/woven-label.png");
+  mask-image: url("/woven-label.png");
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.22));
 }
-.wl-tag--loop { transform: perspective(360px) rotateX(4deg); }
-.wl-tag--end { transform: none; }
 .wl-tag-text {
   font-family: var(--font-display); font-size: 0.78rem; font-weight: 800;
   letter-spacing: 0.16em; text-transform: uppercase; text-align: center; line-height: 1.15;
