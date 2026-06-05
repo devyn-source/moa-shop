@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { sendOrderConfirmation, sendProofApproval } from "@/lib/email";
 import { generateProof } from "@/lib/proof";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
+import { trackServer } from "@/lib/analytics-server";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
       // isn't set, so missing email config never blocks payment processing.
       const order = await getOrderById(id);
       if (order) {
+        // Purchase conversion event (server-side, authoritative).
+        await trackServer("purchase", { order_number: order.orderNumber, value: order.totalUsd, order_id: id, currency: "USD" }, order.orderNumber);
         // Generate the proof, then email the customer to approve it. The MoaOS
         // push + vendor send happen ONLY after the customer approves their proof
         // (see /api/orders/[id]/approve) — the approval IS the QA.

@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { getOrderById, recordProofApproval } from "@/lib/store";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
+import { trackServer } from "@/lib/analytics-server";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   const approved = await recordProofApproval(id);
+  if (approved) await trackServer("proof_approved", { order_number: approved.orderNumber, order_id: id }, approved.orderNumber);
   // Push into MoaOS → releases the PO + tech pack to the vendor (allow-list gated).
   try {
     if (approved) await pushOrderToMoaOS(approved);

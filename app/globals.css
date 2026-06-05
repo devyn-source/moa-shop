@@ -5720,6 +5720,84 @@ a.stat-card:hover {
   color: var(--color-terracotta);
 }
 
+/* per-unit price + volume-savings nudge */
+.pdpx-tier-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.pdpx-save {
+  padding: 3px 8px 2px;
+  border-radius: 999px;
+  background: rgba(61, 122, 74, 0.12);
+  color: var(--color-success);
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* "Need something more bespoke?" — funnel to the custom studio */
+.pdpx-bespoke {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 14px;
+  padding: 16px 18px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.pdpx-bespoke:hover {
+  border-color: rgba(176, 71, 49, 0.34);
+  background: #f4efe8;
+}
+.pdpx-bespoke-text { display: flex; flex-direction: column; gap: 3px; }
+.pdpx-bespoke-q {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+}
+.pdpx-bespoke-sub { font-size: 0.8rem; color: var(--color-neutral); line-height: 1.4; }
+.pdpx-bespoke-link {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+  white-space: nowrap;
+}
+
+/* delivered-in timeframe */
+.pdpx-delivered {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+}
+.pdpx-delivered span { font-size: 1.1rem; }
+
+@media (max-width: 560px) {
+  .pdpx-bespoke { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
 /* Sticky-feeling bottom block — subtotal + continue */
 .pdpx-foot {
   display: flex;

@@ -9,6 +9,7 @@ import { currency, formatLeadTime } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
+import { analytics } from "@/lib/analytics";
 
 type Step = "color" | "decoration" | "placement" | "size";
 
@@ -105,6 +106,13 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addItem } = useCart();
+
+  // Fire product_viewed once per SKU (Shopify-style funnel entry).
+  useEffect(() => {
+    const from = Math.min(...product.priceTiers.map((t) => t.perUnitUsd));
+    analytics.productViewed({ slug: product.slug, name: product.displayName, category: product.category, from_price: from });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.slug]);
 
   const qty = useMemo(() => Object.values(sizeQty).reduce((s, n) => s + (n || 0), 0), [sizeQty]);
   const belowMoq = qty < product.moq;
@@ -243,6 +251,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
       setArtworkUrl(data.url);
       setUploadWarning(data.warning ?? null);
       setArtMeta(data.kind === "raster" && data.meta?.width && data.meta?.height ? { width: data.meta.width, height: data.meta.height } : null);
+      analytics.artworkUploaded({ slug: product.slug, file: file.name, kind: data.kind ?? "unknown", low_res: Boolean(data.warning) });
     } catch (err) {
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(null);
@@ -259,6 +268,11 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
       ? decoSelected.map((d) => d.label).join(" + ")
       : "Undecorated";
     const perUnitTotal = tier.perUnitUsd + decorationAdder;
+    analytics.addToCart({
+      slug: product.slug, name: product.displayName, category: product.category,
+      color: variant.colorLabel, decoration: decorationLabel, quantity: qty,
+      unit_price: perUnitTotal, value: perUnitTotal * qty,
+    });
     addItem({
       productId: product.id,
       slug: product.slug,
@@ -666,13 +680,19 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
                         <div className="pdpx-tiers">
                           {product.priceTiers.map((t) => {
                             const active = qty >= t.minQty && (t.maxQty == null || qty <= t.maxQty);
+                            // Upsell nudge: % saved per-unit vs the entry (MOQ) tier.
+                            const base = Math.max(...product.priceTiers.map((x) => x.perUnitUsd));
+                            const save = Math.round((1 - t.perUnitUsd / base) * 100);
                             return (
                               <div key={t.minQty} className={`pdpx-tier${active ? " is-active" : ""}`}>
                                 <span>
                                   {t.minQty}
                                   {t.maxQty ? `–${t.maxQty}` : "+"} units
                                 </span>
-                                <strong>{currency(t.perUnitUsd)}/unit</strong>
+                                <span className="pdpx-tier-price">
+                                  <strong>{currency(t.perUnitUsd)}/unit</strong>
+                                  {save > 0 ? <span className="pdpx-save">save {save}%</span> : null}
+                                </span>
                               </div>
                             );
                           })}
@@ -685,6 +705,16 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
             );
           })}
         </div>
+
+        <a className="pdpx-bespoke" href="https://magnumopus.agency/workwithus" target="_blank" rel="noreferrer">
+          <span className="pdpx-bespoke-text">
+            <span className="pdpx-bespoke-q">Need something more bespoke?</span>
+            <span className="pdpx-bespoke-sub">Different sizes, colors, or finishes — our studio builds custom.</span>
+          </span>
+          <span className="pdpx-bespoke-link">Inquire now →</span>
+        </a>
+
+        <p className="pdpx-delivered"><span aria-hidden>📦</span> Delivered in {formatLeadTime(product.leadTimeDays)}</p>
 
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">
@@ -734,7 +764,7 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
           </button>
           {updateError ? <p className="pdpx-foot-note" style={{ color: "var(--color-terracotta)" }}>{updateError}</p> : null}
           <p className="pdpx-foot-note">
-            Lead time {formatLeadTime(product.leadTimeDays)} · MOA-managed quality control · Artwork finalised in QA
+            MOA-managed quality control · Artwork finalised in QA
           </p>
         </div>
       </aside>

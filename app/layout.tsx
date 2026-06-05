@@ -8,6 +8,7 @@ import { NavLink } from "@/components/NavLink";
 import { ProximityFX } from "@/components/ProximityFX";
 import { HeaderScroll } from "@/components/HeaderScroll";
 import { AccountNav } from "@/components/AccountNav";
+import { AnalyticsProviders } from "@/components/AnalyticsProviders";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
+        <AnalyticsProviders />
         <MaybeClerk>
         <a href="#main" className="skip-link">Skip to content</a>
         <HeaderScroll />

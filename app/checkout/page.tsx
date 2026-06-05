@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
+import { analytics } from "@/lib/analytics";
 import { currency } from "@/lib/pricing";
 import { BrandSelect } from "@/components/BrandSelect";
 import { createBrowserSupabase } from "@/lib/supabase-browser";
@@ -38,6 +39,10 @@ type Form = {
 
 export default function CheckoutPage() {
   const { items, total, count, hydrated } = useCart();
+  useEffect(() => {
+    if (hydrated && items.length) analytics.beginCheckout({ count, value: total });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [f, setF] = useState<Form>({
@@ -83,6 +88,7 @@ export default function CheckoutPage() {
     }
     setSubmitting(true);
     setError("");
+    analytics.checkoutSubmitted({ count, value: total });
 
     const contact = {
       contactName: f.contactName, contactEmail: f.contactEmail, contactPhone: f.contactPhone, companyName: f.companyName,
