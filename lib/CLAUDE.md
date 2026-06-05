@@ -21,8 +21,9 @@ Server-side utilities. Storefront/admin pages and API routes pull from here.
 - `email.ts` — transactional email. `deliver()` prefers **Resend** (`RESEND_FROM_EMAIL` = `production@magnumopus.agency`), falls back to N8N. `sendProofApproval()`, `renderProofHtml()` (self-serve "Redo it yourself" link), `notifyOps()`.
 - `stripe.ts` — Stripe SDK init + Checkout/webhook helpers. ⚠️ LIVE keys.
 
-## Auth (Supabase clients; Clerk is the target)
-- `supabase.ts` (shared), `supabase-browser.ts` (client), `supabase-server.ts` (server, service-role — never expose client-side).
+## Auth (Clerk)
+- Customer auth = **Clerk** (`@clerk/nextjs`). Sign-up required to order (gated in `proxy.ts`); browsing/pricing public. The old Supabase auth clients have been removed.
+- `supabase.ts` — the service-role Supabase client (DB access for products/orders/zones/analytics), NOT auth. Server-only; never expose the key client-side.
 
 ## Reference
 - `pantones.ts` — Pantone TCX lookup. · `faqs.ts` — grouped FAQ content + FAQPage JSON-LD (rendered on `/faq`).

@@ -12,9 +12,9 @@ import type {
   Vendor
 } from "./types";
 
-const dataDir = path.join(process.cwd(), ".data");
-const productsPath = path.join(dataDir, "products.json");
-const vendorsPath = path.join(dataDir, "vendors.json");
+// Vendors are still seed-backed reference data (read-only). Products + orders
+// are in Supabase.
+const vendorsPath = path.join(process.cwd(), ".data", "vendors.json");
 
 async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   try {
@@ -23,11 +23,6 @@ async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   } catch {
     return fallback;
   }
-}
-
-async function writeJson<T>(filePath: string, value: T): Promise<void> {
-  await fs.mkdir(dataDir, { recursive: true });
-  await fs.writeFile(filePath, JSON.stringify(value, null, 2));
 }
 
 // Products live in Supabase (table `products`, full product as `data` jsonb).
