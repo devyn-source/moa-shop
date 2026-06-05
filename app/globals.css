@@ -5762,20 +5762,63 @@ a.stat-card:hover {
 .pdpx-tier {
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
+  align-items: center;
+  width: 100%;
+  padding: 11px 10px;
+  background: none;
+  border: 0;
   border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 0.88rem;
   color: var(--color-neutral);
+  cursor: pointer;
+  text-align: left;
+  transition: background 140ms ease;
 }
+
+.pdpx-tier:hover { background: rgba(176, 71, 49, 0.05); }
 
 .pdpx-tier.is-active {
   color: var(--color-charcoal);
   font-weight: 700;
+  background: rgba(176, 71, 49, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(176, 71, 49, 0.3);
 }
 
 .pdpx-tier.is-active strong {
   color: var(--color-terracotta);
 }
+
+.pdpx-custom-qty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.pdpx-custom-qty span {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+}
+.pdpx-custom-qty input {
+  width: 110px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-charcoal);
+  outline: none;
+}
+.pdpx-custom-qty input:focus { box-shadow: inset 0 0 0 1.5px var(--color-terracotta); }
 
 /* per-unit price + volume-savings nudge */
 .pdpx-tier-price {

@@ -296,6 +296,21 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     setSizeQty(next);
   };
 
+  // Fill the size run to an exact total (clicking a tier, or a custom quantity).
+  const fillToTotal = (total: number) => {
+    const sizes = product.sizes;
+    const n = Math.max(0, Math.round(total || 0));
+    if (sizes.length === 1) return setSizeQty({ [sizes[0]]: n });
+    const W: Record<string, number> = { XS: 0.05, S: 0.15, M: 0.3, L: 0.3, XL: 0.15, XXL: 0.05, "2XL": 0.05, "3XL": 0.03 };
+    const w = sizes.map((s) => W[s] ?? 1 / sizes.length);
+    const sum = w.reduce((a, b) => a + b, 0);
+    const next: Record<string, number> = {};
+    sizes.forEach((s, i) => (next[s] = Math.round((n * w[i]) / sum)));
+    const mid = sizes.includes("M") ? "M" : sizes[Math.floor(sizes.length / 2)];
+    next[mid] = Math.max(0, (next[mid] || 0) + (n - Object.values(next).reduce((a, b) => a + b, 0)));
+    setSizeQty(next);
+  };
+
   // Download the live preview as a PNG mockup. Flatten the 3D tilt first for a
   // clean capture; lazy-load html-to-image so it's off the main bundle.
   const handleDownload = async () => {
@@ -779,7 +794,13 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
                             const base = Math.max(...product.priceTiers.map((x) => x.perUnitUsd));
                             const save = Math.round((1 - t.perUnitUsd / base) * 100);
                             return (
-                              <div key={t.minQty} className={`pdpx-tier${active ? " is-active" : ""}`}>
+                              <button
+                                type="button"
+                                key={t.minQty}
+                                className={`pdpx-tier${active ? " is-active" : ""}`}
+                                onClick={() => fillToTotal(t.minQty)}
+                                aria-pressed={active}
+                              >
                                 <span>
                                   {t.minQty}
                                   {t.maxQty ? `–${t.maxQty}` : "+"} units
@@ -788,10 +809,21 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
                                   <strong>{currency(t.perUnitUsd)}/unit</strong>
                                   {save > 0 ? <span className="pdpx-save">save {save}%</span> : null}
                                 </span>
-                              </div>
+                              </button>
                             );
                           })}
                         </div>
+                        <label className="pdpx-custom-qty">
+                          <span>Or enter an exact quantity</span>
+                          <input
+                            type="number"
+                            min={product.moq}
+                            step={1}
+                            value={qty || ""}
+                            onChange={(e) => fillToTotal(parseInt(e.target.value || "0", 10) || 0)}
+                            placeholder={`${product.moq}+`}
+                          />
+                        </label>
                       </div>
                     ) : null}
                   </div>
