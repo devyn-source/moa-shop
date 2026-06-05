@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { currency } from "@/lib/pricing";
+import { DraggableArt, type ArtTransform } from "./DraggableArt";
 
 // Woven-label upsell. A "design your label" modal — logo upload, text,
 // placement, label (fabric) color + thread color — live mockup, flat per-unit
@@ -15,7 +16,11 @@ export type WovenLabel = {
   thread: string; // woven thread color (hex)
   logoUrl?: string;
   logoName?: string;
+  logoTransform?: ArtTransform; // logo position + size within the label box
 };
+
+// Logo's default position/size within the label's printable box (fractions 0..1).
+const DEFAULT_LOGO_TF: ArtTransform = { ox: 0.12, oy: 0.18, sx: 0.76, sy: 0.64 };
 
 const PLACEMENTS: { id: WovenLabel["placement"]; label: string }[] = [
   { id: "neck", label: "Inside neck" },
@@ -61,6 +66,7 @@ export function WovenLabelModal({
   const [thread, setThread] = useState(initial?.thread ?? "#1E1E1E");
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl);
   const [logoName, setLogoName] = useState(initial?.logoName);
+  const [logoTransform, setLogoTransform] = useState<ArtTransform>(initial?.logoTransform ?? DEFAULT_LOGO_TF);
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -84,6 +90,7 @@ export function WovenLabelModal({
       if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
       setLogoUrl(data.url);
       setLogoName(file.name);
+      setLogoTransform(DEFAULT_LOGO_TF);
       setUploadMsg(data.warning ?? "Uploaded ✓");
     } catch (e) {
       setUploadMsg(e instanceof Error ? e.message : "Upload failed");
@@ -106,27 +113,25 @@ export function WovenLabelModal({
           <button type="button" className="wl-x" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        {/* live mockup — real woven-fabric label tinted to the chosen fabric
-            color (texture/stitching preserved); thread color tints the woven
-            text/logo (single-color thread, masked from the uploaded art). */}
-        <div className="wl-preview" aria-hidden>
-          <span className="wl-tag" style={{ backgroundColor: labelColor, width: `${Math.round(250 * (dims.w / 2))}px` }}>
+        {/* live mockup — fixed-size fabric label tinted to the chosen fabric
+            color (texture/stitching preserved); thread tints the woven text/logo
+            (single-color thread). The logo is draggable + resizable within the
+            label's printable box. */}
+        <div className="wl-preview">
+          <span className="wl-tag" style={{ backgroundColor: labelColor }}>
             {logoUrl ? (
-              <span
-                className="wl-tag-logo"
-                style={{
-                  backgroundColor: thread,
-                  WebkitMaskImage: `url("${logoUrl}")`,
-                  maskImage: `url("${logoUrl}")`,
-                }}
-              />
+              <span className="wl-tag-artbox">
+                <DraggableArt url={logoUrl} transform={logoTransform} onChange={setLogoTransform} maskColor={thread} />
+              </span>
             ) : (
               <span className="wl-tag-text" style={{ color: thread }}>
                 {text || "YOUR BRAND"}
               </span>
             )}
           </span>
-          <span className="wl-dim">{dims.w}″ × {dims.h}″</span>
+          <span className="wl-dim">
+            {dims.label} · {dims.w}″ × {dims.h}″{logoUrl ? " · drag logo to size & place" : ""}
+          </span>
         </div>
 
         {/* logo upload */}
@@ -193,7 +198,7 @@ export function WovenLabelModal({
               type="button"
               className="wl-add"
               disabled={!text.trim() && !logoUrl}
-              onClick={() => onSave({ text: text.trim(), fold: "flat", placement, size, labelColor, thread, logoUrl, logoName })}
+              onClick={() => onSave({ text: text.trim(), fold: "flat", placement, size, labelColor, thread, logoUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
             >
               {initial ? "Update label" : "Add to order →"}
             </button>

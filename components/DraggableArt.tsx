@@ -61,11 +61,15 @@ function applyDrag(state: DragState, x: number, y: number): ArtTransform {
 export function DraggableArt({
   url,
   transform,
-  onChange
+  onChange,
+  maskColor
 }: {
   url: string;
   transform: ArtTransform;
   onChange: (t: ArtTransform) => void;
+  // When set, the art renders as a solid-color mask of `url` (single-color woven
+  // thread look) instead of a full-color image. Used by the woven-label modal.
+  maskColor?: string;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -147,7 +151,19 @@ export function DraggableArt({
         height: `${transform.sy * 100}%`,
         transform: `rotate(${transform.r ?? 0}deg)`,
         transformOrigin: "center center",
-        backgroundImage: `url("${url}")`
+        ...(maskColor
+          ? {
+              backgroundColor: maskColor,
+              WebkitMaskImage: `url("${url}")`,
+              maskImage: `url("${url}")`,
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center"
+            }
+          : { backgroundImage: `url("${url}")` })
       }}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}
