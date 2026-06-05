@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import posthog from "posthog-js";
+import { trackPageView } from "@/lib/analytics";
 
 // Vercel Analytics + Speed Insights are always on (no key). PostHog and GA4
 // initialize only when their env key is present — so the funnel layer is one
 // key away from full product analytics.
 export function AnalyticsProviders() {
+  const pathname = usePathname();
+
+  // Owned pageview into analytics_events on every route change.
+  useEffect(() => {
+    if (pathname) trackPageView(pathname);
+  }, [pathname]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const w = window as unknown as Record<string, unknown>;
