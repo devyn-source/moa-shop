@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OrderTracker } from "@/components/OrderTracker";
+import { ReorderButton } from "@/components/ReorderButton";
 import { currency } from "@/lib/pricing";
 import { getOrderById, getProductById, statusLabel } from "@/lib/store";
 
@@ -13,6 +14,32 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   }
 
   const product = await getProductById(order.productId);
+  const variant = product?.variants.find((v) => v.id === order.variantId);
+  const reorderItem = product
+    ? {
+        productId: order.productId,
+        slug: product.slug,
+        displayName: product.displayName,
+        skuCode: product.skuCode,
+        variantId: order.variantId,
+        colorLabel: variant?.colorLabel ?? "",
+        colorHex: variant?.colorHex,
+        image: product.greyFront ?? variant?.frontImage,
+        decorationIds: order.decorationIds as string[],
+        decorationLabel:
+          product.decorations.filter((d) => order.decorationIds.includes(d.id)).map((d) => d.label).join(" + ") || "Undecorated",
+        sizeQty: order.sizeBreakdown ?? {},
+        quantity: order.quantity,
+        perUnitUsd: order.perUnitUsd,
+        decorationAdderUsd: order.decorationAdderUsd,
+        subtotalUsd: order.subtotalUsd,
+        totalUsd: order.totalUsd,
+        artworkFileName: order.artworkFileName,
+        artworkFileUrl: order.artworkFileUrl,
+        artworkNotes: order.artworkNotes,
+        artworkPlacement: order.artworkPlacement,
+      }
+    : null;
 
   return (
     <main className="page">
@@ -59,6 +86,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             </p>
           ) : null}
           <div className="action-row">
+            {reorderItem ? <ReorderButton item={reorderItem} /> : null}
             <Link className="secondary-button" href="/">
               Back to catalog
             </Link>

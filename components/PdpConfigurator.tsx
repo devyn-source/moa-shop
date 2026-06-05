@@ -35,7 +35,7 @@ const STEPS: { key: Step; label: string }[] = [
 // existing order, and the CTA regenerates that order's proof instead of adding
 // a new cart line. This is the self-serve "request changes" → re-proof loop.
 export type EditSeed = {
-  orderId: string;
+  orderId?: string;
   variantId?: string;
   decorationIds?: string[];
   pantones?: PmsColor[];
@@ -47,7 +47,10 @@ export type EditSeed = {
   sizeQty?: Record<string, number>;
 };
 
-export function PdpConfigurator({ product, editOrder }: { product: CatalogProduct; editOrder?: EditSeed }) {
+export function PdpConfigurator({ product, editOrder, seed }: { product: CatalogProduct; editOrder?: EditSeed; seed?: EditSeed }) {
+  // editOrder = editing an existing order (CTA updates it). seed = a shared config
+  // pre-fill (CTA adds to cart normally). Both seed the same initial state.
+  const seed0 = editOrder ?? seed;
   // Defaults from lib/zones; if /studio has authored a Supabase override for
   // this slug we swap it in on mount.
   const [zones, setZones] = useState<ProductZones>(() => getDefaultZones(product));
@@ -76,22 +79,22 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.slug]);
   const defaultVariant = product.variants.find((v) => v.frontImage) ?? product.variants[0];
-  const [variantId, setVariantId] = useState(editOrder?.variantId ?? defaultVariant?.id ?? "");
-  const [view, setView] = useState<"front" | "back">(editOrder?.view ?? "front");
-  const [step, setStep] = useState<Step>(editOrder ? "placement" : "color");
-  const [decorationIds, setDecorationIds] = useState<string[]>(editOrder?.decorationIds ?? []);
-  const [pantones, setPantones] = useState<PmsColor[]>(editOrder?.pantones ?? []);
-  const [artworkUrl, setArtworkUrl] = useState<string | null>(editOrder?.artworkFileUrl ?? null);
-  const [artworkName, setArtworkName] = useState<string | null>(editOrder?.artworkFileName ?? null);
+  const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
+  const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
+  const [step, setStep] = useState<Step>(seed0 ? "placement" : "color");
+  const [decorationIds, setDecorationIds] = useState<string[]>(seed0?.decorationIds ?? []);
+  const [pantones, setPantones] = useState<PmsColor[]>(seed0?.pantones ?? []);
+  const [artworkUrl, setArtworkUrl] = useState<string | null>(seed0?.artworkFileUrl ?? null);
+  const [artworkName, setArtworkName] = useState<string | null>(seed0?.artworkFileName ?? null);
   // Native pixel dims of a raster upload — for print-resolution QA against the
   // ACTUAL physical print size (the 1200px upload floor only knows absolute px).
   const [artMeta, setArtMeta] = useState<{ width: number; height: number } | null>(null);
-  const [placementId, setPlacementId] = useState<string | null>(editOrder?.zoneId ?? null);
+  const [placementId, setPlacementId] = useState<string | null>(seed0?.zoneId ?? null);
   // Free position + size of the artwork WITHIN the chosen bounding box.
   // Reset to "fill the box" whenever the shopper picks a different zone — but
   // NOT on the initial mount in edit mode (we'd wipe the seeded placement).
-  const [artTransform, setArtTransform] = useState<ArtTransform>(editOrder?.art ?? { ox: 0, oy: 0, sx: 1, sy: 1 });
-  const skipArtReset = useRef(Boolean(editOrder));
+  const [artTransform, setArtTransform] = useState<ArtTransform>(seed0?.art ?? { ox: 0, oy: 0, sx: 1, sy: 1 });
+  const skipArtReset = useRef(Boolean(seed0));
   useEffect(() => {
     if (skipArtReset.current) {
       skipArtReset.current = false;
@@ -100,9 +103,10 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
     setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
   }, [placementId, view]);
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
-    editOrder?.sizeQty ?? distributeAcross(product.sizes, product.moq)
+    seed0?.sizeQty ?? distributeAcross(product.sizes, product.moq)
   );
   const [submitting, setSubmitting] = useState(false);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addItem } = useCart();
@@ -282,6 +286,31 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
     const mid = sizes.includes("M") ? "M" : sizes[Math.floor(sizes.length / 2)];
     next[mid] = Math.max(0, (next[mid] || 0) + (target - Object.values(next).reduce((a, b) => a + b, 0)));
     setSizeQty(next);
+  };
+
+  // Shareable config link — persist the current configuration, copy a /c/<id>
+  // URL a buyer can send to a teammate/approver for sign-off.
+  const handleShare = async () => {
+    setShareMsg("Creating link…");
+    try {
+      const config = {
+        variantId, decorationIds, pantones, view,
+        zoneId: placementId ?? undefined, art: artTransform,
+        artworkFileUrl: artworkUrl ?? undefined, artworkFileName: artworkName ?? undefined, sizeQty,
+      };
+      const res = await fetch("/api/config/share", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ slug: product.slug, config }),
+      });
+      const data = (await res.json()) as { id?: string };
+      if (!data.id) throw new Error("no id");
+      const url = `${location.origin}/c/${data.id}`;
+      await navigator.clipboard.writeText(url).catch(() => {});
+      setShareMsg("Link copied — send it for sign-off");
+      analytics.track("config_shared", { slug: product.slug });
+    } catch {
+      setShareMsg("Couldn't create a link — try again");
+    }
   };
 
   const handleAddToCart = () => {
@@ -796,6 +825,11 @@ export function PdpConfigurator({ product, editOrder }: { product: CatalogProduc
           <p className="pdpx-foot-note">
             MOA-managed quality control · Artwork finalised in QA
           </p>
+          {!editOrder ? (
+            <button type="button" className="pdpx-share-link" onClick={handleShare}>
+              {shareMsg ?? "Share this configuration ↗"}
+            </button>
+          ) : null}
         </div>
       </aside>
 
