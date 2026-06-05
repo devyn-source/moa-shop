@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { currency } from "@/lib/pricing";
 
-// Woven-label upsell. A small "design your label" modal — text, fold, placement,
-// thread color — with a live preview, added as a flat per-unit add-on.
+// Woven-label upsell. A "design your label" modal — logo upload, text, fold,
+// placement, thread color — with a live mockup, added as a flat per-unit add-on.
 export type WovenLabel = {
   text: string;
   fold: "loop" | "flat" | "end";
   placement: "neck" | "side-seam" | "hem";
   thread: string; // hex
+  logoUrl?: string;
+  logoName?: string;
 };
 
 const FOLDS: { id: WovenLabel["fold"]; label: string }[] = [
@@ -43,6 +45,11 @@ export function WovenLabelModal({
   const [fold, setFold] = useState<WovenLabel["fold"]>(initial?.fold ?? "loop");
   const [placement, setPlacement] = useState<WovenLabel["placement"]>(initial?.placement ?? "neck");
   const [thread, setThread] = useState(initial?.thread ?? "#FFFFFF");
+  const [logoUrl, setLogoUrl] = useState(initial?.logoUrl);
+  const [logoName, setLogoName] = useState(initial?.logoName);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -51,8 +58,28 @@ export function WovenLabelModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  const handleLogo = async (file: File | undefined | null) => {
+    if (!file) return;
+    setUploading(true);
+    setUploadMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
+      const data = (await res.json()) as { url?: string; error?: string; warning?: string };
+      if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+      setLogoUrl(data.url);
+      setLogoName(file.name);
+      setUploadMsg(data.warning ?? "Uploaded ✓");
+    } catch (e) {
+      setUploadMsg(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!open) return null;
-  const dark = thread.toUpperCase() === "#FFFFFF" || thread === "#C5C6C7";
+  const lightThread = thread.toUpperCase() === "#FFFFFF" || thread === "#C5C6C7";
 
   return (
     <div className="wl-overlay" onClick={onClose}>
@@ -65,15 +92,33 @@ export function WovenLabelModal({
           <button type="button" className="wl-x" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        {/* live preview */}
+        {/* live mockup */}
         <div className="wl-preview" aria-hidden>
-          <span className={`wl-tag wl-tag--${fold}`} style={{ background: thread, color: dark ? "#1E1E1E" : "#FFFFFF" }}>
-            {text || "YOUR BRAND"}
+          <span className={`wl-tag wl-tag--${fold}`} style={{ background: thread, color: lightThread ? "#1E1E1E" : "#FFFFFF" }}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="wl-tag-logo" src={logoUrl} alt="" style={{ filter: lightThread ? "none" : "invert(1) brightness(2)" }} />
+            ) : (
+              text || "YOUR BRAND"
+            )}
           </span>
         </div>
 
+        {/* logo upload */}
+        <div className="wl-field">
+          <span className="wl-label">Logo (optional)</span>
+          <input ref={fileRef} type="file" accept="image/png,image/svg+xml,application/pdf,.ai,.eps" hidden onChange={(e) => handleLogo(e.target.files?.[0])} />
+          <button type="button" className="wl-upload" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            {uploading ? "Uploading…" : logoName ? `↻ ${logoName}` : "Upload logo"}
+          </button>
+          <p className={`wl-hint${uploadMsg && uploadMsg !== "Uploaded ✓" ? " is-warn" : ""}`}>
+            {uploadMsg ??
+              "Woven labels are ~2 × 1 in. Use a vector (SVG / AI / PDF) or a transparent PNG ≥ 1200px. Keep it simple — woven art is solid thread colors, not gradients."}
+          </p>
+        </div>
+
         <label className="wl-field">
-          <span className="wl-label">Label text</span>
+          <span className="wl-label">Label text {logoUrl ? "(used if no logo)" : ""}</span>
           <input className="wl-input" value={text} maxLength={28} onChange={(e) => setText(e.target.value)} placeholder="Your brand name" />
         </label>
 
@@ -111,8 +156,8 @@ export function WovenLabelModal({
             <button
               type="button"
               className="wl-add"
-              disabled={!text.trim()}
-              onClick={() => onSave({ text: text.trim(), fold, placement, thread })}
+              disabled={!text.trim() && !logoUrl}
+              onClick={() => onSave({ text: text.trim(), fold, placement, thread, logoUrl, logoName })}
             >
               {initial ? "Update label" : "Add to order →"}
             </button>

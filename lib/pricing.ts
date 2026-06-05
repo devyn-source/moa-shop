@@ -1,4 +1,9 @@
 import type { CatalogProduct, DecorationMethod, PriceTier } from "./types";
+import { evaluatePromo, PR_BOX_PROMO, type PrBoxPromo, type PromoEvaluation } from "./promo";
+
+export function round2(n: number): number {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
 
 export function currency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -46,5 +51,142 @@ export function calculateOrderPrice(
     subtotalUsd,
     taxUsd,
     totalUsd
+  };
+}
+
+// ---------------------------------------------------------------------------
+// PR Box (bundle) pricing
+//
+// A box = N configured garment components + M packaging assets, ordered as a
+// quantity of identical boxes. Each line is priced with the EXISTING per-SKU
+// engine (tiers + decoration adders) at its effective run quantity
+// (boxQty × perBoxQty), so itemized pricing falls out for free. The box-qty is
+// clamped up to `minBoxes` (the per-line MOQ ceiling, floored by the promo).
+// The promo discount is applied to the per-box subtotal and re-validated at
+// checkout server-side.
+// ---------------------------------------------------------------------------
+
+export type BundleComponentInput = {
+  product: CatalogProduct;
+  decorationIds: DecorationMethod[];
+  perBoxQty?: number; // units of this item per box (default 1)
+};
+
+export type BundlePackagingInput = {
+  product: CatalogProduct;
+  perBoxQty?: number; // default 1
+};
+
+export type BundleLine = {
+  kind: "component" | "packaging";
+  productId: string;
+  displayName: string;
+  perBoxQty: number;
+  effectiveQty: number; // normalizedBoxQty × perBoxQty
+  perUnitUsd: number; // tier unit price at effectiveQty
+  decorationAdderUsd: number;
+  lineUnitUsd: number; // perUnit + decorationAdder
+  perBoxUsd: number; // lineUnit × perBoxQty (this item's contribution to one box)
+  lineSubtotalUsd: number; // perBoxUsd × normalizedBoxQty (over the whole run)
+};
+
+export type BundlePrice = {
+  boxQty: number; // requested box quantity
+  normalizedBoxQty: number; // clamped up to minBoxes
+  minBoxes: number;
+  lines: BundleLine[];
+  boxSubtotalUsd: number; // per box, pre-discount
+  bundleDiscountPerBoxUsd: number;
+  boxUnitUsd: number; // per box, net of discount
+  itemsSubtotalUsd: number; // boxSubtotal × normalizedBoxQty (pre-discount, whole run)
+  bundleDiscountUsd: number; // total discount over the run
+  boxTotalUsd: number; // net total over the run
+  promo: PromoEvaluation;
+};
+
+// Minimum number of boxes so every line clears its own MOQ, floored by the promo.
+export function bundleMinBoxes(
+  components: BundleComponentInput[],
+  packaging: BundlePackagingInput[],
+  floor = 1
+): number {
+  const lineMins = [...components, ...packaging].map((sel) => {
+    const perBox = Math.max(sel.perBoxQty ?? 1, 1);
+    const moq = sel.product.moq ?? 1;
+    return Math.ceil(moq / perBox);
+  });
+  return Math.max(floor, 1, ...lineMins);
+}
+
+export function calculateBundlePrice(
+  components: BundleComponentInput[],
+  packaging: BundlePackagingInput[],
+  boxQty: number,
+  promo: PrBoxPromo = PR_BOX_PROMO,
+  now: Date = new Date()
+): BundlePrice {
+  const minBoxes = bundleMinBoxes(components, packaging, promo.qualify.minBoxes);
+  const requestedBoxQty = Number.isFinite(boxQty) ? Math.max(Math.floor(boxQty), 0) : 0;
+  const normalizedBoxQty = Math.max(requestedBoxQty, minBoxes);
+
+  const toLine = (
+    kind: "component" | "packaging",
+    sel: BundleComponentInput | BundlePackagingInput
+  ): BundleLine => {
+    const perBoxQty = Math.max(sel.perBoxQty ?? 1, 0);
+    const effectiveQty = normalizedBoxQty * perBoxQty;
+    const decorationIds = kind === "component" ? (sel as BundleComponentInput).decorationIds ?? [] : [];
+    const priced = calculateOrderPrice(sel.product, effectiveQty, decorationIds);
+    const lineUnitUsd = round2(priced.perUnitUsd + priced.decorationAdderUsd);
+    return {
+      kind,
+      productId: sel.product.id,
+      displayName: sel.product.displayName,
+      perBoxQty,
+      effectiveQty,
+      perUnitUsd: priced.perUnitUsd,
+      decorationAdderUsd: priced.decorationAdderUsd,
+      lineUnitUsd,
+      perBoxUsd: round2(lineUnitUsd * perBoxQty),
+      lineSubtotalUsd: round2(lineUnitUsd * effectiveQty)
+    };
+  };
+
+  const lines: BundleLine[] = [
+    ...components.map((c) => toLine("component", c)),
+    ...packaging.map((p) => toLine("packaging", p))
+  ];
+
+  const boxSubtotalUsd = round2(lines.reduce((sum, l) => sum + l.perBoxUsd, 0));
+
+  const promoEval = evaluatePromo(
+    {
+      componentCount: components.length,
+      hasPackaging: packaging.length > 0,
+      boxQty: normalizedBoxQty,
+      boxSubtotalUsd
+    },
+    promo,
+    now
+  );
+
+  const bundleDiscountPerBoxUsd = promoEval.discountPerBoxUsd;
+  const boxUnitUsd = round2(boxSubtotalUsd - bundleDiscountPerBoxUsd);
+  const itemsSubtotalUsd = round2(boxSubtotalUsd * normalizedBoxQty);
+  const bundleDiscountUsd = round2(bundleDiscountPerBoxUsd * normalizedBoxQty);
+  const boxTotalUsd = round2(boxUnitUsd * normalizedBoxQty);
+
+  return {
+    boxQty: requestedBoxQty,
+    normalizedBoxQty,
+    minBoxes,
+    lines,
+    boxSubtotalUsd,
+    bundleDiscountPerBoxUsd,
+    boxUnitUsd,
+    itemsSubtotalUsd,
+    bundleDiscountUsd,
+    boxTotalUsd,
+    promo: promoEval
   };
 }

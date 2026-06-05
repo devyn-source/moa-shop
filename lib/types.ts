@@ -6,7 +6,19 @@ export type ProductCategory =
   | "outerwear"
   | "headwear"
   | "bag"
-  | "accessory";
+  | "accessory"
+  | "packaging"; // PR Box packaging assets — hidden from the catalog grid, surfaced in the box builder
+
+// Physical packaging assets that compose a PR Box (the box itself + fillers/branding).
+export type PackagingAssetKind =
+  | "box"
+  | "tissue"
+  | "card"
+  | "sticker"
+  | "fill"
+  | "tape"
+  | "ribbon"
+  | "other";
 
 export type DecorationMethod =
   | "screen_print"
@@ -97,6 +109,13 @@ export type CatalogProduct = {
   variants: CatalogVariant[];
   decorations: CatalogDecoration[];
   priceTiers: PriceTier[];
+  // --- PR Box (bundle) ---
+  // Optional per-SKU override of box eligibility. When unset, eligibility is
+  // derived by category (everything published except `packaging`/test SKUs).
+  bundleEligible?: boolean;
+  // Set on `category: "packaging"` products only.
+  assetKind?: PackagingAssetKind;
+  packagingRequired?: boolean; // auto-included + non-removable in the box (e.g. the box itself)
 };
 
 // The customer's actual artwork placement — structured (not a string) so it can
@@ -133,6 +152,14 @@ export type ShopOrder = {
   subtotalUsd: number;
   taxUsd: number;
   totalUsd: number;
+  // --- PR Box (bundle) ---
+  // A PR Box is a set of ShopOrders sharing a bundleId. Each line keeps its own
+  // economics; the box is the group. Null/absent on standalone single-SKU orders.
+  bundleId?: string;
+  bundleLabel?: string; // e.g. "PR Box"
+  bundleRole?: "component" | "packaging";
+  promoId?: string; // promo applied to the box, if any
+  bundleDiscountUsd?: number; // this line's share of the box discount (already reflected in totalUsd)
   artworkFileName: string;
   artworkFileUrl?: string;
   artworkNotes: string;
@@ -205,6 +232,12 @@ export type OrderInput = {
   sizeBreakdown?: Record<string, number>;
   shipToName: string;
   shipToAddress: ShopOrder["shipToAddress"];
+  // --- PR Box (bundle) --- set when this order is one line of a PR Box
+  bundleId?: string;
+  bundleLabel?: string;
+  bundleRole?: "component" | "packaging";
+  promoId?: string;
+  bundleDiscountUsd?: number;
 };
 
 export type ProductUpdateInput = Partial<

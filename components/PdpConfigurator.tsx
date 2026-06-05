@@ -396,7 +396,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
               `Art-in-box: ox=${artTransform.ox.toFixed(3)} oy=${artTransform.oy.toFixed(3)} sx=${artTransform.sx.toFixed(3)} sy=${artTransform.sy.toFixed(3)}${artTransform.r ? ` r=${Math.round(artTransform.r)}°` : ""}`,
             ]
           : []),
-        ...(wovenLabel ? [`Woven label: "${wovenLabel.text}" · ${wovenLabel.fold} fold · ${wovenLabel.placement} · thread ${wovenLabel.thread}`] : []),
+        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · ${wovenLabel.fold} fold · ${wovenLabel.placement} · thread ${wovenLabel.thread}`] : []),
       ].join("\n"),
       // Structured placement — the real spec that threads to the tech pack/proof.
       artworkPlacement: placement

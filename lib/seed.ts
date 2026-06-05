@@ -1,4 +1,11 @@
-import type { CatalogDecoration, CatalogProduct, CatalogVariant, Vendor } from "./types";
+import type {
+  CatalogDecoration,
+  CatalogProduct,
+  CatalogVariant,
+  PackagingAssetKind,
+  PriceTier,
+  Vendor
+} from "./types";
 
 const coreDecorations: CatalogDecoration[] = [
   {
@@ -104,7 +111,7 @@ function colorways(slug: string, label: string, fabric: string, ids: PaletteId[]
   });
 }
 
-export const seedProducts: CatalogProduct[] = [
+const apparelProducts: CatalogProduct[] = [
   {
     // HIDDEN internal $1 test SKU — validates the live order pipeline end-to-end
     // cheaply. isPublished:false keeps it out of the catalog; reach it directly
@@ -604,3 +611,185 @@ export const seedProducts: CatalogProduct[] = [
     ]
   }
 ];
+
+// ---------------------------------------------------------------------------
+// PR Box packaging assets
+//
+// Each asset is a hidden CatalogProduct (category "packaging", isPublished:false)
+// so it reuses the entire product/cart/order/Stripe/fulfillment pipeline but
+// never appears in the catalog grid — only inside the box builder.
+//
+// ⚠️ PLACEHOLDER COSTS — `vendorUnitCostUsd` (LDP) and the sell-price ladders
+// below are estimates pending real packaging quotes. Sell ≈ LDP ÷ 0.40 (the
+// catalog's 60%-floor model). Confirm with Devyn before go-live (see memory
+// project_moa_shop_costing — seed placeholders previously ran too low).
+// ---------------------------------------------------------------------------
+function packagingAsset(opts: {
+  slug: string;
+  skuCode: string;
+  assetKind: PackagingAssetKind;
+  displayName: string;
+  headline: string;
+  description: string;
+  vendorUnitCostUsd: number; // LDP — PLACEHOLDER
+  tiers: PriceTier[]; // sell-price ladder (≈ LDP ÷ 0.40) — PLACEHOLDER
+  sortOrder: number;
+  required?: boolean;
+  moq?: number;
+}): CatalogProduct {
+  return {
+    id: `pkg-${opts.slug}`,
+    slug: `pkg-${opts.slug}`,
+    skuCode: opts.skuCode,
+    category: "packaging",
+    displayName: opts.displayName,
+    headline: opts.headline,
+    description: opts.description,
+    bestFor: "PR Box packaging",
+    visual: "tote",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: opts.vendorUnitCostUsd,
+    moq: opts.moq ?? 50,
+    leadTimeDays: 30,
+    isPublished: false,
+    sortOrder: opts.sortOrder,
+    sizes: ["ONE"],
+    assetKind: opts.assetKind,
+    packagingRequired: opts.required ?? false,
+    variants: [
+      {
+        id: `pkg-${opts.slug}-default`,
+        label: opts.displayName,
+        fabric: "—",
+        colorLabel: "Branded",
+        colorHex: "#D6D1C0",
+        mockupTemplateUrl: "",
+        isAvailable: true,
+        recolor: false
+      }
+    ],
+    decorations: [],
+    priceTiers: opts.tiers
+  };
+}
+
+export const packagingAssets: CatalogProduct[] = [
+  packagingAsset({
+    slug: "rigid-box",
+    skuCode: "PKG-BOX",
+    assetKind: "box",
+    displayName: "Rigid Magnetic Gift Box",
+    headline: "Branded rigid magnetic-close presentation box.",
+    description:
+      "The PR Box itself — a rigid magnetic-close gift box with a custom-printed wrap. The required foundation of every box.",
+    vendorUnitCostUsd: 4.5,
+    required: true,
+    sortOrder: 900,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 11.25 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 9.75 },
+      { minQty: 500, maxQty: null, perUnitUsd: 8.5 }
+    ]
+  }),
+  packagingAsset({
+    slug: "tissue",
+    skuCode: "PKG-TIS",
+    assetKind: "tissue",
+    displayName: "Branded Tissue Paper",
+    headline: "Custom-printed tissue wrap.",
+    description: "Printed tissue paper lining the box and wrapping the contents.",
+    vendorUnitCostUsd: 0.3,
+    sortOrder: 901,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 0.75 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 0.65 },
+      { minQty: 500, maxQty: null, perUnitUsd: 0.55 }
+    ]
+  }),
+  packagingAsset({
+    slug: "insert-card",
+    skuCode: "PKG-CRD",
+    assetKind: "card",
+    displayName: "Insert / Thank-You Card",
+    headline: "Printed insert or thank-you card.",
+    description: "A printed card — welcome note, story, or call-to-action — tucked into the box.",
+    vendorUnitCostUsd: 0.45,
+    sortOrder: 902,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 1.15 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 0.95 },
+      { minQty: 500, maxQty: null, perUnitUsd: 0.85 }
+    ]
+  }),
+  packagingAsset({
+    slug: "sticker-sheet",
+    skuCode: "PKG-STK",
+    assetKind: "sticker",
+    displayName: "Sticker Sheet",
+    headline: "Die-cut branded sticker sheet.",
+    description: "A sheet of die-cut branded stickers included as a box extra.",
+    vendorUnitCostUsd: 0.4,
+    sortOrder: 903,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 1.0 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 0.85 },
+      { minQty: 500, maxQty: null, perUnitUsd: 0.75 }
+    ]
+  }),
+  packagingAsset({
+    slug: "void-fill",
+    skuCode: "PKG-FIL",
+    assetKind: "fill",
+    displayName: "Crinkle Void Fill",
+    headline: "Crinkle paper void fill.",
+    description: "Crinkle-cut paper fill that cushions and presents the contents.",
+    vendorUnitCostUsd: 0.25,
+    sortOrder: 904,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 0.65 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 0.55 },
+      { minQty: 500, maxQty: null, perUnitUsd: 0.45 }
+    ]
+  }),
+  packagingAsset({
+    slug: "branded-tape",
+    skuCode: "PKG-TAP",
+    assetKind: "tape",
+    displayName: "Branded Tape",
+    headline: "Custom-printed packing tape.",
+    description: "Custom-printed tape that seals the outer mailer.",
+    vendorUnitCostUsd: 0.2,
+    sortOrder: 905,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 0.5 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 0.42 },
+      { minQty: 500, maxQty: null, perUnitUsd: 0.35 }
+    ]
+  }),
+  packagingAsset({
+    slug: "belly-band",
+    skuCode: "PKG-RIB",
+    assetKind: "ribbon",
+    displayName: "Ribbon / Belly Band",
+    headline: "Branded ribbon or belly band.",
+    description: "A ribbon or printed belly band that finishes the unboxing.",
+    vendorUnitCostUsd: 0.35,
+    sortOrder: 906,
+    tiers: [
+      { minQty: 50, maxQty: 249, perUnitUsd: 0.9 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 0.78 },
+      { minQty: 500, maxQty: null, perUnitUsd: 0.68 }
+    ]
+  })
+];
+
+// The catalog seed: apparel SKUs + hidden packaging assets. Packaging is filtered
+// out of the storefront grid by `isPublished:false`; the box builder pulls it
+// explicitly via its category.
+export const seedProducts: CatalogProduct[] = [...apparelProducts, ...packagingAssets];
+
+// Eligibility helper for the box builder: published, non-packaging, real SKUs.
+export function isBundleEligible(product: CatalogProduct): boolean {
+  if (product.bundleEligible !== undefined) return product.bundleEligible;
+  return product.isPublished && product.category !== "packaging";
+}
