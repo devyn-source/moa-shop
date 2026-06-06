@@ -165,25 +165,31 @@ export function DraggableArt({
         height: `${transform.sy * 100}%`,
         transform: `rotate(${transform.r ?? 0}deg)`,
         transformOrigin: "center center",
-        ...(maskColor
-          ? {
-              backgroundColor: maskColor,
-              WebkitMaskImage: `url("${url}")`,
-              maskImage: `url("${url}")`,
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-              maskPosition: "center"
-            }
-          : { backgroundImage: `url("${url}")` })
+        // Non-mask: paint the art as the handle background. Mask mode renders the
+        // art in an inner fill span instead, so the mask doesn't clip the handles.
+        ...(maskColor ? {} : { backgroundImage: `url("${url}")` })
       }}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}
       onPointerDown={start("move")}
       onKeyDown={onKeyDown}
     >
+      {maskColor ? (
+        <span
+          className="pdpx-art-fill"
+          style={{
+            backgroundColor: maskColor,
+            WebkitMaskImage: `url("${url}")`,
+            maskImage: `url("${url}")`,
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center",
+            maskPosition: "center"
+          }}
+        />
+      ) : null}
       <span className="pdpx-art-handle__edge" />
       <span className="pdpx-art-resize pdpx-art-resize--nw" onPointerDown={start("nw")} />
       <span className="pdpx-art-resize pdpx-art-resize--ne" onPointerDown={start("ne")} />

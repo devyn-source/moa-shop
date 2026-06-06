@@ -5202,6 +5202,10 @@ a.stat-card:hover {
   white-space: nowrap;
 }
 
+/* Mask-mode fill (woven label): the art rendered as a solid-color mask, inside
+   the handle so the handle's own resize/rotate dots aren't clipped by the mask. */
+.pdpx-art-fill { position: absolute; inset: 0; pointer-events: none; }
+
 /* The actual artwork — draggable, resizable within the bounding box. */
 .pdpx-art-handle {
   position: absolute;
