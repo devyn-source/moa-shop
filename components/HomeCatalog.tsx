@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { ProductCard } from "./ProductCard";
 import { BrandSelect } from "./BrandSelect";
 import type { CatalogProduct } from "@/lib/types";
+
+const GRID_EASE = [0.22, 1, 0.36, 1] as const;
 
 const CATEGORY_LABELS: Record<string, string> = {
   hoodie: "Hoodies",
@@ -232,15 +235,25 @@ export function HomeCatalog({
             <button type="button" className="link-button" onClick={clearAll}>Clear filters</button>
           </div>
         ) : (
-          <div className="catalog-grid">
-            {filtered.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                bundleStartFromUsd={product.isBundleBuilder ? bundleStartFromUsd : undefined}
-              />
-            ))}
-          </div>
+          <motion.div className="catalog-grid" layout>
+            <AnimatePresence mode="popLayout">
+              {filtered.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.16, ease: GRID_EASE } }}
+                  transition={{ duration: 0.36, ease: GRID_EASE, delay: Math.min(i * 0.024, 0.28) }}
+                >
+                  <ProductCard
+                    product={product}
+                    bundleStartFromUsd={product.isBundleBuilder ? bundleStartFromUsd : undefined}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </section>
     </>

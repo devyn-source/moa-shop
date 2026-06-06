@@ -7991,9 +7991,10 @@ body.is-scrolled .site-header {
 .bb-pick:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(30, 30, 30, 0.10); }
 .bb-summary, .bb-item, .cart-bundle, .uc-bottom { transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out); }
 .bb-summary:hover, .bb-item:hover { box-shadow: 0 10px 30px rgba(30, 30, 30, 0.06); }
-/* NOTE: ProximityFX owns the catalog card transform (cursor lift) — only animate
-   shadow/border here so we don't fight it. */
-.product-card { transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out); }
+/* ProximityFX drives the card's transform via the --prox var; keep transform in
+   the transition so the cursor-lift eases smoothly (esp. on leave). No :hover
+   transform here — that would override --prox and fight it. */
+.product-card { transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out), transform 220ms var(--ease-out); }
 .product-card:hover { box-shadow: 0 18px 44px rgba(30, 30, 30, 0.11); }
 
 /* Consistent, on-brand focus ring */
