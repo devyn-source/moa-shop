@@ -5439,7 +5439,7 @@ a.stat-card:hover {
 
 .pdpx-step-body {
   padding: 4px 4px 22px;
-  animation: pdpx-body-in 240ms ease both;
+  /* open/close animated by Motion (height + fade) in PdpConfigurator */
 }
 
 @keyframes pdpx-body-in {
@@ -8054,3 +8054,13 @@ body.is-scrolled .site-header {
 .lp-faq-item summary {
   text-transform: uppercase;
 }
+
+/* Mockup download capture: keep the artwork, hide the editor chrome
+   (dashed zone box, resize/rotate handles, art border). */
+.pdpx-canvas.is-capturing .pdpx-place-box,
+.pdpx-canvas.is-capturing .pdpx-place-box--saved { outline: none !important; }
+.pdpx-canvas.is-capturing .pdpx-art-handle__edge,
+.pdpx-canvas.is-capturing .pdpx-art-resize,
+.pdpx-canvas.is-capturing .pdpx-art-rotate,
+.pdpx-canvas.is-capturing .pdpx-art-rotate-stem { display: none !important; }
+.pdpx-canvas.is-capturing .pdpx-art-handle { box-shadow: none !important; border-color: transparent !important; outline: none !important; }

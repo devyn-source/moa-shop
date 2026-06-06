@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
@@ -710,7 +711,7 @@ export function PdpConfigurator({
             two image layers, and the entrance keyframe only plays on first load. */}
         <div
           ref={stageRef}
-          className="pdpx-canvas"
+          className={`pdpx-canvas${downloading ? " is-capturing" : ""}`}
           onPointerMove={onStagePointerMove}
           onPointerLeave={onStagePointerLeave}
         >
@@ -808,7 +809,19 @@ export function PdpConfigurator({
                   <span className="pdpx-step-value">{stepValue(s.key)}</span>
                 </button>
 
+                <AnimatePresence initial={false}>
                 {open ? (
+                  <motion.div
+                    key="body"
+                    style={{ overflow: "hidden" }}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{
+                      height: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+                      opacity: { duration: 0.26, ease: [0.22, 1, 0.36, 1] }
+                    }}
+                  >
                   <div id={`pdpx-panel-${s.key}`} role="region" aria-label={s.label} className="pdpx-step-body">
                     {s.key === "color" ? (
                       <div className="pdpx-colors">
@@ -1091,7 +1104,9 @@ export function PdpConfigurator({
                       </div>
                     ) : null}
                   </div>
+                  </motion.div>
                 ) : null}
+                </AnimatePresence>
               </div>
             );
           })}
