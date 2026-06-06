@@ -7,7 +7,6 @@ import { ProductShot } from "@/components/ProductShot";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { ALL_FAQS } from "@/lib/faqs";
-import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 import type { CatalogProduct } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -79,10 +78,6 @@ export default async function LandingPage() {
   const fromLow = Math.min(...shoppable.map(fromPrice));
   const faqs = ALL_FAQS.slice(0, 6);
 
-  // PR Box promo drives the announcement banner; links to the box builder product.
-  const prBox = products.find((p) => p.isBundleBuilder);
-  const promoOn = isPromoWithinWindow(PR_BOX_PROMO) && Boolean(prBox);
-
   const cred = [
     { icon: I.badge, t: "Production-grade", d: "The same garments we make for top brands" },
     { icon: I.tag, t: "No minimums runaround", d: "One clear price ladder, MOQ 50" },
@@ -95,23 +90,19 @@ export default async function LandingPage() {
     { icon: I.check, t: "Approve your proof", d: "We generate an instant digital proof. Tweak it yourself until it's right, then approve." },
     { icon: I.box, t: "We make & ship it", d: "MOA manufactures to spec with managed QC and ships it, with tracking emailed on dispatch." },
   ];
+  // Real clients (logos pulled from magnumopus.agency) — most recognizable first.
+  const clients = [
+    ["nike", "Nike"], ["burberry", "Burberry"], ["ralph-lauren", "Ralph Lauren"],
+    ["activision", "Activision"], ["live-nation", "Live Nation"], ["bacardi", "Bacardi"],
+    ["canva", "Canva"], ["goldenvoice", "Goldenvoice"], ["kaytranada", "Kaytranada"],
+    ["evisu", "Evisu"], ["pudgy-penguins", "Pudgy Penguins"], ["cherry", "Cherry"],
+    ["bigface", "Bigface"], ["groq", "Groq"], ["twojeys", "Two Jeys"],
+    ["tepn", "TEPN"], ["paly", "Paly"],
+  ];
 
   return (
     <main className="lp">
       <ScrollReveal />
-
-      {/* Announcement bar — PR Box promo when live, else the proof guarantee */}
-      {promoOn ? (
-        <Link className="lp-announce lp-announce--promo" href={`/p/${prBox!.slug}`}>
-          <span className="lp-announce-label">{PR_BOX_PROMO.label}</span>
-          <span className="lp-announce-sub">{PR_BOX_PROMO.banner.subcopy}</span>
-          <span className="lp-announce-cta">{PR_BOX_PROMO.banner.ctaText} →</span>
-        </Link>
-      ) : (
-        <div className="lp-announce">
-          A free digital proof on every order — nothing is made until you approve it.
-        </div>
-      )}
 
       {/* ===== Hero ===== */}
       <section className="lp-hero">
@@ -149,6 +140,26 @@ export default async function LandingPage() {
           <span className="lp-hero-caption">
             {hero?.displayName} · from {currency(fromLow)}/unit
           </span>
+        </div>
+      </section>
+
+      {/* ===== Trusted-by marquee (real clients) ===== */}
+      <section className="lp-marquee" aria-label="Brands MOA has produced merch for">
+        <p className="lp-marquee-label">The studio behind merch for</p>
+        <div className="lp-marquee-viewport">
+          <div className="lp-marquee-track">
+            {[...clients, ...clients].map(([slug, name], i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={`${slug}-${i}`}
+                className="lp-marquee-logo"
+                src={`/brand/clients/${slug}.png`}
+                alt={name}
+                loading="lazy"
+                aria-hidden={i >= clients.length}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
