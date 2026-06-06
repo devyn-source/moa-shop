@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { currency } from "@/lib/pricing";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 
-// Woven-label "design your label" modal — logo upload, text, placement,
-// label (fabric) color + thread color, live mockup. Single fold (straight sewn).
+// Woven-label "design your label" modal — logo upload, text, label (fabric)
+// color + thread color, live mockup. Single fold (straight sewn); placement is
+// always inside neck.
 export type WovenLabel = {
   text: string;
   fold: "flat"; // single construction type (straight / sewn)
-  placement: "neck" | "side-seam" | "hem";
+  placement: "neck"; // always inside neck
   labelColor: string; // fabric base color (hex)
   thread: string; // woven thread color (hex)
   logoUrl?: string;
@@ -20,11 +21,6 @@ export type WovenLabel = {
 // Logo's default position/size within the label's printable box (fractions 0..1).
 const DEFAULT_LOGO_TF: ArtTransform = { ox: 0.12, oy: 0.18, sx: 0.76, sy: 0.64 };
 
-const PLACEMENTS: { id: WovenLabel["placement"]; label: string }[] = [
-  { id: "neck", label: "Inside neck" },
-  { id: "side-seam", label: "Side seam" },
-  { id: "hem", label: "Bottom hem" },
-];
 // Fabric colors for the label base.
 const LABEL_COLORS = ["#FFFFFF", "#EFE9DD", "#1E1E1E", "#2B2E43", "#8A6A4F", "#C5C6C7"];
 // Woven thread colors for the text/logo.
@@ -46,7 +42,6 @@ export function WovenLabelModal({
   onRemove: () => void;
 }) {
   const [text, setText] = useState(initial?.text ?? "");
-  const [placement, setPlacement] = useState<WovenLabel["placement"]>(initial?.placement ?? "neck");
   const [labelColor, setLabelColor] = useState(initial?.labelColor ?? "#FFFFFF");
   const [thread, setThread] = useState(initial?.thread ?? "#1E1E1E");
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl);
@@ -143,15 +138,6 @@ export function WovenLabelModal({
         </label>
 
         <div className="wl-field">
-          <span className="wl-label">Placement</span>
-          <div className="wl-pills">
-            {PLACEMENTS.map((p) => (
-              <button key={p.id} type="button" className={`wl-pill${placement === p.id ? " is-on" : ""}`} onClick={() => setPlacement(p.id)}>{p.label}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="wl-field">
           <span className="wl-label">Label color</span>
           <div className="wl-threads">
             {LABEL_COLORS.map((c) => (
@@ -177,7 +163,7 @@ export function WovenLabelModal({
               type="button"
               className="wl-add"
               disabled={!text.trim() && !logoUrl}
-              onClick={() => onSave({ text: text.trim(), fold: "flat", placement, labelColor, thread, logoUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
+              onClick={() => onSave({ text: text.trim(), fold: "flat", placement: "neck", labelColor, thread, logoUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
             >
               {initial ? "Update label" : "Add to order →"}
             </button>

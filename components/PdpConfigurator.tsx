@@ -506,7 +506,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
       artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
       artworkNotes: [
         ...placementNotes,
-        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · label fabric ${wovenLabel.labelColor} · thread ${wovenLabel.thread} · ${wovenLabel.placement}${wovenLabel.logoTransform ? ` · logo box ox=${wovenLabel.logoTransform.ox.toFixed(2)} oy=${wovenLabel.logoTransform.oy.toFixed(2)} w=${wovenLabel.logoTransform.sx.toFixed(2)} h=${wovenLabel.logoTransform.sy.toFixed(2)}` : ""}`] : []),
+        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · label fabric ${wovenLabel.labelColor} · thread ${wovenLabel.thread} · inside neck${wovenLabel.logoTransform ? ` · logo box ox=${wovenLabel.logoTransform.ox.toFixed(2)} oy=${wovenLabel.logoTransform.oy.toFixed(2)} w=${wovenLabel.logoTransform.sx.toFixed(2)} h=${wovenLabel.logoTransform.sy.toFixed(2)}` : ""}`] : []),
       ].join("\n"),
       // Structured placement — primary threads to the tech pack/proof; the full
       // set rides along for multi-placement orders.
