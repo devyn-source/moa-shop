@@ -23,6 +23,10 @@ export type BundleBuilderComponent = {
 export type BundleBuilderPackaging = {
   product: CatalogProduct;
   perBoxQty: number;
+  // Each packaging asset is a printed/branded piece, so it carries its own artwork.
+  artworkFileName?: string;
+  artworkFileUrl?: string;
+  artworkNotes?: string;
 };
 
 function decorationLabelFor(product: CatalogProduct, decorationIds: DecorationMethod[]): string {
@@ -115,7 +119,7 @@ export function buildBundleCartLines(args: {
       } satisfies Omit<CartItem, "lineId">;
     }
 
-    const { product } = sel.p;
+    const { product, artworkFileName, artworkFileUrl, artworkNotes } = sel.p;
     return {
       ...base,
       slug: product.slug,
@@ -128,9 +132,9 @@ export function buildBundleCartLines(args: {
       decorationIds: [],
       decorationLabel: "Packaging",
       sizeQty: {},
-      artworkFileName: "",
-      artworkFileUrl: undefined,
-      artworkNotes: ""
+      artworkFileName: artworkFileName ?? "Artwork file pending",
+      artworkFileUrl,
+      artworkNotes: artworkNotes ?? ""
     } satisfies Omit<CartItem, "lineId">;
   });
 

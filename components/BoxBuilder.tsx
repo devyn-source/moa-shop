@@ -22,6 +22,15 @@ type ComponentDraft = {
   uploadError?: string;
 };
 
+// Per-packaging-asset customization — each branded piece carries its own artwork.
+type PackArt = {
+  artworkFileName?: string;
+  artworkFileUrl?: string;
+  uploading?: boolean;
+  uploadError?: string;
+  notes?: string;
+};
+
 let draftSeq = 0;
 const nextKey = () => `draft-${draftSeq++}-${crypto.randomUUID().slice(0, 8)}`;
 
@@ -45,6 +54,7 @@ export function BoxBuilder({
   const [packagingIds, setPackagingIds] = useState<string[]>(() =>
     packaging.filter((p) => p.packagingRequired).map((p) => p.id)
   );
+  const [packArt, setPackArt] = useState<Record<string, PackArt>>({});
   const [boxQty, setBoxQty] = useState<number>(promo.qualify.minBoxes);
   const [submitting, setSubmitting] = useState(false);
 
@@ -101,6 +111,32 @@ export function BoxBuilder({
     [updateComponent]
   );
 
+  const updatePackArt = useCallback((id: string, patch: Partial<PackArt>) => {
+    setPackArt((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  }, []);
+
+  const uploadPackArt = useCallback(
+    async (id: string, file: File | undefined | null) => {
+      if (!file) return;
+      updatePackArt(id, { uploading: true, uploadError: undefined, artworkFileName: file.name });
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
+        const data = (await res.json()) as { url?: string; error?: string };
+        if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+        updatePackArt(id, { uploading: false, artworkFileUrl: data.url });
+      } catch (err) {
+        updatePackArt(id, {
+          uploading: false,
+          artworkFileUrl: undefined,
+          uploadError: err instanceof Error ? err.message : "Upload failed"
+        });
+      }
+    },
+    [updatePackArt]
+  );
+
   // Resolve drafts -> priced inputs (skip anything whose product vanished).
   const resolved = useMemo(() => {
     const comps = components
@@ -110,15 +146,20 @@ export function BoxBuilder({
         return p && variant ? { draft: d, product: p, variant } : null;
       })
       .filter(Boolean) as { draft: ComponentDraft; product: CatalogProduct; variant: CatalogVariant }[];
-    const packs = packagingIds.map((id) => packagingById.get(id)).filter(Boolean) as CatalogProduct[];
+    const packs = packagingIds
+      .map((id) => {
+        const p = packagingById.get(id);
+        return p ? { product: p, art: packArt[id] } : null;
+      })
+      .filter(Boolean) as { product: CatalogProduct; art?: PackArt }[];
     return { comps, packs };
-  }, [components, packagingIds, eligibleById, packagingById]);
+  }, [components, packagingIds, packArt, eligibleById, packagingById]);
 
   const price = useMemo(
     () =>
       calculateBundlePrice(
         resolved.comps.map((c) => ({ product: c.product, decorationIds: c.draft.decorationIds, perBoxQty: c.draft.perBoxQty })),
-        resolved.packs.map((p) => ({ product: p, perBoxQty: 1 })),
+        resolved.packs.map((p) => ({ product: p.product, perBoxQty: 1 })),
         boxQty,
         promo
       ),
@@ -126,7 +167,8 @@ export function BoxBuilder({
   );
 
   const canAdd = resolved.comps.length > 0 && resolved.packs.length > 0 && !submitting;
-  const uploading = components.some((d) => d.uploading);
+  const uploading =
+    components.some((d) => d.uploading) || Object.values(packArt).some((a) => a?.uploading);
 
   const handleAdd = useCallback(() => {
     if (!canAdd) return;
@@ -143,7 +185,13 @@ export function BoxBuilder({
         artworkFileName: c.draft.artworkFileName,
         artworkFileUrl: c.draft.artworkFileUrl
       })),
-      packaging: resolved.packs.map((p) => ({ product: p, perBoxQty: 1 })),
+      packaging: resolved.packs.map((p) => ({
+        product: p.product,
+        perBoxQty: 1,
+        artworkFileName: p.art?.artworkFileName,
+        artworkFileUrl: p.art?.artworkFileUrl,
+        artworkNotes: p.art?.notes
+      })),
       boxQty: price.normalizedBoxQty,
       promo
     });
@@ -308,35 +356,82 @@ export function BoxBuilder({
           </div>
         </section>
 
-        {/* packaging */}
+        {/* packaging — each branded piece is customizable */}
         <section className="bb-section">
           <div className="bb-section-head">
             <h2>Packaging</h2>
-            <span className="label">Branded unboxing</span>
+            <span className="label">Customize each branded piece</span>
           </div>
-          <div className="bb-packaging">
-            {packaging.map((asset) => {
-              const on = packagingIds.includes(asset.id);
+
+          <ul className="bb-items">
+            {packagingIds.map((id) => {
+              const asset = packagingById.get(id);
+              if (!asset) return null;
+              const art = packArt[id];
               const required = Boolean(asset.packagingRequired);
-              const tier = asset.priceTiers[0];
+              const line = lineByProduct.get(asset.id);
               return (
-                <button
-                  type="button"
-                  key={asset.id}
-                  className={`bb-pack${on ? " bb-pack--on" : ""}${required ? " bb-pack--locked" : ""}`}
-                  aria-pressed={on}
-                  onClick={() => togglePackaging(asset.id)}
-                >
-                  <span className="bb-pack-check" aria-hidden>{on ? "✓" : ""}</span>
-                  <span className="bb-pack-name">
-                    {asset.displayName}
-                    {required ? <em> · included</em> : null}
-                  </span>
-                  <span className="bb-pack-price">{currency(tier.perUnitUsd)}/box</span>
-                </button>
+                <li className="bb-item" key={id}>
+                  <div className="bb-item-shot">
+                    <ProductShot product={asset} variant={asset.variants[0]} view="front" />
+                  </div>
+                  <div className="bb-item-body">
+                    <div className="bb-item-top">
+                      <h3>
+                        {asset.displayName}
+                        {required ? <span className="bb-pack-req"> · included</span> : null}
+                      </h3>
+                      {required ? null : (
+                        <button type="button" className="cart-remove" aria-label="Remove packaging" onClick={() => togglePackaging(id)}>✕</button>
+                      )}
+                    </div>
+                    <div className="bb-field bb-field--row">
+                      <label className="bb-mini bb-mini--art">
+                        <span className="bb-field-label">Artwork / branding</span>
+                        <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadPackArt(id, e.target.files?.[0])} />
+                      </label>
+                      <label className="bb-mini bb-mini--notes">
+                        <span className="bb-field-label">Notes</span>
+                        <input
+                          type="text"
+                          placeholder="e.g. logo centered, gold foil"
+                          value={art?.notes ?? ""}
+                          onChange={(e) => updatePackArt(id, { notes: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                    <div className="bb-item-foot">
+                      <span className="bb-art-status">
+                        {art?.uploading
+                          ? "Uploading artwork…"
+                          : art?.uploadError
+                            ? `⚠ ${art.uploadError}`
+                            : art?.artworkFileUrl
+                              ? `✓ ${art.artworkFileName}`
+                              : "No artwork yet (optional now)"}
+                      </span>
+                      {line ? <span className="bb-item-price"><b>{currency(line.perBoxUsd)}/box</b></span> : null}
+                    </div>
+                  </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
+
+          {packaging.some((a) => !packagingIds.includes(a.id)) ? (
+            <div className="bb-pack-add">
+              <span className="bb-field-label">Add packaging</span>
+              <div className="bb-chips">
+                {packaging
+                  .filter((a) => !packagingIds.includes(a.id))
+                  .map((asset) => (
+                    <button type="button" key={asset.id} className="bb-chip" onClick={() => togglePackaging(asset.id)}>
+                      + {asset.displayName} <b>{currency(asset.priceTiers[0].perUnitUsd)}/box</b>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          ) : null}
         </section>
       </div>
 

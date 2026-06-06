@@ -142,8 +142,8 @@ export default async function LandingPage() {
           {hero ? (
             <div className="lp-hero-shot">
               <ProductShot product={hero} variant={heroVariant(hero)} view="front" />
-              {/* "your art here" placeholder — tells the custom story without an asset */}
-              <span className="lp-hero-artzone">Your logo here</span>
+              {/* a real logo printed on the chest — what a finished proof looks like */}
+              <span className="lp-hero-logo" aria-hidden />
             </div>
           ) : null}
           <span className="lp-hero-caption">
