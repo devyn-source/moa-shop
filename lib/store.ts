@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { calculateOrderPrice } from "./pricing";
+import { calculateOrderPrice, round2 } from "./pricing";
 import { getSupabase, orderLookupColumn } from "./supabase";
 import { seedProducts, seedVendors } from "./seed";
 import type {
@@ -167,11 +167,18 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
   const decorationIds = (input.decorationIds ?? []).filter((id) =>
     product.decorations.some((item) => item.id === id)
   );
-  if (decorationIds.length === 0) {
+  // Bundle lines (packaging, or an undecorated box component) legitimately have
+  // no decoration; only standalone single-SKU orders require a method.
+  if (decorationIds.length === 0 && !input.bundleId) {
     throw new Error("No valid decoration method selected");
   }
 
   const price = calculateOrderPrice(product, input.quantity, decorationIds);
+  // PR Box: this line's net = its gross minus its server-validated share of the
+  // box discount. The discount is computed server-side in the checkout route
+  // (re-validating the promo), never trusted from the client.
+  const bundleDiscountUsd = input.bundleId ? Math.max(0, Math.min(price.totalUsd, input.bundleDiscountUsd ?? 0)) : 0;
+  const netTotalUsd = round2(price.totalUsd - bundleDiscountUsd);
   const now = new Date().toISOString();
   const supabase = getSupabase();
   const { count } = await supabase.from("orders").select("*", { count: "exact", head: true });
@@ -195,7 +202,14 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     decorationAdderUsd: price.decorationAdderUsd,
     subtotalUsd: price.subtotalUsd,
     taxUsd: price.taxUsd,
-    totalUsd: price.totalUsd,
+    totalUsd: netTotalUsd,
+    // PR Box grouping — present only on bundle lines; MoaOS groups by bundleId.
+    bundleId: input.bundleId,
+    bundleLabel: input.bundleLabel,
+    bundleRole: input.bundleRole,
+    perBoxQty: input.perBoxQty,
+    promoId: input.promoId,
+    bundleDiscountUsd: input.bundleId ? bundleDiscountUsd : undefined,
     artworkFileName: input.artworkFileName,
     artworkFileUrl: input.artworkFileUrl,
     artworkNotes: input.artworkNotes,

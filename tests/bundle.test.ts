@@ -7,6 +7,7 @@ import {
   type BundlePackagingInput
 } from "@/lib/pricing";
 import { evaluatePromo, type PrBoxPromo } from "@/lib/promo";
+import { allocateBundleDiscount } from "@/lib/bundle";
 import { isBundleEligible, packagingAssets, PR_BOX_PRODUCT_ID, seedProducts } from "@/lib/seed";
 import type { CatalogProduct } from "@/lib/types";
 
@@ -198,6 +199,47 @@ describe("PR Box catalog product", () => {
   it("treats published apparel SKUs as eligible", () => {
     const apparel = seedProducts.find((p) => p.id === "prod-heavyweight-tee")!;
     expect(isBundleEligible(apparel)).toBe(true);
+  });
+});
+
+describe("allocateBundleDiscount (checkout discount allocation)", () => {
+  const price = calculateBundlePrice(
+    components(
+      { product: tee, decorationIds: ["screen_print"] as never },
+      { product: cap, decorationIds: ["embroidery"] as never },
+      { product: tote, decorationIds: [] }
+    ),
+    pkg({ product: box }),
+    100,
+    promo,
+    NOW
+  );
+
+  it("nets each line to gross minus its discount share", () => {
+    const alloc = allocateBundleDiscount(price);
+    alloc.forEach((a, i) => {
+      expect(a.netUsd).toBe(Number((price.lines[i].lineSubtotalUsd - a.discountUsd).toFixed(2)));
+    });
+  });
+
+  it("shares sum EXACTLY to the box discount, nets sum EXACTLY to the box total", () => {
+    const alloc = allocateBundleDiscount(price);
+    const discountSum = Number(alloc.reduce((s, a) => s + a.discountUsd, 0).toFixed(2));
+    const netSum = Number(alloc.reduce((s, a) => s + a.netUsd, 0).toFixed(2));
+    expect(discountSum).toBe(price.bundleDiscountUsd); // 1388
+    expect(netSum).toBe(price.boxTotalUsd); // 12487 — what Stripe charges
+  });
+
+  it("allocates nothing when the box doesn't qualify", () => {
+    const noDiscount = calculateBundlePrice(
+      components({ product: tee, decorationIds: [] }, { product: cap, decorationIds: [] }),
+      pkg({ product: box }),
+      100,
+      promo,
+      NOW
+    );
+    const alloc = allocateBundleDiscount(noDiscount);
+    expect(alloc.every((a) => a.discountUsd === 0)).toBe(true);
   });
 });
 

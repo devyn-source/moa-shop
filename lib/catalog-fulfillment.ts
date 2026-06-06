@@ -80,6 +80,15 @@ async function buildIntakePayload(order: ShopOrder) {
     approved: Boolean(order.proofApprovedAt),
     orderNumber: order.orderNumber,
     customer: { name: order.contactName, email: order.contactEmail, company: order.companyName },
+    // PR Box: lines sharing a bundleId belong to one box — lets MoaOS group them.
+    bundle: order.bundleId
+      ? {
+          id: order.bundleId,
+          label: order.bundleLabel ?? "PR Box",
+          role: order.bundleRole ?? "component",
+          discountUsd: order.bundleDiscountUsd ?? 0
+        }
+      : null,
     subtotalUsd: order.subtotalUsd,
     taxUsd: order.taxUsd,
     totalUsd: order.totalUsd,

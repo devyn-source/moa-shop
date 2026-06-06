@@ -30,6 +30,24 @@ function decorationLabelFor(product: CatalogProduct, decorationIds: DecorationMe
   return labels.length ? labels.join(" + ") : "Undecorated";
 }
 
+// Allocate the box's per-run discount across its lines, proportional to each
+// line's gross subtotal, with the rounding remainder on the last line so the net
+// totals sum EXACTLY to boxTotalUsd. Single source of truth for both the cart
+// (buildBundleCartLines) and checkout (server re-pricing). Lines align 1:1 with
+// price.lines (components first, then packaging).
+export function allocateBundleDiscount(price: BundlePrice): { discountUsd: number; netUsd: number }[] {
+  const gross = price.itemsSubtotalUsd;
+  let remaining = price.bundleDiscountUsd;
+  return price.lines.map((line, i) => {
+    const isLast = i === price.lines.length - 1;
+    const discountUsd = isLast
+      ? round2(remaining)
+      : round2(gross > 0 ? price.bundleDiscountUsd * (line.lineSubtotalUsd / gross) : 0);
+    remaining = round2(remaining - discountUsd);
+    return { discountUsd, netUsd: round2(line.lineSubtotalUsd - discountUsd) };
+  });
+}
+
 // Build the cart lines for one box. The per-box subtotal discount is allocated
 // across lines proportionally to each line's gross subtotal, with the remainder
 // assigned to the last line so the line totals sum EXACTLY to boxTotalUsd.
@@ -54,16 +72,11 @@ export function buildBundleCartLines(args: {
   const packagingSel = args.packaging.map((p) => ({ kind: "packaging" as const, p }));
   const selections = [...componentSel, ...packagingSel];
 
-  const gross = price.itemsSubtotalUsd;
-  let remainingDiscount = price.bundleDiscountUsd;
+  const alloc = allocateBundleDiscount(price);
 
   const lines: Omit<CartItem, "lineId">[] = price.lines.map((line, i) => {
-    const isLast = i === price.lines.length - 1;
-    const share = isLast
-      ? round2(remainingDiscount)
-      : round2(gross > 0 ? price.bundleDiscountUsd * (line.lineSubtotalUsd / gross) : 0);
-    remainingDiscount = round2(remainingDiscount - share);
-    const netTotal = round2(line.lineSubtotalUsd - share);
+    const share = alloc[i].discountUsd;
+    const netTotal = alloc[i].netUsd;
 
     const base = {
       productId: line.productId,

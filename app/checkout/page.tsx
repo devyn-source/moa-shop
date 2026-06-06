@@ -95,6 +95,8 @@ export default function CheckoutPage() {
         decorationLabel: item.decorationLabel, artworkFileName: item.artworkFileName, artworkFileUrl: item.artworkFileUrl,
         artworkPlacement: item.artworkPlacement, sizeBreakdown: item.sizeQty,
         artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes,
+        // PR Box grouping — server re-prices + re-validates the discount from these.
+        bundleId: item.bundleId, bundleLabel: item.bundleLabel, bundleRole: item.bundleRole, perBoxQty: item.perBoxQty,
       };
     });
 

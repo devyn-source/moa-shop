@@ -162,6 +162,7 @@ export type ShopOrder = {
   bundleId?: string;
   bundleLabel?: string; // e.g. "PR Box"
   bundleRole?: "component" | "packaging";
+  perBoxQty?: number; // units of this line per box
   promoId?: string; // promo applied to the box, if any
   bundleDiscountUsd?: number; // this line's share of the box discount (already reflected in totalUsd)
   artworkFileName: string;
@@ -240,8 +241,9 @@ export type OrderInput = {
   bundleId?: string;
   bundleLabel?: string;
   bundleRole?: "component" | "packaging";
+  perBoxQty?: number;
   promoId?: string;
-  bundleDiscountUsd?: number;
+  bundleDiscountUsd?: number; // server-validated share of the box discount for this line
 };
 
 export type ProductUpdateInput = Partial<
