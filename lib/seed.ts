@@ -619,10 +619,10 @@ const apparelProducts: CatalogProduct[] = [
 // so it reuses the entire product/cart/order/Stripe/fulfillment pipeline but
 // never appears in the catalog grid — only inside the box builder.
 //
-// ⚠️ PLACEHOLDER COSTS — `vendorUnitCostUsd` (LDP) and the sell-price ladders
-// below are estimates pending real packaging quotes. Sell ≈ LDP ÷ 0.40 (the
-// catalog's 60%-floor model). Confirm with Devyn before go-live (see memory
-// project_moa_shop_costing — seed placeholders previously ran too low).
+// Costs confirmed by Devyn (Jun 5 2026): the FULL packaging set lands at ~$17/box
+// at the 50-box tier, dropping to ~$12/box at 500+. The rigid box is the dominant
+// cost. Sell = LDP ÷ 0.40 (the catalog's 60%-floor model), so the full set sells
+// ~$42/box → ~$30/box. Per-asset LDP/sell below are allocated within that envelope.
 // ---------------------------------------------------------------------------
 function packagingAsset(opts: {
   slug: string;
@@ -631,8 +631,8 @@ function packagingAsset(opts: {
   displayName: string;
   headline: string;
   description: string;
-  vendorUnitCostUsd: number; // LDP — PLACEHOLDER
-  tiers: PriceTier[]; // sell-price ladder (≈ LDP ÷ 0.40) — PLACEHOLDER
+  vendorUnitCostUsd: number; // LDP (landed)
+  tiers: PriceTier[]; // sell-price ladder (= LDP ÷ 0.40)
   sortOrder: number;
   required?: boolean;
   moq?: number;
@@ -685,14 +685,14 @@ export const packagingAssets: CatalogProduct[] = [
     headline: "Branded rigid magnetic-close presentation box.",
     description:
       "The PR Box itself — a rigid magnetic-close gift box with a custom-printed wrap. The required foundation of every box.",
-    vendorUnitCostUsd: 4.5,
+    vendorUnitCostUsd: 9.0,
     required: true,
     sortOrder: 900,
     image: "/products/pkg-rigid-box/base-front.png",
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 11.25 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 9.75 },
-      { minQty: 500, maxQty: null, perUnitUsd: 8.5 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 22.5 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 19.38 },
+      { minQty: 500, maxQty: null, perUnitUsd: 16.25 }
     ]
   }),
   packagingAsset({
@@ -702,12 +702,12 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Branded Tissue Paper",
     headline: "Custom-printed tissue wrap.",
     description: "Printed tissue paper lining the box and wrapping the contents.",
-    vendorUnitCostUsd: 0.3,
+    vendorUnitCostUsd: 0.8,
     sortOrder: 901,
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 0.75 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 0.65 },
-      { minQty: 500, maxQty: null, perUnitUsd: 0.55 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 2.0 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 1.7 },
+      { minQty: 500, maxQty: null, perUnitUsd: 1.38 }
     ]
   }),
   packagingAsset({
@@ -717,12 +717,12 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Insert / Thank-You Card",
     headline: "Printed insert or thank-you card.",
     description: "A printed card — welcome note, story, or call-to-action — tucked into the box.",
-    vendorUnitCostUsd: 0.45,
+    vendorUnitCostUsd: 1.2,
     sortOrder: 902,
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 1.15 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 0.95 },
-      { minQty: 500, maxQty: null, perUnitUsd: 0.85 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 3.0 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 2.5 },
+      { minQty: 500, maxQty: null, perUnitUsd: 2.13 }
     ]
   }),
   packagingAsset({
@@ -732,12 +732,12 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Sticker Sheet",
     headline: "Die-cut branded sticker sheet.",
     description: "A sheet of die-cut branded stickers included as a box extra.",
-    vendorUnitCostUsd: 0.4,
+    vendorUnitCostUsd: 1.5,
     sortOrder: 903,
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 1.0 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 0.85 },
-      { minQty: 500, maxQty: null, perUnitUsd: 0.75 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 3.75 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 3.13 },
+      { minQty: 500, maxQty: null, perUnitUsd: 2.63 }
     ]
   }),
   packagingAsset({
@@ -747,12 +747,12 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Crinkle Void Fill",
     headline: "Crinkle paper void fill.",
     description: "Crinkle-cut paper fill that cushions and presents the contents.",
-    vendorUnitCostUsd: 0.25,
+    vendorUnitCostUsd: 1.0,
     sortOrder: 904,
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 0.65 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 0.55 },
-      { minQty: 500, maxQty: null, perUnitUsd: 0.45 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 2.5 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 2.13 },
+      { minQty: 500, maxQty: null, perUnitUsd: 1.75 }
     ]
   }),
   packagingAsset({
@@ -762,12 +762,12 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Branded Tape",
     headline: "Custom-printed packing tape.",
     description: "Custom-printed tape that seals the outer mailer.",
-    vendorUnitCostUsd: 0.2,
+    vendorUnitCostUsd: 1.5,
     sortOrder: 905,
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 0.5 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 0.42 },
-      { minQty: 500, maxQty: null, perUnitUsd: 0.35 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 3.75 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 3.13 },
+      { minQty: 500, maxQty: null, perUnitUsd: 2.63 }
     ]
   }),
   packagingAsset({
@@ -777,12 +777,12 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Ribbon / Belly Band",
     headline: "Branded ribbon or belly band.",
     description: "A ribbon or printed belly band that finishes the unboxing.",
-    vendorUnitCostUsd: 0.35,
+    vendorUnitCostUsd: 2.0,
     sortOrder: 906,
     tiers: [
-      { minQty: 50, maxQty: 249, perUnitUsd: 0.9 },
-      { minQty: 250, maxQty: 499, perUnitUsd: 0.78 },
-      { minQty: 500, maxQty: null, perUnitUsd: 0.68 }
+      { minQty: 50, maxQty: 249, perUnitUsd: 5.0 },
+      { minQty: 250, maxQty: 499, perUnitUsd: 4.13 },
+      { minQty: 500, maxQty: null, perUnitUsd: 3.25 }
     ]
   })
 ];
