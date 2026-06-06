@@ -7822,13 +7822,19 @@ body.is-scrolled .site-header {
 }
 .lp-marquee-viewport:hover .lp-marquee-track { animation-play-state: paused; }
 .lp-marquee-logo {
-  height: 27px; width: auto; flex: 0 0 auto; object-fit: contain;
-  opacity: 0.48; filter: grayscale(1) brightness(0.2);
+  height: var(--logo-h, 26px); width: auto; max-width: 150px; flex: 0 0 auto; object-fit: contain;
+  opacity: 0.5; filter: grayscale(1) brightness(0.15);
   transition: opacity 220ms ease;
 }
 .lp-marquee-logo:hover { opacity: 0.85; }
 @keyframes lp-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
-  .lp-marquee-track { animation: none; flex-wrap: wrap; justify-content: center; gap: 28px 48px; }
+  .lp-marquee-track { animation: none; flex-wrap: wrap; justify-content: center; gap: 24px 44px; }
 }
-@media (max-width: 560px) { .lp-marquee-logo { height: 22px; } .lp-marquee-track { gap: 44px; } }
+@media (max-width: 560px) {
+  .lp-marquee-logo { height: calc(var(--logo-h, 26px) * 0.82); }
+  .lp-marquee-track { gap: 44px; }
+}
+
+/* PR Box — artwork placement hint in the box card */
+.bb-place-hint { font-size: 0.74rem; color: var(--color-neutral); margin: 10px 0 6px; }

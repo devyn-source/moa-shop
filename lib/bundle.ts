@@ -7,7 +7,7 @@
 import type { CartItem } from "@/components/CartProvider";
 import { calculateBundlePrice, round2, type BundlePrice } from "./pricing";
 import { PR_BOX_PROMO, type PrBoxPromo } from "./promo";
-import type { CatalogProduct, CatalogVariant, DecorationMethod } from "./types";
+import type { ArtworkPlacement, CatalogProduct, CatalogVariant, DecorationMethod } from "./types";
 
 export type BundleBuilderComponent = {
   product: CatalogProduct;
@@ -18,6 +18,7 @@ export type BundleBuilderComponent = {
   artworkFileName?: string;
   artworkFileUrl?: string;
   artworkNotes?: string;
+  artworkPlacement?: ArtworkPlacement; // where the art sits on the garment (PDP-style)
 };
 
 export type BundleBuilderPackaging = {
@@ -100,7 +101,7 @@ export function buildBundleCartLines(args: {
 
     const sel = selections[i];
     if (sel.kind === "component") {
-      const { product, variant, decorationIds, size, artworkFileName, artworkFileUrl, artworkNotes } = sel.c;
+      const { product, variant, decorationIds, size, artworkFileName, artworkFileUrl, artworkNotes, artworkPlacement } = sel.c;
       return {
         ...base,
         slug: product.slug,
@@ -115,7 +116,8 @@ export function buildBundleCartLines(args: {
         sizeQty: size ? { [size]: line.effectiveQty } : {},
         artworkFileName: artworkFileName ?? "Artwork file pending",
         artworkFileUrl,
-        artworkNotes: artworkNotes ?? ""
+        artworkNotes: artworkNotes ?? "",
+        artworkPlacement
       } satisfies Omit<CartItem, "lineId">;
     }
 

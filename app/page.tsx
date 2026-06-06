@@ -90,14 +90,15 @@ export default async function LandingPage() {
     { icon: I.check, t: "Approve your proof", d: "We generate an instant digital proof. Tweak it yourself until it's right, then approve." },
     { icon: I.box, t: "We make & ship it", d: "MOA manufactures to spec with managed QC and ships it, with tracking emailed on dispatch." },
   ];
-  // Real clients (logos pulled from magnumopus.agency) — most recognizable first.
-  const clients = [
-    ["nike", "Nike"], ["burberry", "Burberry"], ["ralph-lauren", "Ralph Lauren"],
-    ["activision", "Activision"], ["live-nation", "Live Nation"], ["bacardi", "Bacardi"],
-    ["canva", "Canva"], ["goldenvoice", "Goldenvoice"], ["kaytranada", "Kaytranada"],
-    ["evisu", "Evisu"], ["pudgy-penguins", "Pudgy Penguins"], ["cherry", "Cherry"],
-    ["bigface", "Bigface"], ["groq", "Groq"], ["twojeys", "Two Jeys"],
-    ["tepn", "TEPN"], ["paly", "Paly"],
+  // Real clients (logos pulled from magnumopus.agency). Per-logo height is tuned
+  // by aspect ratio so wide wordmarks and compact marks feel the same visual size.
+  const clients: [string, string, number][] = [
+    ["nike", "Nike", 26], ["burberry", "Burberry", 20], ["ralph-lauren", "Ralph Lauren", 19],
+    ["activision", "Activision", 23], ["live-nation", "Live Nation", 22], ["bacardi", "Bacardi", 22],
+    ["canva", "Canva", 25], ["goldenvoice", "Goldenvoice", 22], ["kaytranada", "Kaytranada", 17],
+    ["evisu", "Evisu", 22], ["pudgy-penguins", "Pudgy Penguins", 34], ["cherry", "Cherry", 32],
+    ["bigface", "Bigface", 21], ["groq", "Groq", 27], ["twojeys", "Two Jeys", 20],
+    ["tepn", "TEPN", 22], ["paly", "Paly", 32],
   ];
 
   return (
@@ -148,7 +149,7 @@ export default async function LandingPage() {
         <p className="lp-marquee-label">The studio behind merch for</p>
         <div className="lp-marquee-viewport">
           <div className="lp-marquee-track">
-            {[...clients, ...clients].map(([slug, name], i) => (
+            {[...clients, ...clients].map(([slug, name, h], i) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={`${slug}-${i}`}
@@ -157,6 +158,7 @@ export default async function LandingPage() {
                 alt={name}
                 loading="lazy"
                 aria-hidden={i >= clients.length}
+                style={{ ["--logo-h"]: `${h}px` } as CSSProperties}
               />
             ))}
           </div>

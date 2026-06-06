@@ -3,11 +3,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductShot } from "./ProductShot";
+import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
 import { buildBundleCartLines } from "@/lib/bundle";
 import { calculateBundlePrice, currency } from "@/lib/pricing";
 import { PR_BOX_PROMO } from "@/lib/promo";
-import type { CatalogProduct, CatalogVariant, DecorationMethod } from "@/lib/types";
+import { getDefaultZones, type Zone } from "@/lib/zones";
+import type { ArtworkPlacement, CatalogProduct, CatalogVariant, DecorationMethod } from "@/lib/types";
 
 type ComponentDraft = {
   key: string;
@@ -17,11 +19,15 @@ type ComponentDraft = {
   perBoxQty: number;
   size: string;
   view: "front" | "back";
+  placementId: string | null; // chosen zone on the current view
+  art: ArtTransform; // position/scale of the art within the zone box
   artworkFileName?: string;
   artworkFileUrl?: string;
   uploading?: boolean;
   uploadError?: string;
 };
+
+const FILL_ART: ArtTransform = { ox: 0, oy: 0, sx: 1, sy: 1 };
 
 // Per-packaging-asset customization — each branded piece carries its own artwork.
 type PackArt = {
@@ -67,7 +73,7 @@ export function BoxBuilder({
       const midSize = p.sizes[Math.floor(p.sizes.length / 2)] ?? p.sizes[0] ?? "ONE";
       setComponents((prev) => [
         ...prev,
-        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize, view: "front" }
+        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize, view: "front", placementId: null, art: FILL_ART }
       ]);
     },
     [eligibleById]
@@ -177,15 +183,28 @@ export function BoxBuilder({
     const { lines } = buildBundleCartLines({
       bundleId: crypto.randomUUID(),
       bundleLabel: "PR Box",
-      components: resolved.comps.map((c) => ({
-        product: c.product,
-        variant: c.variant,
-        decorationIds: c.draft.decorationIds,
-        perBoxQty: c.draft.perBoxQty,
-        size: c.draft.size,
-        artworkFileName: c.draft.artworkFileName,
-        artworkFileUrl: c.draft.artworkFileUrl
-      })),
+      components: resolved.comps.map((c) => {
+        const zones = getDefaultZones(c.product);
+        const viewZones = c.draft.view === "back" ? zones.back : zones.front;
+        const zone = viewZones.find((z) => z.id === c.draft.placementId) ?? viewZones[0] ?? null;
+        const method =
+          c.product.decorations.filter((dd) => c.draft.decorationIds.includes(dd.id)).map((dd) => dd.label).join(" + ") ||
+          undefined;
+        const artworkPlacement: ArtworkPlacement | undefined =
+          c.draft.artworkFileUrl && zone
+            ? { view: c.draft.view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art: c.draft.art, method }
+            : undefined;
+        return {
+          product: c.product,
+          variant: c.variant,
+          decorationIds: c.draft.decorationIds,
+          perBoxQty: c.draft.perBoxQty,
+          size: c.draft.size,
+          artworkFileName: c.draft.artworkFileName,
+          artworkFileUrl: c.draft.artworkFileUrl,
+          artworkPlacement
+        };
+      }),
       packaging: resolved.packs.map((p) => ({
         product: p.product,
         perBoxQty: 1,
@@ -230,21 +249,29 @@ export function BoxBuilder({
                 const line = lineByProduct.get(p.id);
                 const hasBack = Boolean(p.greyBack);
                 const view = hasBack ? d.view : "front";
+                const zones = getDefaultZones(p);
+                const viewZones: Zone[] = view === "back" ? zones.back : zones.front;
+                const placement = viewZones.find((z) => z.id === d.placementId) ?? viewZones[0] ?? null;
                 return (
                   <li className="bb-card" key={d.key}>
-                    {/* visual stage — live garment recolor + artwork preview */}
+                    {/* visual stage — live garment recolor + drag-place artwork */}
                     <div className="bb-stage">
                       <div className="bb-stage-shot">
                         <ProductShot product={p} variant={variant} view={view} />
-                        {d.artworkFileUrl ? (
-                          <img
-                            className="bb-stage-art"
-                            src={d.artworkFileUrl}
-                            alt="Your artwork preview"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                        {d.artworkFileUrl && placement ? (
+                          <span
+                            className="pdpx-place-box"
+                            style={{
+                              left: `${placement.box.x * 100}%`,
+                              top: `${placement.box.y * 100}%`,
+                              width: `${placement.box.w * 100}%`,
+                              height: `${placement.box.h * 100}%`,
+                              transform: `rotate(${placement.box.r ?? 0}deg)`,
+                              transformOrigin: "center center"
                             }}
-                          />
+                          >
+                            <DraggableArt url={d.artworkFileUrl} transform={d.art} onChange={(t) => updateComponent(d.key, { art: t })} />
+                          </span>
                         ) : null}
                       </div>
                       {hasBack ? (
@@ -322,9 +349,9 @@ export function BoxBuilder({
                         </div>
                       ) : null}
 
-                      {/* artwork */}
+                      {/* artwork — upload, then drag-place on the garment */}
                       <div className="bb-step">
-                        <span className="bb-step-label">Artwork</span>
+                        <span className="bb-step-label">Artwork placement</span>
                         <div className="bb-artwork-row">
                           <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadArtwork(d.key, e.target.files?.[0])} />
                           <span className="bb-art-status">
@@ -337,6 +364,24 @@ export function BoxBuilder({
                                   : "Optional now — finalize after checkout"}
                           </span>
                         </div>
+                        {d.artworkFileUrl ? (
+                          <>
+                            <p className="bb-place-hint">Drag the artwork on the garment to position it, then pick a zone:</p>
+                            <div className="bb-chips">
+                              {viewZones.map((z) => (
+                                <button
+                                  key={z.id}
+                                  type="button"
+                                  className={`bb-chip${placement?.id === z.id ? " bb-chip--on" : ""}`}
+                                  aria-pressed={placement?.id === z.id}
+                                  onClick={() => updateComponent(d.key, { placementId: z.id, art: FILL_ART })}
+                                >
+                                  {z.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        ) : null}
                       </div>
 
                       {/* size & quantity */}
