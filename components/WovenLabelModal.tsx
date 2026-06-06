@@ -102,7 +102,11 @@ export function WovenLabelModal({
             (single-color thread). The logo is draggable + resizable within the
             label's printable box. */}
         <div className="wl-preview">
-          <span className="wl-tag" style={{ backgroundColor: labelColor }}>
+          <span className="wl-stage">
+            {/* masked fabric label (the visual) */}
+            <span className="wl-tag" style={{ backgroundColor: labelColor }} />
+            {/* logo + drag/resize handles — a sibling overlay so the mask on the
+                fabric never clips the handles */}
             <span
               className={`wl-tag-artbox${
                 logoUrl && Math.abs(logoTransform.ox + logoTransform.sx / 2 - 0.5) < 0.012 ? " v-center" : ""
@@ -117,7 +121,7 @@ export function WovenLabelModal({
               )}
             </span>
           </span>
-          {logoUrl ? <span className="wl-dim">Drag to resize &amp; reposition</span> : null}
+          {logoUrl ? <span className="wl-dim">Drag a corner to resize · drag the logo to move</span> : null}
         </div>
 
         {/* logo upload */}
