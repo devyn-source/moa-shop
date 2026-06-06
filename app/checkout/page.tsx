@@ -127,7 +127,7 @@ export default function CheckoutPage() {
   if (hydrated && items.length === 0) {
     return (
       <main className="page">
-        <div className="empty-state">Your cart is empty. <Link href="/" className="link-button">Browse the catalog →</Link></div>
+        <div className="empty-state">Your cart is empty. <Link href="/shop" className="link-button">Browse the catalog →</Link></div>
       </main>
     );
   }
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
     <main className="page">
       {clerkConfigured ? <ClerkContactPrefill onPrefill={handlePrefill} /> : null}
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/">Catalog</Link><span aria-hidden>/</span>
+        <Link href="/shop">Catalog</Link><span aria-hidden>/</span>
         <Link href="/cart">Cart</Link><span aria-hidden>/</span>
         <span className="crumb-current">Checkout</span>
       </nav>

@@ -58,7 +58,7 @@ export default function FaqPage() {
             Email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> and we&apos;ll help.
           </p>
         </div>
-        <Link className="button button--lg" href="/">Browse the catalog →</Link>
+        <Link className="button button--lg" href="/shop">Browse the catalog →</Link>
       </section>
     </main>
   );

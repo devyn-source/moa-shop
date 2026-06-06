@@ -41,7 +41,7 @@ export default async function OrdersPage() {
       {orders.length === 0 ? (
         <div className="empty-state" style={{ marginTop: 28 }}>
           No orders under this email yet.{" "}
-          <Link href="/" style={{ color: "var(--color-terracotta)" }}>Browse the catalog →</Link>
+          <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the catalog →</Link>
         </div>
       ) : (
         <div style={{ marginTop: 24, display: "grid", gap: 12 }}>

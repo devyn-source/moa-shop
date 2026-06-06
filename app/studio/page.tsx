@@ -5,7 +5,7 @@ export default function StudioPage() {
   return (
     <main className="page">
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/">Catalog</Link>
+        <Link href="/shop">Catalog</Link>
         <span aria-hidden>/</span>
         <span className="crumb-current">Design studio (prototype)</span>
       </nav>

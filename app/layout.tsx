@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CartProvider>
         <header className="site-header site-header--sticky">
           <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
-            <NavLink href="/">Catalog</NavLink>
+            <NavLink href="/shop">Shop</NavLink>
             <NavLink href="/catalog-pdf">Catalog PDF</NavLink>
             <NavLink href="/faq">FAQ</NavLink>
           </nav>

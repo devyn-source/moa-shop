@@ -18,7 +18,7 @@ export default async function CatalogPdfPage() {
         </p>
         <div className="action-row no-print">
           <PrintButton />
-          <Link className="secondary-button" href="/">
+          <Link className="secondary-button" href="/shop">
             Back to catalog
           </Link>
         </div>

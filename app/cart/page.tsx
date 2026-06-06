@@ -65,7 +65,7 @@ export default function CartPage() {
   return (
     <main className="page">
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/">Catalog</Link>
+        <Link href="/shop">Catalog</Link>
         <span aria-hidden>/</span>
         <span className="crumb-current">Cart</span>
       </nav>
@@ -87,7 +87,7 @@ export default function CartPage() {
         <div className="empty-state">Loading cart…</div>
       ) : items.length === 0 ? (
         <div className="empty-state">
-          Your cart is empty. <Link href="/" className="link-button">Browse the catalog →</Link>
+          Your cart is empty. <Link href="/shop" className="link-button">Browse the catalog →</Link>
         </div>
       ) : (
         <div className="cart-layout">

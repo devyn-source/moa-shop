@@ -96,7 +96,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
       <div className="config-form">
         <div className="config-head">
           <nav className="crumbs" aria-label="Breadcrumb">
-            <Link href="/">Catalog</Link>
+            <Link href="/shop">Catalog</Link>
             <span aria-hidden>/</span>
             <Link href={`/p/${product.slug}`}>{product.displayName}</Link>
             <span aria-hidden>/</span>
