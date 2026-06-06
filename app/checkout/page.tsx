@@ -1,12 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { analytics } from "@/lib/analytics";
 import { currency } from "@/lib/pricing";
 import { BrandSelect } from "@/components/BrandSelect";
 import { useUser } from "@clerk/nextjs";
+
+// Clerk is mounted only when configured (app/layout.tsx MaybeClerk). On envs
+// without a Clerk key (e.g. preview deployments) there's no <ClerkProvider>, so
+// useUser() would throw during prerender. Isolate it in this child that only
+// mounts when Clerk is present; it reports the signed-in identity up for prefill.
+const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+function ClerkContactPrefill({ onPrefill }: { onPrefill: (name: string | null, email: string | null) => void }) {
+  const { user } = useUser();
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current || !user) return;
+    done.current = true;
+    onPrefill(user.fullName, user.primaryEmailAddress?.emailAddress ?? null);
+  }, [user, onPrefill]);
+  return null;
+}
 
 const US_STATES = [
   { value: "", label: "Select state" },
@@ -53,21 +70,15 @@ export default function CheckoutPage() {
   const setVal = (k: keyof Form, v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const [ipAttested, setIpAttested] = useState(false);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
 
-  // Pre-fill contact from the signed-in Clerk account (sign-in is required to
-  // reach checkout). Fields stay editable — the order contact may differ.
-  const { user } = useUser();
-  const accountEmail = user?.primaryEmailAddress?.emailAddress ?? null;
-  const prefilled = useRef(false);
-  useEffect(() => {
-    if (prefilled.current || !user) return;
-    prefilled.current = true;
-    setF((p) => ({
-      ...p,
-      contactEmail: accountEmail || p.contactEmail,
-      contactName: user.fullName || p.contactName,
-    }));
-  }, [user, accountEmail]);
+  // Pre-fill contact from the signed-in Clerk account (when Clerk is configured).
+  // Fields stay editable — the order contact may differ. The hook lives in the
+  // guarded child below so envs without Clerk still prerender.
+  const handlePrefill = useCallback((name: string | null, email: string | null) => {
+    setAccountEmail(email);
+    setF((p) => ({ ...p, contactName: name || p.contactName, contactEmail: email || p.contactEmail }));
+  }, []);
 
   const isUS = f.country === "United States";
 
@@ -123,6 +134,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="page">
+      {clerkConfigured ? <ClerkContactPrefill onPrefill={handlePrefill} /> : null}
       <nav className="crumbs" aria-label="Breadcrumb">
         <Link href="/">Catalog</Link><span aria-hidden>/</span>
         <Link href="/cart">Cart</Link><span aria-hidden>/</span>
