@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
 import { PdpConfigurator, type BundleItemConfig } from "./PdpConfigurator";
 import { useCart } from "./CartProvider";
@@ -85,6 +86,43 @@ function rescaleConfig(cfg: BundleItemConfig, p: CatalogProduct | undefined, new
     totalUsd: round2((perUnitUsd + cfg.decorationAdderUsd) * qty),
     seed: { ...cfg.seed, sizeQty }
   };
+}
+
+// Premium easing shared with the global CSS system.
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+// Smoothly counts the displayed price to its target — small delight on every change.
+function MoneyCount({ value }: { value: number }) {
+  const [shown, setShown] = useState(value);
+  const ref = useRef(value);
+  useEffect(() => {
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const from = ref.current;
+    const to = value;
+    if (reduce || Math.abs(from - to) < 0.005) {
+      ref.current = to;
+      setShown(to);
+      return;
+    }
+    const start = performance.now();
+    const dur = 420;
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      const e = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      const v = from + (to - from) * e;
+      ref.current = v;
+      setShown(v);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else {
+        ref.current = to;
+        setShown(to);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <>{currency(shown)}</>;
 }
 
 export function BoxBuilder({
@@ -258,35 +296,47 @@ export function BoxBuilder({
             <p className="bb-empty">Add items below, then customize each in the full configurator.</p>
           ) : (
             <ul className="bb-summaries">
-              {items.map((it) => {
-                const cfg = it.config;
-                const p = eligibleById.get(cfg.productId);
-                const variant = p?.variants.find((v) => v.id === cfg.variantId) ?? p?.variants[0];
-                return (
-                  <li className="bb-summary" key={it.key}>
-                    <div className="bb-summary-shot">
-                      {p ? <ProductShot product={p} variant={variant} view="front" /> : null}
-                    </div>
-                    <div className="bb-summary-body">
-                      <div className="bb-summary-top">
-                        <h3>{cfg.displayName}</h3>
-                        <button type="button" className="cart-remove" aria-label="Remove item" onClick={() => removeItem(it.key)}>✕</button>
+              <AnimatePresence initial={false} mode="popLayout">
+                {items.map((it) => {
+                  const cfg = it.config;
+                  const p = eligibleById.get(cfg.productId);
+                  const variant = p?.variants.find((v) => v.id === cfg.variantId) ?? p?.variants[0];
+                  return (
+                    <motion.li
+                      className="bb-summary"
+                      key={it.key}
+                      layout
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.18, ease: EASE } }}
+                      transition={{ duration: 0.34, ease: EASE }}
+                    >
+                      <div className="bb-summary-shot">
+                        {p ? <ProductShot product={p} variant={variant} view="front" /> : null}
                       </div>
-                      <p className="bb-summary-meta">
-                        {cfg.colorLabel} · {cfg.decorationLabel} · {cfg.quantity.toLocaleString()} units
-                        {cfg.artworkFileUrl ? " · artwork ✓" : ""}
-                        {cfg.wovenLabel ? " · woven label" : ""}
-                      </p>
-                      <div className="bb-summary-foot">
-                        <button type="button" className="bb-customize" onClick={() => p && setModal({ product: p, seed: cfg.seed, editKey: it.key })}>
-                          Customize in full configurator →
-                        </button>
-                        <span className="bb-summary-price">{currency(cfg.totalUsd)}</span>
+                      <div className="bb-summary-body">
+                        <div className="bb-summary-top">
+                          <h3>{cfg.displayName}</h3>
+                          <button type="button" className="cart-remove" aria-label="Remove item" onClick={() => removeItem(it.key)}>✕</button>
+                        </div>
+                        <p className="bb-summary-meta">
+                          {cfg.colorLabel} · {cfg.decorationLabel} · {cfg.quantity.toLocaleString()} units
+                          {cfg.artworkFileUrl ? " · artwork ✓" : ""}
+                          {cfg.wovenLabel ? " · woven label" : ""}
+                        </p>
+                        <div className="bb-summary-foot">
+                          <button type="button" className="bb-customize" onClick={() => p && setModal({ product: p, seed: cfg.seed, editKey: it.key })}>
+                            Customize in full configurator →
+                          </button>
+                          <span className="bb-summary-price">
+                            <MoneyCount value={cfg.totalUsd} />
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
+                    </motion.li>
+                  );
+                })}
+              </AnimatePresence>
             </ul>
           )}
         </section>
@@ -312,6 +362,7 @@ export function BoxBuilder({
             <span className="label">Customize each branded piece</span>
           </div>
           <ul className="bb-items">
+            <AnimatePresence initial={false} mode="popLayout">
             {packagingIds.map((id) => {
               const asset = packagingById.get(id);
               if (!asset) return null;
@@ -322,7 +373,15 @@ export function BoxBuilder({
               const upcharge = asset.printUpchargeUsd ?? 0;
               const unit = packagingUnitPrice(asset, boxQty, branded).perUnitUsd;
               return (
-                <li className="bb-item" key={id}>
+                <motion.li
+                  className="bb-item"
+                  key={id}
+                  layout
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.16, ease: EASE } }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                >
                   <div className="bb-item-shot"><ProductShot product={asset} variant={asset.variants[0]} view="front" /></div>
                   <div className="bb-item-body">
                     <div className="bb-item-top">
@@ -380,9 +439,10 @@ export function BoxBuilder({
                       </div>
                     )}
                   </div>
-                </li>
+                </motion.li>
               );
             })}
+            </AnimatePresence>
           </ul>
           {packaging.some((a) => !packagingIds.includes(a.id)) ? (
             <div className="bb-pack-add">
@@ -435,19 +495,46 @@ export function BoxBuilder({
             )}
           </div>
 
-          <div className="price-line bb-subtotal"><span>Subtotal</span><strong>{currency(price.grossUsd)}</strong></div>
-          {price.qualifies ? (
-            <div className="price-line bb-discount"><span>Bundle discount ({Math.round(price.percent * 100)}%)</span><strong>−{currency(price.discountUsd)}</strong></div>
-          ) : items.length > 0 ? (
-            <div className="bb-unmet">
-              <span className="bb-unmet-title">Unlock {Math.round(promo.discount.value * 100)}% off:</span>
-              <ul>{price.unmetReasons.map((r) => <li key={r}>{r}</li>)}</ul>
-            </div>
-          ) : null}
+          <div className="price-line bb-subtotal"><span>Subtotal</span><strong><MoneyCount value={price.grossUsd} /></strong></div>
+          <AnimatePresence initial={false} mode="wait">
+            {price.qualifies ? (
+              <motion.div
+                key="discount"
+                className="price-line bb-discount"
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: "auto", marginTop: 0 }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.28, ease: EASE }}
+              >
+                <span>Bundle discount ({Math.round(price.percent * 100)}%)</span>
+                <strong>−<MoneyCount value={price.discountUsd} /></strong>
+              </motion.div>
+            ) : items.length > 0 ? (
+              <motion.div
+                key="unmet"
+                className="bb-unmet"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.28, ease: EASE }}
+              >
+                <span className="bb-unmet-title">Unlock {Math.round(promo.discount.value * 100)}% off:</span>
+                <ul>{price.unmetReasons.map((r) => <li key={r}>{r}</li>)}</ul>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           <div className="price-total-big bb-box-total">
             <span className="from-label">Program total</span>
-            <span className="price-total-num">{currency(price.totalUsd)}</span>
+            <motion.span
+              key={price.qualifies ? "q" : "n"}
+              className="price-total-num"
+              initial={{ scale: 0.96 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.3, ease: EASE }}
+            >
+              <MoneyCount value={price.totalUsd} />
+            </motion.span>
             <span className="price-total-sub">{boxQty.toLocaleString()} boxes · {items.length} item{items.length === 1 ? "" : "s"} each</span>
           </div>
 
@@ -459,23 +546,41 @@ export function BoxBuilder({
       </aside>
 
       {/* full PDP configurator modal */}
-      {modal ? (
-        <div className="bb-modal-overlay" role="dialog" aria-modal="true" onClick={() => setModal(null)}>
-          <div className="bb-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="bb-modal-head">
-              <span className="bb-modal-title">Configure · {modal.product.displayName}</span>
-              <button type="button" className="bb-modal-x" aria-label="Close" onClick={() => setModal(null)}>✕</button>
-            </div>
-            <div className="bb-modal-body">
-              <PdpConfigurator
-                product={modal.product}
-                seed={modal.seed}
-                bundle={{ boxQty, editing: Boolean(modal.editKey), onUse: handleModalUse, onCancel: () => setModal(null) }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {modal ? (
+          <motion.div
+            className="bb-modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setModal(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: EASE }}
+          >
+            <motion.div
+              className="bb-modal"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              transition={{ duration: 0.36, ease: EASE }}
+            >
+              <div className="bb-modal-head">
+                <span className="bb-modal-title">Configure · {modal.product.displayName}</span>
+                <button type="button" className="bb-modal-x" aria-label="Close" onClick={() => setModal(null)}>✕</button>
+              </div>
+              <div className="bb-modal-body">
+                <PdpConfigurator
+                  product={modal.product}
+                  seed={modal.seed}
+                  bundle={{ boxQty, editing: Boolean(modal.editKey), onUse: handleModalUse, onCancel: () => setModal(null) }}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

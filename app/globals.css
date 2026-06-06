@@ -164,6 +164,7 @@ button {
 .value-num {
   font-family: var(--font-display);
   font-stretch: 125%;
+  text-transform: uppercase; /* brand rule: all Archivo Expanded renders ALL CAPS */
 }
 
 /* ===== Site header ===== */
@@ -7934,3 +7935,121 @@ body.is-scrolled .site-header {
 .bb-brand-opt--on em { color: var(--color-terracotta); }
 .bb-brand-opt:disabled { opacity: 0.45; cursor: not-allowed; }
 .bb-brand-note { font-size: 0.72rem; color: var(--color-neutral); }
+
+/* ===================================================================
+   Motion system — calm/premium (refined easing, micro-interactions)
+   =================================================================== */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);   /* expo-out: smooth, premium */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 150ms;
+  --dur: 240ms;
+  --dur-slow: 420ms;
+}
+
+/* Press + state feedback on interactive elements (transform/colors only → GPU) */
+.button,
+.button--lg,
+.ghost-button,
+.link-button,
+.pdpx-cta,
+.bb-pick,
+.bb-chip,
+.bb-brand-opt,
+.bb-view,
+.bb-customize,
+.cart-remove,
+.bb-stepper button,
+.from-pill,
+.bundle-card-cta {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out),
+    opacity var(--dur) var(--ease-out);
+}
+.button:active,
+.button--lg:active,
+.pdpx-cta:active,
+.bb-pick:active,
+.bb-chip:active,
+.bb-brand-opt:active,
+.bb-customize:active,
+.bb-stepper button:active {
+  transform: scale(0.97);
+}
+.button:disabled,
+.button--lg:disabled,
+.pdpx-cta:disabled {
+  transform: none;
+}
+
+/* Tile + card hover lift */
+.bb-pick { transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out); }
+.bb-pick:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(30, 30, 30, 0.10); }
+.bb-summary, .bb-item, .cart-bundle, .uc-bottom { transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out); }
+.bb-summary:hover, .bb-item:hover { box-shadow: 0 10px 30px rgba(30, 30, 30, 0.06); }
+/* NOTE: ProximityFX owns the catalog card transform (cursor lift) — only animate
+   shadow/border here so we don't fight it. */
+.product-card { transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out); }
+.product-card:hover { box-shadow: 0 18px 44px rgba(30, 30, 30, 0.11); }
+
+/* Consistent, on-brand focus ring */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Primary CTA: soft sheen sweep on hover */
+.button--lg { position: relative; overflow: hidden; }
+.button--lg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease-out);
+  pointer-events: none;
+}
+.button--lg:hover::after { transform: translateX(120%); }
+
+/* Live-price emphasis when it changes */
+.bb-box-total .price-total-num { transition: color var(--dur) var(--ease-out); }
+
+/* Respect reduced motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Modal: frosted backdrop for depth (motion handles the fade/scale) */
+.bb-modal-overlay { backdrop-filter: blur(6px) saturate(115%); -webkit-backdrop-filter: blur(6px) saturate(115%); }
+.bb-modal { will-change: transform, opacity; box-shadow: 0 30px 90px rgba(30, 30, 30, 0.40); }
+/* keep animated list items from showing a focus/overflow seam */
+.bb-summaries, .bb-items { will-change: contents; }
+
+/* Brand rule: ALL Archivo Expanded (display font) renders ALL CAPS.
+   Catch the standalone display-font classes not covered by the main group. */
+.cart-line-ph,
+.cart-size-chip b,
+.price-total,
+.size-pill,
+.size-cell--size,
+.size-breakdown-chip b,
+.tracker-seg__num,
+.pdpx-step-num,
+.pdpx-matrix-input,
+.pdpx-total,
+.wl-price,
+.success-step-num,
+.ze-coords,
+.lp-step-n,
+.lp-faq-item summary {
+  text-transform: uppercase;
+}
