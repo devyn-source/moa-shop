@@ -103,9 +103,9 @@ export function WovenLabelModal({
             label's printable box. */}
         <div className="wl-preview">
           <span className="wl-tag" style={{ backgroundColor: labelColor }}>
-            <span className="wl-tag-artbox">
+            <span className={`wl-tag-artbox${logoUrl ? " has-guides" : ""}`}>
               {logoUrl ? (
-                <DraggableArt url={logoUrl} transform={logoTransform} onChange={setLogoTransform} maskColor={thread} />
+                <DraggableArt url={logoUrl} transform={logoTransform} onChange={setLogoTransform} maskColor={thread} alwaysShowHandles />
               ) : (
                 <span className="wl-tag-text" style={{ color: thread }}>
                   {text || "YOUR BRAND"}

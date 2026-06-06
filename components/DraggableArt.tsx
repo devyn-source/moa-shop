@@ -62,7 +62,8 @@ export function DraggableArt({
   url,
   transform,
   onChange,
-  maskColor
+  maskColor,
+  alwaysShowHandles
 }: {
   url: string;
   transform: ArtTransform;
@@ -70,6 +71,9 @@ export function DraggableArt({
   // When set, the art renders as a solid-color mask of `url` (single-color woven
   // thread look) instead of a full-color image. Used by the woven-label modal.
   maskColor?: string;
+  // Keep the resize/rotate handles visible at rest (not only on hover) — used in
+  // the small woven-label preview where the affordance isn't otherwise obvious.
+  alwaysShowHandles?: boolean;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -116,7 +120,7 @@ export function DraggableArt({
   );
 
   const dragging = Boolean(drag);
-  const showHandles = hover || dragging;
+  const showHandles = hover || dragging || Boolean(alwaysShowHandles);
 
   // Arrow keys nudge the artwork while the handle is hovered/focused —
   // 1% per tap, 5% with Shift, clamped inside the box.

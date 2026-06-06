@@ -6190,6 +6190,23 @@ a.stat-card:hover {
   outline-offset: 0;
   border-radius: 2px;
 }
+/* Center crosshair — vertical + horizontal guide lines to align the logo to
+   the exact center of the label. Only shown when there's a logo to place. */
+.wl-tag-artbox.has-guides::before,
+.wl-tag-artbox.has-guides::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(var(--ang, 0deg), rgba(176,71,49,0.4) 0 4px, transparent 4px 8px);
+}
+.wl-tag-artbox.has-guides::before { /* vertical line — dashes run top↓bottom */
+  left: 50%; top: -6%; bottom: -6%; width: 1px; transform: translateX(-0.5px);
+  --ang: 0deg;
+}
+.wl-tag-artbox.has-guides::after { /* horizontal line — dashes run left→right */
+  top: 50%; left: -4%; right: -4%; height: 1px; transform: translateY(-0.5px);
+  --ang: 90deg;
+}
 .wl-pills { display: flex; flex-wrap: wrap; gap: 8px; }
 .wl-pill { padding: 8px 13px; border-radius: 999px; border: 1px solid var(--border); background: #fff; font-family: var(--font-display); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-charcoal); cursor: pointer; transition: all 140ms ease; }
 .wl-pill.is-on { background: var(--color-charcoal); color: var(--color-cream); border-color: var(--color-charcoal); }
