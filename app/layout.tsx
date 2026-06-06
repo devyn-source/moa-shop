@@ -10,6 +10,7 @@ import { HeaderScroll } from "@/components/HeaderScroll";
 import { AccountNav } from "@/components/AccountNav";
 import { AnalyticsProviders } from "@/components/AnalyticsProviders";
 import { PromoBanner } from "@/components/PromoBanner";
+import { USE_CASES } from "@/lib/use-cases";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -107,10 +108,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               <div className="ft-col">
                 <p className="ft-h">Programs</p>
-                <span>Brand drops &amp; capsules</span>
-                <span>Event &amp; tour merch</span>
-                <span>Creator collaborations</span>
-                <span>Staff &amp; uniform kits</span>
+                {USE_CASES.map((uc) => (
+                  <Link key={uc.slug} href={`/for/${uc.slug}`}>{uc.navLabel}</Link>
+                ))}
               </div>
               <div className="ft-col">
                 <p className="ft-h">Studio</p>

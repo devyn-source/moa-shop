@@ -50,14 +50,44 @@ type PackArt = {
 let draftSeq = 0;
 const nextKey = () => `draft-${draftSeq++}-${crypto.randomUUID().slice(0, 8)}`;
 
+// A kit preset / "add item" turns a product into a fresh draft with sensible defaults.
+function buildDraft(
+  p: CatalogProduct,
+  opts?: { decorationIds?: DecorationMethod[]; perBoxQty?: number; size?: string }
+): ComponentDraft {
+  const variant = p.variants.find((v) => v.isAvailable) ?? p.variants[0];
+  const midSize = p.sizes[Math.floor(p.sizes.length / 2)] ?? p.sizes[0] ?? "ONE";
+  return {
+    key: nextKey(),
+    productId: p.id,
+    variantId: variant.id,
+    decorationIds: opts?.decorationIds ?? [],
+    perBoxQty: opts?.perBoxQty ?? 1,
+    size: opts?.size ?? midSize,
+    view: "front",
+    openStep: "color",
+    placementId: null,
+    art: FILL_ART
+  };
+}
+
+export type InitialComponent = {
+  productId: string;
+  decorationIds?: DecorationMethod[];
+  perBoxQty?: number;
+  size?: string;
+};
+
 export function BoxBuilder({
   product,
   eligible,
-  packaging
+  packaging,
+  initialComponents
 }: {
   product: CatalogProduct;
   eligible: CatalogProduct[];
   packaging: CatalogProduct[];
+  initialComponents?: InitialComponent[];
 }) {
   const router = useRouter();
   const { addBundle } = useCart();
@@ -66,7 +96,14 @@ export function BoxBuilder({
   const eligibleById = useMemo(() => new Map(eligible.map((p) => [p.id, p])), [eligible]);
   const packagingById = useMemo(() => new Map(packaging.map((p) => [p.id, p])), [packaging]);
 
-  const [components, setComponents] = useState<ComponentDraft[]>([]);
+  const [components, setComponents] = useState<ComponentDraft[]>(() =>
+    (initialComponents ?? [])
+      .map((ic) => {
+        const p = eligible.find((e) => e.id === ic.productId);
+        return p ? buildDraft(p, ic) : null;
+      })
+      .filter(Boolean) as ComponentDraft[]
+  );
   const [packagingIds, setPackagingIds] = useState<string[]>(() =>
     packaging.filter((p) => p.packagingRequired).map((p) => p.id)
   );
@@ -78,12 +115,7 @@ export function BoxBuilder({
     (productId: string) => {
       const p = eligibleById.get(productId);
       if (!p) return;
-      const variant = p.variants.find((v) => v.isAvailable) ?? p.variants[0];
-      const midSize = p.sizes[Math.floor(p.sizes.length / 2)] ?? p.sizes[0] ?? "ONE";
-      setComponents((prev) => [
-        ...prev,
-        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize, view: "front", openStep: "color", placementId: null, art: FILL_ART }
-      ]);
+      setComponents((prev) => [...prev, buildDraft(p)]);
     },
     [eligibleById]
   );

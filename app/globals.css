@@ -7865,3 +7865,39 @@ body.is-scrolled .site-header {
   .bb-pdp-item { grid-template-columns: 1fr; }
   .bb-pdp-stage { position: static; }
 }
+
+/* Use-case landing pages (/for/<slug>) */
+.uc-hero { max-width: 760px; margin: 8px 0 36px; }
+.uc-headline {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  margin: 6px 0 14px;
+}
+.uc-sub { font-size: 1.05rem; line-height: 1.55; color: var(--color-neutral); max-width: 60ch; }
+.uc-frame {
+  margin-top: 16px;
+  padding-left: 14px;
+  border-left: 3px solid var(--color-terracotta);
+  color: var(--color-charcoal);
+  font-size: 1rem;
+  font-weight: 500;
+}
+.uc-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+.uc-proof { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; }
+.uc-proof li { position: relative; padding-left: 22px; font-size: 0.9rem; color: var(--color-neutral); }
+.uc-proof li::before { content: "✓"; position: absolute; left: 0; color: var(--color-success); font-weight: 700; }
+.uc-kit { margin-top: 40px; }
+.uc-bottom {
+  margin-top: 48px;
+  padding: 36px 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.uc-bottom-head { font-family: var(--font-display); text-transform: uppercase; font-size: 1.1rem; letter-spacing: 0.02em; }

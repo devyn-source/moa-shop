@@ -7,6 +7,7 @@ import { currency } from "@/lib/pricing";
 import { getProductBySlug, getProducts } from "@/lib/store";
 import { isBundleEligible } from "@/lib/seed";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
+import { getKit } from "@/lib/use-cases";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -39,10 +40,10 @@ export default async function ProductPage({
   searchParams
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string }>;
+  searchParams: Promise<{ preview?: string; kit?: string }>;
 }) {
   const { slug } = await params;
-  const { preview } = await searchParams;
+  const { preview, kit } = await searchParams;
   const product = await getProductBySlug(slug);
 
   // Unpublished SKUs (e.g. the internal test SKU) render only with a valid
@@ -61,6 +62,10 @@ export default async function ProductPage({
     const packaging = all
       .filter((p) => p.category === "packaging")
       .sort((a, b) => a.sortOrder - b.sortOrder);
+    // A named kit (?kit=new-hire) pre-loads the builder with curated components.
+    const preset = getKit(kit);
+    const eligibleIds = new Set(eligible.map((p) => p.id));
+    const initialComponents = (preset?.components ?? []).filter((c) => eligibleIds.has(c.productId));
     return (
       <main className="page">
         <nav className="crumbs" aria-label="Breadcrumb">
@@ -68,7 +73,7 @@ export default async function ProductPage({
           <span aria-hidden>/</span>
           <span className="crumb-current">{product.displayName}</span>
         </nav>
-        <BoxBuilder product={product} eligible={eligible} packaging={packaging} />
+        <BoxBuilder product={product} eligible={eligible} packaging={packaging} initialComponents={initialComponents} />
       </main>
     );
   }
