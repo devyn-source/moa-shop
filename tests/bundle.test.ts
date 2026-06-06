@@ -3,11 +3,12 @@ import {
   bundleMinBoxes,
   bundleStartingPriceUsd,
   calculateBundlePrice,
+  round2,
   type BundleComponentInput,
   type BundlePackagingInput
 } from "@/lib/pricing";
 import { evaluatePromo, type PrBoxPromo } from "@/lib/promo";
-import { allocateBundleDiscount } from "@/lib/bundle";
+import { allocateBundleDiscount, packagingUnitPrice, priceFullBundle, type FullBundleItem } from "@/lib/bundle";
 import { isBundleEligible, packagingAssets, PR_BOX_PRODUCT_ID, seedProducts } from "@/lib/seed";
 import type { CatalogProduct } from "@/lib/types";
 
@@ -240,6 +241,45 @@ describe("allocateBundleDiscount (checkout discount allocation)", () => {
     );
     const alloc = allocateBundleDiscount(noDiscount);
     expect(alloc.every((a) => a.discountUsd === 0)).toBe(true);
+  });
+});
+
+describe("packaging blank/branded pricing", () => {
+  const boxAsset = {
+    id: "pkg-box",
+    slug: "pkg-box",
+    displayName: "Rigid Box",
+    skuCode: "PKG-BOX",
+    moq: 50,
+    priceTiers: [{ minQty: 50, maxQty: null, perUnitUsd: 22.5 }],
+    printUpchargeUsd: 3,
+    printable: true,
+    variants: [{ id: "pkg-box-default", colorLabel: "Branded", colorHex: "#000" }],
+    decorations: []
+  } as unknown as CatalogProduct;
+  const fill = {
+    ...boxAsset,
+    id: "pkg-fill",
+    printable: false,
+    printUpchargeUsd: 0,
+    priceTiers: [{ minQty: 50, maxQty: null, perUnitUsd: 2.5 }]
+  } as unknown as CatalogProduct;
+
+  it("branded = tier price; blank = tier − print upcharge", () => {
+    expect(packagingUnitPrice(boxAsset, 50, true)).toEqual({ perUnitUsd: 22.5, branded: true });
+    expect(packagingUnitPrice(boxAsset, 50, false)).toEqual({ perUnitUsd: 19.5, branded: false });
+  });
+  it("non-printable assets are always plain (branded ignored)", () => {
+    expect(packagingUnitPrice(fill, 50, true)).toEqual({ perUnitUsd: 2.5, branded: false });
+  });
+  it("priceFullBundle reflects blank vs branded packaging", () => {
+    const items = [{ totalUsd: 4400 }, { totalUsd: 4850 }, { totalUsd: 1900 }] as unknown as FullBundleItem[];
+    const branded = priceFullBundle(items, [{ product: boxAsset, branded: true }], 50, promo, NOW);
+    const blank = priceFullBundle(items, [{ product: boxAsset, branded: false }], 50, promo, NOW);
+    // branded box = 22.5×50 = 1125; blank = 19.5×50 = 975 → $150 cheaper, ×0.9 after discount
+    expect(branded.packagingTotalUsd).toBe(1125);
+    expect(blank.packagingTotalUsd).toBe(975);
+    expect(round2(branded.totalUsd - blank.totalUsd)).toBe(round2(150 * 0.9));
   });
 });
 

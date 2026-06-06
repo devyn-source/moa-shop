@@ -7922,3 +7922,15 @@ body.is-scrolled .site-header {
 .bb-modal-body { padding: 18px; }
 /* the configurator stage shouldn't stick inside the modal */
 .bb-modal-body .pdpx-stage { position: static; top: auto; }
+
+/* PR Box — packaging blank/branded toggle */
+.bb-brand-toggle { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
+.bb-brand-opt {
+  border: 1px solid var(--border); background: var(--card); border-radius: 999px;
+  padding: 5px 12px; font-size: 0.78rem; cursor: pointer;
+}
+.bb-brand-opt em { color: var(--color-neutral); font-style: normal; }
+.bb-brand-opt--on { border-color: var(--color-terracotta); background: rgba(176,71,49,0.06); color: var(--color-terracotta); }
+.bb-brand-opt--on em { color: var(--color-terracotta); }
+.bb-brand-opt:disabled { opacity: 0.45; cursor: not-allowed; }
+.bb-brand-note { font-size: 0.72rem; color: var(--color-neutral); }

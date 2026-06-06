@@ -21,10 +21,12 @@ export type FullBundleItem = Omit<
   "lineId" | "bundleId" | "bundleLabel" | "bundleRole" | "perBoxQty" | "perBoxUsd" | "bundleDiscountUsd" | "promoId"
 >;
 
+export type PackagingSelection = { product: CatalogProduct; branded: boolean };
+
 export type FullBundlePrice = {
   boxQty: number;
   itemsSubtotalUsd: number; // sum of item totals
-  packagingLines: { product: CatalogProduct; perUnitUsd: number; totalUsd: number }[];
+  packagingLines: { product: CatalogProduct; perUnitUsd: number; totalUsd: number; branded: boolean }[];
   packagingTotalUsd: number;
   grossUsd: number; // items + packaging, pre-discount
   qualifies: boolean;
@@ -34,17 +36,27 @@ export type FullBundlePrice = {
   totalUsd: number; // net program total
 };
 
+// Self-serve print pricing: a piece is branded (printed with the customer's art,
+// full tier price) or blank (tier − print upcharge). Non-printable assets are
+// always plain. The customer always supplies the art — no MOA design labor.
+export function packagingUnitPrice(product: CatalogProduct, boxQty: number, branded: boolean): { perUnitUsd: number; branded: boolean } {
+  const tier = getPriceTier(product, boxQty).perUnitUsd;
+  const isBranded = product.printable !== false && branded;
+  const perUnitUsd = isBranded ? tier : round2(Math.max(0, tier - (product.printUpchargeUsd ?? 0)));
+  return { perUnitUsd, branded: isBranded };
+}
+
 export function priceFullBundle(
   items: FullBundleItem[],
-  packaging: CatalogProduct[],
+  packaging: PackagingSelection[],
   boxQty: number,
   promo: PrBoxPromo = PR_BOX_PROMO,
   now: Date = new Date()
 ): FullBundlePrice {
   const itemsSubtotalUsd = round2(items.reduce((s, i) => s + (i.totalUsd ?? 0), 0));
-  const packagingLines = packaging.map((product) => {
-    const perUnitUsd = getPriceTier(product, boxQty).perUnitUsd;
-    return { product, perUnitUsd, totalUsd: round2(perUnitUsd * boxQty) };
+  const packagingLines = packaging.map(({ product, branded }) => {
+    const { perUnitUsd, branded: isBranded } = packagingUnitPrice(product, boxQty, branded);
+    return { product, perUnitUsd, totalUsd: round2(perUnitUsd * boxQty), branded: isBranded };
   });
   const packagingTotalUsd = round2(packagingLines.reduce((s, l) => s + l.totalUsd, 0));
   const grossUsd = round2(itemsSubtotalUsd + packagingTotalUsd);
@@ -70,6 +82,7 @@ export function priceFullBundle(
 // (items + packaging) proportional to its total, remainder on the last line.
 export type FullBundlePackaging = {
   product: CatalogProduct;
+  branded: boolean;
   artworkFileName?: string;
   artworkFileUrl?: string;
   artworkNotes?: string;
@@ -84,7 +97,7 @@ export function buildFullBundleCartLines(args: {
   promo?: PrBoxPromo;
 }): { lines: Omit<CartItem, "lineId">[]; price: FullBundlePrice } {
   const promo = args.promo ?? PR_BOX_PROMO;
-  const price = priceFullBundle(args.items, args.packaging.map((p) => p.product), args.boxQty, promo);
+  const price = priceFullBundle(args.items, args.packaging.map((p) => ({ product: p.product, branded: p.branded })), args.boxQty, promo);
   const promoId = price.qualifies ? promo.id : undefined;
 
   const grosses = [...args.items.map((i) => i.totalUsd ?? 0), ...price.packagingLines.map((l) => l.totalUsd)];
@@ -122,27 +135,28 @@ export function buildFullBundleCartLines(args: {
       displayName: p.displayName,
       skuCode: p.skuCode,
       variantId: p.variants[0]?.id ?? `${p.id}-default`,
-      colorLabel: p.variants[0]?.colorLabel ?? "Branded",
+      colorLabel: pl.branded ? "Branded" : "Blank",
       colorHex: p.variants[0]?.colorHex,
       image: p.greyFront ?? p.variants[0]?.frontImage,
       decorationIds: [],
-      decorationLabel: "Packaging",
+      decorationLabel: pl.branded ? "Branded packaging" : "Blank packaging",
       sizeQty: {},
       quantity: args.boxQty,
       perUnitUsd: pl.perUnitUsd,
       decorationAdderUsd: 0,
       subtotalUsd: pl.totalUsd,
       totalUsd: round2(pl.totalUsd - share),
-      artworkFileName: art?.artworkFileName ?? "",
-      artworkFileUrl: art?.artworkFileUrl,
-      artworkNotes: art?.artworkNotes ?? "",
+      artworkFileName: pl.branded ? art?.artworkFileName ?? "" : "",
+      artworkFileUrl: pl.branded ? art?.artworkFileUrl : undefined,
+      artworkNotes: pl.branded ? art?.artworkNotes ?? "Branded — print customer artwork" : "Blank — no print",
       bundleId: args.bundleId,
       bundleLabel: args.bundleLabel,
       bundleRole: "packaging",
       perBoxQty: 1,
       perBoxUsd: pl.perUnitUsd,
       bundleDiscountUsd: share,
-      promoId
+      promoId,
+      printed: pl.branded
     });
   });
 

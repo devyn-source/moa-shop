@@ -34,6 +34,7 @@ export type CartItem = {
   perBoxUsd?: number; // this line's gross contribution to one box
   bundleDiscountUsd?: number; // this line's share of the box discount (already in totalUsd)
   promoId?: string;
+  printed?: boolean; // packaging line: branded/printed (true) vs blank (false)
 };
 
 type CartContextValue = {

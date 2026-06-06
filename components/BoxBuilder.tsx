@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ProductShot } from "./ProductShot";
 import { PdpConfigurator, type BundleItemConfig } from "./PdpConfigurator";
 import { useCart } from "./CartProvider";
-import { buildFullBundleCartLines, priceFullBundle } from "@/lib/bundle";
+import { buildFullBundleCartLines, packagingUnitPrice, priceFullBundle } from "@/lib/bundle";
 import { currency, getPriceTier, round2 } from "@/lib/pricing";
 import { PR_BOX_PROMO } from "@/lib/promo";
 import type { CatalogProduct } from "@/lib/types";
@@ -117,6 +117,9 @@ export function BoxBuilder({
   const [packagingIds, setPackagingIds] = useState<string[]>(() =>
     packaging.filter((p) => p.packagingRequired).map((p) => p.id)
   );
+  const [packBranded, setPackBranded] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(packaging.map((p) => [p.id, p.printable !== false]))
+  );
   const [packArt, setPackArt] = useState<Record<string, PackArt>>({});
   const [submitting, setSubmitting] = useState(false);
   const [modal, setModal] = useState<{ product: CatalogProduct; seed?: BundleItemConfig["seed"]; editKey?: string } | null>(null);
@@ -160,6 +163,21 @@ export function BoxBuilder({
     },
     [packagingById]
   );
+  // Self-serve: each printable piece is blank or branded (printed with the
+  // customer's art). Design-required (cards/stickers) is locked branded;
+  // non-printable (void fill) is always plain.
+  const brandedOf = useCallback(
+    (asset: CatalogProduct) => {
+      if (asset.printable === false) return false;
+      if (asset.designRequired) return true;
+      return packBranded[asset.id] ?? true;
+    },
+    [packBranded]
+  );
+  const toggleBranded = useCallback((asset: CatalogProduct) => {
+    if (asset.printable === false || asset.designRequired) return;
+    setPackBranded((prev) => ({ ...prev, [asset.id]: !(prev[asset.id] ?? true) }));
+  }, []);
   const updatePackArt = useCallback((id: string, patch: Partial<PackArt>) => {
     setPackArt((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   }, []);
@@ -182,8 +200,12 @@ export function BoxBuilder({
   );
 
   const selectedPackaging = useMemo(
-    () => packagingIds.map((id) => packagingById.get(id)).filter(Boolean) as CatalogProduct[],
-    [packagingIds, packagingById]
+    () =>
+      packagingIds
+        .map((id) => packagingById.get(id))
+        .filter(Boolean)
+        .map((p) => ({ product: p as CatalogProduct, branded: brandedOf(p as CatalogProduct) })),
+    [packagingIds, packagingById, brandedOf]
   );
 
   const price = useMemo(
@@ -206,9 +228,9 @@ export function BoxBuilder({
           const p = packagingById.get(id);
           if (!p) return null;
           const a = packArt[id];
-          return { product: p, artworkFileName: a?.artworkFileName, artworkFileUrl: a?.artworkFileUrl, artworkNotes: a?.notes };
+          return { product: p, branded: brandedOf(p), artworkFileName: a?.artworkFileName, artworkFileUrl: a?.artworkFileUrl, artworkNotes: a?.notes };
         })
-        .filter(Boolean) as { product: CatalogProduct }[],
+        .filter(Boolean) as { product: CatalogProduct; branded: boolean }[],
       boxQty,
       promo
     });
@@ -295,7 +317,10 @@ export function BoxBuilder({
               if (!asset) return null;
               const art = packArt[id];
               const required = Boolean(asset.packagingRequired);
-              const tier = getPriceTier(asset, boxQty);
+              const branded = brandedOf(asset);
+              const printable = asset.printable !== false;
+              const upcharge = asset.printUpchargeUsd ?? 0;
+              const unit = packagingUnitPrice(asset, boxQty, branded).perUnitUsd;
               return (
                 <li className="bb-item" key={id}>
                   <div className="bb-item-shot"><ProductShot product={asset} variant={asset.variants[0]} view="front" /></div>
@@ -304,22 +329,56 @@ export function BoxBuilder({
                       <h3>{asset.displayName}{required ? <span className="bb-pack-req"> · included</span> : null}</h3>
                       {required ? null : <button type="button" className="cart-remove" aria-label="Remove packaging" onClick={() => togglePackaging(id)}>✕</button>}
                     </div>
-                    <div className="bb-field bb-field--row">
-                      <label className="bb-mini bb-mini--art">
-                        <span className="bb-field-label">Artwork / branding</span>
-                        <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadPackArt(id, e.target.files?.[0])} />
-                      </label>
-                      <label className="bb-mini bb-mini--notes">
-                        <span className="bb-field-label">Notes</span>
-                        <input type="text" placeholder="e.g. logo centered, gold foil" value={art?.notes ?? ""} onChange={(e) => updatePackArt(id, { notes: e.target.value })} />
-                      </label>
-                    </div>
-                    <div className="bb-item-foot">
-                      <span className="bb-art-status">
-                        {art?.uploading ? "Uploading artwork…" : art?.uploadError ? `⚠ ${art.uploadError}` : art?.artworkFileUrl ? `✓ ${art.artworkFileName}` : "No artwork yet (optional now)"}
-                      </span>
-                      <span className="bb-item-price"><b>{currency(tier.perUnitUsd)}/box</b></span>
-                    </div>
+
+                    {/* blank ↔ branded (self-serve, customer's own art) */}
+                    {printable ? (
+                      <div className="bb-brand-toggle">
+                        <button
+                          type="button"
+                          className={`bb-brand-opt${!branded ? " bb-brand-opt--on" : ""}`}
+                          disabled={asset.designRequired}
+                          onClick={() => toggleBranded(asset)}
+                        >
+                          Blank
+                        </button>
+                        <button
+                          type="button"
+                          className={`bb-brand-opt${branded ? " bb-brand-opt--on" : ""}`}
+                          onClick={() => !branded && toggleBranded(asset)}
+                        >
+                          Add my branding{upcharge > 0 ? <em> +{currency(upcharge)}/box</em> : null}
+                        </button>
+                        {asset.designRequired ? <span className="bb-brand-note">design required</span> : null}
+                      </div>
+                    ) : (
+                      <p className="bb-brand-note">Plain — not printed.</p>
+                    )}
+
+                    {branded ? (
+                      <>
+                        <div className="bb-field bb-field--row">
+                          <label className="bb-mini bb-mini--art">
+                            <span className="bb-field-label">Your artwork</span>
+                            <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadPackArt(id, e.target.files?.[0])} />
+                          </label>
+                          <label className="bb-mini bb-mini--notes">
+                            <span className="bb-field-label">Notes</span>
+                            <input type="text" placeholder="e.g. logo centered, gold foil" value={art?.notes ?? ""} onChange={(e) => updatePackArt(id, { notes: e.target.value })} />
+                          </label>
+                        </div>
+                        <div className="bb-item-foot">
+                          <span className="bb-art-status">
+                            {art?.uploading ? "Uploading artwork…" : art?.uploadError ? `⚠ ${art.uploadError}` : art?.artworkFileUrl ? `✓ ${art.artworkFileName}` : "Optional now — finalize after checkout"}
+                          </span>
+                          <span className="bb-item-price"><b>{currency(unit)}/box</b></span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="bb-item-foot">
+                        <span className="bb-art-status">Blank — no print</span>
+                        <span className="bb-item-price"><b>{currency(unit)}/box</b></span>
+                      </div>
+                    )}
                   </div>
                 </li>
               );

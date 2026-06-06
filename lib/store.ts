@@ -183,8 +183,13 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
   // PR Box: this line's net = its gross minus its server-validated share of the
   // box discount. The discount is computed server-side in the checkout route
   // (re-validating the promo), never trusted from the client.
-  const bundleDiscountUsd = input.bundleId ? Math.max(0, Math.min(price.totalUsd, input.bundleDiscountUsd ?? 0)) : 0;
-  const netTotalUsd = round2(price.totalUsd - bundleDiscountUsd);
+  // Blank packaging: subtract the per-unit print upcharge (the line was priced
+  // branded by calculateOrderPrice, but the customer chose blank/no print).
+  const blankAdj = input.blankPackaging ? round2((product.printUpchargeUsd ?? 0) * price.quantity) : 0;
+  const bundleDiscountUsd = input.bundleId
+    ? Math.max(0, Math.min(round2(price.totalUsd - blankAdj), input.bundleDiscountUsd ?? 0))
+    : 0;
+  const netTotalUsd = round2(price.totalUsd - blankAdj - bundleDiscountUsd);
   const now = new Date().toISOString();
   const supabase = getSupabase();
   const { count } = await supabase.from("orders").select("*", { count: "exact", head: true });

@@ -117,6 +117,9 @@ export type CatalogProduct = {
   // Set on `category: "packaging"` products only.
   assetKind?: PackagingAssetKind;
   packagingRequired?: boolean; // auto-included + non-removable in the box (e.g. the box itself)
+  printUpchargeUsd?: number; // per-unit print fee: branded price − blank price (self-serve, auto)
+  designRequired?: boolean; // must be branded (a blank one is pointless — e.g. cards, stickers)
+  printable?: boolean; // false = can't be branded at all, always plain (e.g. crinkle void fill)
   // True on the single `category: "bundle"` PR Box product. Routing renders the
   // box builder for this product instead of the standard PdpConfigurator.
   isBundleBuilder?: boolean;
@@ -253,6 +256,7 @@ export type OrderInput = {
   perBoxQty?: number;
   promoId?: string;
   bundleDiscountUsd?: number; // server-validated share of the box discount for this line
+  blankPackaging?: boolean; // packaging line is blank (no print) — server subtracts the print upcharge
 };
 
 export type ProductUpdateInput = Partial<

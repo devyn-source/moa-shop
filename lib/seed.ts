@@ -637,6 +637,9 @@ function packagingAsset(opts: {
   required?: boolean;
   moq?: number;
   image?: string; // hero/thumb for the builder's packaging picker
+  printUpchargeUsd?: number; // per-unit print fee (branded − blank); 0/undefined = no upcharge
+  designRequired?: boolean; // must be branded (blank is pointless — cards, stickers)
+  printable?: boolean; // false = always plain (e.g. crinkle fill); default true
 }): CatalogProduct {
   return {
     id: `pkg-${opts.slug}`,
@@ -657,6 +660,9 @@ function packagingAsset(opts: {
     sizes: ["ONE"],
     assetKind: opts.assetKind,
     packagingRequired: opts.required ?? false,
+    printUpchargeUsd: opts.printUpchargeUsd ?? 0,
+    designRequired: opts.designRequired ?? false,
+    printable: opts.printable ?? true,
     greyFront: opts.image,
     variants: [
       {
@@ -688,6 +694,7 @@ export const packagingAssets: CatalogProduct[] = [
     vendorUnitCostUsd: 9.0,
     required: true,
     sortOrder: 900,
+    printUpchargeUsd: 3.0,
     image: "/products/pkg-rigid-box/base-front.png",
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 22.5 },
@@ -704,6 +711,7 @@ export const packagingAssets: CatalogProduct[] = [
     description: "Printed tissue paper lining the box and wrapping the contents.",
     vendorUnitCostUsd: 0.8,
     sortOrder: 901,
+    printUpchargeUsd: 0.8,
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 2.0 },
       { minQty: 250, maxQty: 499, perUnitUsd: 1.7 },
@@ -719,6 +727,8 @@ export const packagingAssets: CatalogProduct[] = [
     description: "A printed card — welcome note, story, or call-to-action — tucked into the box.",
     vendorUnitCostUsd: 1.2,
     sortOrder: 902,
+    printUpchargeUsd: 1.2,
+    designRequired: true,
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 3.0 },
       { minQty: 250, maxQty: 499, perUnitUsd: 2.5 },
@@ -734,6 +744,8 @@ export const packagingAssets: CatalogProduct[] = [
     description: "A sheet of die-cut branded stickers included as a box extra.",
     vendorUnitCostUsd: 1.5,
     sortOrder: 903,
+    printUpchargeUsd: 1.5,
+    designRequired: true,
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 3.75 },
       { minQty: 250, maxQty: 499, perUnitUsd: 3.13 },
@@ -749,6 +761,7 @@ export const packagingAssets: CatalogProduct[] = [
     description: "Crinkle-cut paper fill that cushions and presents the contents.",
     vendorUnitCostUsd: 1.0,
     sortOrder: 904,
+    printable: false,
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 2.5 },
       { minQty: 250, maxQty: 499, perUnitUsd: 2.13 },
@@ -764,6 +777,7 @@ export const packagingAssets: CatalogProduct[] = [
     description: "Custom-printed tape that seals the outer mailer.",
     vendorUnitCostUsd: 1.5,
     sortOrder: 905,
+    printUpchargeUsd: 0.8,
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 3.75 },
       { minQty: 250, maxQty: 499, perUnitUsd: 3.13 },
@@ -779,6 +793,7 @@ export const packagingAssets: CatalogProduct[] = [
     description: "A ribbon or printed belly band that finishes the unboxing.",
     vendorUnitCostUsd: 2.0,
     sortOrder: 906,
+    printUpchargeUsd: 1.2,
     tiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 5.0 },
       { minQty: 250, maxQty: 499, perUnitUsd: 4.13 },

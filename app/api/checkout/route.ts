@@ -27,6 +27,7 @@ type CartLine = {
   bundleLabel?: string;
   bundleRole?: "component" | "packaging";
   perBoxQty?: number;
+  printed?: boolean; // packaging: branded (printed) vs blank
 };
 
 type Body = {
@@ -121,10 +122,12 @@ export async function POST(request: Request) {
         });
         return { line, decorationIds, gross: priced.totalUsd };
       });
-      const packPriced = packResolved.map(({ line, product }) => ({
-        line,
-        gross: round2(getPriceTier(product, line.quantity).perUnitUsd * line.quantity)
-      }));
+      const packPriced = packResolved.map(({ line, product }) => {
+        const tier = getPriceTier(product, line.quantity).perUnitUsd;
+        const blank = line.printed === false && product.printable !== false;
+        const perUnit = blank ? Math.max(0, tier - (product.printUpchargeUsd ?? 0)) : tier;
+        return { line, blank, gross: round2(perUnit * line.quantity) };
+      });
 
       // Program size = one of each item per box.
       const boxQty = Math.max(1, packResolved[0]?.line.quantity ?? 0, ...compResolved.map((c) => c.line.quantity || 0));
@@ -193,6 +196,7 @@ export async function POST(request: Request) {
             bundleId,
             bundleLabel: src.bundleLabel || "PR Box",
             bundleRole: "packaging",
+            blankPackaging: x.blank,
             promoId,
             bundleDiscountUsd: shares[shareIdx++]
           },

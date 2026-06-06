@@ -107,7 +107,7 @@ export default function CheckoutPage() {
         artworkPlacement: item.artworkPlacement, artworkPlacements: item.artworkPlacements, wovenLabel: item.wovenLabel, sizeBreakdown: item.sizeQty,
         artworkNotes: sizeSummary ? `Sizes — ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes,
         // PR Box grouping — server re-prices + re-validates the discount from these.
-        bundleId: item.bundleId, bundleLabel: item.bundleLabel, bundleRole: item.bundleRole, perBoxQty: item.perBoxQty,
+        bundleId: item.bundleId, bundleLabel: item.bundleLabel, bundleRole: item.bundleRole, perBoxQty: item.perBoxQty, printed: item.printed,
       };
     });
 
