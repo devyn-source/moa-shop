@@ -7589,7 +7589,12 @@ body.is-scrolled .site-header {
 
 /* Hero — bigger, tighter, calmer (no chips) */
 .lp-h1 { font-size: clamp(2.6rem, 6.4vw, 4.4rem); line-height: 0.96; }
-.lp-hero-shot { position: relative; }
+/* Give the hero shot a real box so the recolor layers (height:100%) have height
+   to fill — the garment image is 4:5. */
+.lp-hero-shot { position: relative; width: 84%; aspect-ratio: 4 / 5; }
+.lp-hero-shot .recolor-shot, .lp-hero-shot .product-photo, .lp-hero-shot .product-visual {
+  width: 100%; height: 100%; object-fit: contain;
+}
 .lp-hero-artzone, .lp-proof-artzone {
   position: absolute;
   top: 30%; left: 50%; transform: translateX(-50%);
