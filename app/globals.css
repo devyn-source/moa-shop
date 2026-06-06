@@ -7753,3 +7753,53 @@ body.is-scrolled .site-header {
   .bb-card { grid-template-columns: 1fr; }
   .bb-stage-shot { aspect-ratio: 1; }
 }
+
+/* PR Box — promo surfaces (banner, cart upsell, PDP nudge) */
+.promo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--color-terracotta);
+  color: #fff;
+  padding: 8px 44px 8px 16px;
+  position: relative;
+  text-align: center;
+}
+.promo-banner-link { display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: center; color: #fff; text-decoration: none; }
+.promo-banner-head { font-family: var(--font-display); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; font-weight: 700; }
+.promo-banner-sub { font-size: 0.78rem; opacity: 0.92; }
+.promo-banner-cta { font-size: 0.74rem; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.promo-banner-x { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #fff; opacity: 0.8; cursor: pointer; font-size: 0.85rem; line-height: 1; }
+.promo-banner-x:hover { opacity: 1; }
+@media (max-width: 560px) { .promo-banner-sub { display: none; } }
+
+.cart-upsell {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: rgba(176,71,49,0.06);
+  border: 1px solid var(--color-terracotta);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  text-decoration: none;
+  color: var(--color-charcoal);
+}
+.cart-upsell:hover { background: rgba(176,71,49,0.1); }
+.cart-upsell-tag { display: block; font-family: var(--font-display); text-transform: uppercase; font-size: 0.62rem; letter-spacing: 0.08em; color: var(--color-terracotta); font-weight: 700; }
+.cart-upsell-text p { font-size: 0.88rem; margin-top: 2px; }
+.cart-upsell-cta { white-space: nowrap; font-weight: 700; color: var(--color-terracotta); }
+
+.pdp-prbox-nudge {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  margin-top: 22px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--color-terracotta);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--color-charcoal);
+}
+.pdp-prbox-nudge:hover { border-color: var(--color-terracotta); }
+.pdp-prbox-nudge-text { color: var(--color-neutral); font-size: 0.9rem; }
+.pdp-prbox-nudge b { color: var(--color-terracotta); white-space: nowrap; }

@@ -6,6 +6,7 @@ import { BoxBuilder } from "@/components/BoxBuilder";
 import { currency } from "@/lib/pricing";
 import { getProductBySlug, getProducts } from "@/lib/store";
 import { isBundleEligible } from "@/lib/seed";
+import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -118,6 +119,13 @@ export default async function ProductPage({
       </nav>
 
       <PdpConfigurator product={product} />
+
+      {isPromoWithinWindow(PR_BOX_PROMO) ? (
+        <Link href="/p/pr-box" className="pdp-prbox-nudge">
+          <span className="pdp-prbox-nudge-text">Seeding {product.displayName} to press or influencers?</span>
+          <b>Build it into a PR Box → save {Math.round(PR_BOX_PROMO.discount.value * 100)}%</b>
+        </Link>
+      ) : null}
     </main>
   );
 }

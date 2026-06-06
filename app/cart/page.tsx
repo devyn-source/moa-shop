@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useCart, type CartItem } from "@/components/CartProvider";
 import { groupCartItems } from "@/lib/bundle";
 import { currency } from "@/lib/pricing";
+import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 
 function SingleLine({ item, onRemove }: { item: CartItem; onRemove: (id: string) => void }) {
   const sizes = Object.entries(item.sizeQty);
@@ -90,6 +91,20 @@ export default function CartPage() {
           Your cart is empty. <Link href="/shop" className="link-button">Browse the catalog →</Link>
         </div>
       ) : (
+        <>
+        {isPromoWithinWindow(PR_BOX_PROMO) && singles.length > 0 ? (
+          <Link href="/p/pr-box" className="cart-upsell">
+            <div className="cart-upsell-text">
+              <span className="cart-upsell-tag">{PR_BOX_PROMO.label}</span>
+              <p>
+                {singles.length >= PR_BOX_PROMO.qualify.minComponents
+                  ? `You've got ${singles.length} items — bundle them with branded packaging into a PR Box and save ${Math.round(PR_BOX_PROMO.discount.value * 100)}%.`
+                  : `Seeding to press or influencers? Bundle ${PR_BOX_PROMO.qualify.minComponents}+ items with branded packaging into a PR Box and save ${Math.round(PR_BOX_PROMO.discount.value * 100)}%.`}
+              </p>
+            </div>
+            <span className="cart-upsell-cta">{PR_BOX_PROMO.banner.ctaText} →</span>
+          </Link>
+        ) : null}
         <div className="cart-layout">
           <div className="cart-lines">
             {bundles.map((bundle) => (
@@ -149,6 +164,7 @@ export default function CartPage() {
             </div>
           </aside>
         </div>
+        </>
       )}
     </main>
   );
