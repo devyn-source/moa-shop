@@ -11,6 +11,14 @@ import { PR_BOX_PROMO } from "@/lib/promo";
 import { getDefaultZones, type Zone } from "@/lib/zones";
 import type { ArtworkPlacement, CatalogProduct, CatalogVariant, DecorationMethod } from "@/lib/types";
 
+type Step = "color" | "placement" | "decoration" | "size";
+const STEPS: { key: Step; label: string }[] = [
+  { key: "color", label: "Color" },
+  { key: "placement", label: "Artwork placement" },
+  { key: "decoration", label: "Decoration" },
+  { key: "size", label: "Size & quantity" }
+];
+
 type ComponentDraft = {
   key: string;
   productId: string;
@@ -19,6 +27,7 @@ type ComponentDraft = {
   perBoxQty: number;
   size: string;
   view: "front" | "back";
+  openStep: Step; // which rail step is expanded (PDP accordion)
   placementId: string | null; // chosen zone on the current view
   art: ArtTransform; // position/scale of the art within the zone box
   artworkFileName?: string;
@@ -73,7 +82,7 @@ export function BoxBuilder({
       const midSize = p.sizes[Math.floor(p.sizes.length / 2)] ?? p.sizes[0] ?? "ONE";
       setComponents((prev) => [
         ...prev,
-        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize, view: "front", placementId: null, art: FILL_ART }
+        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize, view: "front", openStep: "color", placementId: null, art: FILL_ART }
       ]);
     },
     [eligibleById]
@@ -253,172 +262,197 @@ export function BoxBuilder({
                 const viewZones: Zone[] = view === "back" ? zones.back : zones.front;
                 const placement = viewZones.find((z) => z.id === d.placementId) ?? viewZones[0] ?? null;
                 return (
-                  <li className="bb-card" key={d.key}>
-                    {/* visual stage — live garment recolor + drag-place artwork */}
-                    <div className="bb-stage">
-                      <div className="bb-stage-shot">
-                        <ProductShot product={p} variant={variant} view={view} />
-                        {d.artworkFileUrl && placement ? (
-                          <span
-                            className="pdpx-place-box"
-                            style={{
-                              left: `${placement.box.x * 100}%`,
-                              top: `${placement.box.y * 100}%`,
-                              width: `${placement.box.w * 100}%`,
-                              height: `${placement.box.h * 100}%`,
-                              transform: `rotate(${placement.box.r ?? 0}deg)`,
-                              transformOrigin: "center center"
-                            }}
-                          >
-                            <DraggableArt url={d.artworkFileUrl} transform={d.art} onChange={(t) => updateComponent(d.key, { art: t })} />
-                          </span>
-                        ) : null}
+                  <li className="pdpx bb-pdp-item" key={d.key}>
+                    {/* ---- stage (same as PDP) ---- */}
+                    <div className="pdpx-stage bb-pdp-stage">
+                      <div className="pdpx-stage-toolbar">
+                        <span className="pdpx-eyebrow">{p.category}</span>
+                        {hasBack ? (
+                          <div className="pdpx-view-pills" role="tablist" aria-label="Garment view">
+                            <button type="button" className={`pdpx-pill${view === "front" ? " is-on" : ""}`} onClick={() => updateComponent(d.key, { view: "front" })}>Front</button>
+                            <button type="button" className={`pdpx-pill${view === "back" ? " is-on" : ""}`} onClick={() => updateComponent(d.key, { view: "back" })}>Back</button>
+                          </div>
+                        ) : (
+                          <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
+                        )}
+                        <button type="button" className="pdpx-download" onClick={() => removeComponent(d.key)} aria-label="Remove item">Remove ✕</button>
                       </div>
-                      {hasBack ? (
-                        <div className="bb-stage-views">
-                          {(["front", "back"] as const).map((vw) => (
-                            <button
-                              key={vw}
-                              type="button"
-                              className={`bb-view${view === vw ? " bb-view--on" : ""}`}
-                              onClick={() => updateComponent(d.key, { view: vw })}
+                      <div className="pdpx-canvas">
+                        <div className="pdpx-canvas-breathe">
+                          <span className="pdpx-ground-shadow" aria-hidden />
+                          <span className="pdpx-view-layer is-on">
+                            <ProductShot product={p} variant={variant} view={view} />
+                          </span>
+                          {d.artworkFileUrl && placement ? (
+                            <span
+                              className="pdpx-place-box"
+                              style={{
+                                left: `${placement.box.x * 100}%`,
+                                top: `${placement.box.y * 100}%`,
+                                width: `${placement.box.w * 100}%`,
+                                height: `${placement.box.h * 100}%`,
+                                transform: `rotate(${placement.box.r ?? 0}deg)`,
+                                transformOrigin: "center center"
+                              }}
                             >
-                              {vw}
-                            </button>
-                          ))}
+                              <DraggableArt url={d.artworkFileUrl} transform={d.art} onChange={(t) => updateComponent(d.key, { art: t })} />
+                            </span>
+                          ) : null}
                         </div>
-                      ) : null}
+                      </div>
+                      <p className="pdpx-shotnote">
+                        Live preview · {variant?.colorLabel}
+                        {d.artworkFileUrl && placement ? ` · ${placement.label}` : ""}
+                      </p>
                     </div>
 
-                    {/* config — stepped, PDP-style */}
-                    <div className="bb-config">
-                      <div className="bb-item-top">
-                        <div>
-                          <h3>{p.displayName}</h3>
-                          {p.fitNotes ? <p className="bb-card-fit">{p.fitNotes}</p> : null}
-                        </div>
-                        <button type="button" className="cart-remove" aria-label="Remove item" onClick={() => removeComponent(d.key)}>✕</button>
+                    {/* ---- rail (same numbered-step accordion as PDP) ---- */}
+                    <aside className="pdpx-rail bb-pdp-rail">
+                      <div className="pdpx-rail-head">
+                        <p className="pdpx-style">Style {p.skuCode}</p>
+                        <h1 className="pdpx-title">{p.displayName}</h1>
+                        <p className="pdpx-lede">{p.headline}</p>
                       </div>
 
-                      {/* color */}
-                      <div className="bb-step">
-                        <span className="bb-step-label">Color · <b>{variant?.colorLabel}</b></span>
-                        <div className="bb-swatches">
-                          {p.variants.map((v) => (
-                            <button
-                              key={v.id}
-                              type="button"
-                              className={`bb-swatch${v.id === d.variantId ? " bb-swatch--on" : ""}`}
-                              style={{ background: v.colorHex }}
-                              title={v.colorLabel}
-                              aria-label={v.colorLabel}
-                              aria-pressed={v.id === d.variantId}
-                              onClick={() => updateComponent(d.key, { variantId: v.id })}
-                            />
-                          ))}
-                        </div>
-                      </div>
+                      <div className="pdpx-steps">
+                        {STEPS.map((s, i) => {
+                          if (s.key === "decoration" && p.decorations.length === 0) return null;
+                          const open = d.openStep === s.key;
+                          const value =
+                            s.key === "color"
+                              ? variant?.colorLabel
+                              : s.key === "placement"
+                                ? d.artworkFileUrl
+                                  ? placement?.label ?? "Uploaded"
+                                  : "Optional"
+                                : s.key === "decoration"
+                                  ? p.decorations.filter((x) => d.decorationIds.includes(x.id)).map((x) => x.label).join(" + ") || "Undecorated"
+                                  : `${p.sizes.length > 1 ? d.size + " · " : ""}${d.perBoxQty}/box`;
+                          return (
+                            <div key={s.key} className={`pdpx-step${open ? " is-open" : ""}`}>
+                              <button type="button" className="pdpx-step-head" aria-expanded={open} onClick={() => updateComponent(d.key, { openStep: s.key })}>
+                                <span className="pdpx-step-num">{String(i + 1).padStart(2, "0")}</span>
+                                <span className="pdpx-step-label">{s.label}</span>
+                                <span className="pdpx-step-value">{value}</span>
+                              </button>
+                              {open ? (
+                                <div className="pdpx-step-body">
+                                  {s.key === "color" ? (
+                                    <div className="pdpx-colors">
+                                      {p.variants.map((v) => (
+                                        <button
+                                          key={v.id}
+                                          type="button"
+                                          className={`pdpx-swatch${v.id === d.variantId ? " is-on" : ""}`}
+                                          style={{ background: v.colorHex }}
+                                          title={v.colorLabel}
+                                          aria-label={v.colorLabel}
+                                          aria-pressed={v.id === d.variantId}
+                                          onClick={() => updateComponent(d.key, { variantId: v.id })}
+                                        />
+                                      ))}
+                                    </div>
+                                  ) : null}
 
-                      {/* decoration */}
-                      {p.decorations.length > 0 ? (
-                        <div className="bb-step">
-                          <span className="bb-step-label">Decoration</span>
-                          <div className="bb-chips">
-                            {p.decorations.map((deco) => {
-                              const on = d.decorationIds.includes(deco.id);
-                              return (
-                                <button
-                                  key={deco.id}
-                                  type="button"
-                                  className={`bb-chip${on ? " bb-chip--on" : ""}`}
-                                  aria-pressed={on}
-                                  onClick={() =>
-                                    updateComponent(d.key, {
-                                      decorationIds: on
-                                        ? d.decorationIds.filter((x) => x !== deco.id)
-                                        : [...d.decorationIds, deco.id]
-                                    })
-                                  }
-                                >
-                                  {deco.label}
-                                  <b>+{currency(deco.perUnitAdderUsd)}</b>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : null}
+                                  {s.key === "placement" ? (
+                                    <div className="pdpx-place">
+                                      <label className="pdpx-drop">
+                                        <input
+                                          type="file"
+                                          accept="image/png,image/jpeg,image/svg+xml,application/pdf,.ai,.eps"
+                                          className="pdpx-file"
+                                          onChange={(e) => uploadArtwork(d.key, e.target.files?.[0])}
+                                        />
+                                        <span className="pdpx-drop-eyebrow">Your artwork</span>
+                                        <span className="pdpx-drop-cta">{d.uploading ? "Uploading…" : d.artworkFileName ? d.artworkFileName : "Upload artwork"}</span>
+                                        <span className={`pdpx-drop-hint${d.uploadError ? " is-error" : d.artworkFileUrl && !d.uploading ? " is-ok" : ""}`}>
+                                          {d.uploadError ? `⚠ ${d.uploadError}` : d.artworkFileUrl && !d.uploading ? "Uploaded · print-ready ✓" : "PNG, JPG, SVG, PDF — vector preferred"}
+                                        </span>
+                                      </label>
+                                      <p className="pdpx-place-label">Location</p>
+                                      <div className="pdpx-locs">
+                                        {viewZones.map((z) => (
+                                          <button
+                                            key={z.id}
+                                            type="button"
+                                            className={`pdpx-loc${placement?.id === z.id ? " is-on" : ""}`}
+                                            onClick={() => updateComponent(d.key, { placementId: z.id, art: FILL_ART })}
+                                          >
+                                            {z.label}
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <p className="pdpx-place-hint">
+                                        {d.artworkFileUrl
+                                          ? "Drag to reposition, corners to resize, the top circle to rotate. The dashed outline is the max print area — MOA finalises the spec during artwork QA."
+                                          : "Upload your logo, then drag it onto the garment and pick a location. Optional now — finalize after checkout."}
+                                      </p>
+                                    </div>
+                                  ) : null}
 
-                      {/* artwork — upload, then drag-place on the garment */}
-                      <div className="bb-step">
-                        <span className="bb-step-label">Artwork placement</span>
-                        <div className="bb-artwork-row">
-                          <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadArtwork(d.key, e.target.files?.[0])} />
-                          <span className="bb-art-status">
-                            {d.uploading
-                              ? "Uploading…"
-                              : d.uploadError
-                                ? `⚠ ${d.uploadError}`
-                                : d.artworkFileUrl
-                                  ? `✓ ${d.artworkFileName}`
-                                  : "Optional now — finalize after checkout"}
-                          </span>
-                        </div>
-                        {d.artworkFileUrl ? (
-                          <>
-                            <p className="bb-place-hint">Drag the artwork on the garment to position it, then pick a zone:</p>
-                            <div className="bb-chips">
-                              {viewZones.map((z) => (
-                                <button
-                                  key={z.id}
-                                  type="button"
-                                  className={`bb-chip${placement?.id === z.id ? " bb-chip--on" : ""}`}
-                                  aria-pressed={placement?.id === z.id}
-                                  onClick={() => updateComponent(d.key, { placementId: z.id, art: FILL_ART })}
-                                >
-                                  {z.label}
-                                </button>
-                              ))}
+                                  {s.key === "decoration" ? (
+                                    <div className="pdpx-decos">
+                                      {p.decorations.map((deco) => {
+                                        const on = d.decorationIds.includes(deco.id);
+                                        return (
+                                          <button
+                                            key={deco.id}
+                                            type="button"
+                                            className={`pdpx-deco${on ? " is-on" : ""}`}
+                                            onClick={() =>
+                                              updateComponent(d.key, {
+                                                decorationIds: on ? d.decorationIds.filter((x) => x !== deco.id) : [...d.decorationIds, deco.id]
+                                              })
+                                            }
+                                          >
+                                            <span>
+                                              <strong>{deco.label}</strong>
+                                              <em>{deco.description}</em>
+                                            </span>
+                                            <span className="pdpx-deco-adder">+{currency(deco.perUnitAdderUsd)}/unit</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : null}
+
+                                  {s.key === "size" ? (
+                                    <div className="bb-pdp-size">
+                                      {p.sizes.length > 1 ? (
+                                        <label className="bb-mini">
+                                          <span className="bb-field-label">Size</span>
+                                          <select value={d.size} onChange={(e) => updateComponent(d.key, { size: e.target.value })}>
+                                            {p.sizes.map((sz) => (
+                                              <option key={sz} value={sz}>{sz}</option>
+                                            ))}
+                                          </select>
+                                        </label>
+                                      ) : null}
+                                      <label className="bb-mini">
+                                        <span className="bb-field-label">Per box</span>
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          value={d.perBoxQty}
+                                          onChange={(e) => updateComponent(d.key, { perBoxQty: Math.max(1, Number(e.target.value) || 1) })}
+                                        />
+                                      </label>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : null}
                             </div>
-                          </>
-                        ) : null}
-                      </div>
-
-                      {/* size & quantity */}
-                      <div className="bb-step">
-                        <span className="bb-step-label">Size &amp; quantity</span>
-                        <div className="bb-field--row">
-                          {p.sizes.length > 1 ? (
-                            <label className="bb-mini">
-                              <span className="bb-field-label">Size</span>
-                              <select value={d.size} onChange={(e) => updateComponent(d.key, { size: e.target.value })}>
-                                {p.sizes.map((s) => (
-                                  <option key={s} value={s}>{s}</option>
-                                ))}
-                              </select>
-                            </label>
-                          ) : null}
-                          <label className="bb-mini">
-                            <span className="bb-field-label">Per box</span>
-                            <input
-                              type="number"
-                              min={1}
-                              value={d.perBoxQty}
-                              onChange={(e) => updateComponent(d.key, { perBoxQty: Math.max(1, Number(e.target.value) || 1) })}
-                            />
-                          </label>
-                        </div>
+                          );
+                        })}
                       </div>
 
                       {line ? (
-                        <div className="bb-item-foot">
-                          <span />
-                          <span className="bb-item-price">
-                            {currency(line.lineUnitUsd)}/unit · <b>{currency(line.perBoxUsd)}/box</b>
-                          </span>
+                        <div className="bb-pdp-foot">
+                          <span className="bb-field-label">This item</span>
+                          <strong>{currency(line.lineUnitUsd)}/unit · {currency(line.perBoxUsd)}/box</strong>
                         </div>
                       ) : null}
-                    </div>
+                    </aside>
                   </li>
                 );
               })}

@@ -55,7 +55,7 @@ ${productLines || "(Catalog loading.)"}
 
 ## Important pages
 - Catalog home: ${SITE}
-- Full catalog (PDF): ${SITE}/catalog-pdf
+- Shop the catalog: ${SITE}/shop
 - FAQ: ${SITE}/faq
 - Terms of Service: ${SITE}/terms
 - Refund Policy: ${SITE}/refund-policy

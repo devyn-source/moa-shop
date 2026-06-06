@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { HomeCatalog } from "@/components/HomeCatalog";
 import { getProducts } from "@/lib/store";
 import { isBundleEligible } from "@/lib/seed";
@@ -51,16 +50,6 @@ export default async function HomePage() {
           <h3>Tracked to your door</h3>
           <p>Live status from approval through production to delivery, with carrier tracking emailed the moment it ships.</p>
         </div>
-      </section>
-
-      <section className="cta-strip">
-        <div>
-          <p className="eyebrow">The full range</p>
-          <h2>Browse the complete catalog as a PDF</h2>
-        </div>
-        <Link className="button button--lg" href="/catalog-pdf">
-          View PDF →
-        </Link>
       </section>
     </main>
   );

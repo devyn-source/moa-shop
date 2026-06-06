@@ -7838,3 +7838,30 @@ body.is-scrolled .site-header {
 
 /* PR Box — artwork placement hint in the box card */
 .bb-place-hint { font-size: 0.74rem; color: var(--color-neutral); margin: 10px 0 6px; }
+
+/* PR Box — box-content item rendered with the PDP's own stage + rail */
+.bb-pdp-item {
+  margin-top: 0;
+  gap: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.bb-items { gap: 18px; }
+/* per-item stages must not stick (the page-level PDP one does) */
+.bb-pdp-stage { position: static; top: auto; }
+.bb-pdp-rail { padding: 4px 2px; }
+.bb-pdp-size { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.bb-pdp-size .bb-mini select, .bb-pdp-size .bb-mini input {
+  border: 1px solid var(--input); border-radius: 8px; padding: 8px 10px; background: var(--card); font: inherit; min-width: 72px;
+}
+.bb-pdp-foot {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.bb-pdp-foot strong { font-size: 0.95rem; }
+@media (max-width: 880px) {
+  .bb-pdp-item { grid-template-columns: 1fr; }
+  .bb-pdp-stage { position: static; }
+}
