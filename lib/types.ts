@@ -138,6 +138,11 @@ export type ArtworkPlacement = {
   maxColors?: number; // the chosen decoration's max allowed colors (the cap)
   widthIn?: number; // placed art size in inches (when the zone has inch dims)
   heightIn?: number;
+  // Per-placement artwork. On a multi-placement order each location carries its
+  // own art (e.g. chest logo + back graphic). Absent on the primary placement,
+  // which inherits the order-level artworkFileUrl/Name.
+  artworkFileUrl?: string;
+  artworkFileName?: string;
 };
 
 export type ShopOrder = {
@@ -168,7 +173,9 @@ export type ShopOrder = {
   artworkFileName: string;
   artworkFileUrl?: string;
   artworkNotes: string;
-  artworkPlacement?: ArtworkPlacement;
+  artworkPlacement?: ArtworkPlacement; // the primary placement (back-compat)
+  artworkPlacements?: ArtworkPlacement[]; // full set for multi-placement orders (incl. the primary)
+  wovenLabel?: boolean; // woven-label upsell chosen (priced server-side); spec is in artworkNotes
   sizeBreakdown?: Record<string, number>; // size run (e.g. { S: 10, M: 20 })
   proofUrl?: string; // auto-generated proof image (garment + placed art)
   proofApprovedAt?: string; // customer sign-off — the QA. Gates the vendor send.
@@ -233,7 +240,9 @@ export type OrderInput = {
   artworkFileName: string;
   artworkFileUrl?: string;
   artworkNotes: string;
-  artworkPlacement?: ArtworkPlacement;
+  artworkPlacement?: ArtworkPlacement; // the primary placement (back-compat)
+  artworkPlacements?: ArtworkPlacement[]; // full set for multi-placement orders (incl. the primary)
+  wovenLabel?: boolean; // woven-label upsell chosen (priced server-side)
   sizeBreakdown?: Record<string, number>;
   shipToName: string;
   shipToAddress: ShopOrder["shipToAddress"];

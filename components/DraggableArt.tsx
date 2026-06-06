@@ -61,11 +61,22 @@ function applyDrag(state: DragState, x: number, y: number): ArtTransform {
 export function DraggableArt({
   url,
   transform,
-  onChange
+  onChange,
+  maskColor,
+  alwaysShowHandles,
+  snapCenter
 }: {
   url: string;
   transform: ArtTransform;
   onChange: (t: ArtTransform) => void;
+  // When set, the art renders as a solid-color mask of `url` (single-color woven
+  // thread look) instead of a full-color image. Used by the woven-label modal.
+  maskColor?: string;
+  // Keep the resize/rotate handles visible at rest (not only on hover) — used in
+  // the small woven-label preview where the affordance isn't otherwise obvious.
+  alwaysShowHandles?: boolean;
+  // Magnetically snap to the box's horizontal/vertical center while moving.
+  snapCenter?: boolean;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -77,7 +88,14 @@ export function DraggableArt({
       // Parent of wrap is the bounding box; use its rect for percent math.
       const box = wrapRef.current?.parentElement?.getBoundingClientRect();
       if (!box) return;
-      onChange(applyDrag(drag, e.clientX - box.left, e.clientY - box.top));
+      let next = applyDrag(drag, e.clientX - box.left, e.clientY - box.top);
+      // Magnetic center snap (move only): pull to dead-center when close.
+      if (snapCenter && drag.mode === "move") {
+        const SNAP = 0.035;
+        if (Math.abs(next.ox + next.sx / 2 - 0.5) < SNAP) next = { ...next, ox: 0.5 - next.sx / 2 };
+        if (Math.abs(next.oy + next.sy / 2 - 0.5) < SNAP) next = { ...next, oy: 0.5 - next.sy / 2 };
+      }
+      onChange(next);
     };
     const onUp = () => setDrag(null);
     window.addEventListener("pointermove", onMove);
@@ -86,7 +104,7 @@ export function DraggableArt({
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [drag, onChange]);
+  }, [drag, onChange, snapCenter]);
 
   const start = useCallback(
     (mode: DragMode) => (e: React.PointerEvent) => {
@@ -112,7 +130,7 @@ export function DraggableArt({
   );
 
   const dragging = Boolean(drag);
-  const showHandles = hover || dragging;
+  const showHandles = hover || dragging || Boolean(alwaysShowHandles);
 
   // Arrow keys nudge the artwork while the handle is hovered/focused —
   // 1% per tap, 5% with Shift, clamped inside the box.
@@ -147,13 +165,31 @@ export function DraggableArt({
         height: `${transform.sy * 100}%`,
         transform: `rotate(${transform.r ?? 0}deg)`,
         transformOrigin: "center center",
-        backgroundImage: `url("${url}")`
+        // Non-mask: paint the art as the handle background. Mask mode renders the
+        // art in an inner fill span instead, so the mask doesn't clip the handles.
+        ...(maskColor ? {} : { backgroundImage: `url("${url}")` })
       }}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}
       onPointerDown={start("move")}
       onKeyDown={onKeyDown}
     >
+      {maskColor ? (
+        <span
+          className="pdpx-art-fill"
+          style={{
+            backgroundColor: maskColor,
+            WebkitMaskImage: `url("${url}")`,
+            maskImage: `url("${url}")`,
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center",
+            maskPosition: "center"
+          }}
+        />
+      ) : null}
       <span className="pdpx-art-handle__edge" />
       <span className="pdpx-art-resize pdpx-art-resize--nw" onPointerDown={start("nw")} />
       <span className="pdpx-art-resize pdpx-art-resize--ne" onPointerDown={start("ne")} />

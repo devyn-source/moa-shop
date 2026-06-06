@@ -20,6 +20,8 @@ type CartLine = {
   artworkFileUrl?: string;
   artworkNotes?: string;
   artworkPlacement?: OrderInput["artworkPlacement"];
+  artworkPlacements?: OrderInput["artworkPlacements"];
+  wovenLabel?: boolean;
   sizeBreakdown?: Record<string, number>;
   // PR Box (bundle) — present on lines that belong to a box
   bundleId?: string;
@@ -83,6 +85,8 @@ export async function POST(request: Request) {
           artworkFileUrl: item.artworkFileUrl,
           artworkNotes: item.artworkNotes || "",
           artworkPlacement: item.artworkPlacement,
+          artworkPlacements: item.artworkPlacements,
+          wovenLabel: item.wovenLabel,
           sizeBreakdown: item.sizeBreakdown
         },
         { paid: false }

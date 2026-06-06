@@ -2,29 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 import { currency } from "@/lib/pricing";
+import { DraggableArt, type ArtTransform } from "./DraggableArt";
 
-// Woven-label upsell. A "design your label" modal — logo upload, text, fold,
-// placement, thread color — with a live mockup, added as a flat per-unit add-on.
+// Woven-label "design your label" modal — logo upload, text, label (fabric)
+// color + thread color, live mockup. Single fold (straight sewn); placement is
+// always inside neck.
 export type WovenLabel = {
   text: string;
-  fold: "loop" | "flat" | "end";
-  placement: "neck" | "side-seam" | "hem";
-  thread: string; // hex
+  fold: "flat"; // single construction type (straight / sewn)
+  placement: "neck"; // always inside neck
+  labelColor: string; // fabric base color (hex)
+  thread: string; // woven thread color (hex)
   logoUrl?: string;
   logoName?: string;
+  logoTransform?: ArtTransform; // logo position + size within the label box
 };
 
-const FOLDS: { id: WovenLabel["fold"]; label: string }[] = [
-  { id: "loop", label: "Loop fold" },
-  { id: "flat", label: "Flat / sewn" },
-  { id: "end", label: "End fold" },
-];
-const PLACEMENTS: { id: WovenLabel["placement"]; label: string }[] = [
-  { id: "neck", label: "Inside neck" },
-  { id: "side-seam", label: "Side seam" },
-  { id: "hem", label: "Bottom hem" },
-];
-const THREADS = ["#FFFFFF", "#1E1E1E", "#B04731", "#2B2E43", "#776A5F", "#C5C6C7"];
+// Logo's default position/size within the label's printable box (fractions 0..1).
+const DEFAULT_LOGO_TF: ArtTransform = { ox: 0.12, oy: 0.18, sx: 0.76, sy: 0.64 };
+
+// Fabric colors for the label base.
+const LABEL_COLORS = ["#FFFFFF", "#EFE9DD", "#1E1E1E", "#2B2E43", "#8A6A4F", "#C5C6C7"];
+// Woven thread colors for the text/logo.
+const THREADS = ["#1E1E1E", "#FFFFFF", "#B04731", "#2B2E43", "#8A6A4F", "#C5C6C7"];
 
 export function WovenLabelModal({
   open,
@@ -42,11 +42,11 @@ export function WovenLabelModal({
   onRemove: () => void;
 }) {
   const [text, setText] = useState(initial?.text ?? "");
-  const [fold, setFold] = useState<WovenLabel["fold"]>(initial?.fold ?? "loop");
-  const [placement, setPlacement] = useState<WovenLabel["placement"]>(initial?.placement ?? "neck");
-  const [thread, setThread] = useState(initial?.thread ?? "#FFFFFF");
+  const [labelColor, setLabelColor] = useState(initial?.labelColor ?? "#FFFFFF");
+  const [thread, setThread] = useState(initial?.thread ?? "#1E1E1E");
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl);
   const [logoName, setLogoName] = useState(initial?.logoName);
+  const [logoTransform, setLogoTransform] = useState<ArtTransform>(initial?.logoTransform ?? DEFAULT_LOGO_TF);
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -70,6 +70,7 @@ export function WovenLabelModal({
       if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
       setLogoUrl(data.url);
       setLogoName(file.name);
+      setLogoTransform(DEFAULT_LOGO_TF);
       setUploadMsg(data.warning ?? "Uploaded ✓");
     } catch (e) {
       setUploadMsg(e instanceof Error ? e.message : "Upload failed");
@@ -79,29 +80,43 @@ export function WovenLabelModal({
   };
 
   if (!open) return null;
-  const lightThread = thread.toUpperCase() === "#FFFFFF" || thread === "#C5C6C7";
 
   return (
     <div className="wl-overlay" onClick={onClose}>
       <div className="wl-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Design woven label">
         <div className="wl-head">
           <div>
-            <p className="wl-eyebrow">Upsell · Woven label</p>
+            <p className="wl-eyebrow">Woven label</p>
             <h2 className="wl-title">Design your label</h2>
           </div>
           <button type="button" className="wl-x" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        {/* live mockup */}
-        <div className="wl-preview" aria-hidden>
-          <span className={`wl-tag wl-tag--${fold}`} style={{ background: thread, color: lightThread ? "#1E1E1E" : "#FFFFFF" }}>
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="wl-tag-logo" src={logoUrl} alt="" style={{ filter: lightThread ? "none" : "invert(1) brightness(2)" }} />
-            ) : (
-              text || "YOUR BRAND"
-            )}
+        {/* live mockup — fixed-size fabric label tinted to the chosen fabric
+            color (texture/stitching preserved); thread tints the woven text/logo
+            (single-color thread). The logo is draggable + resizable within the
+            label's printable box. */}
+        <div className="wl-preview">
+          <span className="wl-stage">
+            {/* masked fabric label (the visual) */}
+            <span className="wl-tag" style={{ backgroundColor: labelColor }} />
+            {/* logo + drag/resize handles — a sibling overlay so the mask on the
+                fabric never clips the handles */}
+            <span
+              className={`wl-tag-artbox${
+                logoUrl && Math.abs(logoTransform.ox + logoTransform.sx / 2 - 0.5) < 0.012 ? " v-center" : ""
+              }${logoUrl && Math.abs(logoTransform.oy + logoTransform.sy / 2 - 0.5) < 0.012 ? " h-center" : ""}`}
+            >
+              {logoUrl ? (
+                <DraggableArt url={logoUrl} transform={logoTransform} onChange={setLogoTransform} maskColor={thread} snapCenter />
+              ) : (
+                <span className="wl-tag-text" style={{ color: thread }}>
+                  {text || "YOUR BRAND"}
+                </span>
+              )}
+            </span>
           </span>
+          {logoUrl ? <span className="wl-dim">Drag a corner to resize · drag the logo to move</span> : null}
         </div>
 
         {/* logo upload */}
@@ -123,19 +138,10 @@ export function WovenLabelModal({
         </label>
 
         <div className="wl-field">
-          <span className="wl-label">Fold</span>
-          <div className="wl-pills">
-            {FOLDS.map((f) => (
-              <button key={f.id} type="button" className={`wl-pill${fold === f.id ? " is-on" : ""}`} onClick={() => setFold(f.id)}>{f.label}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="wl-field">
-          <span className="wl-label">Placement</span>
-          <div className="wl-pills">
-            {PLACEMENTS.map((p) => (
-              <button key={p.id} type="button" className={`wl-pill${placement === p.id ? " is-on" : ""}`} onClick={() => setPlacement(p.id)}>{p.label}</button>
+          <span className="wl-label">Label color</span>
+          <div className="wl-threads">
+            {LABEL_COLORS.map((c) => (
+              <button key={c} type="button" className={`wl-thread${labelColor === c ? " is-on" : ""}`} style={{ background: c }} onClick={() => setLabelColor(c)} aria-label={c} />
             ))}
           </div>
         </div>
@@ -157,7 +163,7 @@ export function WovenLabelModal({
               type="button"
               className="wl-add"
               disabled={!text.trim() && !logoUrl}
-              onClick={() => onSave({ text: text.trim(), fold, placement, thread, logoUrl, logoName })}
+              onClick={() => onSave({ text: text.trim(), fold: "flat", placement: "neck", labelColor, thread, logoUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
             >
               {initial ? "Update label" : "Add to order →"}
             </button>

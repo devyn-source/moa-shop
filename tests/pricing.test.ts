@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { currency, formatLeadTime, getPriceTier, calculateOrderPrice } from "@/lib/pricing";
+import {
+  currency,
+  formatLeadTime,
+  getPriceTier,
+  calculateOrderPrice,
+  WOVEN_LABEL_ADDER_USD,
+  EXTRA_PLACEMENT_ADDER_USD,
+} from "@/lib/pricing";
 import type { CatalogProduct } from "@/lib/types";
 
 // Minimal product fixture — pricing only reads priceTiers / decorations / moq.
@@ -60,5 +67,34 @@ describe("calculateOrderPrice", () => {
     const r = calculateOrderPrice(product, 250, []);
     expect(r.decorationAdderUsd).toBe(0);
     expect(r.totalUsd).toBe(250 * 84);
+  });
+});
+
+describe("calculateOrderPrice — upsells (server-side)", () => {
+  it("includes the first placement free, charges each extra", () => {
+    // 1 placement → no extra fee
+    expect(calculateOrderPrice(product, 100, [], { placementCount: 1 }).extraPlacementAdderUsd).toBe(0);
+    // 3 placements → 2 extra × 2.50
+    const r = calculateOrderPrice(product, 100, [], { placementCount: 3 });
+    expect(r.extraPlacementAdderUsd).toBe(2 * EXTRA_PLACEMENT_ADDER_USD);
+    expect(r.totalUsd).toBe(100 * (89 + 2 * EXTRA_PLACEMENT_ADDER_USD));
+  });
+  it("treats 0 or undefined placement count as no extra fee", () => {
+    expect(calculateOrderPrice(product, 100, [], { placementCount: 0 }).extraPlacementAdderUsd).toBe(0);
+    expect(calculateOrderPrice(product, 100, []).extraPlacementAdderUsd).toBe(0);
+  });
+  it("charges the woven-label adder when chosen", () => {
+    const r = calculateOrderPrice(product, 100, [], { wovenLabel: true });
+    expect(r.wovenAdderUsd).toBe(WOVEN_LABEL_ADDER_USD);
+    expect(r.totalUsd).toBe(100 * (89 + WOVEN_LABEL_ADDER_USD));
+  });
+  it("stacks decoration + extra placements + woven into the charged total", () => {
+    const r = calculateOrderPrice(product, 100, ["screen_print"] as never, {
+      placementCount: 2,
+      wovenLabel: true,
+    });
+    // base 89 + screenprint 5 + 1 extra placement 2.50 + woven 2 = 98.50/unit
+    expect(r.decorationAdderUsd).toBe(5 + EXTRA_PLACEMENT_ADDER_USD + WOVEN_LABEL_ADDER_USD);
+    expect(r.totalUsd).toBe(100 * (89 + 5 + EXTRA_PLACEMENT_ADDER_USD + WOVEN_LABEL_ADDER_USD));
   });
 });

@@ -173,7 +173,13 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     throw new Error("No valid decoration method selected");
   }
 
-  const price = calculateOrderPrice(product, input.quantity, decorationIds);
+  // Server-side pricing of upsells: placement count comes from the structured
+  // placement set (trustworthy); woven from the chosen flag. The client never
+  // dictates the total — pricing.ts does.
+  const price = calculateOrderPrice(product, input.quantity, decorationIds, {
+    placementCount: input.artworkPlacements?.length,
+    wovenLabel: input.wovenLabel,
+  });
   // PR Box: this line's net = its gross minus its server-validated share of the
   // box discount. The discount is computed server-side in the checkout route
   // (re-validating the promo), never trusted from the client.
@@ -214,6 +220,8 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     artworkFileUrl: input.artworkFileUrl,
     artworkNotes: input.artworkNotes,
     artworkPlacement: input.artworkPlacement,
+    artworkPlacements: input.artworkPlacements,
+    wovenLabel: input.wovenLabel,
     sizeBreakdown: input.sizeBreakdown,
     paymentStatus: paid ? "paid" : "unpaid",
     status: paid ? "artwork_qa" : "awaiting_payment",

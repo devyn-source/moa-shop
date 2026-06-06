@@ -28,16 +28,33 @@ export function getPriceTier(product: CatalogProduct, quantity: number): PriceTi
   return tier ?? product.priceTiers[0];
 }
 
+// Flat per-unit upsell rates (cost + margin). The SERVER is the source of truth
+// for what these add-ons cost — the client sends WHAT was chosen (woven: yes,
+// N placements), pricing.ts decides the price. The configurator imports these so
+// its live display and the charged total never drift.
+export const WOVEN_LABEL_ADDER_USD = 2;
+export const EXTRA_PLACEMENT_ADDER_USD = 2.5;
+
 export function calculateOrderPrice(
   product: CatalogProduct,
   quantity: number,
-  decorationIds: DecorationMethod[]
+  decorationIds: DecorationMethod[],
+  opts: { placementCount?: number; wovenLabel?: boolean } = {}
 ) {
   const normalizedQty = Number.isFinite(quantity) ? Math.max(quantity, product.moq) : product.moq;
   const tier = getPriceTier(product, normalizedQty);
   const decorations = product.decorations.filter((item) => decorationIds.includes(item.id));
   const perUnitUsd = tier.perUnitUsd;
-  const decorationAdderUsd = decorations.reduce((sum, item) => sum + item.perUnitAdderUsd, 0);
+  const decorationOnlyAdderUsd = decorations.reduce((sum, item) => sum + item.perUnitAdderUsd, 0);
+
+  // Upsell add-ons, priced server-side. First placement is included; each extra
+  // is a flat per-unit fee. Woven label is a flat per-unit fee when chosen.
+  const extraPlacements = Math.max(0, (opts.placementCount ?? 0) - 1);
+  const extraPlacementAdderUsd = extraPlacements * EXTRA_PLACEMENT_ADDER_USD;
+  const wovenAdderUsd = opts.wovenLabel ? WOVEN_LABEL_ADDER_USD : 0;
+
+  // Fold add-ons into the per-unit adder so total = qty × (base + adder) holds.
+  const decorationAdderUsd = decorationOnlyAdderUsd + extraPlacementAdderUsd + wovenAdderUsd;
   const subtotalUsd = normalizedQty * (perUnitUsd + decorationAdderUsd);
   const taxUsd = 0;
   const totalUsd = subtotalUsd + taxUsd;
@@ -48,6 +65,9 @@ export function calculateOrderPrice(
     decorations,
     perUnitUsd,
     decorationAdderUsd,
+    decorationOnlyAdderUsd,
+    extraPlacementAdderUsd,
+    wovenAdderUsd,
     subtotalUsd,
     taxUsd,
     totalUsd
