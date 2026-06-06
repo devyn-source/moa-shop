@@ -16,6 +16,7 @@ type ComponentDraft = {
   decorationIds: DecorationMethod[];
   perBoxQty: number;
   size: string;
+  view: "front" | "back";
   artworkFileName?: string;
   artworkFileUrl?: string;
   uploading?: boolean;
@@ -66,7 +67,7 @@ export function BoxBuilder({
       const midSize = p.sizes[Math.floor(p.sizes.length / 2)] ?? p.sizes[0] ?? "ONE";
       setComponents((prev) => [
         ...prev,
-        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize }
+        { key: nextKey(), productId, variantId: variant.id, decorationIds: [], perBoxQty: 1, size: midSize, view: "front" }
       ]);
     },
     [eligibleById]
@@ -227,20 +228,54 @@ export function BoxBuilder({
                 if (!p) return null;
                 const variant = p.variants.find((v) => v.id === d.variantId) ?? p.variants[0];
                 const line = lineByProduct.get(p.id);
+                const hasBack = Boolean(p.greyBack);
+                const view = hasBack ? d.view : "front";
                 return (
-                  <li className="bb-item" key={d.key}>
-                    <div className="bb-item-shot">
-                      <ProductShot product={p} variant={variant} view="front" />
+                  <li className="bb-card" key={d.key}>
+                    {/* visual stage — live garment recolor + artwork preview */}
+                    <div className="bb-stage">
+                      <div className="bb-stage-shot">
+                        <ProductShot product={p} variant={variant} view={view} />
+                        {d.artworkFileUrl ? (
+                          <img
+                            className="bb-stage-art"
+                            src={d.artworkFileUrl}
+                            alt="Your artwork preview"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      {hasBack ? (
+                        <div className="bb-stage-views">
+                          {(["front", "back"] as const).map((vw) => (
+                            <button
+                              key={vw}
+                              type="button"
+                              className={`bb-view${view === vw ? " bb-view--on" : ""}`}
+                              onClick={() => updateComponent(d.key, { view: vw })}
+                            >
+                              {vw}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
-                    <div className="bb-item-body">
+
+                    {/* config — stepped, PDP-style */}
+                    <div className="bb-config">
                       <div className="bb-item-top">
-                        <h3>{p.displayName}</h3>
+                        <div>
+                          <h3>{p.displayName}</h3>
+                          {p.fitNotes ? <p className="bb-card-fit">{p.fitNotes}</p> : null}
+                        </div>
                         <button type="button" className="cart-remove" aria-label="Remove item" onClick={() => removeComponent(d.key)}>✕</button>
                       </div>
 
                       {/* color */}
-                      <div className="bb-field">
-                        <span className="bb-field-label">Color</span>
+                      <div className="bb-step">
+                        <span className="bb-step-label">Color · <b>{variant?.colorLabel}</b></span>
                         <div className="bb-swatches">
                           {p.variants.map((v) => (
                             <button
@@ -254,14 +289,13 @@ export function BoxBuilder({
                               onClick={() => updateComponent(d.key, { variantId: v.id })}
                             />
                           ))}
-                          <span className="bb-color-name">{variant?.colorLabel}</span>
                         </div>
                       </div>
 
                       {/* decoration */}
                       {p.decorations.length > 0 ? (
-                        <div className="bb-field">
-                          <span className="bb-field-label">Decoration</span>
+                        <div className="bb-step">
+                          <span className="bb-step-label">Decoration</span>
                           <div className="bb-chips">
                             {p.decorations.map((deco) => {
                               const on = d.decorationIds.includes(deco.id);
@@ -288,48 +322,57 @@ export function BoxBuilder({
                         </div>
                       ) : null}
 
-                      {/* size + per-box qty + artwork */}
-                      <div className="bb-field bb-field--row">
-                        {p.sizes.length > 1 ? (
-                          <label className="bb-mini">
-                            <span className="bb-field-label">Size</span>
-                            <select value={d.size} onChange={(e) => updateComponent(d.key, { size: e.target.value })}>
-                              {p.sizes.map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
-                            </select>
-                          </label>
-                        ) : null}
-                        <label className="bb-mini">
-                          <span className="bb-field-label">Per box</span>
-                          <input
-                            type="number"
-                            min={1}
-                            value={d.perBoxQty}
-                            onChange={(e) => updateComponent(d.key, { perBoxQty: Math.max(1, Number(e.target.value) || 1) })}
-                          />
-                        </label>
-                        <label className="bb-mini bb-mini--art">
-                          <span className="bb-field-label">Artwork</span>
+                      {/* artwork */}
+                      <div className="bb-step">
+                        <span className="bb-step-label">Artwork</span>
+                        <div className="bb-artwork-row">
                           <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadArtwork(d.key, e.target.files?.[0])} />
-                        </label>
+                          <span className="bb-art-status">
+                            {d.uploading
+                              ? "Uploading…"
+                              : d.uploadError
+                                ? `⚠ ${d.uploadError}`
+                                : d.artworkFileUrl
+                                  ? `✓ ${d.artworkFileName}`
+                                  : "Optional now — finalize after checkout"}
+                          </span>
+                        </div>
                       </div>
-                      <div className="bb-item-foot">
-                        <span className="bb-art-status">
-                          {d.uploading
-                            ? "Uploading artwork…"
-                            : d.uploadError
-                              ? `⚠ ${d.uploadError}`
-                              : d.artworkFileUrl
-                                ? `✓ ${d.artworkFileName}`
-                                : "No artwork yet (optional now)"}
-                        </span>
-                        {line ? (
+
+                      {/* size & quantity */}
+                      <div className="bb-step">
+                        <span className="bb-step-label">Size &amp; quantity</span>
+                        <div className="bb-field--row">
+                          {p.sizes.length > 1 ? (
+                            <label className="bb-mini">
+                              <span className="bb-field-label">Size</span>
+                              <select value={d.size} onChange={(e) => updateComponent(d.key, { size: e.target.value })}>
+                                {p.sizes.map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            </label>
+                          ) : null}
+                          <label className="bb-mini">
+                            <span className="bb-field-label">Per box</span>
+                            <input
+                              type="number"
+                              min={1}
+                              value={d.perBoxQty}
+                              onChange={(e) => updateComponent(d.key, { perBoxQty: Math.max(1, Number(e.target.value) || 1) })}
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      {line ? (
+                        <div className="bb-item-foot">
+                          <span />
                           <span className="bb-item-price">
                             {currency(line.lineUnitUsd)}/unit · <b>{currency(line.perBoxUsd)}/box</b>
                           </span>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : null}
                     </div>
                   </li>
                 );

@@ -7689,3 +7689,67 @@ body.is-scrolled .site-header {
 .bb-mini--notes input { width: 100%; border: 1px solid var(--input); border-radius: 7px; padding: 6px 8px; background: var(--card); font: inherit; }
 .bb-pack-add { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
 .bb-pack-add .bb-chips { margin-top: 6px; }
+
+/* PR Box — PDP-styled box-content cards */
+.bb-card {
+  display: grid;
+  grid-template-columns: clamp(200px, 32%, 280px) 1fr;
+  gap: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.bb-stage { display: flex; flex-direction: column; gap: 8px; }
+.bb-stage-shot {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  background: var(--color-cream);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.bb-stage-shot :is(.recolor-shot, img) { width: 100%; height: 100%; object-fit: contain; }
+.bb-stage-art {
+  position: absolute;
+  top: 38%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34%; height: auto; max-height: 34%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+}
+.bb-stage-views { display: flex; gap: 6px; justify-content: center; }
+.bb-view {
+  flex: 1;
+  text-transform: capitalize;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  padding: 6px 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.bb-view--on { border-color: var(--color-terracotta); background: rgba(176,71,49,0.06); color: var(--color-terracotta); }
+.bb-config { display: flex; flex-direction: column; min-width: 0; }
+.bb-card-fit { color: var(--color-neutral); font-size: 0.8rem; margin-top: 2px; }
+.bb-step { padding: 12px 0; border-top: 1px solid var(--border); }
+.bb-step:first-of-type { border-top: none; padding-top: 8px; }
+.bb-step-label {
+  display: block;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--color-neutral);
+  margin-bottom: 8px;
+}
+.bb-step-label b { color: var(--color-charcoal); }
+.bb-artwork-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bb-artwork-row input[type="file"] { font-size: 0.78rem; }
+@media (max-width: 560px) {
+  .bb-card { grid-template-columns: 1fr; }
+  .bb-stage-shot { aspect-ratio: 1; }
+}
