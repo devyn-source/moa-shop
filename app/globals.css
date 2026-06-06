@@ -6181,14 +6181,12 @@ a.stat-card:hover {
 .wl-upload:disabled { opacity: 0.6; cursor: default; }
 .wl-hint { margin: 7px 0 0; font-size: 0.7rem; line-height: 1.45; color: var(--color-neutral); }
 .wl-hint.is-warn { color: var(--color-warning); font-weight: 600; }
-/* The logo's draggable/resizable bounding box inside the label's printable
-   area — a persistent dashed guide so the editable region is always visible. */
+/* The logo's printable area inside the label. Positioning only — the visible
+   bounding box + handles come from DraggableArt itself (clean snug box around
+   the logo), so we don't draw a second competing outline here. */
 .wl-tag-artbox {
   position: absolute; inset: 16% 13%;
   display: flex; align-items: center; justify-content: center;
-  outline: 1.5px dashed rgba(176, 71, 49, 0.55);
-  outline-offset: 0;
-  border-radius: 2px;
 }
 /* Center alignment guides — a vertical / horizontal line that appears ONLY when
    the logo is snapped to the exact center on that axis (confirms dead-center).
