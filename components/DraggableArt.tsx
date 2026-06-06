@@ -63,7 +63,8 @@ export function DraggableArt({
   transform,
   onChange,
   maskColor,
-  alwaysShowHandles
+  alwaysShowHandles,
+  snapCenter
 }: {
   url: string;
   transform: ArtTransform;
@@ -74,6 +75,8 @@ export function DraggableArt({
   // Keep the resize/rotate handles visible at rest (not only on hover) — used in
   // the small woven-label preview where the affordance isn't otherwise obvious.
   alwaysShowHandles?: boolean;
+  // Magnetically snap to the box's horizontal/vertical center while moving.
+  snapCenter?: boolean;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -85,7 +88,14 @@ export function DraggableArt({
       // Parent of wrap is the bounding box; use its rect for percent math.
       const box = wrapRef.current?.parentElement?.getBoundingClientRect();
       if (!box) return;
-      onChange(applyDrag(drag, e.clientX - box.left, e.clientY - box.top));
+      let next = applyDrag(drag, e.clientX - box.left, e.clientY - box.top);
+      // Magnetic center snap (move only): pull to dead-center when close.
+      if (snapCenter && drag.mode === "move") {
+        const SNAP = 0.035;
+        if (Math.abs(next.ox + next.sx / 2 - 0.5) < SNAP) next = { ...next, ox: 0.5 - next.sx / 2 };
+        if (Math.abs(next.oy + next.sy / 2 - 0.5) < SNAP) next = { ...next, oy: 0.5 - next.sy / 2 };
+      }
+      onChange(next);
     };
     const onUp = () => setDrag(null);
     window.addEventListener("pointermove", onMove);
@@ -94,7 +104,7 @@ export function DraggableArt({
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [drag, onChange]);
+  }, [drag, onChange, snapCenter]);
 
   const start = useCallback(
     (mode: DragMode) => (e: React.PointerEvent) => {
