@@ -113,7 +113,7 @@ export function WovenLabelModal({
               }${logoUrl && Math.abs(logoTransform.oy + logoTransform.sy / 2 - 0.5) < 0.012 ? " h-center" : ""}`}
             >
               {logoUrl ? (
-                <DraggableArt url={logoUrl} transform={logoTransform} onChange={setLogoTransform} maskColor={thread} alwaysShowHandles snapCenter />
+                <DraggableArt url={logoUrl} transform={logoTransform} onChange={setLogoTransform} maskColor={thread} snapCenter />
               ) : (
                 <span className="wl-tag-text" style={{ color: thread }}>
                   {text || "YOUR BRAND"}
