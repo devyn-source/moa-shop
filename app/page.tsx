@@ -228,8 +228,11 @@ export default async function LandingPage() {
           <Link className="lp-btn lp-btn--primary" href="#shop">Try it on a product →</Link>
         </div>
         <div className="lp-proof-stage" data-reveal style={stagger(1)}>
-          {hero ? <ProductShot product={hero} variant={heroVariant(hero)} view="front" /> : null}
-          <span className="lp-proof-artzone">Your art, your proof</span>
+          <div className="lp-proof-shot">
+            {hero ? <ProductShot product={hero} variant={heroVariant(hero)} view="front" /> : null}
+            {/* a real logo printed on the chest — what an approved proof looks like */}
+            <span className="lp-proof-logo" aria-hidden />
+          </div>
           <span className="lp-proof-tag">Live preview</span>
         </div>
       </section>

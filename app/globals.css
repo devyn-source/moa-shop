@@ -7439,7 +7439,19 @@ body.is-scrolled .site-header {
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.lp-proof-stage > * { width: 84%; }
+/* Sized garment box inside the proof stage so the chest logo positions against
+   the garment (not the whole panel). Only the shot is 84% — not the tag. */
+.lp-proof-shot { position: relative; width: 82%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
+.lp-proof-shot .recolor-shot, .lp-proof-shot .product-photo, .lp-proof-shot .product-visual { width: 100%; height: 100%; object-fit: contain; }
+/* Realistic chest print — the MOA mask rendered in light thread on the garment. */
+.lp-proof-logo {
+  position: absolute; top: 36%; left: 50%; transform: translateX(-50%);
+  width: 16%; aspect-ratio: 1 / 1;
+  background-color: rgba(238, 234, 227, 0.95);
+  -webkit-mask: url("/brand/logos/moa-mark.svg") center / contain no-repeat;
+  mask: url("/brand/logos/moa-mark.svg") center / contain no-repeat;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+}
 .lp-proof-tag {
   position: absolute; bottom: 18px; left: 18px;
   background: var(--color-terracotta); color: #fff;
