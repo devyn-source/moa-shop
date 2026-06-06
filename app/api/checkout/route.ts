@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { createOrder, getProductById } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
-import { calculateBundlePrice } from "@/lib/pricing";
-import { allocateBundleDiscount } from "@/lib/bundle";
-import { PR_BOX_PROMO } from "@/lib/promo";
+import { calculateOrderPrice, getPriceTier, round2 } from "@/lib/pricing";
+import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
 import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -109,49 +108,93 @@ export async function POST(request: Request) {
       const compResolved = await Promise.all(compItems.map(resolve));
       const packResolved = await Promise.all(packItems.map(resolve));
 
-      // Derive the box quantity from the lines; calculateBundlePrice re-clamps to MOQ.
-      const boxQty = Math.max(
-        1,
-        ...group.map((i) => Math.round((i.quantity || 0) / Math.max(i.perBoxQty ?? 1, 1)))
-      );
+      // Full-PDP model: each item is a complete order line (its own size run +
+      // quantity + features). Re-price every line server-side (never trust client
+      // totals); the box is the grouping + packaging + the bundle discount.
+      const compPriced = compResolved.map(({ line, product }) => {
+        const decorationIds = (line.decorationIds ?? []).filter((id) =>
+          product.decorations.some((d) => d.id === id)
+        ) as DecorationMethod[];
+        const priced = calculateOrderPrice(product, line.quantity, decorationIds, {
+          placementCount: line.artworkPlacements?.length,
+          wovenLabel: line.wovenLabel
+        });
+        return { line, decorationIds, gross: priced.totalUsd };
+      });
+      const packPriced = packResolved.map(({ line, product }) => ({
+        line,
+        gross: round2(getPriceTier(product, line.quantity).perUnitUsd * line.quantity)
+      }));
 
-      const price = calculateBundlePrice(
-        compResolved.map(({ line, product }) => ({
-          product,
-          decorationIds: (line.decorationIds ?? []).filter((id) =>
-            product.decorations.some((d) => d.id === id)
-          ) as DecorationMethod[],
-          perBoxQty: line.perBoxQty ?? 1
-        })),
-        packResolved.map(({ line, product }) => ({ product, perBoxQty: line.perBoxQty ?? 1 })),
-        boxQty,
-        PR_BOX_PROMO
+      // Program size = one of each item per box.
+      const boxQty = Math.max(1, packResolved[0]?.line.quantity ?? 0, ...compResolved.map((c) => c.line.quantity || 0));
+      const grossTotal = round2(
+        compPriced.reduce((s, x) => s + x.gross, 0) + packPriced.reduce((s, x) => s + x.gross, 0)
       );
-      const alloc = allocateBundleDiscount(price);
+      const active = isPromoWithinWindow(PR_BOX_PROMO);
+      const qualifies =
+        active &&
+        compPriced.length >= PR_BOX_PROMO.qualify.minComponents &&
+        (!PR_BOX_PROMO.qualify.requirePackaging || packPriced.length > 0) &&
+        boxQty >= PR_BOX_PROMO.qualify.minBoxes;
+      const percent = qualifies ? Math.min(1, Math.max(0, PR_BOX_PROMO.discount.value)) : 0;
+      const discountTotal = round2(grossTotal * percent);
 
-      // price.lines order === [components..., packaging...] === ordered selections
-      const ordered = [...compResolved, ...packResolved];
-      for (let idx = 0; idx < price.lines.length; idx++) {
-        const line = price.lines[idx];
-        const src = ordered[idx].line;
+      // Allocate the discount across every line, proportional to its gross.
+      const allPriced = [...compPriced, ...packPriced];
+      let remaining = discountTotal;
+      const shares = allPriced.map((x, i) => {
+        const isLast = i === allPriced.length - 1;
+        const d = isLast ? round2(remaining) : round2(grossTotal > 0 ? discountTotal * (x.gross / grossTotal) : 0);
+        remaining = round2(remaining - d);
+        return d;
+      });
+      const promoId = qualifies ? PR_BOX_PROMO.id : undefined;
+
+      let shareIdx = 0;
+      for (const x of compPriced) {
+        const src = x.line;
         const order = await createOrder(
           {
             ...contact,
-            productId: line.productId,
+            productId: src.productId,
             variantId: src.variantId,
-            decorationIds: (src.decorationIds ?? []) as OrderInput["decorationIds"],
-            quantity: line.effectiveQty,
+            decorationIds: x.decorationIds as OrderInput["decorationIds"],
+            quantity: src.quantity,
             artworkFileName: src.artworkFileName || "Artwork file pending",
             artworkFileUrl: src.artworkFileUrl,
             artworkNotes: src.artworkNotes || "",
             artworkPlacement: src.artworkPlacement,
+            artworkPlacements: src.artworkPlacements,
+            wovenLabel: src.wovenLabel,
             sizeBreakdown: src.sizeBreakdown,
             bundleId,
             bundleLabel: src.bundleLabel || "PR Box",
-            bundleRole: line.kind,
-            perBoxQty: line.perBoxQty,
-            promoId: price.promo.promoId,
-            bundleDiscountUsd: alloc[idx].discountUsd
+            bundleRole: "component",
+            promoId,
+            bundleDiscountUsd: shares[shareIdx++]
+          },
+          { paid: false }
+        );
+        created.push({ order, item: src });
+      }
+      for (const x of packPriced) {
+        const src = x.line;
+        const order = await createOrder(
+          {
+            ...contact,
+            productId: src.productId,
+            variantId: src.variantId,
+            decorationIds: [] as OrderInput["decorationIds"],
+            quantity: src.quantity,
+            artworkFileName: src.artworkFileName || "Artwork file pending",
+            artworkFileUrl: src.artworkFileUrl,
+            artworkNotes: src.artworkNotes || "",
+            bundleId,
+            bundleLabel: src.bundleLabel || "PR Box",
+            bundleRole: "packaging",
+            promoId,
+            bundleDiscountUsd: shares[shareIdx++]
           },
           { paid: false }
         );

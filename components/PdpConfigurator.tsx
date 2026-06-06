@@ -70,7 +70,55 @@ export type EditSeed = {
   extraPlacements?: ExtraPlacement[];
 };
 
-export function PdpConfigurator({ product, editOrder, seed }: { product: CatalogProduct; editOrder?: EditSeed; seed?: EditSeed }) {
+// A fully-configured box item produced by the PDP in bundle mode. It is the
+// EXACT cart payload a standalone order produces (all features: multi-placement,
+// woven label, size run, decoration) PLUS the seed extras needed to re-open it
+// in the configurator for editing.
+export type BundleItemConfig = {
+  productId: string;
+  slug: string;
+  displayName: string;
+  skuCode: string;
+  variantId: string;
+  colorLabel: string;
+  colorHex?: string;
+  image?: string;
+  decorationIds: string[];
+  decorationLabel: string;
+  sizeQty: Record<string, number>;
+  quantity: number;
+  perUnitUsd: number;
+  decorationAdderUsd: number;
+  subtotalUsd: number;
+  totalUsd: number;
+  artworkFileName: string;
+  artworkFileUrl?: string;
+  artworkNotes: string;
+  artworkPlacement?: import("@/lib/types").ArtworkPlacement;
+  artworkPlacements?: import("@/lib/types").ArtworkPlacement[];
+  wovenLabel?: boolean;
+  // re-edit seed extras
+  seed: EditSeed;
+};
+
+export type BundleMode = {
+  boxQty: number; // program size — the size run totals to this
+  editing?: boolean; // CTA says "Save changes" instead of "Add to box"
+  onUse: (cfg: BundleItemConfig) => void;
+  onCancel?: () => void;
+};
+
+export function PdpConfigurator({
+  product,
+  editOrder,
+  seed,
+  bundle
+}: {
+  product: CatalogProduct;
+  editOrder?: EditSeed;
+  seed?: EditSeed;
+  bundle?: BundleMode;
+}) {
   // editOrder = editing an existing order (CTA updates it). seed = a shared config
   // pre-fill (CTA adds to cart normally). Both seed the same initial state.
   const seed0 = editOrder ?? seed;
@@ -126,7 +174,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
   }, [placementId, view]);
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
-    seed0?.sizeQty ?? distributeAcross(product.sizes, product.moq)
+    seed0?.sizeQty ?? distributeAcross(product.sizes, bundle ? Math.max(product.moq, bundle.boxQty) : product.moq)
   );
   const [submitting, setSubmitting] = useState(false);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
@@ -516,6 +564,57 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
     });
     setSubmitting(true);
     router.push("/cart");
+  };
+
+  // BUNDLE MODE — same full payload as add-to-cart, but handed to the box (no
+  // standalone cart line). Carries every feature + the seed to re-open for edit.
+  const handleAddToBox = () => {
+    if (!bundle || belowMoq || !variant || blockRes) return;
+    const decorationLabel =
+      (decoSelected.length ? decoSelected.map((d) => d.label).join(" + ") : "Undecorated") +
+      (wovenLabel ? " + Woven label" : "");
+    const decorationLabelFull = decorationLabel + (placementCount > 1 ? ` · ${placementCount} placements` : "");
+    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder;
+    const primary = allPlacements[0];
+    bundle.onUse({
+      productId: product.id,
+      slug: product.slug,
+      displayName: product.displayName,
+      skuCode: product.skuCode,
+      variantId: variant.id,
+      colorLabel: variant.colorLabel,
+      colorHex: variant.colorHex,
+      image: product.greyFront ?? variant.frontImage,
+      decorationIds,
+      decorationLabel: decorationLabelFull,
+      sizeQty,
+      quantity: qty,
+      perUnitUsd: tier.perUnitUsd,
+      decorationAdderUsd: decorationAdder + wovenAdder + extraPlacementAdder,
+      subtotalUsd: tier.perUnitUsd * qty,
+      totalUsd: perUnitTotal * qty,
+      artworkFileName: primary?.artworkFileName ?? artworkName ?? "Artwork file pending",
+      artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
+      artworkNotes:
+        allPlacements
+          .map((p, i) => `Placement ${i + 1} — ${p.zoneLabel}${p.view === "back" ? " (back)" : " (front)"}${i === 0 ? " · included" : " · +placement"}`)
+          .join("\n") + (wovenLabel ? "\nWoven label: yes" : ""),
+      artworkPlacement: primary,
+      artworkPlacements: allPlacements.length ? allPlacements : undefined,
+      wovenLabel: Boolean(wovenLabel),
+      seed: {
+        variantId: variant.id,
+        decorationIds,
+        pantones,
+        view,
+        zoneId: placementId ?? undefined,
+        art: artTransform,
+        artworkFileUrl: artworkUrl ?? undefined,
+        artworkFileName: artworkName ?? undefined,
+        sizeQty,
+        extraPlacements: savedPlacements.length ? savedPlacements : undefined
+      }
+    });
   };
 
   // EDIT MODE — regenerate the existing order's proof from the adjusted config.
@@ -1075,13 +1174,17 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
           <button
             type="button"
             className="pdpx-cta"
-            onClick={editOrder ? handleUpdate : handleAddToCart}
+            onClick={bundle ? handleAddToBox : editOrder ? handleUpdate : handleAddToCart}
             disabled={belowMoq || submitting || blockRes}
           >
             {blockRes
               ? "Resolution too low for this size"
               : belowMoq
               ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
+              : bundle
+              ? bundle.editing
+                ? "Save changes ✓"
+                : "Add to box →"
               : editOrder
               ? submitting
                 ? "Updating proof…"
@@ -1094,7 +1197,7 @@ export function PdpConfigurator({ product, editOrder, seed }: { product: Catalog
           <p className="pdpx-foot-note">
             MOA-managed quality control · Artwork finalised in QA
           </p>
-          {!editOrder ? (
+          {!editOrder && !bundle ? (
             <button type="button" className="pdpx-share-link" onClick={handleShare}>
               {shareMsg ?? "Share this configuration ↗"}
             </button>

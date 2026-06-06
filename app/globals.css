@@ -7901,3 +7901,24 @@ body.is-scrolled .site-header {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 .uc-bottom-head { font-family: var(--font-display); text-transform: uppercase; font-size: 1.1rem; letter-spacing: 0.02em; }
+
+/* PR Box — full-PDP model: item summaries + configurator modal */
+.bb-summaries { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.bb-summary { display: grid; grid-template-columns: 84px 1fr; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+.bb-summary-shot { aspect-ratio: 1; background: var(--color-cream); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.bb-summary-shot :is(.recolor-shot, img) { width: 100%; height: 100%; object-fit: contain; }
+.bb-summary-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.bb-summary-top h3 { font-family: var(--font-display); text-transform: uppercase; font-size: 0.92rem; }
+.bb-summary-meta { color: var(--color-neutral); font-size: 0.84rem; margin-top: 3px; }
+.bb-summary-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.bb-customize { background: transparent; border: none; color: var(--color-terracotta); font-weight: 600; font-size: 0.85rem; cursor: pointer; padding: 0; }
+.bb-summary-price { font-weight: 700; }
+
+.bb-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(30,30,30,0.55); display: flex; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; }
+.bb-modal { background: var(--background); border-radius: 14px; width: min(1100px, 100%); margin: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.35); }
+.bb-modal-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--background); border-bottom: 1px solid var(--border); border-radius: 14px 14px 0 0; }
+.bb-modal-title { font-family: var(--font-display); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.04em; }
+.bb-modal-x { background: var(--color-cream); border: 1px solid var(--border); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 0.9rem; }
+.bb-modal-body { padding: 18px; }
+/* the configurator stage shouldn't stick inside the modal */
+.bb-modal-body .pdpx-stage { position: static; top: auto; }

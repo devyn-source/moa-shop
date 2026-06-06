@@ -5,9 +5,149 @@
 // across them, and (2) regroup the flat cart back into boxes for display.
 
 import type { CartItem } from "@/components/CartProvider";
-import { calculateBundlePrice, round2, type BundlePrice } from "./pricing";
-import { PR_BOX_PROMO, type PrBoxPromo } from "./promo";
+import { calculateBundlePrice, getPriceTier, round2, type BundlePrice } from "./pricing";
+import { isPromoWithinWindow, PR_BOX_PROMO, type PrBoxPromo } from "./promo";
 import type { ArtworkPlacement, CatalogProduct, CatalogVariant, DecorationMethod } from "./types";
+
+// ---------------------------------------------------------------------------
+// FULL-PDP box model: each item is a complete order line (its own size run +
+// quantity + all PDP features), the "box" is the grouping + packaging + the 10%
+// bundle discount. boxQty = program size (one of each item per box).
+// ---------------------------------------------------------------------------
+
+// A fully-configured item = the cart payload (minus line/bundle bookkeeping).
+export type FullBundleItem = Omit<
+  CartItem,
+  "lineId" | "bundleId" | "bundleLabel" | "bundleRole" | "perBoxQty" | "perBoxUsd" | "bundleDiscountUsd" | "promoId"
+>;
+
+export type FullBundlePrice = {
+  boxQty: number;
+  itemsSubtotalUsd: number; // sum of item totals
+  packagingLines: { product: CatalogProduct; perUnitUsd: number; totalUsd: number }[];
+  packagingTotalUsd: number;
+  grossUsd: number; // items + packaging, pre-discount
+  qualifies: boolean;
+  unmetReasons: string[];
+  percent: number;
+  discountUsd: number;
+  totalUsd: number; // net program total
+};
+
+export function priceFullBundle(
+  items: FullBundleItem[],
+  packaging: CatalogProduct[],
+  boxQty: number,
+  promo: PrBoxPromo = PR_BOX_PROMO,
+  now: Date = new Date()
+): FullBundlePrice {
+  const itemsSubtotalUsd = round2(items.reduce((s, i) => s + (i.totalUsd ?? 0), 0));
+  const packagingLines = packaging.map((product) => {
+    const perUnitUsd = getPriceTier(product, boxQty).perUnitUsd;
+    return { product, perUnitUsd, totalUsd: round2(perUnitUsd * boxQty) };
+  });
+  const packagingTotalUsd = round2(packagingLines.reduce((s, l) => s + l.totalUsd, 0));
+  const grossUsd = round2(itemsSubtotalUsd + packagingTotalUsd);
+
+  const active = isPromoWithinWindow(promo, now);
+  const unmetReasons: string[] = [];
+  if (items.length < promo.qualify.minComponents) {
+    const n = promo.qualify.minComponents - items.length;
+    unmetReasons.push(`Add ${n} more item${n === 1 ? "" : "s"} (need ${promo.qualify.minComponents})`);
+  }
+  if (promo.qualify.requirePackaging && packaging.length === 0) unmetReasons.push("Add branded packaging");
+  if (boxQty < promo.qualify.minBoxes) unmetReasons.push(`Order at least ${promo.qualify.minBoxes} boxes`);
+
+  const qualifies = active && unmetReasons.length === 0;
+  const percent = qualifies ? Math.min(1, Math.max(0, promo.discount.value)) : 0;
+  const discountUsd = round2(grossUsd * percent);
+  const totalUsd = round2(grossUsd - discountUsd);
+
+  return { boxQty, itemsSubtotalUsd, packagingLines, packagingTotalUsd, grossUsd, qualifies, unmetReasons, percent, discountUsd, totalUsd };
+}
+
+// Turn a full-PDP box into cart lines, allocating the discount across every line
+// (items + packaging) proportional to its total, remainder on the last line.
+export type FullBundlePackaging = {
+  product: CatalogProduct;
+  artworkFileName?: string;
+  artworkFileUrl?: string;
+  artworkNotes?: string;
+};
+
+export function buildFullBundleCartLines(args: {
+  bundleId: string;
+  bundleLabel: string;
+  items: FullBundleItem[];
+  packaging: FullBundlePackaging[];
+  boxQty: number;
+  promo?: PrBoxPromo;
+}): { lines: Omit<CartItem, "lineId">[]; price: FullBundlePrice } {
+  const promo = args.promo ?? PR_BOX_PROMO;
+  const price = priceFullBundle(args.items, args.packaging.map((p) => p.product), args.boxQty, promo);
+  const promoId = price.qualifies ? promo.id : undefined;
+
+  const grosses = [...args.items.map((i) => i.totalUsd ?? 0), ...price.packagingLines.map((l) => l.totalUsd)];
+  const totalGross = price.grossUsd;
+  let remaining = price.discountUsd;
+  const alloc = grosses.map((g, i) => {
+    const isLast = i === grosses.length - 1;
+    const d = isLast ? round2(remaining) : round2(totalGross > 0 ? price.discountUsd * (g / totalGross) : 0);
+    remaining = round2(remaining - d);
+    return d;
+  });
+
+  const lines: Omit<CartItem, "lineId">[] = [];
+  args.items.forEach((it, i) => {
+    const share = alloc[i];
+    lines.push({
+      ...it,
+      totalUsd: round2((it.totalUsd ?? 0) - share),
+      bundleId: args.bundleId,
+      bundleLabel: args.bundleLabel,
+      bundleRole: "component",
+      perBoxQty: 1,
+      perBoxUsd: args.boxQty > 0 ? round2((it.totalUsd ?? 0) / args.boxQty) : it.totalUsd,
+      bundleDiscountUsd: share,
+      promoId
+    });
+  });
+  price.packagingLines.forEach((pl, j) => {
+    const share = alloc[args.items.length + j];
+    const p = pl.product;
+    const art = args.packaging[j];
+    lines.push({
+      productId: p.id,
+      slug: p.slug,
+      displayName: p.displayName,
+      skuCode: p.skuCode,
+      variantId: p.variants[0]?.id ?? `${p.id}-default`,
+      colorLabel: p.variants[0]?.colorLabel ?? "Branded",
+      colorHex: p.variants[0]?.colorHex,
+      image: p.greyFront ?? p.variants[0]?.frontImage,
+      decorationIds: [],
+      decorationLabel: "Packaging",
+      sizeQty: {},
+      quantity: args.boxQty,
+      perUnitUsd: pl.perUnitUsd,
+      decorationAdderUsd: 0,
+      subtotalUsd: pl.totalUsd,
+      totalUsd: round2(pl.totalUsd - share),
+      artworkFileName: art?.artworkFileName ?? "",
+      artworkFileUrl: art?.artworkFileUrl,
+      artworkNotes: art?.artworkNotes ?? "",
+      bundleId: args.bundleId,
+      bundleLabel: args.bundleLabel,
+      bundleRole: "packaging",
+      perBoxQty: 1,
+      perBoxUsd: pl.perUnitUsd,
+      bundleDiscountUsd: share,
+      promoId
+    });
+  });
+
+  return { lines, price };
+}
 
 export type BundleBuilderComponent = {
   product: CatalogProduct;
