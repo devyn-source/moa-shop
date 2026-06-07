@@ -8,8 +8,11 @@ import { motion } from "motion/react";
 
 export function FaqItem({ q, a, style }: { q: string; a: string; style?: React.CSSProperties }) {
   const [open, setOpen] = useState(false);
+  // className stays STABLE — ScrollReveal adds `lp-in` imperatively, and a
+  // changing className on re-render would wipe it (the item would vanish). Drive
+  // the open state via the data-open attribute instead.
   return (
-    <div className={`lp-faq-item${open ? " is-open" : ""}`} data-reveal style={style}>
+    <div className="lp-faq-item" data-open={open} data-reveal style={style}>
       <button type="button" className="lp-faq-q" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <span>{q}</span>
         <span className="lp-faq-icon" aria-hidden>

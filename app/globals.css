@@ -8161,5 +8161,11 @@ body.is-scrolled .site-header {
   transition: transform var(--dur) var(--ease-out);
 }
 .lp-faq-icon-bar--v { width: 2px; height: 14px; }
-.lp-faq-item.is-open .lp-faq-icon-bar--v { transform: translate(-50%, -50%) scaleY(0); }
+.lp-faq-item[data-open="true"] .lp-faq-icon-bar--v { transform: translate(-50%, -50%) scaleY(0); }
 .lp-faq-a { margin: 0 0 16px; font-size: 0.92rem; line-height: 1.6; color: var(--color-neutral); }
+
+/* ===== Brand: whole site is Archivo Expanded → ALL CAPS everywhere =====
+   Form controls keep normal case so users see exactly what they type
+   (emails, addresses, artwork notes, search). */
+body { text-transform: uppercase; }
+input, textarea, select, [contenteditable="true"] { text-transform: none; }
