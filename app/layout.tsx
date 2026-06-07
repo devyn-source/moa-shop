@@ -126,14 +126,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <div className="ft-base">
             <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus Agency · LLC</span>
-            <span style={{ display: "inline-flex", gap: 16, alignItems: "center" }}>
-              <span className="ft-base-right">Made to order · Produced to spec · Tracked to your door</span>
-              <span style={{ display: "inline-flex", gap: 12, fontSize: "0.72rem" }}>
+            <div className="ft-base-right">
+              <span className="ft-tagline">Made to order · Produced to spec · Tracked to your door</span>
+              <span className="ft-legal">
                 <Link href="/terms">Terms</Link>
                 <Link href="/refund-policy">Refunds</Link>
                 <Link href="/privacy">Privacy</Link>
               </span>
-            </span>
+            </div>
           </div>
         </footer>
         </ToastProvider>

@@ -4252,9 +4252,9 @@ a.stat-card:hover {
   object-fit: contain;
   object-position: left center;
   display: block;
-  /* The logo PNG ships with a large empty canvas around the mark — the
-     negative margins crop the visual whitespace so it sits flush left. */
-  margin: -8px 0 -10px -6px;
+  /* The PNG is edge-to-edge (no transparent padding), so its left edge IS the
+     mark — keep margin 0 so it aligns flush-left with the statement + button. */
+  margin: 0 0 2px;
 }
 
 .ft-statement {
@@ -4379,15 +4379,33 @@ a.stat-card:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
   max-width: 1480px;
   margin: 0 auto;
   font-family: var(--font-display);
-  font-size: 0.55rem;
-  letter-spacing: 0.18em;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(238, 234, 227, 0.5);
 }
+.ft-base-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+}
+.ft-tagline { color: rgba(238, 234, 227, 0.4); }
+.ft-legal {
+  display: inline-flex;
+  gap: 18px;
+  padding-left: 24px;
+  border-left: 1px solid rgba(238, 234, 227, 0.16);
+}
+.ft-legal a {
+  color: rgba(238, 234, 227, 0.62);
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+.ft-legal a:hover { color: var(--color-cream); }
 
 @media (max-width: 900px) {
   .ft {
@@ -4407,10 +4425,17 @@ a.stat-card:hover {
   .ft-base {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 12px;
   }
   .ft-base-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
     line-height: 1.5;
+  }
+  .ft-legal {
+    padding-left: 0;
+    border-left: 0;
   }
 }
 
