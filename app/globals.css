@@ -8102,3 +8102,60 @@ body.is-scrolled .site-header {
   100% { opacity: 1; transform: scale(1); }
 }
 .pdpx-place-box { animation: pdpx-art-in 380ms var(--ease-out) both; }
+
+/* ===== Header cart hover preview ===== */
+.cart-wrap { position: relative; display: inline-flex; }
+.cart-pop {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 340px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 26px 64px rgba(30, 30, 30, 0.20);
+  padding: 14px;
+  z-index: 1100;
+}
+.cart-pop::before { /* hover bridge so the gap doesn't drop the menu */
+  content: ""; position: absolute; top: -12px; left: 0; right: 0; height: 12px;
+}
+.cart-pop-head { display: flex; justify-content: space-between; font-family: var(--font-display); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.08em; color: var(--color-neutral); padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.cart-pop-lines { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; padding: 6px 0; }
+.cart-pop-line { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.85rem; }
+.cart-pop-thumb { width: 34px; height: 34px; border-radius: 7px; background: var(--color-cream); overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--color-neutral); }
+.cart-pop-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.cart-pop-thumb--box { font-size: 1rem; }
+.cart-pop-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart-pop-price { font-weight: 700; white-space: nowrap; }
+.cart-pop-total { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0 12px; border-top: 1px solid var(--border); }
+.cart-pop-total strong { font-size: 1.05rem; }
+.cart-pop-actions { display: flex; flex-direction: column; gap: 8px; }
+.cart-pop-checkout { text-align: center; font-size: 0.84rem; color: var(--color-neutral); text-decoration: none; padding: 4px; }
+.cart-pop-checkout:hover { color: var(--color-terracotta); }
+.cart-pop-empty { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 6px 2px; font-size: 0.88rem; color: var(--color-neutral); }
+/* Touch / small screens: no hover menu — the cart icon just taps through to /cart */
+@media (hover: none), (max-width: 760px) { .cart-pop { display: none !important; } }
+
+/* ===== FAQ smooth disclosure (replaces native <details>) ===== */
+.lp-faq-q {
+  width: 100%; appearance: none; background: transparent; border: 0;
+  cursor: pointer; text-align: left;
+  padding: 16px 0;
+  font-family: var(--font-display); font-weight: 700; font-size: 0.95rem;
+  text-transform: uppercase; letter-spacing: 0.01em;
+  color: var(--color-charcoal);
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  transition: color var(--dur) var(--ease-out);
+}
+.lp-faq-q:hover { color: var(--color-terracotta); }
+.lp-faq-icon { position: relative; width: 16px; height: 16px; flex: none; }
+.lp-faq-icon-bar {
+  position: absolute; top: 50%; left: 50%;
+  width: 14px; height: 2px; background: var(--color-terracotta); border-radius: 2px;
+  transform: translate(-50%, -50%);
+  transition: transform var(--dur) var(--ease-out);
+}
+.lp-faq-icon-bar--v { width: 2px; height: 14px; }
+.lp-faq-item.is-open .lp-faq-icon-bar--v { transform: translate(-50%, -50%) scaleY(0); }
+.lp-faq-a { margin: 0 0 16px; font-size: 0.92rem; line-height: 1.6; color: var(--color-neutral); }

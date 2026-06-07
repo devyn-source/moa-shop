@@ -5,6 +5,7 @@ import { getProducts } from "@/lib/store";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductShot } from "@/components/ProductShot";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { FaqItem } from "@/components/FaqItem";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { ALL_FAQS } from "@/lib/faqs";
 import type { CatalogProduct } from "@/lib/types";
@@ -301,10 +302,7 @@ export default async function LandingPage() {
         </div>
         <div className="lp-faq-list">
           {faqs.map((f, i) => (
-            <details key={f.q} className="lp-faq-item" data-reveal style={stagger(i)}>
-              <summary>{f.q}</summary>
-              <p>{f.a}</p>
-            </details>
+            <FaqItem key={f.q} q={f.q} a={f.a} style={stagger(i)} />
           ))}
         </div>
         <div className="lp-faq-more" data-reveal>
