@@ -40,6 +40,15 @@
   font-weight: 900;
 }
 
+/* Archivo NORMAL width (variable) — the text cut of the same superfamily as
+   Archivo Expanded. Used for body copy: readable, narrower, sentence case. */
+@font-face {
+  font-family: "Archivo Text";
+  src: url("/brand/fonts/Archivo-Variable-latin.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 100 900;
+}
+
 :root {
   --color-cream: #EEEAE3;
   --color-cream-dark: #E2DED6;
@@ -50,9 +59,10 @@
   --color-warning: #C4880D;
   --color-danger: #B04731;
   --color-neutral: #8A8680;
+  /* Display = Archivo Expanded (ALL CAPS). Body = Archivo normal width (sentence
+     case) — same superfamily, readable, gives hierarchy via width + case + weight. */
   --font-display: "Archivo", sans-serif;
-  /* Whole site uses Archivo Expanded — body included (system stack is just a fallback). */
-  --font-body: "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-body: "Archivo Text", "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --background: #EEEAE3;
   --foreground: #1E1E1E;
   --card: #FFFFFF;
@@ -8164,8 +8174,7 @@ body.is-scrolled .site-header {
 .lp-faq-item[data-open="true"] .lp-faq-icon-bar--v { transform: translate(-50%, -50%) scaleY(0); }
 .lp-faq-a { margin: 0 0 16px; font-size: 0.92rem; line-height: 1.6; color: var(--color-neutral); }
 
-/* ===== Brand: whole site is Archivo Expanded → ALL CAPS everywhere =====
-   Form controls keep normal case so users see exactly what they type
-   (emails, addresses, artwork notes, search). */
-body { text-transform: uppercase; }
-input, textarea, select, [contenteditable="true"] { text-transform: none; }
+/* Body copy = Archivo normal width, sentence case. Headings/labels/buttons keep
+   ALL CAPS via their own .font-display rules. Tuned for hierarchy + readability. */
+body { font-weight: 400; line-height: 1.6; letter-spacing: 0; }
+p { line-height: 1.65; }
