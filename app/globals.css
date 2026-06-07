@@ -5490,20 +5490,24 @@ a.stat-card:hover {
   gap: 10px;
 }
 
+/* Vaguely Pantone-chip: portrait rounded-rect with a subtle white "label
+   footer" (inset shadow keeps the inline color fill — no extra markup). */
 .pdpx-swatch {
   position: relative;
   appearance: none;
   border: 1px solid rgba(30, 30, 30, 0.12);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 42px;
+  height: 56px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, outline 160ms ease;
+  box-shadow: inset 0 -13px 0 0 #faf8f4;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out), outline 160ms ease;
   outline: 0 solid transparent;
 }
 
 .pdpx-swatch:hover {
-  transform: scale(1.05);
+  transform: translateY(-3px);
+  box-shadow: inset 0 -13px 0 0 #faf8f4, 0 8px 18px rgba(30, 30, 30, 0.12);
 }
 
 .pdpx-swatch.is-on {
