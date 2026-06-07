@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PdpConfigurator } from "@/components/PdpConfigurator";
+import { CaseStudies } from "@/components/CaseStudies";
 import { BoxBuilder } from "@/components/BoxBuilder";
 import { currency } from "@/lib/pricing";
 import { getProductBySlug, getProducts } from "@/lib/store";
@@ -131,6 +132,8 @@ export default async function ProductPage({
           <b>Build it into a PR Box → save {Math.round(PR_BOX_PROMO.discount.value * 100)}%</b>
         </Link>
       ) : null}
+
+      <CaseStudies />
     </main>
   );
 }

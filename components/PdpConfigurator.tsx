@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
 import { useToast } from "./ToastProvider";
+import { METHOD_MEDIA } from "@/lib/method-media";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
@@ -863,7 +864,12 @@ export function PdpConfigurator({
                                 )
                               }
                             >
-                              <span>
+                              {METHOD_MEDIA[d.id] ? (
+                                <span className="pdpx-deco-shot">
+                                  <img src={METHOD_MEDIA[d.id]!.image} alt="" loading="lazy" />
+                                </span>
+                              ) : null}
+                              <span className="pdpx-deco-text">
                                 <strong>{d.label}</strong>
                                 <em>{d.description}</em>
                               </span>

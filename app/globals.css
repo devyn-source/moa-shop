@@ -8203,3 +8203,40 @@ body.is-scrolled .site-header {
    ALL CAPS via their own .font-display rules. Tuned for hierarchy + readability. */
 body { font-weight: 400; line-height: 1.6; letter-spacing: 0; }
 p { line-height: 1.65; }
+
+/* ===== Decoration method detail thumb (in the Decoration step) ===== */
+.pdpx-deco { align-items: center; }
+.pdpx-deco-shot {
+  flex: 0 0 auto; width: 54px; height: 54px;
+  border-radius: 8px; overflow: hidden; background: var(--color-cream);
+}
+.pdpx-deco-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdpx-deco-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+/* ===== Case studies (completed work, below the PDP) ===== */
+.cs { margin-top: 64px; padding-top: 48px; border-top: 1px solid var(--border); }
+.cs-head { margin-bottom: 24px; }
+.cs-head h2 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -0.01em; line-height: 1.05;
+  margin: 6px 0 0; color: var(--color-charcoal);
+}
+.cs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.cs-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.cs-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(30, 30, 30, 0.10); }
+.cs-shot { aspect-ratio: 4 / 5; background: var(--color-cream); overflow: hidden; }
+.cs-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-meta { padding: 14px 16px 16px; }
+.cs-logo { height: 16px; width: auto; max-width: 116px; object-fit: contain; object-position: left center; display: block; opacity: 0.82; margin-bottom: 9px; }
+.cs-product {
+  font-family: var(--font-display); text-transform: uppercase; font-weight: 700;
+  font-size: 0.8rem; letter-spacing: 0.03em; margin: 0; color: var(--color-charcoal);
+}
+.cs-line { margin: 4px 0 0; font-size: 0.82rem; line-height: 1.5; color: var(--color-neutral); }
+
+@media (max-width: 900px) { .cs-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .cs-grid { grid-template-columns: 1fr; } }
