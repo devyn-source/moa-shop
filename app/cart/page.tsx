@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCart, type CartItem } from "@/components/CartProvider";
+
+const CART_EASE = [0.22, 1, 0.36, 1] as const;
 import { groupCartItems } from "@/lib/bundle";
 import { currency } from "@/lib/pricing";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
@@ -107,8 +110,17 @@ export default function CartPage() {
         ) : null}
         <div className="cart-layout">
           <div className="cart-lines">
+            <AnimatePresence initial={false} mode="popLayout">
             {bundles.map((bundle) => (
-              <div className="cart-bundle" key={bundle.bundleId}>
+              <motion.div
+                className="cart-bundle"
+                key={bundle.bundleId}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2, ease: CART_EASE } }}
+                transition={{ duration: 0.34, ease: CART_EASE }}
+              >
                 <div className="cart-bundle-head">
                   <div>
                     <span className="cart-bundle-tag">{bundle.label}</span>
@@ -136,12 +148,22 @@ export default function CartPage() {
                   {bundle.boxDiscountUsd > 0 ? <span className="cart-bundle-save">− {currency(bundle.boxDiscountUsd)}/box bundle discount</span> : null}
                   <Link href={`/p/pr-box`} className="link-button">+ Build another box</Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             {singles.map((item) => (
-              <SingleLine key={item.lineId} item={item} onRemove={removeItem} />
+              <motion.div
+                key={item.lineId}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2, ease: CART_EASE } }}
+                transition={{ duration: 0.34, ease: CART_EASE }}
+              >
+                <SingleLine item={item} onRemove={removeItem} />
+              </motion.div>
             ))}
+            </AnimatePresence>
 
             <Link href="/" className="ghost-button cart-add-more">+ Add another SKU</Link>
           </div>

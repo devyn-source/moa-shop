@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
+import { useToast } from "./ToastProvider";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
@@ -187,8 +187,9 @@ export function PdpConfigurator({
   // finalised copy here and clears the editor for the next location.
   const [savedPlacements, setSavedPlacements] = useState<ExtraPlacement[]>(seed0?.extraPlacements ?? []);
   const fileRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+  const [dragOver, setDragOver] = useState(false);
   const { addItem } = useCart();
+  const { toast } = useToast();
 
   // Fire product_viewed once per SKU (Shopify-style funnel entry).
   useEffect(() => {
@@ -563,8 +564,7 @@ export function PdpConfigurator({
       artworkPlacements: allPlacements.length ? allPlacements : undefined,
       wovenLabel: Boolean(wovenLabel),
     });
-    setSubmitting(true);
-    router.push("/cart");
+    toast("Added to your order", { href: "/cart", cta: "View cart →" });
   };
 
   // BUNDLE MODE — same full payload as add-to-cart, but handed to the box (no
@@ -926,7 +926,16 @@ export function PdpConfigurator({
                           className="pdpx-file"
                           onChange={(e) => handleFile(e.target.files?.[0])}
                         />
-                        <button type="button" className="pdpx-drop" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                        <button
+                          type="button"
+                          className={`pdpx-drop${dragOver ? " is-dragover" : ""}`}
+                          onClick={() => fileRef.current?.click()}
+                          disabled={uploading}
+                          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                          onDragEnter={(e) => { e.preventDefault(); setDragOver(true); }}
+                          onDragLeave={() => setDragOver(false)}
+                          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
+                        >
                           <span className="pdpx-drop-eyebrow">Step 01</span>
                           <span className="pdpx-drop-cta">
                             {uploading ? "Uploading…" : artworkName ? artworkName : "Upload artwork"}

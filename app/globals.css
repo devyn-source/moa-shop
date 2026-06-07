@@ -8064,3 +8064,41 @@ body.is-scrolled .site-header {
 .pdpx-canvas.is-capturing .pdpx-art-rotate,
 .pdpx-canvas.is-capturing .pdpx-art-rotate-stem { display: none !important; }
 .pdpx-canvas.is-capturing .pdpx-art-handle { box-shadow: none !important; border-color: transparent !important; outline: none !important; }
+
+/* ===== Toasts ===== */
+.toast-stack {
+  position: fixed; left: 0; right: 0; bottom: 24px; z-index: 1200;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 0 16px; pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--color-charcoal); color: #fff;
+  border-radius: 999px; padding: 12px 18px;
+  box-shadow: 0 16px 40px rgba(30, 30, 30, 0.28);
+  font-size: 0.9rem; max-width: 92vw;
+}
+.toast-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--color-success); color: #fff; font-size: 0.7rem; font-weight: 700;
+}
+.toast-msg { font-weight: 500; }
+.toast-cta { color: #fff; text-decoration: underline; text-underline-offset: 2px; font-weight: 700; font-size: 0.84rem; white-space: nowrap; }
+
+/* ===== Upload drop-zone drag-over state ===== */
+.pdpx-drop { transition: border-color var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out); }
+.pdpx-drop.is-dragover {
+  border-color: var(--color-terracotta) !important;
+  background: rgba(176, 71, 49, 0.06) !important;
+  transform: scale(1.01);
+}
+
+/* ===== Artwork "lands on the garment" — drop & settle ===== */
+@keyframes pdpx-art-in {
+  0% { opacity: 0; transform: scale(1.16); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+.pdpx-place-box { animation: pdpx-art-in 380ms var(--ease-out) both; }

@@ -10,6 +10,7 @@ import { HeaderScroll } from "@/components/HeaderScroll";
 import { AccountNav } from "@/components/AccountNav";
 import { AnalyticsProviders } from "@/components/AnalyticsProviders";
 import { PromoBanner } from "@/components/PromoBanner";
+import { ToastProvider } from "@/components/ToastProvider";
 import { USE_CASES } from "@/lib/use-cases";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <HeaderScroll />
         <ProximityFX />
         <CartProvider>
+        <ToastProvider>
         <PromoBanner />
         <header className="site-header site-header--sticky">
           <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
@@ -134,6 +136,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </span>
           </div>
         </footer>
+        </ToastProvider>
         </CartProvider>
         </MaybeClerk>
       </body>

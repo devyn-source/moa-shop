@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { useCart } from "./CartProvider";
 
 export function CartButton() {
@@ -13,7 +14,20 @@ export function CartButton() {
         <circle cx="17.5" cy="20" r="1" />
       </svg>
       <span>Cart</span>
-      {hydrated && count > 0 ? <span className="cart-badge">{count > 999 ? "999+" : count}</span> : null}
+      <AnimatePresence>
+        {hydrated && count > 0 ? (
+          <motion.span
+            key={count}
+            className="cart-badge"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: [0.5, 1.22, 1], opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {count > 999 ? "999+" : count}
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
     </Link>
   );
 }
