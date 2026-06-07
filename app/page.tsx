@@ -96,7 +96,7 @@ export default async function LandingPage() {
   const clients: [string, string, number][] = [
     ["nike", "Nike", 26], ["burberry", "Burberry", 20], ["ralph-lauren", "Ralph Lauren", 19],
     ["activision", "Activision", 23], ["live-nation", "Live Nation", 22], ["bacardi", "Bacardi", 22],
-    ["canva", "Canva", 25], ["goldenvoice", "Goldenvoice", 22], ["kaytranada", "Kaytranada", 17],
+    ["google", "Google", 24], ["canva", "Canva", 25], ["goldenvoice", "Goldenvoice", 22], ["kaytranada", "Kaytranada", 17],
     ["evisu", "Evisu", 22], ["pudgy-penguins", "Pudgy Penguins", 34], ["cherry", "Cherry", 32],
     ["bigface", "Bigface", 21], ["groq", "Groq", 27], ["twojeys", "Two Jeys", 20],
     ["tepn", "TEPN", 22], ["paly", "Paly", 32],

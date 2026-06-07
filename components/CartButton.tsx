@@ -22,7 +22,7 @@ export function CartButton() {
   // small delay so moving cursor from button → panel doesn't flicker it shut
   const hideSoon = () => {
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setOpen(false), 160);
+    timer.current = setTimeout(() => setOpen(false), 220);
   };
 
   return (
@@ -60,6 +60,7 @@ export function CartButton() {
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.22, ease: EASE }}
           >
+            <div className="cart-pop-inner">
             {items.length === 0 ? (
               <div className="cart-pop-empty">
                 <span>Your cart is empty.</span>
@@ -99,6 +100,7 @@ export function CartButton() {
                 </div>
               </>
             )}
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
