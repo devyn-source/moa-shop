@@ -8256,3 +8256,13 @@ p { line-height: 1.65; }
 /* Spread the case-study showcase wider than the standard landing section. */
 .lp-work { max-width: 1440px; }
 .lp-work .cs-grid { gap: 22px; }
+
+/* Case-study cards are links into the configurator for that style. */
+.cs-card { display: flex; flex-direction: column; text-decoration: none; color: inherit; cursor: pointer; }
+.cs-cta {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 11px;
+  font-family: var(--font-display); text-transform: uppercase; font-weight: 700;
+  font-size: 0.62rem; letter-spacing: 0.09em; color: var(--color-terracotta);
+}
+.cs-cta-arrow { transition: transform var(--dur) var(--ease-out); }
+.cs-card:hover .cs-cta-arrow { transform: translateX(4px); }
