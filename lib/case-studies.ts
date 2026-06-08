@@ -24,7 +24,8 @@ export const CASE_STUDIES: CaseStudy[] = [
   { id: "shapes-sweater", logo: "shapes", category: "knitwear", slugs: ["knit-sweater"], product: "Shapes Knit Sweater", line: "Cotton knit · embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
   { id: "bloody-sunday-cap", logo: "sunday", category: "headwear", slugs: ["five-panel"], product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" },
   { id: "google-hat", logo: "google", category: "headwear", slugs: ["dad-hat"], product: "Google Hat", line: "Cotton dad cap · embroidery, rubber appliqué", image: "/work/google-hat.png", fit: "contain" },
-  { id: "directv-box", category: "bundle", slugs: ["pr-box"], product: "DirecTV PR Box", line: "Custom rigid box · stencil print", image: "/work/directv-box.png", fit: "contain" } // TODO: add directv logo
+  { id: "directv-box", category: "bundle", slugs: ["pr-box"], product: "DirecTV PR Box", line: "Custom rigid box · stencil print", image: "/work/directv-box.png", fit: "contain" }, // TODO: add directv logo
+  { id: "bigface-chore", logo: "bigface", category: "outerwear", slugs: ["nylon-chore-jacket"], product: "Bigface Coach Jacket", line: "Nylon coach jacket · embroidered patch, snap front", image: "/work/bigface-chore.png", fit: "contain" }
 ];
 
 // PDP: exact product match by slug ("this style, in the wild"). Falls back to the
