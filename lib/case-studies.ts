@@ -27,7 +27,9 @@ export const CASE_STUDIES: CaseStudy[] = [
 // PDP: exact product match by slug ("this style, in the wild"). Falls back to the
 // full set only when the product has no dedicated project yet.
 export function caseStudiesFor(slug?: string): { items: CaseStudy[]; styleSpecific: boolean } {
-  if (!slug) return { items: CASE_STUDIES, styleSpecific: false };
+  if (!slug) return { items: CASE_STUDIES, styleSpecific: false }; // landing = full grid
+  // PDP: show ONLY this product's case study. If we don't have one for this
+  // product yet, show nothing — never fall back to unrelated styles.
   const matches = CASE_STUDIES.filter((c) => c.slugs.includes(slug));
-  return matches.length ? { items: matches, styleSpecific: true } : { items: CASE_STUDIES, styleSpecific: false };
+  return { items: matches, styleSpecific: matches.length > 0 };
 }
