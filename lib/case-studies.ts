@@ -17,11 +17,11 @@ export type CaseStudy = {
 
 export const CASE_STUDIES: CaseStudy[] = [
   { id: "sunday-puffer", logo: "sunday", category: "outerwear", slugs: ["down-puffer"], product: "Sunday Puffer Jacket", line: "Down puffer · nylon shell, rubber appliqué", image: "/work/sunday-puffer.png", fit: "contain" },
-  { id: "backbone-jacket", category: "outerwear", slugs: ["work-jacket"], product: "Backbone Work Jacket", line: "Cotton canvas · corduroy collar, woven patch", image: "/work/backbone-jacket.png", fit: "contain" }, // TODO: add backbone logo
+  { id: "backbone-jacket", logo: "backbone", category: "outerwear", slugs: ["work-jacket"], product: "Backbone Work Jacket", line: "Cotton canvas · corduroy collar, woven patch", image: "/work/backbone-jacket.png", fit: "contain" },
   { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", slugs: ["heavyweight-hoodie"], product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece · screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
   { id: "bigface-tee", logo: "bigface", category: "tee", slugs: ["heavyweight-tee"], product: "Bigface Tee", line: "Heavyweight tee · screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
   { id: "shapes-sweater", logo: "shapes", category: "knitwear", slugs: ["knit-sweater"], product: "Shapes Knit Sweater", line: "Cotton knit · embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
-  { id: "bloody-sunday-cap", category: "headwear", slugs: ["five-panel", "dad-hat"], product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" } // TODO: add bloody-sunday logo
+  { id: "bloody-sunday-cap", logo: "sunday", category: "headwear", slugs: ["five-panel", "dad-hat"], product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" }
 ];
 
 // PDP: exact product match by slug ("this style, in the wild"). Falls back to the
