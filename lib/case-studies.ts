@@ -17,6 +17,7 @@ export type CaseStudy = {
 export const CASE_STUDIES: CaseStudy[] = [
   // --- Real (cutouts from the 2026 catalog / fed in) ---
   { id: "sunday-puffer", logo: "sunday", category: "outerwear", product: "Sunday Puffer Jacket", line: "Down puffer · nylon shell, rubber appliqué", image: "/work/sunday-puffer.png", fit: "contain" },
+  { id: "backbone-jacket", category: "outerwear", product: "Backbone Work Jacket", line: "Cotton canvas · corduroy collar, woven patch", image: "/work/backbone-jacket.png", fit: "contain" }, // TODO: add backbone logo
   { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece · screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
   { id: "bigface-tee", logo: "bigface", category: "tee", product: "Bigface Tee", line: "Heavyweight tee · screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
   { id: "shapes-sweater", logo: "shapes", category: "knitwear", product: "Shapes Knit Sweater", line: "Cotton knit · embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
