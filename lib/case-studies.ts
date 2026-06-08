@@ -18,9 +18,9 @@ export const CASE_STUDIES: CaseStudy[] = [
   // --- Real (cutouts from the 2026 catalog / fed in) ---
   { id: "sunday-puffer", logo: "sunday", category: "outerwear", product: "Sunday Puffer Jacket", line: "Down puffer · nylon shell, rubber appliqué", image: "/work/sunday-puffer.png", fit: "contain" },
   { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece · screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
+  { id: "bigface-tee", logo: "bigface", category: "tee", product: "Bigface Tee", line: "Heavyweight tee · screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
 
   // --- Placeholders (to be replaced as real styles are fed in) ---
-  { id: "canva", logo: "canva", category: "tee", product: "Heavyweight Tees", line: "Onboarding kits shipped worldwide", image: "/work/work-2.jpg" },
   { id: "twojeys", logo: "twojeys", category: "knitwear", product: "Knit Sweaters", line: "In-store retail capsule", image: "/work/work-5.jpg" },
   { id: "cherry", logo: "cherry", category: "headwear", product: "Embroidered Caps", line: "Seasonal collection for the audience", image: "/work/work-6.jpg" }
 ];
