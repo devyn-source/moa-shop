@@ -52,6 +52,10 @@
 :root {
   --color-cream: #EEEAE3;
   --color-cream-dark: #E2DED6;
+  /* Shared product-frame backdrop: a subtle studio lift centered on the page
+     tone (#EEEAE3) so products lift off the surface without reading as a second
+     cream. Used by catalog cards + case-study cards for consistency. */
+  --frame-bg: radial-gradient(120% 100% at 50% 36%, #F2EEE8 0%, #E8E3DA 100%);
   --color-charcoal: #1E1E1E;
   --color-terracotta: #B04731;
   --color-terracotta-light: #C45A42;
@@ -1208,7 +1212,7 @@ button {
   aspect-ratio: 4 / 5;
   margin-bottom: 0;
   overflow: hidden;
-  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
+  background: var(--frame-bg);
   border: 0;
   border-bottom: 1px solid var(--border);
   border-radius: 0;
@@ -1440,7 +1444,7 @@ button {
   position: relative;
   aspect-ratio: 5 / 4;
   margin: 0;
-  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
+  background: var(--frame-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
@@ -2165,7 +2169,7 @@ button {
   justify-content: center;
   aspect-ratio: 5 / 4;
   margin-bottom: 14px;
-  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
+  background: var(--frame-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
@@ -2813,7 +2817,7 @@ a.stat-card:hover {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
+  background: var(--frame-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
 }
@@ -3002,7 +3006,7 @@ a.stat-card:hover {
   max-width: 600px;
   margin: 0 auto;
   aspect-ratio: 4 / 5;
-  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
+  background: var(--frame-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
@@ -3797,7 +3801,7 @@ a.stat-card:hover {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 5;
-  background: linear-gradient(140deg, #f7f3ed 0%, #ece6dc 100%);
+  background: var(--frame-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
@@ -8232,7 +8236,7 @@ p { line-height: 1.65; }
   transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 .cs-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(30, 30, 30, 0.10); }
-.cs-shot { aspect-ratio: 4 / 5; background: var(--color-cream); overflow: hidden; flex: none; }
+.cs-shot { aspect-ratio: 4 / 5; background: var(--frame-bg); overflow: hidden; flex: none; }
 .cs-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* meta grows to fill (cards stretch to equal height in the grid) so the CTA can
    pin to the bottom and align identically across every card. */
@@ -8252,7 +8256,7 @@ p { line-height: 1.65; }
 .lp-work .cs-head { text-align: center; }
 
 /* Case-study product cutouts (transparent PNGs) — show the whole product on the card. */
-.cs-shot--contain { background: var(--color-cream); display: flex; align-items: center; justify-content: center; padding: 10px; }
+.cs-shot--contain { background: var(--frame-bg); display: flex; align-items: center; justify-content: center; padding: 10px; }
 .cs-shot--contain img { object-fit: contain; }
 
 /* Spread the case-study showcase wider than the standard landing section. */
