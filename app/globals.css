@@ -7220,6 +7220,14 @@ body.is-scrolled .site-header {
 .bb-stepper button { width: 32px; height: 34px; background: var(--color-cream); border: none; cursor: pointer; font-size: 1rem; }
 .bb-stepper input { width: 64px; height: 34px; border: none; text-align: center; font: inherit; }
 .bb-moq-note { font-size: 0.76rem; color: var(--color-warning); margin: 2px 0 6px; }
+/* Program-level size breakdown (drives every item's run) */
+.bb-sizes { margin: 8px 0 2px; }
+.bb-size-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 6px; }
+.bb-size-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.bb-size-name { font-family: var(--font-display); text-transform: uppercase; font-size: 0.56rem; letter-spacing: 0.06em; color: var(--color-neutral); }
+.bb-size-cell input { width: 100%; text-align: center; padding: 6px 2px; border: 1px solid var(--input); border-radius: 7px; background: var(--card); font: inherit; font-size: 0.82rem; color: var(--color-charcoal); -moz-appearance: textfield; }
+.bb-size-cell input::-webkit-outer-spin-button, .bb-size-cell input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.bb-size-cell input:focus { outline: none; border-color: var(--color-terracotta); }
 .bb-breakdown { margin: 12px 0; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 12px; }
 .bb-subtotal { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
 .bb-discount strong { color: var(--color-success); }

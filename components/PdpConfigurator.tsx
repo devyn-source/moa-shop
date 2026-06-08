@@ -165,7 +165,11 @@ export function PdpConfigurator({
             (s.key === "color" && product.variants.length > 1) ||
             (s.key === "decoration" && product.decorations.length > 0)
         )
-      : STEPS
+      : // In a PR Box, the size run is set once at the program level — hide the
+        // per-item size step here so each piece inherits the box breakdown.
+        bundle
+        ? STEPS.filter((s) => s.key !== "size")
+        : STEPS
   ).map((s) => (isPackaging && s.key === "decoration" ? { ...s, label: "Finish" } : s));
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");

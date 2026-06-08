@@ -28,14 +28,41 @@ function distributeAcross(sizes: string[], total: number): Record<string, number
   }, {});
 }
 
+// Canonical PROGRAM size run. Each recipient's box is a single size, so the size
+// breakdown lives at the box-program level — every sized piece inherits it; one-
+// size pieces (caps/totes) just take the full box count.
+const BOX_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
+function sumSizes(s: Record<string, number>): number {
+  return Object.values(s).reduce((a, b) => a + (b || 0), 0);
+}
+
+// Map the program breakdown onto one product's sizes. One-size pieces take the
+// full count; sized pieces inherit the run, folding any size they don't offer
+// (e.g. a jacket with no XS) into their smallest size so totals still match.
+function applyBoxSizes(boxSizes: Record<string, number>, productSizes: string[]): Record<string, number> {
+  const total = sumSizes(boxSizes);
+  if (productSizes.length <= 1) return { [productSizes[0] ?? "ONE"]: total };
+  const out: Record<string, number> = {};
+  for (const s of productSizes) out[s] = 0;
+  let overflow = 0;
+  for (const [size, n] of Object.entries(boxSizes)) {
+    if (!n) continue;
+    if (size in out) out[size] += n;
+    else overflow += n;
+  }
+  if (overflow) out[productSizes[0]] += overflow;
+  return out;
+}
+
 // A default (un-customized) configuration — what "add item" / a kit preset drops
-// in. The buyer then opens the FULL PDP to customize (color, artwork placement,
-// decoration, size run, woven label, …).
-function defaultConfig(p: CatalogProduct, boxQty: number): BundleItemConfig {
+// in. The buyer then opens the FULL PDP to customize (color, artwork, decoration);
+// the size run is inherited from the program breakdown, not set per piece.
+function defaultConfig(p: CatalogProduct, boxSizes: Record<string, number>): BundleItemConfig {
   const variant = p.variants.find((v) => v.isAvailable) ?? p.variants[0];
-  const qty = Math.max(p.moq, boxQty);
-  const sizeQty = distributeAcross(p.sizes, qty);
-  const perUnitUsd = getPriceTier(p, qty).perUnitUsd;
+  const sizeQty = applyBoxSizes(boxSizes, p.sizes);
+  const qty = sumSizes(sizeQty);
+  const perUnitUsd = getPriceTier(p, Math.max(p.moq, qty)).perUnitUsd;
   return {
     productId: p.id,
     slug: p.slug,
@@ -61,14 +88,13 @@ function defaultConfig(p: CatalogProduct, boxQty: number): BundleItemConfig {
   };
 }
 
-// Re-scale an item to a new program size: redistribute its size run to total the
-// new box qty, re-price at that volume (keeping its decoration/woven adders).
-function rescaleConfig(cfg: BundleItemConfig, p: CatalogProduct | undefined, newQty: number): BundleItemConfig {
+// Re-apply the PROGRAM size breakdown to an item: inherit the run, re-price at
+// that volume (keeping its decoration/woven adders).
+function rescaleConfig(cfg: BundleItemConfig, p: CatalogProduct | undefined, boxSizes: Record<string, number>): BundleItemConfig {
   if (!p) return cfg;
-  const qty = Math.max(p.moq, newQty);
-  const sizes = p.sizes.length ? p.sizes : Object.keys(cfg.sizeQty);
-  const sizeQty = distributeAcross(sizes, qty);
-  const perUnitUsd = getPriceTier(p, qty).perUnitUsd;
+  const sizeQty = applyBoxSizes(boxSizes, p.sizes);
+  const qty = sumSizes(sizeQty);
+  const perUnitUsd = getPriceTier(p, Math.max(p.moq, qty)).perUnitUsd;
   return {
     ...cfg,
     sizeQty,
@@ -135,32 +161,45 @@ export function BoxBuilder({
   const eligibleById = useMemo(() => new Map(eligible.map((p) => [p.id, p])), [eligible]);
   const packagingById = useMemo(() => new Map(packaging.map((p) => [p.id, p])), [packaging]);
 
-  const [boxQty, setBoxQty] = useState<number>(promo.qualify.minBoxes);
+  // Program-level size breakdown — the single source of truth for every item's
+  // size run. boxQty (the box count) is just its total.
+  const initialBoxSizes = useMemo(() => distributeAcross(BOX_SIZES, promo.qualify.minBoxes), [promo.qualify.minBoxes]);
+  const [boxSizes, setBoxSizes] = useState<Record<string, number>>(initialBoxSizes);
+  const boxQty = useMemo(() => sumSizes(boxSizes), [boxSizes]);
   const [items, setItems] = useState<BoxItem[]>(() =>
     (initialComponents ?? [])
       .map((ic) => {
         const p = eligible.find((e) => e.id === ic.productId);
-        return p ? { key: nextKey(), config: defaultConfig(p, promo.qualify.minBoxes) } : null;
+        return p ? { key: nextKey(), config: defaultConfig(p, initialBoxSizes) } : null;
       })
       .filter(Boolean) as BoxItem[]
   );
   // Packaging is configured in the FULL configurator, exactly like garment items
   // (one config per piece; 1 per box). Required pieces (the box) are pre-added.
   const [packItems, setPackItems] = useState<BoxItem[]>(() =>
-    packaging.filter((p) => p.packagingRequired).map((p) => ({ key: nextKey(), config: defaultConfig(p, promo.qualify.minBoxes) }))
+    packaging.filter((p) => p.packagingRequired).map((p) => ({ key: nextKey(), config: defaultConfig(p, initialBoxSizes) }))
   );
   const [submitting, setSubmitting] = useState(false);
   const [modal, setModal] = useState<{ product: CatalogProduct; seed?: BundleItemConfig["seed"]; editKey?: string } | null>(null);
 
-  // --- program size (rescales every item's size run) ---
-  const updateBoxQty = useCallback(
-    (n: number) => {
-      const q = Math.max(1, Math.round(n) || 1);
-      setBoxQty(q);
-      setItems((prev) => prev.map((it) => ({ ...it, config: rescaleConfig(it.config, eligibleById.get(it.config.productId), q) })));
-      setPackItems((prev) => prev.map((it) => ({ ...it, config: rescaleConfig(it.config, packagingById.get(it.config.productId), q) })));
+  // --- program size breakdown (re-applies to every item's size run) ---
+  const applyProgramSizes = useCallback(
+    (next: Record<string, number>) => {
+      setBoxSizes(next);
+      setItems((prev) => prev.map((it) => ({ ...it, config: rescaleConfig(it.config, eligibleById.get(it.config.productId), next) })));
+      setPackItems((prev) => prev.map((it) => ({ ...it, config: rescaleConfig(it.config, packagingById.get(it.config.productId), next) })));
     },
     [eligibleById, packagingById]
+  );
+  // Total stepper — redistribute evenly across the size set.
+  const updateBoxQty = useCallback(
+    (n: number) => applyProgramSizes(distributeAcross(BOX_SIZES, Math.max(1, Math.round(n) || 1))),
+    [applyProgramSizes]
+  );
+  // A single size cell.
+  const updateBoxSize = useCallback(
+    (size: string, n: number) => applyProgramSizes({ ...boxSizes, [size]: Math.max(0, Math.round(n) || 0) }),
+    [boxSizes, applyProgramSizes]
   );
 
   // --- items ---
@@ -168,21 +207,24 @@ export function BoxBuilder({
     (productId: string) => {
       const p = eligibleById.get(productId);
       if (!p) return;
-      setItems((prev) => [...prev, { key: nextKey(), config: defaultConfig(p, boxQty) }]);
+      setItems((prev) => [...prev, { key: nextKey(), config: defaultConfig(p, boxSizes) }]);
     },
-    [eligibleById, boxQty]
+    [eligibleById, boxSizes]
   );
   const removeItem = useCallback((key: string) => setItems((prev) => prev.filter((it) => it.key !== key)), []);
   const handleModalUse = useCallback(
     (cfg: BundleItemConfig) => {
-      const setList = modal?.product.category === "packaging" ? setPackItems : setItems;
+      const isPack = modal?.product.category === "packaging";
+      const setList = isPack ? setPackItems : setItems;
+      // Keep the size run program-driven — re-apply the breakdown to the saved config.
+      const synced = rescaleConfig(cfg, modal?.product, boxSizes);
       setList((prev) => {
-        if (modal?.editKey) return prev.map((it) => (it.key === modal.editKey ? { ...it, config: cfg } : it));
-        return [...prev, { key: nextKey(), config: cfg }];
+        if (modal?.editKey) return prev.map((it) => (it.key === modal.editKey ? { ...it, config: synced } : it));
+        return [...prev, { key: nextKey(), config: synced }];
       });
       setModal(null);
     },
-    [modal]
+    [modal, boxSizes]
   );
 
   // --- packaging ---
@@ -196,9 +238,9 @@ export function BoxBuilder({
     (id: string) => {
       const p = packagingById.get(id);
       if (!p) return;
-      setPackItems((prev) => (prev.some((it) => it.config.productId === id) ? prev : [...prev, { key: nextKey(), config: defaultConfig(p, boxQty) }]));
+      setPackItems((prev) => (prev.some((it) => it.config.productId === id) ? prev : [...prev, { key: nextKey(), config: defaultConfig(p, boxSizes) }]));
     },
-    [packagingById, boxQty]
+    [packagingById, boxSizes]
   );
   const removePackaging = useCallback(
     (key: string) => {
@@ -223,7 +265,7 @@ export function BoxBuilder({
     [items, selectedPackaging, boxQty, promo]
   );
 
-  const canAdd = items.length > 0 && selectedPackaging.length > 0 && !submitting;
+  const canAdd = items.length > 0 && selectedPackaging.length > 0 && boxQty >= promo.qualify.minBoxes && !submitting;
 
   const handleAdd = useCallback(() => {
     if (!canAdd) return;
@@ -409,7 +451,28 @@ export function BoxBuilder({
               <button type="button" aria-label="More boxes" onClick={() => updateBoxQty(boxQty + 10)}>+</button>
             </div>
           </div>
-          <p className="bb-moq-note">One of each item per box · each item&apos;s size run totals {boxQty.toLocaleString()}.</p>
+          <div className="bb-sizes">
+            <span className="bb-field-label">Size breakdown</span>
+            <div className="bb-size-grid">
+              {BOX_SIZES.map((s) => (
+                <label className="bb-size-cell" key={s}>
+                  <span className="bb-size-name">{s}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={boxSizes[s] ?? 0}
+                    onChange={(e) => updateBoxSize(s, Number(e.target.value) || 0)}
+                    aria-label={`${s} boxes`}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+          <p className="bb-moq-note">
+            {boxQty < promo.qualify.minBoxes
+              ? `Minimum ${promo.qualify.minBoxes} boxes — add ${promo.qualify.minBoxes - boxQty} more.`
+              : `${boxQty.toLocaleString()} boxes · every item produced in this size run (caps & totes one-size).`}
+          </p>
 
           <div className="bb-breakdown">
             {items.length === 0 && selectedPackaging.length === 0 ? (
