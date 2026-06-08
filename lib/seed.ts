@@ -27,30 +27,16 @@ const coreDecorations: CatalogDecoration[] = [
     isAvailable: true
   },
   {
-    id: "patch",
-    label: "Woven patch",
-    description: "Woven or embroidered patch stitched onto garment or accessory.",
-    perUnitAdderUsd: 8.25,
-    placementZones: ["front", "sleeve", "hat front", "bag panel"],
-    isAvailable: true
-  },
-  {
-    id: "puff_print",
-    label: "Puff print",
-    description: "Raised print for bold graphics with dimensional hand feel.",
-    perUnitAdderUsd: 5.5,
-    placementZones: ["front", "back", "sleeve"],
+    id: "rubber_applique",
+    label: "Rubber appliqué",
+    description: "Raised silicone/rubber appliqué badge with a soft, tactile finish.",
+    perUnitAdderUsd: 6.5,
+    placementZones: ["front", "chest", "sleeve"],
     maxColors: 3,
     isAvailable: true
-  },
-  {
-    id: "woven_label",
-    label: "Woven label",
-    description: "Custom neck, side seam, hem, or interior label treatment.",
-    perUnitAdderUsd: 2.25,
-    placementZones: ["neck", "hem", "side seam", "interior"],
-    isAvailable: true
   }
+  // Woven label + woven patch are handled by their own dedicated modals (added
+  // separately) — they are intentionally NOT in the standard decoration list.
 ];
 
 export const seedVendors: Vendor[] = [
@@ -183,7 +169,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 8,
     variants: colorways("knit-sweater", "Crewneck sweater", "100% cotton knit", ["heatherGray", "jetBlack", "bone", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 99, perUnitUsd: 97 },
@@ -215,7 +201,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 10,
     variants: colorways("heavyweight-hoodie", "Oversized pullover", "420gsm cotton/poly fleece", ["jetBlack", "heatherGray", "bone", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
-      ["screen_print", "embroidery", "patch", "puff_print", "woven_label"].includes(item.id)
+      ["screen_print", "embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 99, perUnitUsd: 100 },
@@ -247,7 +233,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 20,
     variants: colorways("heavyweight-tee", "Boxy tee", "260gsm compact cotton jersey", ["bone", "jetBlack", "heatherGray", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
-      ["screen_print", "embroidery", "puff_print", "woven_label"].includes(item.id)
+      ["screen_print", "embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 149, perUnitUsd: 44 },
@@ -279,7 +265,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 30,
     variants: colorways("wide-leg-sweatpant", "Wide-leg sweatpant", "380gsm brushed fleece", ["heatherGray", "jetBlack", "ink", "bone"]),
     decorations: coreDecorations.filter((item) =>
-      ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
+      ["screen_print", "embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 99, perUnitUsd: 88 },
@@ -311,7 +297,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 1,
     variants: colorways("work-jacket", "Chore jacket", "12oz cotton canvas", ["walnut", "jetBlack", "natural", "forest"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 74, perUnitUsd: 150 },
@@ -343,7 +329,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 3,
     variants: colorways("zip-sherpa", "Full-zip sherpa", "heavyweight sherpa fleece", ["jetBlack", "navy", "ink", "forest", "bone"]),
     decorations: coreDecorations.filter((item) =>
-      ["patch", "woven_label", "embroidery"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 74, perUnitUsd: 125 },
@@ -375,7 +361,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 2,
     variants: colorways("down-puffer", "Hooded down puffer", "recycled nylon shell / goose down fill", ["jetBlack", "navy", "ink", "forest"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 74, perUnitUsd: 250 },
@@ -407,7 +393,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 4,
     variants: colorways("track-jacket", "Full-zip track jacket", "recycled nylon shell", ["jetBlack", "navy", "ink", "forest"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 74, perUnitUsd: 88 },
@@ -439,7 +425,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 5,
     variants: colorways("nylon-chore-jacket", "Nylon chore jacket", "nylon shell", ["jetBlack", "navy", "ink", "forest"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 74, perUnitUsd: 100 },
@@ -471,7 +457,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 50,
     variants: colorways("standard-tote", "Standard carry tote", "14oz cotton canvas", ["natural", "walnut", "jetBlack"]),
     decorations: coreDecorations.filter((item) =>
-      ["screen_print", "embroidery", "patch", "woven_label"].includes(item.id)
+      ["screen_print", "embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 38 },
@@ -502,7 +488,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 60,
     variants: colorways("dad-hat", "6-panel unstructured", "cotton twill", ["jetBlack", "bone", "navy", "forest", "oxblood"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 199, perUnitUsd: 34 },
@@ -533,7 +519,7 @@ const apparelProducts: CatalogProduct[] = [
     sortOrder: 62,
     variants: colorways("five-panel", "Unstructured 5-panel", "cotton twill", ["bone", "jetBlack", "navy", "forest"]),
     decorations: coreDecorations.filter((item) =>
-      ["embroidery", "patch", "woven_label"].includes(item.id)
+      ["embroidery", "rubber_applique"].includes(item.id)
     ),
     priceTiers: [
       { minQty: 50, maxQty: 199, perUnitUsd: 38 },
@@ -573,7 +559,7 @@ const apparelProducts: CatalogProduct[] = [
         frontImage: "/products/trucker-hat/trucker-white-black-front.png"
       }
     ],
-    decorations: coreDecorations.filter((item) => ["embroidery", "patch"].includes(item.id)),
+    decorations: coreDecorations.filter((item) => ["embroidery", "rubber_applique"].includes(item.id)),
     priceTiers: [
       { minQty: 50, maxQty: 199, perUnitUsd: 34 },
       { minQty: 200, maxQty: 499, perUnitUsd: 31 },
@@ -602,7 +588,7 @@ const apparelProducts: CatalogProduct[] = [
     isPublished: true,
     sortOrder: 80,
     variants: colorways("rib-knit-beanie", "Cuff beanie", "acrylic rib knit", ["heatherGray", "ink", "jetBlack", "navy", "forest", "natural"]),
-    decorations: coreDecorations.filter((item) => ["patch", "woven_label", "embroidery"].includes(item.id)),
+    decorations: coreDecorations.filter((item) => ["embroidery", "rubber_applique"].includes(item.id)),
     priceTiers: [
       { minQty: 50, maxQty: 249, perUnitUsd: 31 },
       { minQty: 250, maxQty: 499, perUnitUsd: 28 },
@@ -624,6 +610,27 @@ const apparelProducts: CatalogProduct[] = [
 // cost. Sell = LDP ÷ 0.40 (the catalog's 60%-floor model), so the full set sells
 // ~$42/box → ~$30/box. Per-asset LDP/sell below are allocated within that envelope.
 // ---------------------------------------------------------------------------
+// Standard packaging colorways — the box (and any colorable piece) can be made
+// in any of these. Tuned for the neutrals + accents most brands/tech reach for.
+// Recolored live by tinting the grey base (recolor: true).
+const PACKAGING_COLORS: { id: string; label: string; hex: string }[] = [
+  { id: "white", label: "White", hex: "#F5F3EE" },
+  { id: "bone", label: "Bone", hex: "#E7E1D5" },
+  { id: "kraft", label: "Kraft", hex: "#B5895C" },
+  { id: "sand", label: "Sand", hex: "#CBB78F" },
+  { id: "stone", label: "Stone", hex: "#A39E95" },
+  { id: "slate", label: "Slate", hex: "#5C616A" },
+  { id: "charcoal", label: "Charcoal", hex: "#38352F" },
+  { id: "black", label: "Jet Black", hex: "#181818" },
+  { id: "navy", label: "Navy", hex: "#1F2D4A" },
+  { id: "forest", label: "Forest", hex: "#2A4233" },
+  { id: "sage", label: "Sage", hex: "#9CA88B" },
+  { id: "sky", label: "Dusty Blue", hex: "#91A6B8" },
+  { id: "oxblood", label: "Oxblood", hex: "#67292E" },
+  { id: "terracotta", label: "Terracotta", hex: "#B04731" },
+  { id: "cream", label: "Cream", hex: "#EEEAE3" }
+];
+
 function packagingAsset(opts: {
   slug: string;
   skuCode: string;
@@ -640,6 +647,7 @@ function packagingAsset(opts: {
   printUpchargeUsd?: number; // per-unit print fee (branded − blank); 0/undefined = no upcharge
   designRequired?: boolean; // must be branded (blank is pointless — cards, stickers)
   printable?: boolean; // false = always plain (e.g. crinkle fill); default true
+  colorable?: boolean; // true → offers the full PACKAGING_COLORS palette (recolored live)
 }): CatalogProduct {
   return {
     id: `pkg-${opts.slug}`,
@@ -664,19 +672,30 @@ function packagingAsset(opts: {
     designRequired: opts.designRequired ?? false,
     printable: opts.printable ?? true,
     greyFront: opts.image,
-    variants: [
-      {
-        id: `pkg-${opts.slug}-default`,
-        label: opts.displayName,
-        fabric: "—",
-        colorLabel: "Branded",
-        colorHex: "#D6D1C0",
-        mockupTemplateUrl: "",
-        isAvailable: true,
-        frontImage: opts.image,
-        recolor: false
-      }
-    ],
+    variants: opts.colorable
+      ? PACKAGING_COLORS.map((c) => ({
+          id: `pkg-${opts.slug}-${c.id}`,
+          label: c.label,
+          fabric: "—",
+          colorLabel: c.label,
+          colorHex: c.hex,
+          mockupTemplateUrl: "",
+          isAvailable: true,
+          recolor: true // tint the grey box base live to the chosen color
+        }))
+      : [
+          {
+            id: `pkg-${opts.slug}-default`,
+            label: opts.displayName,
+            fabric: "—",
+            colorLabel: "Branded",
+            colorHex: "#D6D1C0",
+            mockupTemplateUrl: "",
+            isAvailable: true,
+            frontImage: opts.image,
+            recolor: false
+          }
+        ],
     decorations: [],
     priceTiers: opts.tiers
   };
@@ -693,6 +712,7 @@ export const packagingAssets: CatalogProduct[] = [
       "The PR Box itself — a rigid magnetic-close gift box with a custom-printed wrap. The required foundation of every box.",
     vendorUnitCostUsd: 9.0,
     required: true,
+    colorable: true, // the box offers the full 15-color palette (recolored live)
     sortOrder: 900,
     printUpchargeUsd: 3.0,
     image: "/products/pkg-rigid-box/base-front.png",

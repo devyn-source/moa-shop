@@ -24,6 +24,7 @@ export type PackagingAssetKind =
 export type DecorationMethod =
   | "screen_print"
   | "embroidery"
+  | "rubber_applique"
   | "puff_print"
   | "patch"
   | "dtg"

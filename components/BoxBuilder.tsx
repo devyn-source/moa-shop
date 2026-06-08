@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
 import { PdpConfigurator, type BundleItemConfig } from "./PdpConfigurator";
 import { useCart } from "./CartProvider";
-import { buildFullBundleCartLines, packagingUnitPrice, priceFullBundle } from "@/lib/bundle";
+import { buildFullBundleCartLines, packagingUnitPrice, priceFullBundle, type FullBundlePackaging } from "@/lib/bundle";
 import { currency, getPriceTier, round2 } from "@/lib/pricing";
 import { PR_BOX_PROMO } from "@/lib/promo";
 import type { CatalogProduct } from "@/lib/types";
@@ -237,9 +237,9 @@ export function BoxBuilder({
           const p = packagingById.get(it.config.productId);
           if (!p) return null;
           const c = it.config;
-          return { product: p, branded: packBrandedOf(c, p), artworkFileName: c.artworkFileName, artworkFileUrl: c.artworkFileUrl, artworkNotes: c.artworkNotes };
+          return { product: p, branded: packBrandedOf(c, p), artworkFileName: c.artworkFileName, artworkFileUrl: c.artworkFileUrl, artworkNotes: c.artworkNotes, variantId: c.variantId, colorLabel: c.colorLabel, colorHex: c.colorHex };
         })
-        .filter(Boolean) as { product: CatalogProduct; branded: boolean; artworkFileName?: string; artworkFileUrl?: string; artworkNotes?: string }[],
+        .filter(Boolean) as FullBundlePackaging[],
       boxQty,
       promo
     });
@@ -359,6 +359,7 @@ export function BoxBuilder({
                       {required ? null : <button type="button" className="cart-remove" aria-label="Remove packaging" onClick={() => removePackaging(it.key)}>✕</button>}
                     </div>
                     <p className="bb-summary-meta">
+                      {p.variants.length > 1 ? `${cfg.colorLabel} · ` : ""}
                       {!printable ? "Plain — not printed" : branded ? "Branded · artwork ✓" : "Blank — no print"}
                       {` · ${currency(unit)}/box`}
                     </p>

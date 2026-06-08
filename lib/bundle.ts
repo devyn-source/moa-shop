@@ -86,6 +86,9 @@ export type FullBundlePackaging = {
   artworkFileName?: string;
   artworkFileUrl?: string;
   artworkNotes?: string;
+  variantId?: string; // chosen colorway (colorable pieces, e.g. the box)
+  colorLabel?: string;
+  colorHex?: string;
 };
 
 export function buildFullBundleCartLines(args: {
@@ -134,9 +137,9 @@ export function buildFullBundleCartLines(args: {
       slug: p.slug,
       displayName: p.displayName,
       skuCode: p.skuCode,
-      variantId: p.variants[0]?.id ?? `${p.id}-default`,
-      colorLabel: pl.branded ? "Branded" : "Blank",
-      colorHex: p.variants[0]?.colorHex,
+      variantId: art?.variantId ?? p.variants[0]?.id ?? `${p.id}-default`,
+      colorLabel: art?.colorLabel ?? (pl.branded ? "Branded" : "Blank"),
+      colorHex: art?.colorHex ?? p.variants[0]?.colorHex,
       image: p.greyFront ?? p.variants[0]?.frontImage,
       decorationIds: [],
       decorationLabel: pl.branded ? "Branded packaging" : "Blank packaging",

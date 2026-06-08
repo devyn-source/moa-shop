@@ -155,10 +155,16 @@ export function PdpConfigurator({
   // Packaging pieces (PR Box) configure ONLY artwork placement — no color/
   // decoration/size run (1 per box). Freeform placement (no calibrated zones).
   const isPackaging = product.category === "packaging";
-  const visibleSteps = isPackaging ? STEPS.filter((s) => s.key === "placement") : STEPS;
+  // Packaging: color step only if the piece is colorable (>1 variant, e.g. the box);
+  // always the placement step. No decoration/size.
+  const visibleSteps = isPackaging
+    ? STEPS.filter((s) => s.key === "placement" || (s.key === "color" && product.variants.length > 1))
+    : STEPS;
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
-  const [step, setStep] = useState<Step>(seed0 || isPackaging ? "placement" : "color");
+  const [step, setStep] = useState<Step>(
+    isPackaging ? (product.variants.length > 1 ? "color" : "placement") : seed0 ? "placement" : "color"
+  );
   const [decorationIds, setDecorationIds] = useState<string[]>(seed0?.decorationIds ?? []);
   const [pantones, setPantones] = useState<PmsColor[]>(seed0?.pantones ?? []);
   const [artworkUrl, setArtworkUrl] = useState<string | null>(seed0?.artworkFileUrl ?? null);
