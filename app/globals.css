@@ -8244,3 +8244,7 @@ p { line-height: 1.65; }
 
 @media (max-width: 900px) { .cs-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .cs-grid { grid-template-columns: 1fr; } }
+
+/* Case studies on the landing: the lp-section already provides rhythm. */
+.lp-work .cs { margin-top: 0; padding-top: 0; border-top: 0; }
+.lp-work .cs-head { text-align: center; }

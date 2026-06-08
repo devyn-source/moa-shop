@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductShot } from "@/components/ProductShot";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { FaqItem } from "@/components/FaqItem";
+import { CaseStudies } from "@/components/CaseStudies";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { ALL_FAQS } from "@/lib/faqs";
 import type { CatalogProduct } from "@/lib/types";
@@ -292,6 +293,11 @@ export default async function LandingPage() {
             studio top brands trust for their best merch.
           </p>
         </div>
+      </section>
+
+      {/* ===== Selected work (full diverse grid) ===== */}
+      <section className="lp-section lp-work" data-reveal>
+        <CaseStudies />
       </section>
 
       {/* ===== FAQ ===== */}
