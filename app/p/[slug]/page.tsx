@@ -133,7 +133,7 @@ export default async function ProductPage({
         </Link>
       ) : null}
 
-      <CaseStudies category={product.category} />
+      <CaseStudies slug={product.slug} />
     </main>
   );
 }

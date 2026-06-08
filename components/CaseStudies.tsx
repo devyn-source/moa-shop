@@ -1,11 +1,10 @@
 import { caseStudiesFor } from "@/lib/case-studies";
-import type { ProductCategory } from "@/lib/types";
 
-// Completed-work showcase. On a PDP, pass the product's `category` to show
-// style-specific proof ("this style, in the wild"); on the landing, omit it for
-// the full diverse grid.
-export function CaseStudies({ category, eyebrow }: { category?: ProductCategory; eyebrow?: string }) {
-  const { items, styleSpecific } = caseStudiesFor(category);
+// Completed-work showcase. On a PDP, pass the product's `slug` to show only the
+// case study for THAT exact product ("this style, in the wild"); on the landing,
+// omit it for the full diverse grid.
+export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string }) {
+  const { items, styleSpecific } = caseStudiesFor(slug);
   if (!items.length) return null;
   const heading = styleSpecific ? "This style, in the wild" : "Merch we've put into the world";
   return (
