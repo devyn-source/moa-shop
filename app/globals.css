@@ -8248,3 +8248,11 @@ p { line-height: 1.65; }
 /* Case studies on the landing: the lp-section already provides rhythm. */
 .lp-work .cs { margin-top: 0; padding-top: 0; border-top: 0; }
 .lp-work .cs-head { text-align: center; }
+
+/* Case-study product cutouts (transparent PNGs) — show the whole product on the card. */
+.cs-shot--contain { background: var(--color-cream); display: flex; align-items: center; justify-content: center; padding: 22px; }
+.cs-shot--contain img { object-fit: contain; }
+
+/* Spread the case-study showcase wider than the standard landing section. */
+.lp-work { max-width: 1440px; }
+.lp-work .cs-grid { gap: 22px; }

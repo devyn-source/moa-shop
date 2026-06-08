@@ -17,11 +17,11 @@ export function CaseStudies({ category, eyebrow }: { category?: ProductCategory;
       <div className="cs-grid">
         {items.map((c) => (
           <article className="cs-card" key={c.id}>
-            <div className="cs-shot">
-              <img src={c.image} alt={`${c.brand} — ${c.product}`} loading="lazy" />
+            <div className={`cs-shot${c.fit === "contain" ? " cs-shot--contain" : ""}`}>
+              <img src={c.image} alt={c.product} loading="lazy" />
             </div>
             <div className="cs-meta">
-              <img className="cs-logo" src={`/brand/clients/${c.logo}.png`} alt={c.brand} loading="lazy" />
+              {c.logo ? <img className="cs-logo" src={`/brand/clients/${c.logo}.png`} alt="" loading="lazy" /> : null}
               <p className="cs-product">{c.product}</p>
               <p className="cs-line">{c.line}</p>
             </div>
