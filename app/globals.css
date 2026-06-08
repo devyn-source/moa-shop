@@ -8279,3 +8279,65 @@ p { line-height: 1.65; }
 .cs-card:hover .cs-cta { color: var(--color-terracotta-light); }
 .cs-cta-arrow { transition: transform var(--dur) var(--ease-out); }
 .cs-card:hover .cs-cta-arrow { transform: translateX(4px); }
+
+/* ===================================================================
+   Order detail — premium receipt (mockup + spec + files + totals)
+   =================================================================== */
+.ord { margin-top: 28px; }
+.ord-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  max-width: 940px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: 0 22px 60px rgba(30, 30, 30, 0.08);
+}
+.ord-mockup {
+  background: var(--frame-bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 34px; min-height: 440px; border-right: 1px solid var(--border);
+}
+.ord-mockup :is(img, .recolor-shot, .product-photo, .product-visual) {
+  width: 100%; height: 100%; max-height: 460px; object-fit: contain; display: block;
+}
+.ord-detail { padding: 30px 32px; display: flex; flex-direction: column; }
+.ord-head { position: relative; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.ord-sku { display: block; font-family: var(--font-display); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.16em; color: var(--color-terracotta); }
+.ord-title { font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: clamp(1.3rem, 2.4vw, 1.7rem); letter-spacing: -0.01em; line-height: 1.04; margin: 4px 96px 0 0; color: var(--color-charcoal); }
+.ord-status { position: absolute; top: 0; right: 0; font-family: var(--font-display); text-transform: uppercase; font-size: 0.56rem; letter-spacing: 0.1em; font-weight: 700; padding: 5px 11px; border-radius: 999px; background: var(--color-cream-dark); color: var(--color-neutral); }
+.ord-status--delivered { background: rgba(61, 122, 74, 0.14); color: var(--color-success); }
+.ord-status--shipped { background: rgba(176, 71, 49, 0.12); color: var(--color-terracotta); }
+
+.ord-specs { margin: 0 0 16px; }
+.ord-specs > div { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.ord-specs dt { font-family: var(--font-display); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--color-neutral); }
+.ord-specs dd { margin: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 500; color: var(--color-charcoal); }
+.ord-swatch { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(30, 30, 30, 0.12); }
+
+.ord-sizes { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.ord-size-chip { font-size: 0.74rem; padding: 5px 10px; border-radius: 8px; background: var(--color-cream); color: var(--color-neutral); }
+.ord-size-chip b { font-family: var(--font-display); color: var(--color-charcoal); margin-right: 3px; }
+
+.ord-files { margin-bottom: 18px; }
+.ord-files-label { font-family: var(--font-display); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--color-neutral); margin: 0 0 8px; }
+.ord-file { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 7px; text-decoration: none; color: var(--color-charcoal); font-size: 0.84rem; transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out); }
+.ord-file:hover { border-color: var(--color-terracotta); background: rgba(176, 71, 49, 0.03); }
+.ord-file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ord-file-name em { color: var(--color-neutral); font-style: normal; }
+.ord-file-dl { flex: none; color: var(--color-terracotta); font-weight: 700; }
+
+.ord-pricing { border-top: 1px solid var(--border); padding-top: 12px; margin-top: auto; }
+.ord-price-line { display: flex; justify-content: space-between; font-size: 0.84rem; color: var(--color-neutral); padding: 4px 0; }
+.ord-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 11px; margin-top: 6px; border-top: 1px solid var(--border); }
+.ord-total span { font-family: var(--font-display); text-transform: uppercase; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--color-neutral); }
+.ord-total strong { font-family: var(--font-display); font-size: 1.25rem; color: var(--color-charcoal); }
+
+.ord-tracking { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; padding: 11px 14px; background: var(--color-cream); border-radius: 10px; font-size: 0.82rem; color: var(--color-charcoal); }
+.ord-tracking-label { font-family: var(--font-display); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.12em; color: var(--color-neutral); }
+
+.ord-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+@media (max-width: 760px) {
+  .ord-grid { grid-template-columns: 1fr; }
+  .ord-mockup { min-height: 0; aspect-ratio: 4 / 5; border-right: 0; border-bottom: 1px solid var(--border); }
+}
