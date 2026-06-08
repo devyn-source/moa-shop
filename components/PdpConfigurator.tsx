@@ -157,9 +157,16 @@ export function PdpConfigurator({
   const isPackaging = product.category === "packaging";
   // Packaging: color step only if the piece is colorable (>1 variant, e.g. the box);
   // always the placement step. No decoration/size.
-  const visibleSteps = isPackaging
-    ? STEPS.filter((s) => s.key === "placement" || (s.key === "color" && product.variants.length > 1))
-    : STEPS;
+  const visibleSteps = (
+    isPackaging
+      ? STEPS.filter(
+          (s) =>
+            s.key === "placement" ||
+            (s.key === "color" && product.variants.length > 1) ||
+            (s.key === "decoration" && product.decorations.length > 0)
+        )
+      : STEPS
+  ).map((s) => (isPackaging && s.key === "decoration" ? { ...s, label: "Finish" } : s));
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
   const [step, setStep] = useState<Step>(
@@ -1147,20 +1154,22 @@ export function PdpConfigurator({
 
         <p className="pdpx-delivered">Delivered in {formatLeadTime(product.leadTimeDays)}</p>
 
-        {/* Woven-label upsell */}
-        <button type="button" className={`pdpx-woven${wovenLabel ? " is-on" : ""}`} onClick={() => setWovenOpen(true)}>
-          {wovenLabel ? (
-            <>
-              <span className="pdpx-woven-text"><strong>Woven label</strong> · “{wovenLabel.text}”</span>
-              <span className="pdpx-woven-edit">Edit</span>
-            </>
-          ) : (
-            <>
-              <span className="pdpx-woven-text"><strong>+ Add a woven label</strong> — your brand, sewn in</span>
-              <span className="pdpx-woven-price">+{currency(WOVEN_LABEL_ADDER)}/unit</span>
-            </>
-          )}
-        </button>
+        {/* Woven-label upsell — garments only (boxes/packaging don't take labels) */}
+        {!isPackaging ? (
+          <button type="button" className={`pdpx-woven${wovenLabel ? " is-on" : ""}`} onClick={() => setWovenOpen(true)}>
+            {wovenLabel ? (
+              <>
+                <span className="pdpx-woven-text"><strong>Woven label</strong> · “{wovenLabel.text}”</span>
+                <span className="pdpx-woven-edit">Edit</span>
+              </>
+            ) : (
+              <>
+                <span className="pdpx-woven-text"><strong>+ Add a woven label</strong> — your brand, sewn in</span>
+                <span className="pdpx-woven-price">+{currency(WOVEN_LABEL_ADDER)}/unit</span>
+              </>
+            )}
+          </button>
+        ) : null}
 
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">

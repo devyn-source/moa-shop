@@ -29,7 +29,12 @@ export type DecorationMethod =
   | "patch"
   | "dtg"
   | "sublimation"
-  | "woven_label";
+  | "woven_label"
+  // Box / packaging print finishes
+  | "full_color"
+  | "spot_uv"
+  | "foil_stamp"
+  | "emboss";
 
 export type OrderStatus =
   | "awaiting_payment"

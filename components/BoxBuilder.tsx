@@ -212,9 +212,9 @@ export function BoxBuilder({
       packItems
         .map((it) => {
           const p = packagingById.get(it.config.productId);
-          return p ? { product: p, branded: packBrandedOf(it.config, p) } : null;
+          return p ? { product: p, branded: packBrandedOf(it.config, p), finishAdderUsd: it.config.decorationAdderUsd } : null;
         })
-        .filter(Boolean) as { product: CatalogProduct; branded: boolean }[],
+        .filter(Boolean) as { product: CatalogProduct; branded: boolean; finishAdderUsd?: number }[],
     [packItems, packagingById, packBrandedOf]
   );
 
@@ -237,7 +237,8 @@ export function BoxBuilder({
           const p = packagingById.get(it.config.productId);
           if (!p) return null;
           const c = it.config;
-          return { product: p, branded: packBrandedOf(c, p), artworkFileName: c.artworkFileName, artworkFileUrl: c.artworkFileUrl, artworkNotes: c.artworkNotes, variantId: c.variantId, colorLabel: c.colorLabel, colorHex: c.colorHex };
+          const branded = packBrandedOf(c, p);
+          return { product: p, branded, artworkFileName: c.artworkFileName, artworkFileUrl: c.artworkFileUrl, artworkNotes: c.artworkNotes, variantId: c.variantId, colorLabel: c.colorLabel, colorHex: c.colorHex, finishAdderUsd: c.decorationAdderUsd, finishLabel: branded && c.decorationLabel && c.decorationLabel !== "Undecorated" ? c.decorationLabel : undefined, decorationIds: c.decorationIds };
         })
         .filter(Boolean) as FullBundlePackaging[],
       boxQty,
@@ -341,7 +342,9 @@ export function BoxBuilder({
               const required = Boolean(p.packagingRequired);
               const printable = p.printable !== false;
               const branded = packBrandedOf(cfg, p);
-              const unit = packagingUnitPrice(p, boxQty, branded).perUnitUsd;
+              const finishAdder = branded ? (cfg.decorationAdderUsd ?? 0) : 0;
+              const finishLabel = branded && cfg.decorationLabel && cfg.decorationLabel !== "Undecorated" ? cfg.decorationLabel : null;
+              const unit = round2(packagingUnitPrice(p, boxQty, branded).perUnitUsd + finishAdder);
               return (
                 <motion.li
                   className="bb-summary"
@@ -361,6 +364,7 @@ export function BoxBuilder({
                     <p className="bb-summary-meta">
                       {p.variants.length > 1 ? `${cfg.colorLabel} · ` : ""}
                       {!printable ? "Plain — not printed" : branded ? "Branded · artwork ✓" : "Blank — no print"}
+                      {finishLabel ? ` · ${finishLabel}` : ""}
                       {` · ${currency(unit)}/box`}
                     </p>
                     <div className="bb-summary-foot">

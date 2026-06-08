@@ -21,7 +21,7 @@ export type FullBundleItem = Omit<
   "lineId" | "bundleId" | "bundleLabel" | "bundleRole" | "perBoxQty" | "perBoxUsd" | "bundleDiscountUsd" | "promoId"
 >;
 
-export type PackagingSelection = { product: CatalogProduct; branded: boolean };
+export type PackagingSelection = { product: CatalogProduct; branded: boolean; finishAdderUsd?: number };
 
 export type FullBundlePrice = {
   boxQty: number;
@@ -54,8 +54,10 @@ export function priceFullBundle(
   now: Date = new Date()
 ): FullBundlePrice {
   const itemsSubtotalUsd = round2(items.reduce((s, i) => s + (i.totalUsd ?? 0), 0));
-  const packagingLines = packaging.map(({ product, branded }) => {
-    const { perUnitUsd, branded: isBranded } = packagingUnitPrice(product, boxQty, branded);
+  const packagingLines = packaging.map(({ product, branded, finishAdderUsd = 0 }) => {
+    const { perUnitUsd: baseUnit, branded: isBranded } = packagingUnitPrice(product, boxQty, branded);
+    // Finish (foil/spot UV/etc.) only applies to a branded (printed) piece.
+    const perUnitUsd = round2(baseUnit + (isBranded ? finishAdderUsd : 0));
     return { product, perUnitUsd, totalUsd: round2(perUnitUsd * boxQty), branded: isBranded };
   });
   const packagingTotalUsd = round2(packagingLines.reduce((s, l) => s + l.totalUsd, 0));
@@ -89,6 +91,9 @@ export type FullBundlePackaging = {
   variantId?: string; // chosen colorway (colorable pieces, e.g. the box)
   colorLabel?: string;
   colorHex?: string;
+  finishAdderUsd?: number; // chosen print finish upcharge (box Finish step)
+  finishLabel?: string;
+  decorationIds?: string[];
 };
 
 export function buildFullBundleCartLines(args: {
@@ -100,7 +105,7 @@ export function buildFullBundleCartLines(args: {
   promo?: PrBoxPromo;
 }): { lines: Omit<CartItem, "lineId">[]; price: FullBundlePrice } {
   const promo = args.promo ?? PR_BOX_PROMO;
-  const price = priceFullBundle(args.items, args.packaging.map((p) => ({ product: p.product, branded: p.branded })), args.boxQty, promo);
+  const price = priceFullBundle(args.items, args.packaging.map((p) => ({ product: p.product, branded: p.branded, finishAdderUsd: p.finishAdderUsd })), args.boxQty, promo);
   const promoId = price.qualifies ? promo.id : undefined;
 
   const grosses = [...args.items.map((i) => i.totalUsd ?? 0), ...price.packagingLines.map((l) => l.totalUsd)];
@@ -141,8 +146,8 @@ export function buildFullBundleCartLines(args: {
       colorLabel: art?.colorLabel ?? (pl.branded ? "Branded" : "Blank"),
       colorHex: art?.colorHex ?? p.variants[0]?.colorHex,
       image: p.greyFront ?? p.variants[0]?.frontImage,
-      decorationIds: [],
-      decorationLabel: pl.branded ? "Branded packaging" : "Blank packaging",
+      decorationIds: pl.branded && art?.decorationIds ? (art.decorationIds as DecorationMethod[]) : [],
+      decorationLabel: pl.branded ? (art?.finishLabel ?? "Branded packaging") : "Blank packaging",
       sizeQty: {},
       quantity: args.boxQty,
       perUnitUsd: pl.perUnitUsd,

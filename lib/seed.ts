@@ -631,6 +631,16 @@ const PACKAGING_COLORS: { id: string; label: string; hex: string }[] = [
   { id: "cream", label: "Cream", hex: "#EEEAE3" }
 ];
 
+// Box print/finish styles (the "Finish" step). Multi-select — combos like
+// foil + emboss are common. Upcharges are placeholders (over the base print).
+const boxFinishes: CatalogDecoration[] = [
+  { id: "screen_print", label: "Screen print", description: "Solid spot-color ink on the printed wrap.", perUnitAdderUsd: 0, placementZones: ["front"], maxColors: 2, isAvailable: true },
+  { id: "full_color", label: "Full-color print", description: "Offset CMYK for multicolor or photographic artwork.", perUnitAdderUsd: 0.75, placementZones: ["front"], isAvailable: true },
+  { id: "spot_uv", label: "Spot UV", description: "Glossy clear coat over a matte base — tone-on-tone shine.", perUnitAdderUsd: 1.25, placementZones: ["front"], maxColors: 1, isAvailable: true },
+  { id: "foil_stamp", label: "Foil stamp", description: "Metallic or pigment foil pressed into the surface.", perUnitAdderUsd: 2.5, placementZones: ["front"], maxColors: 1, isAvailable: true },
+  { id: "emboss", label: "Emboss / deboss", description: "Raised or recessed impression of your mark — tactile.", perUnitAdderUsd: 1.75, placementZones: ["front"], maxColors: 1, isAvailable: true }
+];
+
 function packagingAsset(opts: {
   slug: string;
   skuCode: string;
@@ -648,6 +658,7 @@ function packagingAsset(opts: {
   designRequired?: boolean; // must be branded (blank is pointless — cards, stickers)
   printable?: boolean; // false = always plain (e.g. crinkle fill); default true
   colorable?: boolean; // true → offers the full PACKAGING_COLORS palette (recolored live)
+  finishes?: CatalogDecoration[]; // print/finish styles (the Finish step) — e.g. the box
 }): CatalogProduct {
   return {
     id: `pkg-${opts.slug}`,
@@ -696,7 +707,7 @@ function packagingAsset(opts: {
             recolor: false
           }
         ],
-    decorations: [],
+    decorations: opts.finishes ?? [],
     priceTiers: opts.tiers
   };
 }
@@ -713,6 +724,7 @@ export const packagingAssets: CatalogProduct[] = [
     vendorUnitCostUsd: 9.0,
     required: true,
     colorable: true, // the box offers the full 15-color palette (recolored live)
+    finishes: boxFinishes, // print/finish styles (screen, full-color, spot UV, foil, emboss)
     sortOrder: 900,
     printUpchargeUsd: 3.0,
     image: "/products/pkg-rigid-box/base-front.png",
