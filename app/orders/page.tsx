@@ -3,8 +3,39 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { getOrdersByEmail, getProducts, statusLabel } from "@/lib/store";
 import { currency } from "@/lib/pricing";
+import { ReorderButton } from "@/components/ReorderButton";
+import type { CatalogProduct, ShopOrder } from "@/lib/types";
+import type { CartItem } from "@/components/CartProvider";
 
 export const dynamic = "force-dynamic";
+
+// Rebuild a past order's exact config into a reorderable cart item.
+function reorderFrom(order: ShopOrder, product: CatalogProduct | undefined): Omit<CartItem, "lineId"> | null {
+  if (!product) return null;
+  const variant = product.variants.find((v) => v.id === order.variantId);
+  return {
+    productId: order.productId,
+    slug: product.slug,
+    displayName: product.displayName,
+    skuCode: product.skuCode,
+    variantId: order.variantId,
+    colorLabel: variant?.colorLabel ?? "",
+    colorHex: variant?.colorHex,
+    image: product.greyFront ?? variant?.frontImage,
+    decorationIds: order.decorationIds as string[],
+    decorationLabel: product.decorations.filter((d) => order.decorationIds.includes(d.id)).map((d) => d.label).join(" + ") || "Undecorated",
+    sizeQty: order.sizeBreakdown ?? {},
+    quantity: order.quantity,
+    perUnitUsd: order.perUnitUsd,
+    decorationAdderUsd: order.decorationAdderUsd,
+    subtotalUsd: order.subtotalUsd,
+    totalUsd: order.totalUsd,
+    artworkFileName: order.artworkFileName,
+    artworkFileUrl: order.artworkFileUrl,
+    artworkNotes: order.artworkNotes,
+    artworkPlacement: order.artworkPlacement
+  };
+}
 
 export default async function OrdersPage() {
   const user = await currentUser();
@@ -15,6 +46,7 @@ export default async function OrdersPage() {
 
   const [orders, products] = await Promise.all([getOrdersByEmail(email), getProducts({ includeDrafts: true })]);
   const nameById = new Map(products.map((p) => [p.id, p.displayName]));
+  const productById = new Map(products.map((p) => [p.id, p]));
 
   return (
     <main className="page">
@@ -44,42 +76,30 @@ export default async function OrdersPage() {
           <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the catalog →</Link>
         </div>
       ) : (
-        <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
-          {orders.map((order) => (
-            <Link key={order.id} href={`/orders/${order.id}`} style={card}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                <div>
-                  <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, letterSpacing: "0.4px", textTransform: "uppercase", margin: 0, color: "var(--color-charcoal)" }}>
-                    {nameById.get(order.productId) ?? "Catalog product"}
-                  </p>
-                  <p style={{ fontSize: 12, color: "var(--color-neutral)", margin: "4px 0 0" }}>
-                    {order.orderNumber} · {order.quantity.toLocaleString()} units · {new Date(order.createdAt).toLocaleDateString()}
-                  </p>
+        <div className="ol-list">
+          {orders.map((order) => {
+            const reorder = reorderFrom(order, productById.get(order.productId));
+            return (
+              <div key={order.id} className="ol-card">
+                <div className="ol-top">
+                  <div className="ol-info">
+                    <Link href={`/orders/${order.id}`} className="ol-title">{nameById.get(order.productId) ?? "Catalog product"}</Link>
+                    <p className="ol-meta">{order.orderNumber} · {order.quantity.toLocaleString()} units · {new Date(order.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <span className={`ol-badge ol-badge--${order.status}`}>{statusLabel(order.status)}</span>
                 </div>
-                <span style={badge}>{statusLabel(order.status)}</span>
+                <div className="ol-foot">
+                  <span className="ol-price">{currency(order.totalUsd)}</span>
+                  <div className="ol-actions">
+                    {reorder ? <ReorderButton item={reorder} compact /> : null}
+                    <Link href={`/orders/${order.id}`} className="ol-track">Track →</Link>
+                  </div>
+                </div>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: "var(--color-terracotta)", fontSize: 15 }}>
-                  {currency(order.totalUsd)}
-                </span>
-                <span style={{ fontSize: 11, letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--color-neutral)" }}>
-                  Track →
-                </span>
-              </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>
   );
 }
-
-const card: React.CSSProperties = {
-  display: "block", background: "#fff", border: "1px solid var(--color-cream-dark)",
-  borderRadius: 12, padding: "18px 20px", textDecoration: "none"
-};
-const badge: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase",
-  color: "var(--color-charcoal)", background: "var(--color-cream)", border: "1px solid var(--color-cream-dark)",
-  borderRadius: 999, padding: "5px 11px", whiteSpace: "nowrap"
-};

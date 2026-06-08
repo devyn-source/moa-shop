@@ -8341,3 +8341,33 @@ p { line-height: 1.65; }
   .ord-grid { grid-template-columns: 1fr; }
   .ord-mockup { min-height: 0; aspect-ratio: 4 / 5; border-right: 0; border-bottom: 1px solid var(--border); }
 }
+
+/* ===== Orders list (reorder from the account) ===== */
+.ol-list { margin-top: 24px; display: grid; gap: 12px; max-width: 760px; }
+.ol-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; transition: box-shadow var(--dur) var(--ease-out); }
+.ol-card:hover { box-shadow: 0 10px 30px rgba(30, 30, 30, 0.06); }
+.ol-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.ol-title { font-family: var(--font-display); text-transform: uppercase; font-weight: 700; font-size: 0.88rem; letter-spacing: 0.03em; color: var(--color-charcoal); text-decoration: none; }
+.ol-title:hover { color: var(--color-terracotta); }
+.ol-meta { font-size: 0.75rem; color: var(--color-neutral); margin: 4px 0 0; }
+.ol-badge { font-family: var(--font-display); text-transform: uppercase; font-size: 0.56rem; font-weight: 700; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; white-space: nowrap; background: var(--color-cream-dark); color: var(--color-neutral); }
+.ol-badge--delivered { background: rgba(61, 122, 74, 0.14); color: var(--color-success); }
+.ol-badge--shipped { background: rgba(176, 71, 49, 0.12); color: var(--color-terracotta); }
+.ol-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+.ol-price { font-family: var(--font-display); font-weight: 700; color: var(--color-terracotta); font-size: 0.95rem; }
+.ol-actions { display: inline-flex; align-items: center; gap: 14px; }
+.ol-track { font-family: var(--font-display); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.12em; color: var(--color-neutral); text-decoration: none; }
+.ol-track:hover { color: var(--color-charcoal); }
+
+/* Compact reorder button */
+.reorder-mini {
+  appearance: none; cursor: pointer;
+  font-family: var(--font-display); text-transform: uppercase; font-weight: 700;
+  font-size: 0.6rem; letter-spacing: 0.1em;
+  color: #fff; background: var(--color-terracotta);
+  border: 0; border-radius: 999px; padding: 7px 14px;
+  transition: background var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.reorder-mini:hover { background: #8a3826; }
+.reorder-mini:active { transform: scale(0.97); }
+.reorder-mini:disabled { opacity: 0.6; cursor: default; }
