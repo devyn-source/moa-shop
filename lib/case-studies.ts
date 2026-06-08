@@ -22,7 +22,8 @@ export const CASE_STUDIES: CaseStudy[] = [
   { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", slugs: ["heavyweight-hoodie"], product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece · screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
   { id: "bigface-tee", logo: "bigface", category: "tee", slugs: ["heavyweight-tee"], product: "Bigface Tee", line: "Heavyweight tee · screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
   { id: "shapes-sweater", logo: "shapes", category: "knitwear", slugs: ["knit-sweater"], product: "Shapes Knit Sweater", line: "Cotton knit · embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
-  { id: "bloody-sunday-cap", logo: "sunday", category: "headwear", slugs: ["five-panel", "dad-hat"], product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" }
+  { id: "bloody-sunday-cap", logo: "sunday", category: "headwear", slugs: ["five-panel"], product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" },
+  { id: "google-hat", logo: "google", category: "headwear", slugs: ["dad-hat"], product: "Google Hat", line: "Cotton dad cap · embroidery, rubber appliqué", image: "/work/google-hat.png", fit: "contain" }
 ];
 
 // PDP: exact product match by slug ("this style, in the wild"). Falls back to the
