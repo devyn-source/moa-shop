@@ -21,9 +21,7 @@ export const CASE_STUDIES: CaseStudy[] = [
   { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece · screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
   { id: "bigface-tee", logo: "bigface", category: "tee", product: "Bigface Tee", line: "Heavyweight tee · screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
   { id: "shapes-sweater", logo: "shapes", category: "knitwear", product: "Shapes Knit Sweater", line: "Cotton knit · embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
-
-  // --- Placeholders (to be replaced as real styles are fed in) ---
-  { id: "cherry", logo: "cherry", category: "headwear", product: "Embroidered Caps", line: "Seasonal collection for the audience", image: "/work/work-6.jpg" }
+  { id: "bloody-sunday-cap", category: "headwear", product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" } // TODO: add bloody-sunday logo
 ];
 
 // Examples of a given style, most-relevant first (PDP). Falls back to the full
