@@ -7948,7 +7948,7 @@ body.is-scrolled .site-header {
 .uc-bottom-head { font-family: var(--font-display); text-transform: uppercase; font-size: 1.1rem; letter-spacing: 0.02em; }
 
 /* PR Box — full-PDP model: item summaries + configurator modal */
-.bb-summaries { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.bb-summaries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .bb-summary { display: grid; grid-template-columns: 84px 1fr; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
 .bb-summary-shot { aspect-ratio: 1; background: var(--color-cream); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .bb-summary-shot :is(.recolor-shot, img) { width: 100%; height: 100%; object-fit: contain; }
