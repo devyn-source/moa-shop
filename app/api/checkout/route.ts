@@ -3,6 +3,7 @@ import { createOrder, getProductById } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
 import { calculateOrderPrice, getPriceTier, round2 } from "@/lib/pricing";
 import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
+import { apiError } from "@/lib/errors";
 import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -237,6 +238,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Checkout failed" }, { status: 400 });
+    return apiError(error, { fallback: "Checkout failed. Please try again.", status: 400 });
   }
 }

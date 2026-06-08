@@ -8,6 +8,7 @@ import {
   saveProductMeasurements,
 } from "@/lib/store";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { apiError } from "@/lib/errors";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -19,7 +20,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     ]);
     return NextResponse.json({ zones, calibration, measurements });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 400 });
+    return apiError(error, { fallback: "Request failed.", status: 400 });
   }
 }
 
@@ -40,6 +41,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ slug
     if (body.measurements !== undefined) await saveProductMeasurements(slug, body.measurements);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 400 });
+    return apiError(error, { fallback: "Request failed.", status: 400 });
   }
 }

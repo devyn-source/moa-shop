@@ -23,7 +23,8 @@ export async function POST(req: Request) {
   try {
     const b = (await req.json()) as Body;
     if (typeof b.event !== "string" || !b.event) return NextResponse.json({ ok: false }, { status: 400 });
-    const props = (b.props && typeof b.props === "object" ? b.props : {}) as Record<string, unknown>;
+    let props = (b.props && typeof b.props === "object" ? b.props : {}) as Record<string, unknown>;
+    if (JSON.stringify(props).length > 4000) props = {}; // cap — don't let a client bloat the table
     const value =
       typeof b.value === "number" ? b.value : typeof props.value === "number" ? (props.value as number) : null;
 

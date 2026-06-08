@@ -7,6 +7,7 @@ import { getOrderById, updateOrderConfig, setOrderProof } from "@/lib/store";
 import { generateProof } from "@/lib/proof";
 import { sendProofApproval } from "@/lib/email";
 import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
+import { orderUpdateSchema } from "@/lib/validation";
 import type { ShopOrder } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -21,17 +22,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!ownsOrder(order, email)) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   if (order.proofApprovedAt) return NextResponse.json({ error: "This order is already approved and in production." }, { status: 400 });
 
-  const body = await request.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  const parsed = orderUpdateSchema.safeParse(await request.json().catch(() => ({})));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  const body = parsed.data;
 
   const patch: Partial<ShopOrder> = {
     variantId: body.variantId ?? order.variantId,
-    decorationIds: body.decorationIds ?? order.decorationIds,
+    decorationIds: (body.decorationIds as ShopOrder["decorationIds"]) ?? order.decorationIds,
     artworkFileUrl: body.artworkFileUrl ?? order.artworkFileUrl,
     artworkFileName: body.artworkFileName ?? order.artworkFileName,
     sizeBreakdown: body.sizeBreakdown ?? order.sizeBreakdown,
-    artworkPlacement: body.artworkPlacement ?? order.artworkPlacement,
-    artworkPlacements: body.artworkPlacements ?? order.artworkPlacements,
+    artworkPlacement: (body.artworkPlacement as ShopOrder["artworkPlacement"]) ?? order.artworkPlacement,
+    artworkPlacements: (body.artworkPlacements as ShopOrder["artworkPlacements"]) ?? order.artworkPlacements,
   };
   const updated = await updateOrderConfig(id, patch);
   if (!updated) return NextResponse.json({ error: "Update failed" }, { status: 500 });

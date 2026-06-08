@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { getSupabase } from "@/lib/supabase";
+import { apiError } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -129,9 +130,6 @@ export async function POST(request: Request) {
       warning,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Upload failed" },
-      { status: 500 }
-    );
+    return apiError(err, { fallback: "Upload failed. Please try again.", status: 500 });
   }
 }
