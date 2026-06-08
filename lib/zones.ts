@@ -282,7 +282,9 @@ const CATEGORY_DEFAULTS: Record<ProductCategory, ProductZones> = {
   headwear: { front: HEADWEAR_FRONT, back: HEADWEAR_BACK },
   bag: { front: BAG_FRONT, back: BAG_BACK },
   accessory: { front: ACCESSORY_FRONT, back: ACCESSORY_BACK },
-  packaging: { front: [], back: [] }, // no decoration zones on packaging assets
+  // Packaging has no calibrated print zones; a single generous freeform zone lets
+  // the configurator place the customer's logo on the piece (no inch-spec).
+  packaging: { front: [{ id: "front", label: "Print area", box: { x: 0.2, y: 0.26, w: 0.6, h: 0.46 } }], back: [] },
   bundle: { front: [], back: [] } // the PR Box product has no decoration zones
 };
 

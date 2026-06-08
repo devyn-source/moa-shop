@@ -15,14 +15,6 @@ export type InitialComponent = { productId: string };
 
 type BoxItem = { key: string; config: BundleItemConfig };
 
-type PackArt = {
-  artworkFileName?: string;
-  artworkFileUrl?: string;
-  uploading?: boolean;
-  uploadError?: string;
-  notes?: string;
-};
-
 let seq = 0;
 const nextKey = () => `bi-${seq++}-${crypto.randomUUID().slice(0, 8)}`;
 
@@ -152,13 +144,11 @@ export function BoxBuilder({
       })
       .filter(Boolean) as BoxItem[]
   );
-  const [packagingIds, setPackagingIds] = useState<string[]>(() =>
-    packaging.filter((p) => p.packagingRequired).map((p) => p.id)
+  // Packaging is configured in the FULL configurator, exactly like garment items
+  // (one config per piece; 1 per box). Required pieces (the box) are pre-added.
+  const [packItems, setPackItems] = useState<BoxItem[]>(() =>
+    packaging.filter((p) => p.packagingRequired).map((p) => ({ key: nextKey(), config: defaultConfig(p, promo.qualify.minBoxes) }))
   );
-  const [packBranded, setPackBranded] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(packaging.map((p) => [p.id, p.printable !== false]))
-  );
-  const [packArt, setPackArt] = useState<Record<string, PackArt>>({});
   const [submitting, setSubmitting] = useState(false);
   const [modal, setModal] = useState<{ product: CatalogProduct; seed?: BundleItemConfig["seed"]; editKey?: string } | null>(null);
 
@@ -168,8 +158,9 @@ export function BoxBuilder({
       const q = Math.max(1, Math.round(n) || 1);
       setBoxQty(q);
       setItems((prev) => prev.map((it) => ({ ...it, config: rescaleConfig(it.config, eligibleById.get(it.config.productId), q) })));
+      setPackItems((prev) => prev.map((it) => ({ ...it, config: rescaleConfig(it.config, packagingById.get(it.config.productId), q) })));
     },
-    [eligibleById]
+    [eligibleById, packagingById]
   );
 
   // --- items ---
@@ -184,7 +175,8 @@ export function BoxBuilder({
   const removeItem = useCallback((key: string) => setItems((prev) => prev.filter((it) => it.key !== key)), []);
   const handleModalUse = useCallback(
     (cfg: BundleItemConfig) => {
-      setItems((prev) => {
+      const setList = modal?.product.category === "packaging" ? setPackItems : setItems;
+      setList((prev) => {
         if (modal?.editKey) return prev.map((it) => (it.key === modal.editKey ? { ...it, config: cfg } : it));
         return [...prev, { key: nextKey(), config: cfg }];
       });
@@ -194,56 +186,36 @@ export function BoxBuilder({
   );
 
   // --- packaging ---
-  const togglePackaging = useCallback(
+  // A piece is "branded" once the customer has placed artwork in the configurator
+  // (non-printable pieces are always plain). The print upcharge applies when branded.
+  const packBrandedOf = useCallback(
+    (cfg: BundleItemConfig, p: CatalogProduct) => p.printable !== false && Boolean(cfg.artworkFileUrl),
+    []
+  );
+  const addPackaging = useCallback(
     (id: string) => {
-      if (packagingById.get(id)?.packagingRequired) return;
-      setPackagingIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+      const p = packagingById.get(id);
+      if (!p) return;
+      setPackItems((prev) => (prev.some((it) => it.config.productId === id) ? prev : [...prev, { key: nextKey(), config: defaultConfig(p, boxQty) }]));
+    },
+    [packagingById, boxQty]
+  );
+  const removePackaging = useCallback(
+    (key: string) => {
+      setPackItems((prev) => prev.filter((it) => it.key !== key || packagingById.get(it.config.productId)?.packagingRequired));
     },
     [packagingById]
-  );
-  // Self-serve: each printable piece is blank or branded (printed with the
-  // customer's art). Design-required (cards/stickers) is locked branded;
-  // non-printable (void fill) is always plain.
-  const brandedOf = useCallback(
-    (asset: CatalogProduct) => {
-      if (asset.printable === false) return false;
-      if (asset.designRequired) return true;
-      return packBranded[asset.id] ?? true;
-    },
-    [packBranded]
-  );
-  const toggleBranded = useCallback((asset: CatalogProduct) => {
-    if (asset.printable === false || asset.designRequired) return;
-    setPackBranded((prev) => ({ ...prev, [asset.id]: !(prev[asset.id] ?? true) }));
-  }, []);
-  const updatePackArt = useCallback((id: string, patch: Partial<PackArt>) => {
-    setPackArt((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
-  }, []);
-  const uploadPackArt = useCallback(
-    async (id: string, file: File | undefined | null) => {
-      if (!file) return;
-      updatePackArt(id, { uploading: true, uploadError: undefined, artworkFileName: file.name });
-      try {
-        const fd = new FormData();
-        fd.append("file", file);
-        const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
-        const data = (await res.json()) as { url?: string; error?: string };
-        if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
-        updatePackArt(id, { uploading: false, artworkFileUrl: data.url });
-      } catch (err) {
-        updatePackArt(id, { uploading: false, artworkFileUrl: undefined, uploadError: err instanceof Error ? err.message : "Upload failed" });
-      }
-    },
-    [updatePackArt]
   );
 
   const selectedPackaging = useMemo(
     () =>
-      packagingIds
-        .map((id) => packagingById.get(id))
-        .filter(Boolean)
-        .map((p) => ({ product: p as CatalogProduct, branded: brandedOf(p as CatalogProduct) })),
-    [packagingIds, packagingById, brandedOf]
+      packItems
+        .map((it) => {
+          const p = packagingById.get(it.config.productId);
+          return p ? { product: p, branded: packBrandedOf(it.config, p) } : null;
+        })
+        .filter(Boolean) as { product: CatalogProduct; branded: boolean }[],
+    [packItems, packagingById, packBrandedOf]
   );
 
   const price = useMemo(
@@ -252,7 +224,6 @@ export function BoxBuilder({
   );
 
   const canAdd = items.length > 0 && selectedPackaging.length > 0 && !submitting;
-  const packagingUploading = Object.values(packArt).some((a) => a?.uploading);
 
   const handleAdd = useCallback(() => {
     if (!canAdd) return;
@@ -261,20 +232,20 @@ export function BoxBuilder({
       bundleId: crypto.randomUUID(),
       bundleLabel: "PR Box",
       items: items.map((i) => i.config),
-      packaging: packagingIds
-        .map((id) => {
-          const p = packagingById.get(id);
+      packaging: packItems
+        .map((it) => {
+          const p = packagingById.get(it.config.productId);
           if (!p) return null;
-          const a = packArt[id];
-          return { product: p, branded: brandedOf(p), artworkFileName: a?.artworkFileName, artworkFileUrl: a?.artworkFileUrl, artworkNotes: a?.notes };
+          const c = it.config;
+          return { product: p, branded: packBrandedOf(c, p), artworkFileName: c.artworkFileName, artworkFileUrl: c.artworkFileUrl, artworkNotes: c.artworkNotes };
         })
-        .filter(Boolean) as { product: CatalogProduct; branded: boolean }[],
+        .filter(Boolean) as { product: CatalogProduct; branded: boolean; artworkFileName?: string; artworkFileUrl?: string; artworkNotes?: string }[],
       boxQty,
       promo
     });
     addBundle(lines);
     router.push("/cart");
-  }, [canAdd, items, packagingIds, packArt, packagingById, boxQty, promo, addBundle, router]);
+  }, [canAdd, items, packItems, packagingById, packBrandedOf, boxQty, promo, addBundle, router]);
 
   return (
     <div className="boxbuilder">
@@ -359,97 +330,58 @@ export function BoxBuilder({
         <section className="bb-section">
           <div className="bb-section-head">
             <h2>Packaging</h2>
-            <span className="label">Customize each branded piece</span>
+            <span className="label">Configure each piece</span>
           </div>
-          <ul className="bb-items">
+          <ul className="bb-summaries">
             <AnimatePresence initial={false} mode="popLayout">
-            {packagingIds.map((id) => {
-              const asset = packagingById.get(id);
-              if (!asset) return null;
-              const art = packArt[id];
-              const required = Boolean(asset.packagingRequired);
-              const branded = brandedOf(asset);
-              const printable = asset.printable !== false;
-              const upcharge = asset.printUpchargeUsd ?? 0;
-              const unit = packagingUnitPrice(asset, boxQty, branded).perUnitUsd;
+            {packItems.map((it) => {
+              const cfg = it.config;
+              const p = packagingById.get(cfg.productId);
+              if (!p) return null;
+              const required = Boolean(p.packagingRequired);
+              const printable = p.printable !== false;
+              const branded = packBrandedOf(cfg, p);
+              const unit = packagingUnitPrice(p, boxQty, branded).perUnitUsd;
               return (
                 <motion.li
-                  className="bb-item"
-                  key={id}
+                  className="bb-summary"
+                  key={it.key}
                   layout
-                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.16, ease: EASE } }}
-                  transition={{ duration: 0.3, ease: EASE }}
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.18, ease: EASE } }}
+                  transition={{ duration: 0.34, ease: EASE }}
                 >
-                  <div className="bb-item-shot"><ProductShot product={asset} variant={asset.variants[0]} view="front" /></div>
-                  <div className="bb-item-body">
-                    <div className="bb-item-top">
-                      <h3>{asset.displayName}{required ? <span className="bb-pack-req"> · included</span> : null}</h3>
-                      {required ? null : <button type="button" className="cart-remove" aria-label="Remove packaging" onClick={() => togglePackaging(id)}>✕</button>}
+                  <div className="bb-summary-shot"><ProductShot product={p} variant={p.variants[0]} view="front" /></div>
+                  <div className="bb-summary-body">
+                    <div className="bb-summary-top">
+                      <h3>{p.displayName}{required ? <span className="bb-pack-req"> · included</span> : null}</h3>
+                      {required ? null : <button type="button" className="cart-remove" aria-label="Remove packaging" onClick={() => removePackaging(it.key)}>✕</button>}
                     </div>
-
-                    {/* blank ↔ branded (self-serve, customer's own art) */}
-                    {printable ? (
-                      <div className="bb-brand-toggle">
-                        <button
-                          type="button"
-                          className={`bb-brand-opt${!branded ? " bb-brand-opt--on" : ""}`}
-                          disabled={asset.designRequired}
-                          onClick={() => toggleBranded(asset)}
-                        >
-                          Blank
+                    <p className="bb-summary-meta">
+                      {!printable ? "Plain — not printed" : branded ? "Branded · artwork ✓" : "Blank — no print"}
+                      {` · ${currency(unit)}/box`}
+                    </p>
+                    <div className="bb-summary-foot">
+                      {printable ? (
+                        <button type="button" className="bb-customize" onClick={() => setModal({ product: p, seed: cfg.seed, editKey: it.key })}>
+                          {branded ? "Edit in full configurator →" : "Add branding in configurator →"}
                         </button>
-                        <button
-                          type="button"
-                          className={`bb-brand-opt${branded ? " bb-brand-opt--on" : ""}`}
-                          onClick={() => !branded && toggleBranded(asset)}
-                        >
-                          Add my branding{upcharge > 0 ? <em> +{currency(upcharge)}/box</em> : null}
-                        </button>
-                        {asset.designRequired ? <span className="bb-brand-note">design required</span> : null}
-                      </div>
-                    ) : (
-                      <p className="bb-brand-note">Plain — not printed.</p>
-                    )}
-
-                    {branded ? (
-                      <>
-                        <div className="bb-field bb-field--row">
-                          <label className="bb-mini bb-mini--art">
-                            <span className="bb-field-label">Your artwork</span>
-                            <input type="file" accept="image/*,.pdf,.ai,.eps,.svg" onChange={(e) => uploadPackArt(id, e.target.files?.[0])} />
-                          </label>
-                          <label className="bb-mini bb-mini--notes">
-                            <span className="bb-field-label">Notes</span>
-                            <input type="text" placeholder="e.g. logo centered, gold foil" value={art?.notes ?? ""} onChange={(e) => updatePackArt(id, { notes: e.target.value })} />
-                          </label>
-                        </div>
-                        <div className="bb-item-foot">
-                          <span className="bb-art-status">
-                            {art?.uploading ? "Uploading artwork…" : art?.uploadError ? `⚠ ${art.uploadError}` : art?.artworkFileUrl ? `✓ ${art.artworkFileName}` : "Optional now — finalize after checkout"}
-                          </span>
-                          <span className="bb-item-price"><b>{currency(unit)}/box</b></span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="bb-item-foot">
-                        <span className="bb-art-status">Blank — no print</span>
-                        <span className="bb-item-price"><b>{currency(unit)}/box</b></span>
-                      </div>
-                    )}
+                      ) : <span className="bb-art-status">Always plain</span>}
+                      <span className="bb-summary-price">{currency(round2(unit * boxQty))}</span>
+                    </div>
                   </div>
                 </motion.li>
               );
             })}
             </AnimatePresence>
           </ul>
-          {packaging.some((a) => !packagingIds.includes(a.id)) ? (
+          {packaging.some((a) => !packItems.some((it) => it.config.productId === a.id)) ? (
             <div className="bb-pack-add">
               <span className="bb-field-label">Add packaging</span>
               <div className="bb-chips">
-                {packaging.filter((a) => !packagingIds.includes(a.id)).map((asset) => (
-                  <button type="button" key={asset.id} className="bb-chip" onClick={() => togglePackaging(asset.id)}>
+                {packaging.filter((a) => !packItems.some((it) => it.config.productId === a.id)).map((asset) => (
+                  <button type="button" key={asset.id} className="bb-chip" onClick={() => addPackaging(asset.id)}>
                     + {asset.displayName} <b>{currency(getPriceTier(asset, boxQty).perUnitUsd)}/box</b>
                   </button>
                 ))}
@@ -539,7 +471,7 @@ export function BoxBuilder({
           </div>
 
           <button type="button" className="button button--lg button--full" disabled={!canAdd} onClick={handleAdd} style={{ marginTop: 12 }}>
-            {packagingUploading ? "Uploading…" : submitting ? "Adding…" : "Add box to cart →"}
+            {submitting ? "Adding…" : "Add box to cart →"}
           </button>
           <p className="trust-note">Each item + packaging becomes a production line under one PR Box. Customize any item in the full configurator.</p>
         </div>

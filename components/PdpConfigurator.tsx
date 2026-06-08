@@ -152,9 +152,13 @@ export function PdpConfigurator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.slug]);
   const defaultVariant = product.variants.find((v) => v.frontImage) ?? product.variants[0];
+  // Packaging pieces (PR Box) configure ONLY artwork placement — no color/
+  // decoration/size run (1 per box). Freeform placement (no calibrated zones).
+  const isPackaging = product.category === "packaging";
+  const visibleSteps = isPackaging ? STEPS.filter((s) => s.key === "placement") : STEPS;
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
-  const [step, setStep] = useState<Step>(seed0 ? "placement" : "color");
+  const [step, setStep] = useState<Step>(seed0 || isPackaging ? "placement" : "color");
   const [decorationIds, setDecorationIds] = useState<string[]>(seed0?.decorationIds ?? []);
   const [pantones, setPantones] = useState<PmsColor[]>(seed0?.pantones ?? []);
   const [artworkUrl, setArtworkUrl] = useState<string | null>(seed0?.artworkFileUrl ?? null);
@@ -227,7 +231,7 @@ export function PdpConfigurator({
   // hidden until their reference is built — so we never quote a placement we
   // can't put exact numbers on.
   const placements = (view === "back" ? zones.back : zones.front).filter((p) =>
-    isZoneSpecable(p.id, view, product.category, calibration)
+    isPackaging ? true : isZoneSpecable(p.id, view, product.category, calibration)
   );
   const placement = placements.find((p) => p.id === placementId) ?? null;
 
@@ -793,7 +797,7 @@ export function PdpConfigurator({
         </div>
 
         <div className="pdpx-steps">
-          {STEPS.map((s, i) => {
+          {visibleSteps.map((s, i) => {
             const open = step === s.key;
             const done = stepDone(s.key);
             return (
