@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getOrderById, recordProofApproval } from "@/lib/store";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/analytics-server";
 
 export const runtime = "nodejs";
@@ -32,6 +33,9 @@ function page(eyebrow: string, title: string, body: string): NextResponse {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await rateLimit("approve", clientIp(_request)))) {
+    return page("Slow down", "Too many requests", "Please wait a moment, then open your link again.");
+  }
   const { id } = await params;
   const order = await getOrderById(id);
   if (!order) return page("Not found", "Order not found", "This approval link is invalid or has expired.");

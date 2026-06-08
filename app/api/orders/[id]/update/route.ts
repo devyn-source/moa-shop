@@ -7,6 +7,7 @@ import { getOrderById, updateOrderConfig, setOrderProof } from "@/lib/store";
 import { generateProof } from "@/lib/proof";
 import { sendProofApproval } from "@/lib/email";
 import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { orderUpdateSchema } from "@/lib/validation";
 import type { ShopOrder } from "@/lib/types";
 
@@ -14,6 +15,9 @@ export const runtime = "nodejs";
 const ORIGIN = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await rateLimit("update", clientIp(request)))) {
+    return NextResponse.json({ error: "Too many updates. Please wait a moment." }, { status: 429 });
+  }
   const { id } = await params;
   const order = await getOrderById(id);
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });

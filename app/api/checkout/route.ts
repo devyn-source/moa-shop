@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { calculateOrderPrice, getPriceTier, round2 } from "@/lib/pricing";
 import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
 import { apiError } from "@/lib/errors";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -46,6 +47,9 @@ type Body = {
 
 export async function POST(request: Request) {
   try {
+    if (!(await rateLimit("checkout", clientIp(request)))) {
+      return NextResponse.json({ error: "Too many checkout attempts. Please wait a few minutes." }, { status: 429 });
+    }
     const { items, contact, ipAttested } = (await request.json()) as Body;
     if (!items?.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });

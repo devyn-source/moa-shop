@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { getSupabase } from "@/lib/supabase";
 import { apiError } from "@/lib/errors";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,9 @@ function safeName(raw: string): string {
 
 export async function POST(request: Request) {
   try {
+    if (!(await rateLimit("upload", clientIp(request)))) {
+      return NextResponse.json({ error: "Too many uploads. Please wait a few minutes." }, { status: 429 });
+    }
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) {
