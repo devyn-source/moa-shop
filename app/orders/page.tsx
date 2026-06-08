@@ -1,40 +1,32 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
-import { getOrdersByEmail, getProducts, statusLabel } from "@/lib/store";
+import { getOrdersByEmail, getProducts, statusLabel, bundleStatus } from "@/lib/store";
 import { currency } from "@/lib/pricing";
 import { ReorderButton } from "@/components/ReorderButton";
-import type { CatalogProduct, ShopOrder } from "@/lib/types";
+import { ReorderBundleButton } from "@/components/ReorderBundleButton";
+import { reorderFrom } from "@/lib/reorder";
+import type { ShopOrder } from "@/lib/types";
 import type { CartItem } from "@/components/CartProvider";
 
 export const dynamic = "force-dynamic";
 
-// Rebuild a past order's exact config into a reorderable cart item.
-function reorderFrom(order: ShopOrder, product: CatalogProduct | undefined): Omit<CartItem, "lineId"> | null {
-  if (!product) return null;
-  const variant = product.variants.find((v) => v.id === order.variantId);
-  return {
-    productId: order.productId,
-    slug: product.slug,
-    displayName: product.displayName,
-    skuCode: product.skuCode,
-    variantId: order.variantId,
-    colorLabel: variant?.colorLabel ?? "",
-    colorHex: variant?.colorHex,
-    image: product.greyFront ?? variant?.frontImage,
-    decorationIds: order.decorationIds as string[],
-    decorationLabel: product.decorations.filter((d) => order.decorationIds.includes(d.id)).map((d) => d.label).join(" + ") || "Undecorated",
-    sizeQty: order.sizeBreakdown ?? {},
-    quantity: order.quantity,
-    perUnitUsd: order.perUnitUsd,
-    decorationAdderUsd: order.decorationAdderUsd,
-    subtotalUsd: order.subtotalUsd,
-    totalUsd: order.totalUsd,
-    artworkFileName: order.artworkFileName,
-    artworkFileUrl: order.artworkFileUrl,
-    artworkNotes: order.artworkNotes,
-    artworkPlacement: order.artworkPlacement
-  };
+type OrderRow = { type: "single"; order: ShopOrder } | { type: "bundle"; id: string; label: string; orders: ShopOrder[] };
+
+// Collapse PR Box lines (sharing a bundleId) into one row, preserving list order.
+function groupOrders(orders: ShopOrder[]): OrderRow[] {
+  const seen = new Set<string>();
+  const rows: OrderRow[] = [];
+  for (const o of orders) {
+    if (o.bundleId) {
+      if (seen.has(o.bundleId)) continue;
+      seen.add(o.bundleId);
+      rows.push({ type: "bundle", id: o.bundleId, label: o.bundleLabel ?? "PR Box", orders: orders.filter((x) => x.bundleId === o.bundleId) });
+    } else {
+      rows.push({ type: "single", order: o });
+    }
+  }
+  return rows;
 }
 
 export default async function OrdersPage() {
@@ -77,7 +69,32 @@ export default async function OrdersPage() {
         </div>
       ) : (
         <div className="ol-list">
-          {orders.map((order) => {
+          {groupOrders(orders).map((row) => {
+            if (row.type === "bundle") {
+              const total = row.orders.reduce((s, o) => s + (o.totalUsd ?? 0), 0);
+              const status = bundleStatus(row.orders);
+              const first = row.orders[0];
+              const lines = row.orders.map((o) => reorderFrom(o, productById.get(o.productId))).filter(Boolean) as Omit<CartItem, "lineId">[];
+              return (
+                <div key={row.id} className="ol-card ol-card--box">
+                  <div className="ol-top">
+                    <div className="ol-info">
+                      <Link href={`/orders/${first.id}`} className="ol-title">{row.label} <span className="ol-box-tag">{row.orders.length} pieces</span></Link>
+                      <p className="ol-meta">{first.orderNumber} · {new Date(first.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <span className={`ol-badge ol-badge--${status}`}>{statusLabel(status)}</span>
+                  </div>
+                  <div className="ol-foot">
+                    <span className="ol-price">{currency(total)}</span>
+                    <div className="ol-actions">
+                      {lines.length ? <ReorderBundleButton lines={lines} compact /> : null}
+                      <Link href={`/orders/${first.id}`} className="ol-track">Track →</Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            const order = row.order;
             const reorder = reorderFrom(order, productById.get(order.productId));
             return (
               <div key={order.id} className="ol-card">

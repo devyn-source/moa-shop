@@ -152,6 +152,23 @@ export async function getOrderById(id: string): Promise<ShopOrder | null> {
   return data ? (data.data as ShopOrder) : null;
 }
 
+// All ShopOrders belonging to one PR Box (they share a bundleId). Ordered oldest-
+// first so components/packaging render in their original add order.
+export async function getOrdersByBundle(bundleId: string): Promise<ShopOrder[]> {
+  if (!bundleId) return [];
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("data")
+    .eq("data->>bundleId", bundleId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load box ${bundleId}: ${error.message}`);
+  }
+  return (data ?? []).map((row) => row.data as ShopOrder);
+}
+
 export async function createOrder(input: OrderInput, opts: { paid?: boolean } = {}): Promise<ShopOrder> {
   const paid = opts.paid ?? false;
   const product = await getProductById(input.productId);
@@ -396,6 +413,22 @@ export async function getOrdersNeedingFulfillment(): Promise<ShopOrder[]> {
 
 export function statusLabel(status: OrderStatus): string {
   return status.replace(/_/g, " ");
+}
+
+const STATUS_PROGRESSION: OrderStatus[] = [
+  "awaiting_payment", "paid", "artwork_qa", "awaiting_revision", "approved", "vendor_notified", "in_production", "shipped", "delivered"
+];
+
+// A PR Box's overall status = its least-advanced line (the box isn't "delivered"
+// until every line is). Cancelled lines are ignored unless the whole box is.
+export function bundleStatus(orders: { status: OrderStatus }[]): OrderStatus {
+  const active = orders.filter((o) => o.status !== "cancelled");
+  if (!active.length) return "cancelled";
+  return active.reduce<OrderStatus>((min, o) => {
+    const a = STATUS_PROGRESSION.indexOf(o.status);
+    const b = STATUS_PROGRESSION.indexOf(min);
+    return a >= 0 && (b < 0 || a < b) ? o.status : min;
+  }, active[0].status);
 }
 
 // Paid orders whose proof the customer hasn't approved (or rejected) yet, due
