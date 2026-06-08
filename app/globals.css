@@ -8250,7 +8250,7 @@ p { line-height: 1.65; }
 .lp-work .cs-head { text-align: center; }
 
 /* Case-study product cutouts (transparent PNGs) — show the whole product on the card. */
-.cs-shot--contain { background: var(--color-cream); display: flex; align-items: center; justify-content: center; padding: 22px; }
+.cs-shot--contain { background: var(--color-cream); display: flex; align-items: center; justify-content: center; padding: 10px; }
 .cs-shot--contain img { object-fit: contain; }
 
 /* Spread the case-study showcase wider than the standard landing section. */
