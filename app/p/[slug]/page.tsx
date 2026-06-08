@@ -75,6 +75,7 @@ export default async function ProductPage({
           <span className="crumb-current">{product.displayName}</span>
         </nav>
         <BoxBuilder product={product} eligible={eligible} packaging={packaging} initialComponents={initialComponents} />
+        <CaseStudies slug={product.slug} />
       </main>
     );
   }
