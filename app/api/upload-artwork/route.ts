@@ -5,9 +5,25 @@ import { getSupabase } from "@/lib/supabase";
 export const runtime = "nodejs";
 
 const MAX_BYTES = 50 * 1024 * 1024; // 50 MB — matches bucket file_size_limit
-const VECTOR = new Set(["image/svg+xml", "application/pdf"]); // scalable → print-ready
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365; // 1 year — spans the order lifecycle + email + vendor handoff
+// SVG is intentionally NOT accepted: it's an active document (script/XSS surface)
+// and sanitizing it reliably is hard. PDF covers the vector/print use case.
+const VECTOR = new Set(["application/pdf"]);
 const RASTER = new Set(["image/png", "image/jpeg", "image/webp"]);
 const ALLOWED = new Set([...VECTOR, ...RASTER]);
+
+// Server-side content sniff (magic bytes) — never trust the client-supplied MIME.
+// Returns the real type, or flags svg/html so renamed uploads are rejected.
+function sniffType(buf: Buffer): string | null {
+  if (buf.length >= 4 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "image/png";
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf.length >= 12 && buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP") return "image/webp";
+  if (buf.length >= 5 && buf.toString("ascii", 0, 5) === "%PDF-") return "application/pdf";
+  const head = buf.toString("utf8", 0, 256).trimStart().toLowerCase();
+  if (head.startsWith("<?xml") || head.includes("<svg")) return "image/svg+xml";
+  if (head.startsWith("<!doctype html") || head.startsWith("<html")) return "text/html";
+  return null;
+}
 
 // Print-readiness thresholds. Long-edge pixels is a robust proxy for "enough
 // resolution for a typical decoration" without yet knowing the exact print size.
@@ -35,12 +51,22 @@ export async function POST(request: Request) {
     }
     if (!ALLOWED.has(file.type)) {
       return NextResponse.json(
-        { error: `Unsupported file type ${file.type || "(unknown)"}. Use PNG, JPG, WEBP, SVG, or PDF.` },
+        { error: `Unsupported file type ${file.type || "(unknown)"}. Use PNG, JPG, WEBP, or PDF (vector).` },
         { status: 415 }
       );
     }
 
     const buf = Buffer.from(await file.arrayBuffer());
+
+    // Verify the real content type (magic bytes) — reject renamed/spoofed files
+    // and anything active (svg/html). This is the authoritative type check.
+    const sniffed = sniffType(buf);
+    if (!sniffed || !ALLOWED.has(sniffed)) {
+      return NextResponse.json(
+        { error: "That file isn't a valid PNG, JPG, WEBP, or PDF. (SVG/HTML and renamed files aren't accepted.)" },
+        { status: 415 }
+      );
+    }
 
     // --- Automated print-readiness validation (the QA-killer file gate) -------
     let warning: string | undefined;
@@ -82,15 +108,21 @@ export async function POST(request: Request) {
     const path = `${id}/${safeName(file.name)}`;
     const { error: upErr } = await supabase.storage
       .from("artwork")
-      .upload(path, new Uint8Array(buf), { contentType: file.type, upsert: false });
+      .upload(path, new Uint8Array(buf), { contentType: sniffed, upsert: false });
     if (upErr) {
       return NextResponse.json({ error: upErr.message }, { status: 500 });
     }
-    const { data } = supabase.storage.from("artwork").getPublicUrl(path);
+    // Private bucket → a long-lived SIGNED url (token required; not guessable /
+    // enumerable like a public url). Covers the order lifecycle + email + MoaOS.
+    const { data: signed, error: signErr } = await supabase.storage.from("artwork").createSignedUrl(path, SIGNED_URL_TTL);
+    if (signErr || !signed?.signedUrl) {
+      return NextResponse.json({ error: "Stored, but couldn't sign the file URL. Please retry." }, { status: 500 });
+    }
     return NextResponse.json({
-      url: data.publicUrl,
+      url: signed.signedUrl,
+      path,
       fileName: file.name,
-      contentType: file.type,
+      contentType: sniffed,
       bytes: file.size,
       kind,
       meta,

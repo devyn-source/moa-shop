@@ -13,14 +13,11 @@ const RANGES: Record<string, number | null> = { "7d": 7, "30d": 30, "90d": 90, "
 function authed(req: Request): boolean {
   // Accept any of the shared secrets MOA already uses for cross-app calls, under
   // either header (mirrors the proven refund integration: MoaOS sends
-  // x-moa-internal-secret = INTERNAL_API_SECRET). Open only if none configured.
+  // x-moa-internal-secret = INTERNAL_API_SECRET).
   const secrets = [process.env.MOAOS_INTAKE_SECRET, process.env.INTERNAL_API_SECRET].filter(Boolean) as string[];
-  if (!secrets.length) return true;
-  const url = new URL(req.url);
-  const got =
-    req.headers.get("x-moa-secret") ||
-    req.headers.get("x-moa-internal-secret") ||
-    url.searchParams.get("key");
+  if (!secrets.length) return process.env.NODE_ENV !== "production"; // fail CLOSED in prod
+  // Header-only — never accept the secret in the query string (leaks via logs/referrer).
+  const got = req.headers.get("x-moa-secret") || req.headers.get("x-moa-internal-secret");
   return Boolean(got && secrets.includes(got));
 }
 

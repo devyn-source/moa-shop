@@ -134,5 +134,8 @@ export async function generateProof(order: ShopOrder, origin: string): Promise<s
     .from("artwork")
     .upload(path, new Uint8Array(out), { contentType: "image/png", upsert: true });
   if (error) return null;
-  return supabase.storage.from("artwork").getPublicUrl(path).data.publicUrl;
+  // Private bucket → long-lived signed URL (the proof is embedded in the approval
+  // email, so it must resolve without a session). 1-year TTL spans the lifecycle.
+  const { data: signed } = await supabase.storage.from("artwork").createSignedUrl(path, 60 * 60 * 24 * 365);
+  return signed?.signedUrl ?? null;
 }

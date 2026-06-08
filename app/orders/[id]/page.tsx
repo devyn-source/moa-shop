@@ -7,6 +7,7 @@ import { ProductShot } from "@/components/ProductShot";
 import { currency } from "@/lib/pricing";
 import { reorderFrom } from "@/lib/reorder";
 import { getOrderById, getOrdersByBundle, getProductById, statusLabel, bundleStatus } from "@/lib/store";
+import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
 import type { CatalogProduct, ShopOrder } from "@/lib/types";
 
 // One order's premium receipt: proof/mockup + spec + downloadable files + pricing.
@@ -117,6 +118,14 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const order = await getOrderById(id);
 
   if (!order) {
+    notFound();
+  }
+
+  // Authorization: this order must belong to the signed-in customer. (Route is
+  // already sign-in gated by proxy.ts; here we enforce ownership so nobody can
+  // read another customer's order by changing the id.)
+  const email = await currentCustomerEmail();
+  if (!ownsOrder(order, email)) {
     notFound();
   }
 

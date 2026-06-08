@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 
 function authorized(request: Request): boolean {
   const expected = process.env.CRON_SECRET;
-  if (!expected) return true; // unset (local/dev) → allow
+  if (!expected) return process.env.NODE_ENV !== "production"; // fail CLOSED in prod
   const got = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   return got === expected;
 }

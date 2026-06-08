@@ -28,7 +28,9 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 function adminGate(req: NextRequest): NextResponse | null {
-  if (!ADMIN_PASSWORD) return null; // pass-through in local dev when unset
+  // Fail CLOSED in production if no password is configured; only pass through in
+  // local dev. (Never leave /admin wide open because an env var is missing.)
+  if (!ADMIN_PASSWORD) return process.env.NODE_ENV === "production" ? unauthorized() : null;
   const header = req.headers.get("authorization") || "";
   if (!header.startsWith("Basic ")) return unauthorized();
   let decoded = "";
@@ -56,7 +58,10 @@ function isBackgroundRequest(req: NextRequest): boolean {
 }
 
 // Routes that REQUIRE a signed-in customer ("sign up to order").
-const requiresAccount = createRouteMatcher(["/checkout(.*)", "/orders(.*)", "/api/checkout(.*)"]);
+// Self-edit page is gated here (signed-in); the API routes (approve/update) do
+// in-handler auth + ownership so the emailed approve link can redirect to sign-in
+// rather than returning a bare 401.
+const requiresAccount = createRouteMatcher(["/checkout(.*)", "/orders(.*)", "/adjust(.*)", "/api/checkout(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;

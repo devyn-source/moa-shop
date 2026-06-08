@@ -3,6 +3,7 @@
 // sizes and regenerates their proof. PUBLIC (token = order id).
 import { notFound } from "next/navigation";
 import { getOrderById, getProductById } from "@/lib/store";
+import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
 import { PdpConfigurator, type EditSeed } from "@/components/PdpConfigurator";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,10 @@ export default async function AdjustPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const order = await getOrderById(id);
   if (!order) notFound();
+  // Sign-in is enforced by proxy.ts; enforce ownership here so nobody can edit
+  // another customer's order by changing the id.
+  const email = await currentCustomerEmail();
+  if (!ownsOrder(order, email)) notFound();
   const product = await getProductById(order.productId);
   if (!product) notFound();
 

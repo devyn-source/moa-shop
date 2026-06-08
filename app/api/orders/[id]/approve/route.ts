@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { getOrderById, recordProofApproval } from "@/lib/store";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
+import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
 import { trackServer } from "@/lib/analytics-server";
 
 export const runtime = "nodejs";
@@ -34,6 +35,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const order = await getOrderById(id);
   if (!order) return page("Not found", "Order not found", "This approval link is invalid or has expired.");
+
+  // Approving releases the order into production — require the signed-in owner.
+  // Not signed in → bounce through sign-in and return to this link.
+  const email = await currentCustomerEmail();
+  if (!email) {
+    const signIn = new URL("/sign-in", ORIGIN);
+    signIn.searchParams.set("redirect_url", `/api/orders/${id}/approve`);
+    return NextResponse.redirect(signIn);
+  }
+  if (!ownsOrder(order, email)) {
+    return page("Not authorized", "This isn't your order", "Sign in with the email used to place this order to approve it.");
+  }
 
   if (order.proofApprovedAt) {
     return page("Already approved", "You're all set", `Order ${order.orderNumber} is approved and in motion. We'll email tracking the moment it ships.`);

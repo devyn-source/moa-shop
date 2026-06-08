@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getOrderById, updateOrderConfig, setOrderProof } from "@/lib/store";
 import { generateProof } from "@/lib/proof";
 import { sendProofApproval } from "@/lib/email";
+import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
 import type { ShopOrder } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -15,6 +16,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const order = await getOrderById(id);
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  // Ownership: only the signed-in owner may edit their order's config.
+  const email = await currentCustomerEmail();
+  if (!ownsOrder(order, email)) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   if (order.proofApprovedAt) return NextResponse.json({ error: "This order is already approved and in production." }, { status: 400 });
 
   const body = await request.json().catch(() => null);
