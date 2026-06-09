@@ -76,6 +76,8 @@ export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: strin
     projectNumber: order.orderNumber,
     garmentName: product.displayName,
     garmentColor: { name: variant?.colorLabel || "", tcx: variant?.colorTcx || "", hex: variant?.colorHex || "#1E1E1E" },
+    fabric: variant?.fabric || undefined,
+    fit: product.fitNotes || undefined,
     inks: (placements[0]?.pantones ?? []).map((p) => ({ code: p.code, hex: p.hex })),
     underbase: views[0]?.underbase ?? false,
     views,
