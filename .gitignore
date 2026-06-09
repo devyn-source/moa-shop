@@ -9,3 +9,4 @@ scripts/.venv/
 .vercel
 tsconfig.tsbuildinfo
 supabase/.temp/
+.env*.local
