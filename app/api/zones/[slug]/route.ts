@@ -9,6 +9,7 @@ import {
 } from "@/lib/store";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { apiError } from "@/lib/errors";
+import { zonesSaveSchema } from "@/lib/validation";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -32,8 +33,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ slug
   }
   try {
     const { slug } = await params;
-    const body = (await request.json()) as { zones?: unknown; calibration?: unknown; measurements?: unknown };
-    if (body?.zones === undefined && body?.calibration === undefined && body?.measurements === undefined) {
+    const parsed = zonesSaveSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
+    const body = parsed.data;
+    if (body.zones === undefined && body.calibration === undefined && body.measurements === undefined) {
       return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
     }
     if (body.zones !== undefined) await saveProductZones(slug, body.zones);

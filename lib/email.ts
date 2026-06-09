@@ -339,6 +339,52 @@ async function deliver(
   return sendViaN8n(to, subject, html);
 }
 
+// Payment didn't complete (Stripe Checkout session expired / async payment
+// failed). One polite nudge with a retry path — the customer's cart is still
+// intact client-side, so the CTA points back at /cart.
+export async function sendPaymentIncomplete(
+  order: ShopOrder,
+  req?: { headers?: { get(name: string): string | null } } | null
+): Promise<{ sent: boolean; reason?: string }> {
+  if (!order.contactEmail) return { sent: false, reason: "Order has no contact email" };
+  const product = await getProductById(order.productId);
+  const origin = originFrom(req);
+  const cartUrl = `${origin}/cart`;
+  const productName = product?.displayName ?? "your MOA Catalog order";
+  const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
+  const subject = `Your order wasn't completed · MOA`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${esc(subject)}</title></head>
+  <body style="margin:0;padding:0;background:${C.cream};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+      <tr><td height="4" bgcolor="${C.terracotta}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+      <tr><td style="padding:26px 40px 8px;"><table role="presentation" width="100%"><tr>
+        <td align="left"><img src="${origin}/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" height="32" style="display:block;border:0;height:32px;width:auto;" /></td>
+        <td align="right">${label("Catalog")}</td>
+      </tr></table></td></tr>
+      <tr><td style="padding:24px 40px 8px;">
+        ${label("Payment not completed", C.terracotta)}
+        <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:34px;line-height:1.05;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Pick up where<br/>you left off</h1>
+        <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
+          ${greeting ? `${esc(greeting)} — the` : "The"} payment for <strong>${esc(productName)}</strong> (${esc(order.orderNumber)}) didn't go through, so nothing was charged and nothing went to production. Your configuration is saved in your cart — checkout again whenever you're ready.
+        </p>
+      </td></tr>
+      <tr><td align="center" style="padding:26px 40px 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${C.terracotta}" style="border-radius:10px;">
+          <a href="${esc(cartUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Return to your cart &rarr;</a>
+        </td></tr></table>
+        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Hit a snag or have a question? Just reply to this email — a real person reads it.</div>
+      </td></tr>
+      <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
+        <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
+        <p style="margin:10px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">Magnum Opus Agency · ${esc(order.orderNumber)} · No payment was taken.</p>
+      </td></tr></table></td></tr>
+      <tr><td height="4" bgcolor="${C.creamDark}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+    </table>
+  </td></tr></table></body></html>`;
+  return deliver(order.contactEmail, subject, html);
+}
+
 // Internal ops notification (e.g. a customer requested changes) — to the MOA
 // catalog ops inbox, via the same accounting/production sender + channel.
 const OPS_EMAIL = process.env.CATALOG_OPS_EMAIL || "production@magnumopus.agency";

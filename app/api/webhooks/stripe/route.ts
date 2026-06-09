@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getOrderById, markOrderPaid, setOrderProof } from "@/lib/store";
+import { getOrderById, markOrderPaid, setOrderProof, updateOrderStatus } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
-import { sendOrderConfirmation, sendProofApproval } from "@/lib/email";
+import { sendOrderConfirmation, sendProofApproval, sendPaymentIncomplete } from "@/lib/email";
 import { generateProof } from "@/lib/proof";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 import { trackServer } from "@/lib/analytics-server";
@@ -63,6 +63,32 @@ export async function POST(request: Request) {
         } catch (err) {
           console.warn(`[stripe-webhook] MoaOS pre-push failed for ${id}: ${err instanceof Error ? err.message : err}`);
         }
+      }
+    }
+  }
+
+  // Payment never completed — the Checkout session expired (24h) or an async
+  // payment method failed. Close out the orphaned awaiting_payment orders and
+  // send the customer one retry nudge (their cart is still intact client-side).
+  // Without this, failed checkouts sit in awaiting_payment forever and retries
+  // pile up duplicate orders.
+  if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+    const session = event.data.object as { metadata?: { orderIds?: string } };
+    const ids = (session.metadata?.orderIds ?? "").split(",").filter(Boolean);
+    const reason = event.type === "checkout.session.expired" ? "Checkout session expired" : "Payment failed";
+    let nudged = false;
+    for (const id of ids) {
+      const order = await getOrderById(id);
+      // Idempotent + safe: only ever close orders still waiting on this payment.
+      if (!order || order.paymentStatus === "paid" || order.status !== "awaiting_payment") continue;
+      await updateOrderStatus(id, "cancelled", `${reason} — no charge was made.`);
+      // One email per checkout (the bundle shares a contact), not per line.
+      if (!nudged) {
+        const result = await sendPaymentIncomplete(order, request);
+        if (!result.sent && result.reason && result.reason !== "RESEND_API_KEY not configured") {
+          console.warn(`[stripe-webhook] payment-incomplete email failed for ${id}: ${result.reason}`);
+        }
+        nudged = true;
       }
     }
   }

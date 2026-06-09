@@ -3,14 +3,16 @@ import { NextResponse } from "next/server";
 import { saveCatalogSpec } from "@/lib/garment-spec-store";
 import { isPassportLocked, type GarmentPassport } from "@/lib/garment-spec";
 import { apiError } from "@/lib/errors";
+import { adminSpecSaveSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const body = (await req.json().catch(() => null)) as { spec?: GarmentPassport; approve?: boolean } | null;
-    if (!body?.spec) return NextResponse.json({ error: "Missing spec" }, { status: 400 });
+    const parsed = adminSpecSaveSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return NextResponse.json({ error: "Missing spec" }, { status: 400 });
+    const body = { ...parsed.data, spec: parsed.data.spec as unknown as GarmentPassport };
 
     const status = body.approve ? "approved" : "reviewed";
     // Lock only when set in stone — nothing assumed, no open questions.

@@ -8,6 +8,10 @@ import { Redis } from "@upstash/redis";
 const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 const redis = url && token ? new Redis({ url, token }) : null;
+if (!redis && process.env.NODE_ENV === "production") {
+  // Loud, not silent: prod without Upstash means every limiter is a no-op.
+  console.warn("[rate-limit] UPSTASH_REDIS_REST_URL/_TOKEN not set — rate limiting is DISABLED in production.");
+}
 
 type Window = `${number} ${"s" | "m" | "h" | "d"}`;
 function make(limit: number, window: Window, prefix: string): Ratelimit | null {
@@ -34,7 +38,8 @@ export async function rateLimit(name: keyof typeof limiters, identifier: string)
     const { success } = await l.limit(identifier);
     return success;
   } catch {
-    // Never let a limiter outage take down the endpoint — fail open.
-    return true;
+    // Limiter outage: fail closed in production (abuse protection holds), open
+    // in dev so a missing local Upstash never blocks iteration.
+    return process.env.NODE_ENV !== "production";
   }
 }

@@ -9,6 +9,41 @@ export const configShareSchema = z.object({
   config: z.unknown()
 });
 
+// /api/admin/catalog — product create (Basic-Auth gated; schemas are defense-in-depth).
+export const adminProductCreateSchema = z.object({
+  displayName: z.string().min(1).max(200),
+  headline: z.string().max(300).optional(),
+  moq: z.number().int().positive().max(1_000_000).optional()
+});
+
+// /api/admin/catalog/[id] — product update. Mirrors ProductUpdateInput (lib/types.ts).
+export const adminProductUpdateSchema = z.object({
+  displayName: z.string().min(1).max(200).optional(),
+  headline: z.string().max(300).optional(),
+  description: z.string().max(5000).optional(),
+  bestFor: z.string().max(500).optional(),
+  moq: z.number().int().positive().max(1_000_000).optional(),
+  leadTimeDays: z.number().int().positive().max(365).optional(),
+  vendorUnitCostUsd: z.number().nonnegative().max(100_000).optional(),
+  isPublished: z.boolean().optional()
+});
+
+// /api/admin/specs/[slug] — Garment Passport save/lock. The spec's deep shape is
+// owned by lib/garment-spec.ts; here we guarantee it's a bounded object, not a scalar.
+export const adminSpecSaveSchema = z.object({
+  spec: z.record(z.string(), z.unknown()),
+  approve: z.boolean().optional()
+});
+
+// /api/zones/[slug] PUT — placement zones / calibration / measurements. Deep shapes
+// are owned by lib/zones.ts; reject scalars so store writes are always structured.
+const jsonContainer = z.union([z.record(z.string(), z.unknown()), z.array(z.unknown())]);
+export const zonesSaveSchema = z.object({
+  zones: jsonContainer.optional(),
+  calibration: jsonContainer.optional(),
+  measurements: jsonContainer.optional()
+});
+
 // /api/orders/[id]/update — self-serve edit patch. Only these fields may change.
 export const orderUpdateSchema = z.object({
   variantId: z.string().min(1).optional(),
