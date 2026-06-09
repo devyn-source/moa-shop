@@ -59,7 +59,7 @@ export type GarmentPassport = {
   openQuestions: string[];
   // provenance
   _generatedAt?: string;
-  _status?: "draft" | "reviewed";
+  _status?: "draft" | "reviewed" | "approved";
 };
 
 const SPECS = generated as Record<string, GarmentPassport>;
