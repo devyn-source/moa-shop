@@ -8,6 +8,11 @@ import { derivePlacement, normaliseCalibration } from "./zones";
 
 const MOA_PDF_URL = process.env.MOA_PDF_URL || "https://moa-pdf-fawn.vercel.app";
 
+// react-pdf drops the fi/fl/ff ligature glyph in Archivo (e.g. "fit" → "ft", which
+// on a spec sheet reads as feet). A zero-width non-joiner defeats the ligature,
+// invisibly. Apply to free-text fields that may contain those pairs.
+const noLig = (s?: string | null): string | undefined => s?.replace(/f(?=[fil])/g, "f‌") || undefined;
+
 function lum(hex?: string | null): number | null {
   if (!hex) return null;
   const m = hex.replace("#", "");
@@ -74,10 +79,10 @@ export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: strin
     factory: "MOA Catalog",
     sampleSize: sizes.length ? sizes[Math.floor(sizes.length / 2)] : "—",
     projectNumber: order.orderNumber,
-    garmentName: product.displayName,
+    garmentName: noLig(product.displayName) ?? product.displayName,
     garmentColor: { name: variant?.colorLabel || "", tcx: variant?.colorTcx || "", hex: variant?.colorHex || "#1E1E1E" },
-    fabric: variant?.fabric || undefined,
-    fit: product.fitNotes || undefined,
+    fabric: noLig(variant?.fabric),
+    fit: noLig(product.fitNotes),
     inks: (placements[0]?.pantones ?? []).map((p) => ({ code: p.code, hex: p.hex })),
     underbase: views[0]?.underbase ?? false,
     views,
