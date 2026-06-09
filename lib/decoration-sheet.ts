@@ -27,20 +27,45 @@ function needsUnderbase(garmentHex?: string | null, inks?: { hex: string }[] | n
 // Returns a public PDF URL for the order's decoration sheet, or null if it can't
 // be built (no placement / no calibration / render failed).
 export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: string | null): Promise<string | null> {
-  const placement = order.artworkPlacement;
-  if (!placement) return null;
+  // Every placement on the order (multi-location), each with its OWN method +
+  // colors. Falls back to the single primary placement for older orders.
+  const placements = order.artworkPlacements?.length
+    ? order.artworkPlacements
+    : order.artworkPlacement
+      ? [order.artworkPlacement]
+      : [];
+  if (!placements.length) return null;
   const product = await getProductById(order.productId);
   if (!product) return null;
   const variant = product.variants.find((v) => v.id === order.variantId) ?? null;
 
-  const vcal = normaliseCalibration(await getProductCalibration(product.slug).catch(() => null))?.[placement.view];
-  if (!vcal) return null; // not calibrated → can't spec to inches
-  const d = derivePlacement(vcal, placement.box, placement.art, placement.view);
-
+  const orderDecoLabel =
+    product.decorations.filter((d) => order.decorationIds.includes(d.id)).map((d) => d.label).join(" + ") || "Screen print";
+  const cal = normaliseCalibration(await getProductCalibration(product.slug).catch(() => null));
   const sizes = product.sizes ?? [];
-  const inks = (placement.pantones ?? []).map((p) => ({ code: p.code, hex: p.hex }));
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
   const shot = variant?.frontImage || product.greyFront || null;
+  const fallbackShot = mockupUrl || (shot ? `${origin}${shot}` : "");
+
+  const views = placements.map((pl) => {
+    const method = pl.method || orderDecoLabel;
+    const colors = (pl.pantones ?? []).map((p) => ({ code: p.code, hex: p.hex }));
+    const isScreen = /screen|print/i.test(method);
+    const underbase = isScreen && needsUnderbase(variant?.colorHex, pl.pantones);
+    const viewLabel = pl.zoneLabel || (pl.view === "back" ? "Back" : "Front");
+    const vcal = cal?.[pl.view];
+    if (vcal && pl.box && pl.art) {
+      // calibrated body zone → real-inch placement spec
+      const d = derivePlacement(vcal, pl.box, pl.art, pl.view);
+      return {
+        view: viewLabel, method, colors, underbase, mockupUrl: fallbackShot,
+        box: d.printBox, hpsY: d.hpsY, widthIn: d.widthIn, topBelowCollarIn: d.topBelowCollarIn,
+        horizontal: d.horizontal, cfX: vcal.cfX, fromOffsetIn: Math.abs(d.fromCenterIn),
+      };
+    }
+    // no calibration (e.g. a woven label / uncalibrated zone) → location, no inch dims
+    return { view: viewLabel, method, colors, underbase, mockupUrl: fallbackShot, locationNote: pl.zoneLabel || viewLabel };
+  });
 
   const data = {
     styleNumber: product.skuCode,
@@ -51,21 +76,11 @@ export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: strin
     projectNumber: order.orderNumber,
     garmentName: product.displayName,
     garmentColor: { name: variant?.colorLabel || "", tcx: variant?.colorTcx || "", hex: variant?.colorHex || "#1E1E1E" },
-    inks,
-    underbase: needsUnderbase(variant?.colorHex, placement.pantones),
-    views: [
-      {
-        view: placement.view === "back" ? "Back" : "Front",
-        mockupUrl: mockupUrl || (shot ? `${origin}${shot}` : ""),
-        box: d.printBox,
-        hpsY: d.hpsY,
-        widthIn: d.widthIn,
-        topBelowCollarIn: d.topBelowCollarIn,
-        horizontal: d.horizontal,
-        cfX: vcal.cfX,
-        fromOffsetIn: Math.abs(d.fromCenterIn),
-      },
-    ],
+    inks: (placements[0]?.pantones ?? []).map((p) => ({ code: p.code, hex: p.hex })),
+    underbase: views[0]?.underbase ?? false,
+    views,
+    placementToleranceIn: 0.25,
+    colorNote: "Match Pantone TCX · color tolerance dE 2.0 max",
   };
 
   try {
