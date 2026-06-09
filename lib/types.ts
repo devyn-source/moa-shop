@@ -89,6 +89,17 @@ export type PriceTier = {
   perUnitUsd: number;
 };
 
+export type FabricTier = "econ" | "premium";
+export type FabricOption = {
+  id: string;
+  tier: FabricTier;
+  label: string; // short name, e.g. "Nylon Taslan (4-ply)"
+  composition: string; // e.g. "100% nylon"
+  weight?: string; // "480gsm" | "12oz" — free text (gsm or oz)
+  liner?: string; // jackets/sherpa
+  upchargeUsd: number; // 0 for econ; premium per-unit upcharge (TBD until set)
+};
+
 export type CatalogProduct = {
   id: string;
   slug: string;
@@ -107,6 +118,9 @@ export type CatalogProduct = {
   sortOrder: number;
   sizes: string[];
   fitNotes?: string;
+  // Two fabric tiers per style — econ (base) + premium (carries an upcharge).
+  // Customer-selectable; flows into pricing + the Garment Passport BOM shell.
+  fabricOptions?: FabricOption[];
   greyFront?: string;
   greyBack?: string;
   // Optional mask (PNG, white = recolor region) confining the live tint to part of

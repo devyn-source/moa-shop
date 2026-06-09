@@ -2,6 +2,7 @@ import type {
   CatalogDecoration,
   CatalogProduct,
   CatalogVariant,
+  FabricOption,
   PackagingAssetKind,
   PriceTier,
   Vendor
@@ -887,6 +888,64 @@ export const seedProducts: CatalogProduct[] = [
   ...apparelProducts,
   ...packagingAssets
 ];
+
+// Two fabric tiers per style: econ (base) + premium (carries an upcharge).
+// Captured from MOA's fabric spec (Jun 8). ⚠️ upchargeUsd is 0 = TBD — set the
+// real premium deltas per factory quote before exposing the Fabric step.
+const FABRIC_OPTIONS: Record<string, FabricOption[]> = {
+  "five-panel": [
+    { id: "fp-econ", tier: "econ", label: "Cotton twill", composition: "100% cotton twill", upchargeUsd: 0 },
+    { id: "fp-prem", tier: "premium", label: "Nylon Taslan", composition: "100% nylon Taslan", upchargeUsd: 0 }
+  ],
+  "dad-hat": [
+    { id: "dh-econ", tier: "econ", label: "Cotton twill", composition: "100% cotton twill", upchargeUsd: 0 },
+    { id: "dh-prem", tier: "premium", label: "Nylon Taslan", composition: "100% nylon Taslan", upchargeUsd: 0 }
+  ],
+  "trucker-hat": [
+    { id: "th-econ", tier: "econ", label: "Foam front", composition: "Foam front · poly mesh back", upchargeUsd: 0 },
+    { id: "th-prem", tier: "premium", label: "Cotton canvas", composition: "100% cotton canvas front · poly mesh back", upchargeUsd: 0 }
+  ],
+  "heavyweight-tee": [
+    { id: "tee-econ", tier: "econ", label: "Heavyweight cotton", composition: "100% cotton", weight: "heavyweight", upchargeUsd: 0 },
+    { id: "tee-prem", tier: "premium", label: "Premium heavy (CODM)", composition: "100% cotton", weight: "premium heavyweight", upchargeUsd: 0 }
+  ],
+  "rib-knit-beanie": [
+    { id: "bn-econ", tier: "econ", label: "Cotton", composition: "100% cotton", upchargeUsd: 0 },
+    { id: "bn-prem", tier: "premium", label: "Cotton-cashmere", composition: "92% cotton / 8% cashmere", upchargeUsd: 0 }
+  ],
+  "knit-sweater": [
+    { id: "ks-econ", tier: "econ", label: "Cotton yarn", composition: "100% cotton yarn", upchargeUsd: 0 },
+    { id: "ks-prem", tier: "premium", label: "Cotton-cashmere yarn", composition: "92% cotton / 8% cashmere yarn", upchargeUsd: 0 }
+  ],
+  "heavyweight-hoodie": [
+    { id: "hd-econ", tier: "econ", label: "480gsm cotton fleece", composition: "100% cotton", weight: "480gsm", upchargeUsd: 0 },
+    { id: "hd-prem", tier: "premium", label: "480gsm cotton fleece (Coachella)", composition: "100% cotton", weight: "480gsm", upchargeUsd: 0 }
+  ],
+  "track-jacket": [
+    { id: "tj-econ", tier: "econ", label: "Nylon Taslan self (4-ply)", composition: "100% nylon Taslan, 4-ply", liner: "Poly mesh liner", upchargeUsd: 0 },
+    { id: "tj-prem", tier: "premium", label: "Japanese Taslan ripstop (DWR)", composition: "100% nylon, 2-ply ripstop + DWR", liner: "Cupro / Bemberg liner", upchargeUsd: 0 }
+  ],
+  "nylon-chore-jacket": [
+    { id: "cj-econ", tier: "econ", label: "Nylon (Bigface)", composition: "100% nylon", liner: "Bigface liner", upchargeUsd: 0 },
+    { id: "cj-prem", tier: "premium", label: "Waterproof nylon (Bigface)", composition: "100% nylon, waterproof", liner: "Bigface liner", upchargeUsd: 0 }
+  ],
+  "zip-sherpa": [
+    { id: "zs-econ", tier: "econ", label: "Thin sherpa (Shapes)", composition: "Poly sherpa fleece", liner: "Poly mesh liner", upchargeUsd: 0 },
+    { id: "zs-prem", tier: "premium", label: "Thick sherpa (DCR)", composition: "Poly sherpa fleece, heavyweight", liner: "Poly mesh liner", upchargeUsd: 0 }
+  ],
+  "down-puffer": [
+    // TODO: confirm the econ shell with MOA (premium is the Turbopuffer waterproof ripstop)
+    { id: "dp-econ", tier: "econ", label: "Ripstop nylon", composition: "100% nylon ripstop", upchargeUsd: 0 },
+    { id: "dp-prem", tier: "premium", label: "Waterproof ripstop (Turbopuffer)", composition: "100% nylon, waterproof ripstop", upchargeUsd: 0 }
+  ],
+  "work-jacket": [
+    { id: "wj-econ", tier: "econ", label: "12oz cotton canvas", composition: "100% cotton canvas", weight: "12oz", liner: "Acetate liner", upchargeUsd: 0 },
+    { id: "wj-prem", tier: "premium", label: "14oz cotton canvas", composition: "100% cotton canvas", weight: "14oz", liner: "Lyocell 6oz twill liner", upchargeUsd: 0 }
+  ]
+};
+for (const p of seedProducts) {
+  if (FABRIC_OPTIONS[p.slug]) p.fabricOptions = FABRIC_OPTIONS[p.slug];
+}
 
 // Eligibility helper for the box builder: published real SKUs only.
 // Excludes the PR Box itself (no box-in-a-box) and packaging assets.
