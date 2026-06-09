@@ -81,3 +81,11 @@ export function reviewBurden(p: GarmentPassport): { assumed: number; questions: 
     (p.labelsPackaging._assumed ? 1 : 0);
   return { assumed, questions: p.openQuestions.length };
 }
+
+// "Set in stone" — a passport may only go to a vendor when EVERY field is a real,
+// confirmed value: nothing assumed, no open questions, and explicitly approved.
+// The vendor tech pack must never be generated for an unlocked passport.
+export function isPassportLocked(p: GarmentPassport): boolean {
+  const { assumed, questions } = reviewBurden(p);
+  return assumed === 0 && questions === 0 && p._status === "approved";
+}
