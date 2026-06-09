@@ -8392,3 +8392,28 @@ p { line-height: 1.65; }
 .ord-box-stack { display: flex; flex-direction: column; gap: 14px; }
 .ord-box-stack .ord { margin-top: 0; }
 .ord-box-actions { max-width: 940px; margin-top: 18px; }
+
+/* ===== Garment passport admin (capture-and-lock) ===== */
+.spec-status { font-family: var(--font-display); text-transform: uppercase; font-size: 0.56rem; letter-spacing: 0.1em; font-weight: 700; padding: 5px 11px; border-radius: 999px; background: var(--color-cream-dark); color: var(--color-neutral); white-space: nowrap; }
+.spec-status--approved { background: rgba(61, 122, 74, 0.14); color: var(--color-success); }
+.spec-status--reviewed { background: rgba(196, 136, 13, 0.14); color: var(--color-warning); }
+.spec-ed-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.spec-burden { display: flex; gap: 16px; align-items: center; margin: 12px 0 6px; font-size: 0.8rem; }
+.spec-burden .ok { color: var(--color-success); }
+.spec-burden .warn { color: var(--color-warning); font-weight: 600; }
+.spec-burden-note { color: var(--color-neutral); font-size: 0.72rem; margin-left: auto; }
+.spec-sec { margin-top: 22px; }
+.spec-sec h2 { font-family: var(--font-display); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--color-terracotta); margin: 0 0 8px; }
+.spec-q { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: rgba(196, 136, 13, 0.08); border-radius: 8px; margin-bottom: 6px; font-size: 0.84rem; }
+.spec-resolve { font-family: var(--font-display); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.08em; font-weight: 700; color: #fff; background: var(--color-success); border: 0; border-radius: 999px; padding: 5px 11px; cursor: pointer; white-space: nowrap; }
+.spec-row { display: flex; gap: 6px; align-items: center; padding: 5px 0; flex-wrap: wrap; }
+.spec-row.is-draft { border-left: 2px solid var(--color-warning); padding-left: 8px; margin-left: -10px; }
+.spec-row input { flex: 1; min-width: 90px; padding: 6px 8px; border: 1px solid var(--input); border-radius: 6px; font: inherit; font-size: 0.8rem; background: var(--card); }
+.spec-row input.spec-strong { font-family: var(--font-display); font-weight: 600; flex: 0 0 120px; }
+.spec-confirm { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--color-neutral); white-space: nowrap; }
+.spec-lab { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.spec-lab-key { width: 78px; font-family: var(--font-display); text-transform: uppercase; font-size: 0.56rem; letter-spacing: 0.06em; color: var(--color-neutral); }
+.spec-lab input { flex: 1; padding: 6px 8px; border: 1px solid var(--input); border-radius: 6px; font: inherit; font-size: 0.8rem; background: var(--card); }
+.spec-actions { display: flex; align-items: center; gap: 12px; margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--border); }
+.spec-msg { font-size: 0.82rem; color: var(--color-success); }
+.spec-note { font-size: 0.74rem; color: var(--color-neutral); margin-top: 10px; }
