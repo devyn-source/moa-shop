@@ -1,0 +1,2974 @@
+{
+  "heavyweight-tee": {
+    "styleNumber": "TEE101",
+    "styleName": "Heavyweight Tee",
+    "category": "tee",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "260gsm single jersey, compact cotton jersey",
+        "composition": "compact cotton jersey",
+        "weightGsm": 260,
+        "color": "Bone",
+        "pantoneTcx": "12-0105 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Neck rib",
+        "spec": "1×1 rib, self or matching",
+        "composition": "compact cotton jersey",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Neck tape",
+        "spec": "3/8\" twill tape, back-neck",
+        "composition": "",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 29.5,
+            "M": 29,
+            "S": 28.625,
+            "XL": 30.25,
+            "XS": 28.375,
+            "XXL": 30.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "CHEST-1\" FM ARMHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 25,
+            "M": 24,
+            "S": 23,
+            "XL": 26.25,
+            "XS": 22.5,
+            "XXL": 27.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 24.75,
+            "M": 23.75,
+            "S": 22.75,
+            "XL": 26,
+            "XS": 22.25,
+            "XXL": 27.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "SHOULDER WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 23.5,
+            "M": 23.25,
+            "S": 22.75,
+            "XL": 24,
+            "XS": 22.75,
+            "XXL": 24.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "ARMHOLE DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 9.875,
+            "M": 9.375,
+            "S": 9,
+            "XL": 10.25,
+            "XS": 8.875,
+            "XXL": 10.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "BICEP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 8.625,
+            "M": 8.25,
+            "S": 8,
+            "XL": 9,
+            "XS": 7.75,
+            "XXL": 9.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "SLEEVE OPENING",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.5,
+            "M": 7.125,
+            "S": 6.875,
+            "XL": 7.875,
+            "XS": 6.625,
+            "XXL": 8.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "SLEEVE LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 8.75,
+            "M": 8.5,
+            "S": 8.25,
+            "XL": 9,
+            "XS": 8,
+            "XXL": 9.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "NECK WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 8.25,
+            "M": 8.25,
+            "S": 8,
+            "XL": 8.5,
+            "XS": 8,
+            "XXL": 8.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "FRONT NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 4.5,
+            "M": 4.5,
+            "S": 4.75,
+            "XL": 4.25,
+            "XS": 4.75,
+            "XXL": 4.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "COLLAR HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Sleeves",
+        "detail": "Set-in",
+        "stitch": "Overlock 504",
+        "spi": 12,
+        "seamClass": "EFc",
+        "_assumed": true
+      },
+      {
+        "area": "Bottom + sleeve hem",
+        "detail": "1\" turn, double-needle coverstitch",
+        "stitch": "Coverstitch 406",
+        "spi": 12,
+        "seamClass": "EFb",
+        "_assumed": true
+      },
+      {
+        "area": "Collar",
+        "detail": "3/4\" rib, single-needle set + back-neck tape",
+        "stitch": "Lockstitch 301",
+        "spi": 12,
+        "seamClass": "LSa",
+        "_assumed": true
+      },
+      {
+        "area": "Side seams",
+        "detail": "Side-seamed",
+        "stitch": "Overlock 504",
+        "spi": 12,
+        "seamClass": "SSa",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "heavyweight-hoodie": {
+    "styleNumber": "HDY101",
+    "styleName": "Heavyweight Hoodie",
+    "category": "hoodie",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "420gsm brushed-back fleece, cotton/poly fleece",
+        "composition": "cotton/poly fleece",
+        "weightGsm": 420,
+        "color": "Jet Black",
+        "pantoneTcx": "19-0303 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Rib",
+        "spec": "2×2 rib, cuffs + hem",
+        "composition": "cotton/poly fleece",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Drawcord",
+        "spec": "Round/flat cord + tipped eyelets",
+        "composition": "100% cotton/poly",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Eyelets",
+        "spec": "Metal, matte, 2× at hood",
+        "composition": "Metal",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "FRONT BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 26.25,
+            "M": 25.25,
+            "S": 24.25,
+            "XL": 27.25,
+            "XS": 23.25,
+            "XXL": 28.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "BACK BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 26.25,
+            "M": 25.25,
+            "S": 24.25,
+            "XL": 27.25,
+            "XS": 23.25,
+            "XXL": 28.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "SHOUDLER SLOPE",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 2.25,
+            "M": 2.25,
+            "S": 2.25,
+            "XL": 2.25,
+            "XS": 2.25,
+            "XXL": 2.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "SHOULDER WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 23,
+            "M": 21.5,
+            "S": 20,
+            "XL": 24.5,
+            "XS": 18.5,
+            "XXL": 26
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "CHEST-1\" FROM AMRHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 25,
+            "M": 23,
+            "S": 21,
+            "XL": 27,
+            "XS": 19,
+            "XXL": 29
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "SWEEP EXTEND",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 25,
+            "M": 23,
+            "S": 21,
+            "XL": 27,
+            "XS": 19,
+            "XXL": 29
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "SWEEP RELAX",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 20,
+            "M": 18,
+            "S": 16,
+            "XL": 22,
+            "XS": 14,
+            "XXL": 24
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "HEM RIB HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 2.25,
+            "M": 2.25,
+            "S": 2.25,
+            "XL": 2.25,
+            "XS": 2.25,
+            "XXL": 2.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "SLEEVE LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 24.5,
+            "M": 24.125,
+            "S": 23.75,
+            "XL": 24.875,
+            "XS": 23.375,
+            "XXL": 25.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "BICEP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 10.25,
+            "M": 9.5,
+            "S": 8.75,
+            "XL": 11,
+            "XS": 8,
+            "XXL": 11.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "ARMHOLE DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 13,
+            "M": 12.25,
+            "S": 11.5,
+            "XL": 13.75,
+            "XS": 10.75,
+            "XXL": 14.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "SLEEVE OPENING EXTEND",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 6.5,
+            "M": 6,
+            "S": 5.5,
+            "XL": 7,
+            "XS": 5,
+            "XXL": 7.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "SLEEVE OPENING RELAX",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 4,
+            "M": 3.75,
+            "S": 3.5,
+            "XL": 4.25,
+            "XS": 3.25,
+            "XXL": 4.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "N",
+          "name": "CUFF HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 2.25,
+            "M": 2.25,
+            "S": 2.25,
+            "XL": 2.25,
+            "XS": 2.25,
+            "XXL": 2.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "O",
+          "name": "FRONT NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3.25,
+            "M": 3,
+            "S": 2.75,
+            "XL": 3.5,
+            "XS": 2.5,
+            "XXL": 3.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "P",
+          "name": "BACK NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        },
+        {
+          "code": "Q",
+          "name": "NECK WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 10.625,
+            "M": 10.25,
+            "S": 9.875,
+            "XL": 11,
+            "XS": 9.5,
+            "XXL": 11.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "R",
+          "name": "HOODIE WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 12.5,
+            "M": 12.25,
+            "S": 12,
+            "XL": 12.75,
+            "XS": 11.75,
+            "XXL": 13
+          },
+          "_assumed": false
+        },
+        {
+          "code": "S",
+          "name": "TOP POCKET WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 10,
+            "M": 9.75,
+            "S": 9.75,
+            "XL": 10,
+            "XS": 9.75,
+            "XXL": 10
+          },
+          "_assumed": false
+        },
+        {
+          "code": "T",
+          "name": "POCKET HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 8,
+            "M": 7.75,
+            "S": 7.75,
+            "XL": 8,
+            "XS": 7.75,
+            "XXL": 8
+          },
+          "_assumed": false
+        },
+        {
+          "code": "U",
+          "name": "POCKE SIDE LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 3,
+            "M": 2.875,
+            "S": 2.875,
+            "XL": 3,
+            "XS": 2.875,
+            "XXL": 3
+          },
+          "_assumed": false
+        },
+        {
+          "code": "V",
+          "name": "POCKET BOTTOM LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 14.5,
+            "M": 14.25,
+            "S": 14.25,
+            "XL": 14.5,
+            "XS": 14.25,
+            "XXL": 14.5
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Sleeves",
+        "detail": "Set-in",
+        "stitch": "Overlock 504 + coverstitch",
+        "spi": 12,
+        "seamClass": "EFc",
+        "_assumed": true
+      },
+      {
+        "area": "Hood",
+        "detail": "2- or 3-panel, topstitched, drawcord through eyelets",
+        "stitch": "Lockstitch 301",
+        "spi": 10,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Pocket",
+        "detail": "Kangaroo pouch, bartacked openings",
+        "stitch": "Lockstitch + bartack",
+        "spi": 10,
+        "seamClass": "LSa",
+        "_assumed": true
+      },
+      {
+        "area": "Cuffs + hem",
+        "detail": "2×2 rib set",
+        "stitch": "Overlock + coverstitch",
+        "spi": 12,
+        "seamClass": "EFb",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back",
+      "hood detail"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "Confirm drawcord + eyelet finish/supplier",
+      "Lined vs unlined hood?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "knit-sweater": {
+    "styleNumber": "KNT101",
+    "styleName": "Cotton Knit Sweater",
+    "category": "knitwear",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "knit, 100% cotton knit",
+        "composition": "100% cotton knit",
+        "weightGsm": null,
+        "color": "Heather Gray",
+        "pantoneTcx": "14-4102 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Rib trims",
+        "spec": "2×1 rib — collar, cuffs, hem",
+        "composition": "100% cotton knit",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "FRONT LENGTH - FROM HPS",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 26.5,
+            "M": 26,
+            "S": 25.5,
+            "XL": 27,
+            "XS": 25,
+            "XXL": 27.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "CHEST  1\" BELOW ARMHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 24.75,
+            "M": 23.5,
+            "S": 22.25,
+            "XL": 26,
+            "XS": 21,
+            "XXL": 27.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 21.75,
+            "M": 20.5,
+            "S": 19.25,
+            "XL": 23,
+            "XS": 18,
+            "XXL": 24.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "SWEEP START HEIGHT",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 2.5,
+            "M": 2.5,
+            "S": 2.5,
+            "XL": 2.5,
+            "XS": 2.5,
+            "XXL": 2.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "ACROSS SHOULDER",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 24.5,
+            "M": 23.25,
+            "S": 22,
+            "XL": 25.75,
+            "XS": 20.75,
+            "XXL": 27
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "ARMHOLE - CIRCUMFERENCE",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 10.0625,
+            "M": 9.5,
+            "S": 9,
+            "XL": 10.75,
+            "XS": 8.5,
+            "XXL": 11.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "SLEEVE LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 23.5,
+            "M": 23.375,
+            "S": 23.25,
+            "XL": 23.625,
+            "XS": 23.125,
+            "XXL": 23.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "MUSCLE  1\" BELOW ARMHOLE",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 8.875,
+            "M": 8.375,
+            "S": 8,
+            "XL": 9.625,
+            "XS": 7.625,
+            "XXL": 10.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "SLEEVE OPENING-LS",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 4.25,
+            "M": 4.125,
+            "S": 4,
+            "XL": 4.375,
+            "XS": 3.875,
+            "XXL": 4.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "CUFF START HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 2.5,
+            "M": 2.5,
+            "S": 2.5,
+            "XL": 2.5,
+            "XS": 2.5,
+            "XXL": 2.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "FRONT NECK DROP-HPS TO SEAM",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 4.5,
+            "M": 4.25,
+            "S": 4,
+            "XL": 4.75,
+            "XS": 3.75,
+            "XXL": 5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "NECK WIDTH-SEAM TO SEAM",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.75,
+            "M": 7.5,
+            "S": 7.25,
+            "XL": 8,
+            "XS": 7,
+            "XXL": 8.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "CB NECKBAND HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Gauge",
+        "detail": "12gg (confirm)",
+        "stitch": "Flat-knit",
+        "spi": null,
+        "seamClass": "—",
+        "_assumed": true
+      },
+      {
+        "area": "Seams",
+        "detail": "Linked or overlocked",
+        "stitch": "Linking / Overlock 504",
+        "spi": null,
+        "seamClass": "SSa",
+        "_assumed": true
+      },
+      {
+        "area": "Collar",
+        "detail": "Crew, 2×1 rib, set + linked",
+        "stitch": "Linking",
+        "spi": null,
+        "seamClass": "—",
+        "_assumed": true
+      },
+      {
+        "area": "Sleeves",
+        "detail": "Set-in or fully-fashioned",
+        "stitch": "Linking",
+        "spi": null,
+        "seamClass": "EFc",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "CONFIRM knit gauge (gg) + yarn count — not derivable from a photo",
+      "Fully-fashioned vs cut-and-sew?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "nylon-chore-jacket": {
+    "styleNumber": "NCJ101",
+    "styleName": "Nylon Chore Jacket",
+    "category": "outerwear",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "Nylon shell, nylon shell",
+        "composition": "nylon shell",
+        "weightGsm": null,
+        "color": "Jet Black",
+        "pantoneTcx": "19-0303 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Lining",
+        "spec": "Taffeta or mesh",
+        "composition": "Nylon/poly",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Closure",
+        "spec": "CF zipper or snaps",
+        "composition": "Metal/poly",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Hem",
+        "spec": "Elastic or drawcord",
+        "composition": "",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "CHEST-1\" FM HPS",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 25.5,
+            "M": 24,
+            "S": 23,
+            "XL": 27,
+            "XS": 22,
+            "XXL": 28.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 24.5,
+            "M": 23,
+            "S": 22,
+            "XL": 26,
+            "XS": 21,
+            "XXL": 27.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "SHOULDER WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 20.25,
+            "M": 19.5,
+            "S": 19,
+            "XL": 21,
+            "XS": 18.5,
+            "XXL": 21.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "FRONT ACROSS-7\" FM HPS",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 18.25,
+            "M": 17.5,
+            "S": 17,
+            "XL": 19,
+            "XS": 16.5,
+            "XXL": 19.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "BACK ACROSS-7\" FM HPS",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 19.25,
+            "M": 18.5,
+            "S": 18,
+            "XL": 20,
+            "XS": 17.5,
+            "XXL": 20.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "FRONT BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 29,
+            "M": 28,
+            "S": 27.5,
+            "XL": 30,
+            "XS": 27,
+            "XXL": 31
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "BACK BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 29,
+            "M": 28,
+            "S": 27.5,
+            "XL": 30,
+            "XS": 27,
+            "XXL": 31
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "SWEEP FOLD HEIGHT",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "SHOULDER SLOPE",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 2.5,
+            "M": 2.5,
+            "S": 2.5,
+            "XL": 2.5,
+            "XS": 2.5,
+            "XXL": 2.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "ARMHOLE DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 12.875,
+            "M": 12.5,
+            "S": 12.25,
+            "XL": 13.25,
+            "XS": 12,
+            "XXL": 13.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "SLEEVE LENGTH-FM CB",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 36.375,
+            "M": 35.75,
+            "S": 35.375,
+            "XL": 37,
+            "XS": 35,
+            "XXL": 37.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "BICEP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 10,
+            "M": 9.5,
+            "S": 9.125,
+            "XL": 10.5,
+            "XS": 8.75,
+            "XXL": 11
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "ELBOW",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 8.625,
+            "M": 8.25,
+            "S": 8,
+            "XL": 9,
+            "XS": 7.75,
+            "XXL": 9.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "N",
+          "name": "SLEEVE OPENING EXTEND",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 6.25,
+            "M": 6,
+            "S": 5.75,
+            "XL": 6.5,
+            "XS": 5.5,
+            "XXL": 6.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "O",
+          "name": "SLEEVE OPENING RELAX",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 4.5,
+            "M": 4.25,
+            "S": 4,
+            "XL": 4.75,
+            "XS": 3.75,
+            "XXL": 5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "P",
+          "name": "CUFF HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1.5,
+            "M": 1.5,
+            "S": 1.5,
+            "XL": 1.5,
+            "XS": 1.5,
+            "XXL": 1.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "Q",
+          "name": "NECK WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.375,
+            "M": 7,
+            "S": 6.75,
+            "XL": 7.75,
+            "XS": 6.5,
+            "XXL": 8.125
+          },
+          "_assumed": false
+        },
+        {
+          "code": "R",
+          "name": "FRONT NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3.875,
+            "M": 3.75,
+            "S": 3.625,
+            "XL": 4,
+            "XS": 3.5,
+            "XXL": 4.125
+          },
+          "_assumed": false
+        },
+        {
+          "code": "S",
+          "name": "BACK NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 0.75,
+            "M": 0.75,
+            "S": 0.75,
+            "XL": 0.75,
+            "XS": 0.75,
+            "XXL": 0.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "T",
+          "name": "COLLAR HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3.5,
+            "M": 3.5,
+            "S": 3.5,
+            "XL": 3.5,
+            "XS": 3.5,
+            "XXL": 3.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "U",
+          "name": "SHOULDER FORWARDER",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        },
+        {
+          "code": "V",
+          "name": "BOTTOM POCKET OPENING",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.25,
+            "M": 7,
+            "S": 6.75,
+            "XL": 7.5,
+            "XS": 6.5,
+            "XXL": 7.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "W",
+          "name": "BOTTOM POCKET WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 0.75,
+            "M": 0.75,
+            "S": 0.75,
+            "XL": 0.75,
+            "XS": 0.75,
+            "XXL": 0.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "X",
+          "name": "TOP POCKET TO CF",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 7.875,
+            "M": 7.5,
+            "S": 7.25,
+            "XL": 8.25,
+            "XS": 7,
+            "XXL": 8.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "Y",
+          "name": "BOTTOM POCKET TO CF",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 9.375,
+            "M": 9,
+            "S": 8.75,
+            "XL": 9.75,
+            "XS": 8.5,
+            "XXL": 10.125
+          },
+          "_assumed": false
+        },
+        {
+          "code": "Z",
+          "name": "POCKET DISTANCE TO HEM",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3.75,
+            "M": 3.75,
+            "S": 3.75,
+            "XL": 3.875,
+            "XS": 3.75,
+            "XXL": 3.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "[",
+          "name": "PLACKET WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 1.375,
+            "M": 1.375,
+            "S": 1.375,
+            "XL": 1.375,
+            "XS": 1.375,
+            "XXL": 1.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "\\",
+          "name": "LAST BUTTON TO SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 4.5,
+            "M": 4.5,
+            "S": 4.5,
+            "XL": 4.5,
+            "XS": 4.5,
+            "XXL": 4.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "]",
+          "name": "FIRST BUTTON TO NECK POINT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 0.625,
+            "M": 0.625,
+            "S": 0.625,
+            "XL": 0.625,
+            "XS": 0.625,
+            "XXL": 0.625
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Seams",
+        "detail": "Bagged-out / serged",
+        "stitch": "Overlock 504 + topstitch",
+        "spi": 10,
+        "seamClass": "SSa",
+        "_assumed": true
+      },
+      {
+        "area": "Closure",
+        "detail": "CF zipper set with topstitch (or snap placket)",
+        "stitch": "Lockstitch 301",
+        "spi": 10,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Stress points",
+        "detail": "Bartacked at pocket + placket",
+        "stitch": "Bartack",
+        "spi": null,
+        "seamClass": "—",
+        "_assumed": true
+      },
+      {
+        "area": "Cuffs",
+        "detail": "Elastic, rib, or adjustable",
+        "stitch": "Lockstitch",
+        "spi": 10,
+        "seamClass": "EFb",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "Confirm zipper/snap brand + finish",
+      "Lining type (taffeta vs mesh) + fill?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "track-jacket": {
+    "styleNumber": "TKJ101",
+    "styleName": "Nylon Track Jacket",
+    "category": "outerwear",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "Nylon shell, recycled nylon shell",
+        "composition": "recycled nylon shell",
+        "weightGsm": null,
+        "color": "Jet Black",
+        "pantoneTcx": "19-0303 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Lining",
+        "spec": "Taffeta or mesh",
+        "composition": "Nylon/poly",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Closure",
+        "spec": "CF zipper or snaps",
+        "composition": "Metal/poly",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Hem",
+        "spec": "Elastic or drawcord",
+        "composition": "",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "CHEST-1\" UNDER ARMHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 28.5,
+            "M": 27,
+            "S": 26,
+            "XL": 30,
+            "XS": 25,
+            "3XL": 33,
+            "XXL": 31.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 26.5,
+            "M": 25,
+            "S": 24,
+            "XL": 28,
+            "XS": 23,
+            "3XL": 31,
+            "XXL": 29.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "SHOULDER WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 23,
+            "M": 22.25,
+            "S": 21.75,
+            "XL": 23.75,
+            "XS": 21.25,
+            "3XL": 25.25,
+            "XXL": 24.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "FRONT ACROSS -7\" FM HPS",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 21.25,
+            "M": 20.5,
+            "S": 20,
+            "XL": 22,
+            "XS": 19.5,
+            "3XL": 23.5,
+            "XXL": 22.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "BACK ACROSS -7\" FM HPS",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 22.25,
+            "M": 21.5,
+            "S": 21,
+            "XL": 23,
+            "XS": 20.5,
+            "3XL": 24.5,
+            "XXL": 23.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "FRONT BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 27,
+            "M": 26,
+            "S": 25.5,
+            "XL": 28,
+            "XS": 25,
+            "3XL": 30,
+            "XXL": 29
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "BACK BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 25.5,
+            "M": 24.5,
+            "S": 24,
+            "XL": 26.5,
+            "XS": 23.5,
+            "3XL": 28.5,
+            "XXL": 27.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "HEM FOLED HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1.25,
+            "M": 1.25,
+            "S": 1.25,
+            "XL": 1.25,
+            "XS": 1.25,
+            "3XL": 1.25,
+            "XXL": 1.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "ARMHOLE DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 12.875,
+            "M": 12.5,
+            "S": 12.25,
+            "XL": 13.25,
+            "XS": 12,
+            "3XL": 14,
+            "XXL": 13.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "SLEEVE LENGTH-FROM CB",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 33.625,
+            "M": 33,
+            "S": 32.625,
+            "XL": 34.25,
+            "XS": 32.25,
+            "3XL": 35.5,
+            "XXL": 34.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "BICEP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 11.5,
+            "M": 11,
+            "S": 10.625,
+            "XL": 12,
+            "XS": 10.25,
+            "3XL": 13,
+            "XXL": 12.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "SLEEVE OPENING EXTEND",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 6.25,
+            "M": 6,
+            "S": 5.75,
+            "XL": 6.5,
+            "XS": 5.5,
+            "3XL": 7,
+            "XXL": 6.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "SLEEVE OPENING RELAX",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 4.75,
+            "M": 4.5,
+            "S": 4.25,
+            "XL": 5,
+            "XS": 4,
+            "3XL": 5.5,
+            "XXL": 5.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "N",
+          "name": "CUFF HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "3XL": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        },
+        {
+          "code": "O",
+          "name": "NECK WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.875,
+            "M": 7.5,
+            "S": 7.25,
+            "XL": 8.25,
+            "XS": 7,
+            "3XL": 9,
+            "XXL": 8.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "P",
+          "name": "FRONT NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 4.125,
+            "M": 4,
+            "S": 3.875,
+            "XL": 4.25,
+            "XS": 3.75,
+            "3XL": 4.5,
+            "XXL": 4.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "Q",
+          "name": "BACK NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1,
+            "M": 1,
+            "S": 1,
+            "XL": 1,
+            "XS": 1,
+            "3XL": 1,
+            "XXL": 1
+          },
+          "_assumed": false
+        },
+        {
+          "code": "R",
+          "name": "SHOULDER FORWAR",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 0.625,
+            "M": 0.625,
+            "S": 0.625,
+            "XL": 0.625,
+            "XS": 0.625,
+            "3XL": 0.625,
+            "XXL": 0.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "S",
+          "name": "POCKET OPENING",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7,
+            "M": 7,
+            "S": 7,
+            "XL": 7,
+            "XS": 7,
+            "3XL": 7,
+            "XXL": 7
+          },
+          "_assumed": false
+        },
+        {
+          "code": "T",
+          "name": "CB COLLAR HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3,
+            "M": 3,
+            "S": 3,
+            "XL": 3,
+            "XS": 3,
+            "3XL": 3,
+            "XXL": 3
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Seams",
+        "detail": "Bagged-out / serged",
+        "stitch": "Overlock 504 + topstitch",
+        "spi": 10,
+        "seamClass": "SSa",
+        "_assumed": true
+      },
+      {
+        "area": "Closure",
+        "detail": "CF zipper set with topstitch (or snap placket)",
+        "stitch": "Lockstitch 301",
+        "spi": 10,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Stress points",
+        "detail": "Bartacked at pocket + placket",
+        "stitch": "Bartack",
+        "spi": null,
+        "seamClass": "—",
+        "_assumed": true
+      },
+      {
+        "area": "Cuffs",
+        "detail": "Elastic, rib, or adjustable",
+        "stitch": "Lockstitch",
+        "spi": 10,
+        "seamClass": "EFb",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "Confirm zipper/snap brand + finish",
+      "Lining type (taffeta vs mesh) + fill?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "work-jacket": {
+    "styleNumber": "JKT101",
+    "styleName": "Canvas Work Jacket",
+    "category": "outerwear",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "Cotton canvas, 12oz cotton canvas",
+        "composition": "12oz cotton canvas",
+        "weightGsm": null,
+        "color": "Walnut",
+        "pantoneTcx": "18-1112 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Collar",
+        "spec": "Corduroy contrast collar",
+        "composition": "Cotton corduroy",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Closure",
+        "spec": "Metal snaps/buttons",
+        "composition": "Metal",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Pockets",
+        "spec": "Patch pockets",
+        "composition": "12oz cotton canvas",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "shoulder width",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 19.25,
+            "M": 18.75,
+            "S": 18.25,
+            "XL": 20,
+            "XXL": 20.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "ACROSS FRONT-7\" DOWN FM HPS",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 17.5,
+            "M": 17,
+            "S": 16.5,
+            "XL": 18.25,
+            "XXL": 19
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "ACROSS BACK-7\" DOWN FM HPS",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 18.5,
+            "M": 18,
+            "S": 17.5,
+            "XL": 19.25,
+            "XXL": 20
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "CHEST-1\" DOWN FM ARMHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 50,
+            "M": 48,
+            "S": 46,
+            "XL": 52.5,
+            "XXL": 55
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "WAIST-7\" DOWN FM ARMHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 48,
+            "M": 46,
+            "S": 44,
+            "XL": 50.5,
+            "XXL": 53
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 45,
+            "M": 43,
+            "S": 41,
+            "XL": 47.5,
+            "XXL": 50
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "FRONT BODY LENGTH-HPS",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 27.75,
+            "M": 27.25,
+            "S": 26.75,
+            "XL": 28.25,
+            "XXL": 28.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "BACK BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 27,
+            "M": 26.5,
+            "S": 26,
+            "XL": 27.5,
+            "XXL": 28
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "ARMHOLE",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 12.625,
+            "M": 12.25,
+            "S": 11.875,
+            "XL": 13.25,
+            "XXL": 13.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "BICEP-1\" FM ARMHOLE",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 19.5,
+            "M": 19,
+            "S": 18.5,
+            "XL": 20.25,
+            "XXL": 21
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "SLEEVE LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 25.5,
+            "M": 25,
+            "S": 24.5,
+            "XL": 26,
+            "XXL": 26.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "SLEEVE CUFF HEIGHT",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 3,
+            "M": 3,
+            "S": 3,
+            "XL": 3,
+            "XXL": 3
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "SLEEVE OPENING-CLOSE",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 12.25,
+            "M": 12,
+            "S": 11.75,
+            "XL": 12.625,
+            "XXL": 13
+          },
+          "_assumed": false
+        },
+        {
+          "code": "N",
+          "name": "FRONT NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 4.625,
+            "M": 4.5,
+            "S": 4.375,
+            "XL": 4.875,
+            "XXL": 5.125
+          },
+          "_assumed": false
+        },
+        {
+          "code": "O",
+          "name": "BACK NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 0.75,
+            "M": 0.75,
+            "S": 0.75,
+            "XL": 0.75,
+            "XXL": 0.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "P",
+          "name": "COLLAR WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.25,
+            "M": 7,
+            "S": 6.75,
+            "XL": 7.625,
+            "XXL": 8
+          },
+          "_assumed": false
+        },
+        {
+          "code": "Q",
+          "name": "COLLAR GAP",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3.75,
+            "M": 3.75,
+            "S": 3.75,
+            "XL": 3.75,
+            "XXL": 3.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "R",
+          "name": "COLLAR DEPTH",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 3.75,
+            "M": 3.75,
+            "S": 3.75,
+            "XL": 3.75,
+            "XXL": 3.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "S",
+          "name": "HEM HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 2.25,
+            "M": 2.25,
+            "S": 2.25,
+            "XL": 2.25,
+            "XXL": 2.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "T",
+          "name": "BOTTOM PKT LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7.25,
+            "M": 7,
+            "S": 7,
+            "XL": 7.25,
+            "XXL": 7.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "U",
+          "name": "PKT POSITION TO BOTTOM HEM",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 3.375,
+            "M": 3.25,
+            "S": 3.125,
+            "XL": 3.5,
+            "XXL": 3.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "V",
+          "name": "PKT TOP TO SIDE SEAM",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 6.5,
+            "M": 6.25,
+            "S": 6,
+            "XL": 6.75,
+            "XXL": 7
+          },
+          "_assumed": false
+        },
+        {
+          "code": "W",
+          "name": "PKT BOTTOM TO SIDE SEAM",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 2.25,
+            "M": 2,
+            "S": 1.75,
+            "XL": 2.5,
+            "XXL": 2.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "X",
+          "name": "SHOULDER FORWARD",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1.25,
+            "M": 1.25,
+            "S": 1.25,
+            "XL": 1.25,
+            "XXL": 1.25
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Seams",
+        "detail": "Felled or double-topstitched",
+        "stitch": "Lockstitch 301",
+        "spi": 8,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Front placket",
+        "detail": "Snap/button placket",
+        "stitch": "Lockstitch + bartack",
+        "spi": 8,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Pockets",
+        "detail": "Patch, bartacked corners",
+        "stitch": "Lockstitch + bartack",
+        "spi": 8,
+        "seamClass": "LSa",
+        "_assumed": true
+      },
+      {
+        "area": "Collar",
+        "detail": "Corduroy, topstitched",
+        "stitch": "Lockstitch 301",
+        "spi": 10,
+        "seamClass": "LSa",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "Confirm snap/button finish + supplier",
+      "Lined vs unlined body?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "wide-leg-sweatpant": {
+    "styleNumber": "SWP101",
+    "styleName": "Wide Leg Sweatpant",
+    "category": "bottoms",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "380gsm brushed-back fleece, brushed fleece",
+        "composition": "brushed fleece",
+        "weightGsm": 380,
+        "color": "Heather Gray",
+        "pantoneTcx": "14-4102 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Waistband",
+        "spec": "Elastic + drawcord, tipped eyelets",
+        "composition": "Elastic/cotton",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Cuff/hem",
+        "spec": "2×2 rib or open hem",
+        "composition": "brushed fleece",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "WAIST CIRC",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 28.5,
+            "M": 27.5,
+            "S": 26.5,
+            "XL": 29.5,
+            "XS": 25.5,
+            "XXL": 30.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "WAISTBAND HEIGHT",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 1.5,
+            "M": 1.5,
+            "S": 1.5,
+            "XL": 1.5,
+            "XS": 1.5,
+            "XXL": 1.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "WAIST EXTEND",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 21.5,
+            "M": 20.5,
+            "S": 19.5,
+            "XL": 22.5,
+            "XS": 18.5,
+            "XXL": 23.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "HIP",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 22.5,
+            "M": 21.5,
+            "S": 20.5,
+            "XL": 23.5,
+            "XS": 19.5,
+            "XXL": 24.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "FRONT RISE W/ WB",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 13.25,
+            "M": 12.875,
+            "S": 12.5,
+            "XL": 13.625,
+            "XS": 12.125,
+            "XXL": 14
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "BACK RISE W/ WB",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 17.25,
+            "M": 16.875,
+            "S": 16.5,
+            "XL": 17.625,
+            "XS": 16.125,
+            "XXL": 18
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "THIGH-1\" FROM CROTCH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 13.5,
+            "M": 13,
+            "S": 12.5,
+            "XL": 14,
+            "XS": 12,
+            "XXL": 14.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "LEG OPENING",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 10.5,
+            "M": 10,
+            "S": 9.5,
+            "XL": 11,
+            "XS": 9,
+            "XXL": 11.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "OUTER LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 41,
+            "M": 40.625,
+            "S": 40.25,
+            "XL": 41.375,
+            "XS": 39.875,
+            "XXL": 41.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "INSEAM LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 28.5,
+            "M": 28.5,
+            "S": 28.5,
+            "XL": 28.5,
+            "XS": 28.5,
+            "XXL": 28.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "FRONT POCKET TO SIDE SEAM",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 6,
+            "M": 6,
+            "S": 6,
+            "XL": 6,
+            "XS": 6,
+            "XXL": 6
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "FRONT POCKET TO WB",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 1.625,
+            "M": 1.625,
+            "S": 1.625,
+            "XL": 1.625,
+            "XS": 1.625,
+            "XXL": 1.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "POCKET BAG LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 10.5,
+            "M": 10.5,
+            "S": 10.5,
+            "XL": 10.5,
+            "XS": 10.5,
+            "XXL": 10.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "N",
+          "name": "POCKET BAG WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 6.75,
+            "M": 6.75,
+            "S": 6.75,
+            "XL": 6.75,
+            "XS": 6.75,
+            "XXL": 6.75
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Waistband",
+        "detail": "Tunnelled elastic, drawcord through eyelets",
+        "stitch": "Coverstitch + bartack",
+        "spi": 10,
+        "seamClass": "EFb",
+        "_assumed": true
+      },
+      {
+        "area": "Side seams + pockets",
+        "detail": "Side-seam pockets",
+        "stitch": "Overlock 504 + lockstitch",
+        "spi": 10,
+        "seamClass": "SSa",
+        "_assumed": true
+      },
+      {
+        "area": "Hem",
+        "detail": "2×2 rib cuff or 1.5\" open hem",
+        "stitch": "Coverstitch 406",
+        "spi": 12,
+        "seamClass": "EFb",
+        "_assumed": true
+      },
+      {
+        "area": "Rise",
+        "detail": "Gusset at crotch",
+        "stitch": "Overlock 504",
+        "spi": 10,
+        "seamClass": "SSa",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "Confirm waistband elastic width + drawcord finish",
+      "Cuffed vs open hem?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "down-puffer": {
+    "styleNumber": "PUF101",
+    "styleName": "Goose Down Puffer",
+    "category": "outerwear",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "Nylon shell, recycled nylon shell / goose down fill",
+        "composition": "recycled nylon shell / goose down fill",
+        "weightGsm": null,
+        "color": "Jet Black",
+        "pantoneTcx": "19-0303 TCX",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Lining",
+        "spec": "Down-proof nylon",
+        "composition": "Nylon",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Fill",
+        "spec": "CONFIRM: down (fill power + g/panel) or synthetic",
+        "composition": "",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Closure",
+        "spec": "CF zipper, branded pull",
+        "composition": "Metal/poly",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "Shoulder width",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 21.25,
+            "M": 20.5,
+            "S": 19.75,
+            "XL": 22,
+            "XS": 19,
+            "XXL": 22.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "chest",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 52,
+            "M": 50,
+            "S": 48,
+            "XL": 54,
+            "XS": 46,
+            "XXL": 56
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "sweep extend",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 51,
+            "M": 49,
+            "S": 47,
+            "XL": 53,
+            "XS": 45,
+            "XXL": 55
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "front body length",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 28,
+            "M": 27.25,
+            "S": 26.5,
+            "XL": 28.75,
+            "XS": 25.75,
+            "XXL": 29.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "back body length",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 27.25,
+            "M": 26.5,
+            "S": 25.75,
+            "XL": 28,
+            "XS": 25,
+            "XXL": 28.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "sleeve length",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 28.375,
+            "M": 27.5,
+            "S": 26.75,
+            "XL": 28.75,
+            "XS": 26,
+            "XXL": 28.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "sleeve cuff extend",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 14.75,
+            "M": 14,
+            "S": 13.25,
+            "XL": 15.5,
+            "XS": 12.5,
+            "XXL": 16.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "sleeve cuff relax",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 8.5,
+            "M": 8,
+            "S": 7.5,
+            "XL": 9,
+            "XS": 7,
+            "XXL": 9.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "front neck drop",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 4.5,
+            "M": 4.25,
+            "S": 4,
+            "XL": 4.75,
+            "XS": 3.75,
+            "XXL": 5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "neck width",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 9.5,
+            "M": 9.25,
+            "S": 9,
+            "XL": 9.75,
+            "XS": 8.75,
+            "XXL": 10
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "hoodie width",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 12.75,
+            "M": 12.25,
+            "S": 11.75,
+            "XL": 13.25,
+            "XS": 11.25,
+            "XXL": 13.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "L",
+          "name": "hoodie height",
+          "tolerance": 0.25,
+          "bySize": {
+            "L": 17.75,
+            "M": 17.5,
+            "S": 17.25,
+            "XL": 18,
+            "XS": 17,
+            "XXL": 18.25
+          },
+          "_assumed": false
+        },
+        {
+          "code": "M",
+          "name": "hoodie edge width",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 1.5,
+            "M": 1.5,
+            "S": 1.5,
+            "XL": 1.5,
+            "XS": 1.5,
+            "XXL": 1.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "N",
+          "name": "pocket length",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 7,
+            "M": 7,
+            "S": 7,
+            "XL": 7,
+            "XS": 7,
+            "XXL": 7
+          },
+          "_assumed": false
+        },
+        {
+          "code": "O",
+          "name": "pocket width",
+          "tolerance": 0.5,
+          "bySize": {
+            "L": 1.25,
+            "M": 1.25,
+            "S": 1.25,
+            "XL": 1.25,
+            "XS": 1.25,
+            "XXL": 1.25
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Body",
+        "detail": "Box-baffle or sewn-through channels",
+        "stitch": "Lockstitch 301, down-proof",
+        "spi": 12,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Quilting",
+        "detail": "Channel quilt, even fill distribution",
+        "stitch": "Lockstitch 301",
+        "spi": 12,
+        "seamClass": "—",
+        "_assumed": true
+      },
+      {
+        "area": "Closure",
+        "detail": "CF zipper, internal storm flap",
+        "stitch": "Lockstitch 301",
+        "spi": 12,
+        "seamClass": "LSc",
+        "_assumed": true
+      },
+      {
+        "area": "Hem + cuffs",
+        "detail": "Elastic-bound or snap-adjust",
+        "stitch": "Bound",
+        "spi": 10,
+        "seamClass": "BSa",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back",
+      "baffle layout"
+    ],
+    "openQuestions": [
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)",
+      "CONFIRM fill: down fill-power + grams per panel, OR synthetic weight — production-critical, not derivable",
+      "Baffle construction: box vs sewn-through?"
+    ],
+    "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  }
+}
