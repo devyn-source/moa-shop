@@ -199,6 +199,8 @@ export type ShopOrder = {
   artworkPlacement?: ArtworkPlacement; // the primary placement (back-compat)
   artworkPlacements?: ArtworkPlacement[]; // full set for multi-placement orders (incl. the primary)
   wovenLabel?: boolean; // woven-label upsell chosen (priced server-side); spec is in artworkNotes
+  fabricOptionId?: string; // chosen fabric tier (econ/premium) — upcharge priced server-side
+  fabricLabel?: string; // display label of the chosen fabric
   sizeBreakdown?: Record<string, number>; // size run (e.g. { S: 10, M: 20 })
   proofUrl?: string; // auto-generated proof image (garment + placed art)
   proofApprovedAt?: string; // customer sign-off — the QA. Gates the vendor send.
@@ -266,6 +268,8 @@ export type OrderInput = {
   artworkPlacement?: ArtworkPlacement; // the primary placement (back-compat)
   artworkPlacements?: ArtworkPlacement[]; // full set for multi-placement orders (incl. the primary)
   wovenLabel?: boolean; // woven-label upsell chosen (priced server-side)
+  fabricOptionId?: string; // chosen fabric tier — upcharge priced server-side
+  fabricLabel?: string;
   sizeBreakdown?: Record<string, number>;
   shipToName: string;
   shipToAddress: ShopOrder["shipToAddress"];

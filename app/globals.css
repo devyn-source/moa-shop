@@ -8417,3 +8417,14 @@ p { line-height: 1.65; }
 .spec-actions { display: flex; align-items: center; gap: 12px; margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--border); }
 .spec-msg { font-size: 0.82rem; color: var(--color-success); }
 .spec-note { font-size: 0.74rem; color: var(--color-neutral); margin-top: 10px; }
+
+/* ===== Configurator Fabric step (econ / premium tiers) ===== */
+.pdpx-fabrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pdpx-fabric { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); cursor: pointer; transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out); }
+.pdpx-fabric:hover { border-color: var(--color-neutral); }
+.pdpx-fabric.is-on { border-color: var(--color-terracotta); box-shadow: inset 0 0 0 1px var(--color-terracotta); }
+.pdpx-fabric-tier { font-family: var(--font-display); text-transform: uppercase; font-size: 0.54rem; letter-spacing: 0.1em; font-weight: 700; color: var(--color-neutral); }
+.pdpx-fabric-name { font-family: var(--font-display); font-weight: 600; font-size: 0.86rem; color: var(--color-charcoal); }
+.pdpx-fabric-comp { font-size: 0.72rem; color: var(--color-neutral); line-height: 1.35; }
+.pdpx-fabric-price { margin-top: 4px; font-family: var(--font-display); text-transform: uppercase; font-size: 0.62rem; letter-spacing: 0.06em; font-weight: 700; color: var(--color-terracotta); }
+@media (max-width: 520px) { .pdpx-fabrics { grid-template-columns: 1fr; } }

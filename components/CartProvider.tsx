@@ -26,6 +26,9 @@ export type CartItem = {
   artworkPlacement?: import("@/lib/types").ArtworkPlacement;
   artworkPlacements?: import("@/lib/types").ArtworkPlacement[];
   wovenLabel?: boolean;
+  fabricOptionId?: string; // chosen fabric tier (econ/premium)
+  fabricLabel?: string;
+  fabricUpchargeUsd?: number; // display only; server re-prices from the product
   // --- PR Box (bundle) --- set on lines that belong to a box; absent on singles.
   bundleId?: string;
   bundleLabel?: string;

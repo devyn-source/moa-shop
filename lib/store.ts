@@ -196,6 +196,7 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
   const price = calculateOrderPrice(product, input.quantity, decorationIds, {
     placementCount: input.artworkPlacements?.length,
     wovenLabel: input.wovenLabel,
+    fabricOptionId: input.fabricOptionId,
   });
   // PR Box: this line's net = its gross minus its server-validated share of the
   // box discount. The discount is computed server-side in the checkout route
@@ -244,6 +245,8 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     artworkPlacement: input.artworkPlacement,
     artworkPlacements: input.artworkPlacements,
     wovenLabel: input.wovenLabel,
+    fabricOptionId: input.fabricOptionId,
+    fabricLabel: input.fabricLabel ?? product.fabricOptions?.find((o) => o.id === input.fabricOptionId)?.label,
     sizeBreakdown: input.sizeBreakdown,
     paymentStatus: paid ? "paid" : "unpaid",
     status: paid ? "artwork_qa" : "awaiting_payment",

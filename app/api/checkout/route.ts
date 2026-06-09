@@ -23,6 +23,7 @@ type CartLine = {
   artworkPlacement?: OrderInput["artworkPlacement"];
   artworkPlacements?: OrderInput["artworkPlacements"];
   wovenLabel?: boolean;
+  fabricOptionId?: string;
   sizeBreakdown?: Record<string, number>;
   // PR Box (bundle) — present on lines that belong to a box
   bundleId?: string;
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
           artworkPlacement: item.artworkPlacement,
           artworkPlacements: item.artworkPlacements,
           wovenLabel: item.wovenLabel,
+          fabricOptionId: item.fabricOptionId,
           sizeBreakdown: item.sizeBreakdown
         },
         { paid: false }
@@ -123,7 +125,8 @@ export async function POST(request: Request) {
         ) as DecorationMethod[];
         const priced = calculateOrderPrice(product, line.quantity, decorationIds, {
           placementCount: line.artworkPlacements?.length,
-          wovenLabel: line.wovenLabel
+          wovenLabel: line.wovenLabel,
+          fabricOptionId: line.fabricOptionId
         });
         return { line, decorationIds, gross: priced.totalUsd };
       });
@@ -175,6 +178,7 @@ export async function POST(request: Request) {
             artworkPlacement: src.artworkPlacement,
             artworkPlacements: src.artworkPlacements,
             wovenLabel: src.wovenLabel,
+            fabricOptionId: src.fabricOptionId,
             sizeBreakdown: src.sizeBreakdown,
             bundleId,
             bundleLabel: src.bundleLabel || "PR Box",

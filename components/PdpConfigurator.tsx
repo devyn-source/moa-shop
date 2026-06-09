@@ -35,7 +35,7 @@ type ExtraPlacement = {
   artMeta: { width: number; height: number } | null;
 };
 
-type Step = "color" | "decoration" | "placement" | "size";
+type Step = "color" | "fabric" | "decoration" | "placement" | "size";
 
 // Spreads a MOQ across every available size as evenly as possible.
 function distributeAcross(sizes: string[], total: number): Record<string, number> {
@@ -50,6 +50,7 @@ function distributeAcross(sizes: string[], total: number): Record<string, number
 
 const STEPS: { key: Step; label: string }[] = [
   { key: "color", label: "Color" },
+  { key: "fabric", label: "Fabric" },
   { key: "placement", label: "Artwork placement" },
   { key: "decoration", label: "Decoration" },
   { key: "size", label: "Size & quantity" }
@@ -168,9 +169,12 @@ export function PdpConfigurator({
       : // In a PR Box, the size run is set once at the program level — hide the
         // per-item size step here so each piece inherits the box breakdown.
         bundle
-        ? STEPS.filter((s) => s.key !== "size")
+        ? STEPS.filter((s) => s.key !== "size" && s.key !== "fabric")
         : STEPS
-  ).map((s) => (isPackaging && s.key === "decoration" ? { ...s, label: "Finish" } : s));
+  )
+    // Fabric step only when the SKU has fabric tiers to choose from.
+    .filter((s) => s.key !== "fabric" || Boolean(product.fabricOptions?.length))
+    .map((s) => (isPackaging && s.key === "decoration" ? { ...s, label: "Finish" } : s));
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
   const [step, setStep] = useState<Step>(
@@ -203,6 +207,9 @@ export function PdpConfigurator({
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
+  const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
+  const fabricOption = product.fabricOptions?.find((o) => o.id === fabricOptionId);
+  const fabricAdder = fabricOption?.upchargeUsd ?? 0;
   const [wovenOpen, setWovenOpen] = useState(false);
   // Additional placements beyond the one being edited in the live stage. The
   // editor below always edits the "current" placement; saving it pushes a
@@ -259,7 +266,7 @@ export function PdpConfigurator({
   const placementCount = savedPlacements.length + (editorComplete ? 1 : 0);
   const extraPlacementCount = Math.max(0, placementCount - 1);
   const extraPlacementAdder = extraPlacementCount * EXTRA_PLACEMENT_ADDER;
-  const perUnit = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder;
+  const perUnit = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder + fabricAdder;
   const subtotal = perUnit * qty;
 
   // Snapshot the live editor into the saved list and clear it for the next
@@ -542,7 +549,7 @@ export function PdpConfigurator({
     const decorationLabel = (decoSelected.length
       ? decoSelected.map((d) => d.label).join(" + ")
       : "Undecorated") + (wovenLabel ? " + Woven label" : "");
-    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder;
+    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder + fabricAdder;
     const decorationLabelFull = decorationLabel + (placementCount > 1 ? ` · ${placementCount} placements` : "");
     analytics.addToCart({
       slug: product.slug, name: product.displayName, category: product.category,
@@ -585,6 +592,9 @@ export function PdpConfigurator({
       artworkPlacement: primary,
       artworkPlacements: allPlacements.length ? allPlacements : undefined,
       wovenLabel: Boolean(wovenLabel),
+      fabricOptionId: product.fabricOptions?.length ? fabricOptionId : undefined,
+      fabricLabel: fabricOption?.label,
+      fabricUpchargeUsd: fabricAdder,
     });
     toast("Added to your order", { href: "/cart", cta: "View cart →" });
   };
@@ -597,7 +607,7 @@ export function PdpConfigurator({
       (decoSelected.length ? decoSelected.map((d) => d.label).join(" + ") : "Undecorated") +
       (wovenLabel ? " + Woven label" : "");
     const decorationLabelFull = decorationLabel + (placementCount > 1 ? ` · ${placementCount} placements` : "");
-    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder;
+    const perUnitTotal = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder + fabricAdder;
     const primary = allPlacements[0];
     bundle.onUse({
       productId: product.id,
@@ -867,6 +877,33 @@ export function PdpConfigurator({
                             </p>
                           ) : null;
                         })()}
+                      </div>
+                    ) : null}
+
+                    {s.key === "fabric" ? (
+                      <div className="pdpx-fabrics">
+                        {product.fabricOptions?.map((o) => {
+                          const on = o.id === fabricOptionId;
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              className={`pdpx-fabric${on ? " is-on" : ""}`}
+                              onClick={() => setFabricOptionId(o.id)}
+                            >
+                              <span className="pdpx-fabric-tier">{o.tier}</span>
+                              <span className="pdpx-fabric-name">{o.label}</span>
+                              <span className="pdpx-fabric-comp">
+                                {o.composition}
+                                {o.weight ? ` · ${o.weight}` : ""}
+                                {o.liner ? ` · ${o.liner}` : ""}
+                              </span>
+                              <span className="pdpx-fabric-price">
+                                {o.upchargeUsd > 0 ? `+${currency(o.upchargeUsd)}/unit` : "Included"}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     ) : null}
 
