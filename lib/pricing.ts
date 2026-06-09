@@ -39,7 +39,7 @@ export function calculateOrderPrice(
   product: CatalogProduct,
   quantity: number,
   decorationIds: DecorationMethod[],
-  opts: { placementCount?: number; wovenLabel?: boolean } = {}
+  opts: { placementCount?: number; wovenLabel?: boolean; fabricOptionId?: string } = {}
 ) {
   const normalizedQty = Number.isFinite(quantity) ? Math.max(quantity, product.moq) : product.moq;
   const tier = getPriceTier(product, normalizedQty);
@@ -52,9 +52,12 @@ export function calculateOrderPrice(
   const extraPlacements = Math.max(0, (opts.placementCount ?? 0) - 1);
   const extraPlacementAdderUsd = extraPlacements * EXTRA_PLACEMENT_ADDER_USD;
   const wovenAdderUsd = opts.wovenLabel ? WOVEN_LABEL_ADDER_USD : 0;
+  // Premium fabric tier = a per-unit upcharge looked up from the product (server
+  // is the price authority — the client can't dictate the upcharge).
+  const fabricAdderUsd = product.fabricOptions?.find((o) => o.id === opts.fabricOptionId)?.upchargeUsd ?? 0;
 
   // Fold add-ons into the per-unit adder so total = qty × (base + adder) holds.
-  const decorationAdderUsd = decorationOnlyAdderUsd + extraPlacementAdderUsd + wovenAdderUsd;
+  const decorationAdderUsd = decorationOnlyAdderUsd + extraPlacementAdderUsd + wovenAdderUsd + fabricAdderUsd;
   const subtotalUsd = normalizedQty * (perUnitUsd + decorationAdderUsd);
   const taxUsd = 0;
   const totalUsd = subtotalUsd + taxUsd;
@@ -68,6 +71,7 @@ export function calculateOrderPrice(
     decorationOnlyAdderUsd,
     extraPlacementAdderUsd,
     wovenAdderUsd,
+    fabricAdderUsd,
     subtotalUsd,
     taxUsd,
     totalUsd
