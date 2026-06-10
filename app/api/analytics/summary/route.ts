@@ -46,18 +46,30 @@ export async function GET(req: Request) {
 
   const CANCELLED = new Set(["cancelled", "canceled"]);
   let revenue = 0, units = 0, cost = 0, paidCount = 0, cancelled = 0, refunded = 0, refundValue = 0;
+  let pendingPayment = 0, paymentIncomplete = 0;
+  const paidCheckoutIds = new Set<string>();
   const byStatus: Record<string, number> = {};
   const bySku: Record<string, { name: string; revenue: number; units: number; orders: number }> = {};
   const series: Record<string, { revenue: number; orders: number }> = {};
   const emails: Record<string, number> = {};
 
   for (const r of orders) {
-    const d = r.data as { totalUsd?: number; quantity?: number; productId?: string; contactEmail?: string; refundedAt?: string };
+    const d = r.data as { id?: string; totalUsd?: number; quantity?: number; productId?: string; contactEmail?: string; refundedAt?: string; paymentStatus?: string; stripeSessionId?: string };
     const status = r.status || "unknown";
     byStatus[status] = (byStatus[status] || 0) + 1;
+    // Never count unpaid checkouts as revenue: still-open sessions are pending,
+    // cancelled-unpaid ones are failed/expired payments (distinct from refunds).
+    if (status === "awaiting_payment") { pendingPayment++; continue; }
     const isCancelled = CANCELLED.has(status) || Boolean(d.refundedAt);
     if (d.refundedAt) { refunded++; refundValue += d.totalUsd || 0; }
-    if (isCancelled) { cancelled++; continue; }
+    if (isCancelled) {
+      if (!d.refundedAt && d.paymentStatus !== "paid") paymentIncomplete++;
+      cancelled++;
+      continue;
+    }
+    // One Stripe session can carry several order lines (PR Box) — completion is
+    // measured per checkout, not per line.
+    paidCheckoutIds.add(d.stripeSessionId || d.id || r.created_at);
     const total = d.totalUsd || 0;
     const qty = d.quantity || 0;
     revenue += total; units += qty; paidCount++;
@@ -108,7 +120,7 @@ export async function GET(req: Request) {
       units, orders: paidCount, grossProfit: Math.round(revenue - cost),
       marginPct: revenue ? Math.round(((revenue - cost) / revenue) * 100) : 0,
     },
-    orders: { total: orders.length, paid: paidCount, cancelled, refunded, refundValue: Math.round(refundValue), byStatus },
+    orders: { total: orders.length, paid: paidCount, cancelled, refunded, refundValue: Math.round(refundValue), pendingPayment, paymentIncomplete, byStatus },
     customers: { total: totalCustomers, returning: returningCustomers, repeatRatePct: pct(returningCustomers, totalCustomers) },
     funnel: {
       visitors, sessions, pageviews,
@@ -117,11 +129,16 @@ export async function GET(req: Request) {
       beginCheckout: countOf("begin_checkout"), checkoutSessions,
       checkoutSubmitted: countOf("checkout_submitted"),
       purchases: paidCount,
+      paidCheckouts: paidCheckoutIds.size,
       proofApproved: countOf("proof_approved"),
       // session-based conversion through the funnel
       viewRatePct: pct(productViewSessions, sessions),
       cartRatePct: pct(addToCartSessions, productViewSessions),
       checkoutRatePct: pct(checkoutSessions, addToCartSessions),
+      submitRatePct: pct(countOf("checkout_submitted"), checkoutSessions),
+      // THE gate metric: of checkouts handed to Stripe, how many actually paid.
+      // If this craters, the self-serve bet needs an invoice/PO fallback.
+      paymentCompletionPct: pct(paidCheckoutIds.size, countOf("checkout_submitted")),
       conversionRatePct: pct(paidCount, sessions),
       cartAbandonmentPct: checkoutSessions ? pct(checkoutSessions - paidCount, checkoutSessions) : 0,
     },
