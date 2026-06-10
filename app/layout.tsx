@@ -105,6 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="ft-col">
                 <p className="ft-h">Catalog</p>
                 <Link href="/shop">The Collection</Link>
+                <Link href="/samples">Sample Kit</Link>
                 <Link href="/faq">FAQ</Link>
                 <Link href="/cart">Cart</Link>
               </div>

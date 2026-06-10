@@ -44,6 +44,26 @@ export const zonesSaveSchema = z.object({
   measurements: jsonContainer.optional()
 });
 
+// /api/samples — sample-kit request (public form; rate-limited + bounded).
+export const sampleRequestSchema = z.object({
+  contactName: z.string().min(1).max(120),
+  contactEmail: z.string().email().max(254),
+  companyName: z.string().min(1).max(160),
+  roleTitle: z.string().max(120).optional(),
+  shipTo: z.object({
+    line1: z.string().min(1).max(200),
+    line2: z.string().max(200).optional(),
+    city: z.string().min(1).max(120),
+    state: z.string().max(120).optional(),
+    postalCode: z.string().min(1).max(20),
+    country: z.string().min(1).max(120)
+  }),
+  interestedSlugs: z.array(z.string().max(64)).max(20).default([]),
+  estQuantity: z.string().max(60).optional(),
+  timeline: z.string().max(60).optional(),
+  notes: z.string().max(2000).optional()
+});
+
 // /api/orders/[id]/update — self-serve edit patch. Only these fields may change.
 export const orderUpdateSchema = z.object({
   variantId: z.string().min(1).optional(),

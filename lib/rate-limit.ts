@@ -25,7 +25,8 @@ const limiters = {
   checkout: make(10, "1 h", "rl:checkout"),
   upload: make(40, "1 h", "rl:upload"),
   approve: make(20, "1 h", "rl:approve"),
-  update: make(20, "1 h", "rl:update")
+  update: make(20, "1 h", "rl:update"),
+  samples: make(5, "1 h", "rl:samples")
 };
 
 export function clientIp(req: Request): string {
