@@ -138,7 +138,9 @@ export async function GET(req: Request) {
       submitRatePct: pct(countOf("checkout_submitted"), checkoutSessions),
       // THE gate metric: of checkouts handed to Stripe, how many actually paid.
       // If this craters, the self-serve bet needs an invoice/PO fallback.
-      paymentCompletionPct: pct(paidCheckoutIds.size, countOf("checkout_submitted")),
+      // Denominator is loss-tolerant: a paid checkout implies a submit even when
+      // the client beacon died during the Stripe redirect (observed in prod).
+      paymentCompletionPct: pct(paidCheckoutIds.size, Math.max(countOf("checkout_submitted"), paidCheckoutIds.size)),
       conversionRatePct: pct(paidCount, sessions),
       cartAbandonmentPct: checkoutSessions ? pct(checkoutSessions - paidCount, checkoutSessions) : 0,
     },
