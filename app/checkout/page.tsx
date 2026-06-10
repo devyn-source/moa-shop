@@ -249,6 +249,19 @@ export default function CheckoutPage() {
               {submitting ? "Redirecting to checkout…" : `Pay ${currency(total)} · secure checkout`}
             </button>
             <p className="trust-note">Secure payment via Stripe. One order is created per SKU.</p>
+            {/* Escape hatch for buyers who want a human before a four-figure card
+                charge. Tracked: sustained clicks here = signal to build an
+                invoice/PO payment path (see launch plan, GATE 2). */}
+            <p className="trust-note" style={{ marginTop: 6 }}>
+              Prefer to talk it through first?{" "}
+              <a
+                href={`mailto:production@magnumopus.agency?subject=${encodeURIComponent(`Order question — ${count.toLocaleString()} units, ${currency(total)}`)}`}
+                style={{ color: "var(--color-terracotta)", fontWeight: 600 }}
+                onClick={() => analytics.track("talk_to_us_clicked", { value: total, count })}
+              >
+                Email a real person →
+              </a>
+            </p>
           </div>
         </aside>
       </div>
