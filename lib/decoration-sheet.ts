@@ -29,9 +29,10 @@ function needsUnderbase(garmentHex?: string | null, inks?: { hex: string }[] | n
   return list.some((i) => { const li = lum(i.hex); return li === null || li < 0.92; });
 }
 
-// Returns a public PDF URL for the order's decoration sheet, or null if it can't
-// be built (no placement / no calibration / render failed).
-export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: string | null): Promise<string | null> {
+// Builds the decoration-sheet DATA payload (moa-pdf DecorationSheetData shape),
+// or null when there's nothing to spec (no placement). Shared by the standalone
+// sheet below and the full vendor tech pack (lib/tech-pack.ts).
+export async function buildDecorationSheetData(order: ShopOrder, mockupUrl: string | null): Promise<Record<string, unknown> | null> {
   // Every placement on the order (multi-location), each with its OWN method +
   // colors. Falls back to the single primary placement for older orders.
   const placements = order.artworkPlacements?.length
@@ -90,6 +91,14 @@ export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: strin
     colorNote: "Match Pantone TCX · color tolerance dE 2.0 max",
   };
 
+  return data;
+}
+
+// Returns a public PDF URL for the order's decoration sheet, or null if it can't
+// be built (no placement / no calibration / render failed).
+export async function buildDecorationSheetUrl(order: ShopOrder, mockupUrl: string | null): Promise<string | null> {
+  const data = await buildDecorationSheetData(order, mockupUrl);
+  if (!data) return null;
   try {
     const res = await fetch(`${MOA_PDF_URL}/api/decoration-sheet`, {
       method: "POST",

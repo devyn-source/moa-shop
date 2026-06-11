@@ -9,6 +9,7 @@ import { getProductById, setOrderFulfillment, getOrderById, updateOrderStatus, g
 import { sendShippingNotification } from "./email";
 import { seedVendors } from "./seed";
 import { derivePlacement, normaliseCalibration } from "./zones";
+import { buildTechPackUrl } from "./tech-pack";
 
 export type FulfillmentMode = "off" | "dry_run" | "draft_only" | "manual_release" | "auto";
 
@@ -73,11 +74,19 @@ async function buildIntakePayload(order: ShopOrder) {
     }
   }
 
+  // The full vendor tech pack (Passport + Decoration Sheet, merged PDF). Only
+  // built on the APPROVAL push — that's the vendor-release moment — and only
+  // when the SKU's passport is locked (buildTechPackUrl returns null otherwise;
+  // nothing assumed reaches a vendor). Null just means MoaOS keeps using the
+  // display spec in tech_pack_data.
+  const approved = Boolean(order.proofApprovedAt);
+  const techPackUrl = approved ? await buildTechPackUrl(order, order.proofUrl ?? null) : null;
+
   return {
     shopOrderId: order.id,
     // Drives the intake stage: false on the payment push (creates an
     // awaiting_approval card, no PO/send); true once the customer approves.
-    approved: Boolean(order.proofApprovedAt),
+    approved,
     orderNumber: order.orderNumber,
     customer: { name: order.contactName, email: order.contactEmail, company: order.companyName },
     // PR Box: lines sharing a bundleId belong to one box — lets MoaOS group them.
@@ -117,6 +126,9 @@ async function buildIntakePayload(order: ShopOrder) {
         fromOffsetIn: derived ? Math.abs(derived.fromCenterIn) : null,
         printBox: derived?.printBox ?? placement?.box ?? null,
         proofUrl: order.proofUrl ?? null,
+        // Full vendor tech pack PDF (locked passport + decoration sheet) —
+        // null until the passport is locked AND the customer has approved.
+        techPackUrl,
         underbase: needsUnderbase(variant?.colorHex, placement?.pantones),
         quantity: order.quantity,
         clientUnitCost: order.perUnitUsd + order.decorationAdderUsd,
