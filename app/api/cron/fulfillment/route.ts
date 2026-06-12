@@ -3,7 +3,7 @@
 //  - Paid orders already pushed          → sync MoaOS status back to the tracker.
 // Mode-gated (off/dry_run never push). Protected by CRON_SECRET.
 import { NextResponse } from "next/server";
-import { getOrdersNeedingFulfillment, getProofReminderCandidates, recordProofReminder } from "@/lib/store";
+import { getOrdersNeedingFulfillment, getProofReminderCandidates, recordProofReminder, getStalePaymentOrders, updateOrderStatus } from "@/lib/store";
 import { pushOrderToMoaOS, syncOrderFromMoaOS, fulfillmentMode } from "@/lib/catalog-fulfillment";
 import { sendProofApproval } from "@/lib/email";
 
@@ -55,5 +55,18 @@ export async function GET(request: Request) {
     /* reminders are best-effort */
   }
 
-  return NextResponse.json({ mode, scanned: orders.length, pushed, synced, reminded });
+  // Sweep dead checkouts: awaiting_payment older than 48h (Stripe sessions die
+  // at 24h). Fresh expiries get closed + emailed by the webhook; this catches
+  // orphans the webhook never saw. No email here — the moment is long past.
+  let expired = 0;
+  try {
+    for (const o of await getStalePaymentOrders()) {
+      await updateOrderStatus(o.id, "cancelled", "Checkout expired — payment was never completed. No charge was made.");
+      expired++;
+    }
+  } catch {
+    /* sweep is best-effort */
+  }
+
+  return NextResponse.json({ mode, scanned: orders.length, pushed, synced, reminded, expired });
 }

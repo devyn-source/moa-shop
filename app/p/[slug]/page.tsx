@@ -18,9 +18,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = `${product.displayName} · MOA Catalog`;
   const description = `${product.headline} From ${currency(cheapest.perUnitUsd)}/unit · MOQ ${product.moq} · ${product.variants.length} colors.`;
   const image = product.greyFront ?? product.variants.find((v) => v.frontImage)?.frontImage;
+  const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
   return {
     title,
     description,
+    alternates: { canonical: `${origin}/p/${product.slug}` },
     openGraph: {
       title,
       description,

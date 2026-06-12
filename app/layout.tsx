@@ -132,6 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="ft-legal">
                 <Link href="/terms">Terms</Link>
                 <Link href="/refund-policy">Refunds</Link>
+                <Link href="/shipping">Shipping</Link>
                 <Link href="/privacy">Privacy</Link>
               </span>
             </div>

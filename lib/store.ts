@@ -452,6 +452,18 @@ export async function getProofReminderCandidates(): Promise<ShopOrder[]> {
   });
 }
 
+// awaiting_payment orders whose Stripe session is long dead (sessions expire at
+// 24h; we sweep at 48h). Catches orphans that never got a checkout.session.expired
+// webhook — sessions created before the event subscription, or missed deliveries.
+export async function getStalePaymentOrders(): Promise<ShopOrder[]> {
+  const orders = await getOrders();
+  const now = Date.now();
+  const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+  return orders.filter(
+    (o) => o.status === "awaiting_payment" && o.paymentStatus !== "paid" && now - Date.parse(o.createdAt) > TWO_DAYS
+  );
+}
+
 export async function recordProofReminder(id: string): Promise<void> {
   const current = await getOrderById(id);
   if (!current) return;
