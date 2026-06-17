@@ -11,7 +11,7 @@ import * as THREE from "three";
 // so material.color tints the baked texture.
 type Swatch = { label: string; hex: string };
 
-function Model({ url, hex }: { url: string; hex: string }) {
+function Model({ url, hex, fit = 1.55 }: { url: string; hex: string; fit?: number }) {
   const { scene } = useGLTF(url);
   // Clone (so instances/HMR don't share mutated materials) and NORMALIZE scale:
   // GLBs arrive in wildly different unit scales (a cap fills the frame while a
@@ -24,9 +24,9 @@ function Model({ url, hex }: { url: string; hex: string }) {
     const maxDim = Math.max(size.x, size.y, size.z) || 1;
     // Target fits the NARROW (width) axis of the portrait 4:5 stage with margin,
     // so wide items (caps) aren't cropped and tall items (tees) sit centered.
-    c.scale.setScalar(1.55 / maxDim);
+    c.scale.setScalar(fit / maxDim);
     return c;
-  }, [scene]);
+  }, [scene, fit]);
   useEffect(() => {
     const color = new THREE.Color(hex);
     cloned.traverse((o) => {
@@ -72,6 +72,8 @@ export default function Garment3D({
   swatches = [],
   hex: hexProp,
   showSwatches = true,
+  fit = 1.55,
+  showShadow = true,
 }: {
   url: string;
   swatches?: Swatch[];
@@ -79,6 +81,8 @@ export default function Garment3D({
   // selected variant) — the internal swatch picker is hidden.
   hex?: string;
   showSwatches?: boolean;
+  fit?: number; // model fit size (smaller = more margin; thumbnails use this)
+  showShadow?: boolean; // ground contact shadow — off for thumbnails (it clips at the canvas edge)
 }) {
   const [hex, setHex] = useState(hexProp ?? swatches[0]?.hex ?? "#2D2C2F");
   const [active, setActive] = useState(swatches[0]?.label ?? "");
@@ -105,8 +109,8 @@ export default function Garment3D({
           <directionalLight position={[-4, 2, -2]} intensity={0.3} />
           <directionalLight position={[0, 3, -5]} intensity={0.3} />
           <Suspense fallback={<Loader />}>
-            <Model url={url} hex={hex} />
-            <ContactShadows position={[0, -0.85, 0]} opacity={0.3} scale={4} blur={2.6} far={2.5} />
+            <Model url={url} hex={hex} fit={fit} />
+            {showShadow ? <ContactShadows position={[0, -0.85, 0]} opacity={0.3} scale={4} blur={2.6} far={2.5} /> : null}
           </Suspense>
           <OrbitControls enablePan={false} minDistance={2} maxDistance={6} enableDamping dampingFactor={0.08} />
         </Canvas>

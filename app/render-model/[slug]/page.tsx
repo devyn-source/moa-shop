@@ -19,7 +19,7 @@ export default async function RenderModelPage({ params }: { params: Promise<{ sl
 
   return (
     <main className="render-model">
-      <Garment3DClient url={modelUrl} hex={hero?.colorHex} showSwatches={false} swatches={[]} />
+      <Garment3DClient url={modelUrl} hex={hero?.colorHex} showSwatches={false} swatches={[]} fit={1.35} showShadow={false} />
     </main>
   );
 }

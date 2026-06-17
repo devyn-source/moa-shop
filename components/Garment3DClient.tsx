@@ -13,6 +13,8 @@ export default function Garment3DClient(props: {
   swatches?: { label: string; hex: string }[];
   hex?: string;
   showSwatches?: boolean;
+  fit?: number;
+  showShadow?: boolean;
 }) {
   return <Garment3D {...props} />;
 }
