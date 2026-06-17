@@ -28,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 export async function PUT(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   // Writes overwrite product placement zones/calibration/measurements — admin only.
   // (GET stays public: the PDP/configurator needs zones to render placement.)
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {

@@ -4,50 +4,19 @@
 //      Browsing + pricing stay public. Customer auth = Clerk.
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
+import { basicAuthValid, emailIsAdmin, clerkEmail } from "@/lib/admin-auth";
 
-// ---- Admin Basic Auth ------------------------------------------------------
-const ADMIN_USER = process.env.ADMIN_USER || "moa";
+// ---- Admin gate ------------------------------------------------------------
+// Primary path = Clerk session whose email is allowlisted (branded sign-in, no
+// browser popup). Fallback = HTTP Basic Auth (break-glass / automation).
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 function isAdminRoute(path: string): boolean {
   return path === "/admin" || path.startsWith("/admin/") || path.startsWith("/api/admin");
 }
 
-function unauthorized() {
-  return new NextResponse("Authentication required", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="MOA Catalog Admin"' },
-  });
-}
-
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-function adminGate(req: NextRequest): NextResponse | null {
-  // Fail CLOSED in production if no password is configured; only pass through in
-  // local dev. (Never leave /admin wide open because an env var is missing.)
-  if (!ADMIN_PASSWORD) return process.env.NODE_ENV === "production" ? unauthorized() : null;
-  const header = req.headers.get("authorization") || "";
-  if (!header.startsWith("Basic ")) return unauthorized();
-  let decoded = "";
-  try {
-    decoded = atob(header.slice(6));
-  } catch {
-    return unauthorized();
-  }
-  const idx = decoded.indexOf(":");
-  const user = decoded.slice(0, idx);
-  const pass = decoded.slice(idx + 1);
-  if (safeEqual(user, ADMIN_USER) && safeEqual(pass, ADMIN_PASSWORD)) return null;
-  return unauthorized();
-}
-
-// Prefetch/RSC requests must never get a WWW-Authenticate header (it pops the
-// browser's native Basic Auth dialog on pages that merely link to /admin).
+// Prefetch/RSC requests must never trigger a redirect or auth challenge (pages
+// merely linking to /admin would otherwise bounce the user). Answer them quietly.
 function isBackgroundRequest(req: NextRequest): boolean {
   return (
     (req.headers.get("sec-purpose") || "").includes("prefetch") ||
@@ -66,11 +35,25 @@ const requiresAccount = createRouteMatcher(["/checkout(.*)", "/orders(.*)", "/ad
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
-  // 1. Admin gate (Basic Auth) — independent of customer auth.
+  // 1. Admin gate — Clerk allowlist (primary) with Basic Auth break-glass.
   if (isAdminRoute(pathname)) {
-    const denied = adminGate(req);
-    if (denied && isBackgroundRequest(req)) return new NextResponse(null, { status: 401 });
-    return denied ?? NextResponse.next();
+    // Break-glass / automation: a valid Basic Auth header passes silently.
+    if (basicAuthValid(req)) return NextResponse.next();
+    // Local dev with no creds configured → open (matches prior behavior).
+    if (!ADMIN_PASSWORD && process.env.NODE_ENV !== "production") return NextResponse.next();
+    const { userId } = await auth();
+    if (userId) {
+      if (emailIsAdmin(await clerkEmail(userId))) return NextResponse.next();
+      // Signed in, but not an MOA admin — forbid (don't loop back to sign-in).
+      if (isBackgroundRequest(req)) return new NextResponse(null, { status: 403 });
+      return new NextResponse("Not authorized — this account isn't an MOA admin.", { status: 403 });
+    }
+    // Not signed in → branded Clerk sign-in (no native popup). APIs get 401.
+    if (isBackgroundRequest(req)) return new NextResponse(null, { status: 401 });
+    if (pathname.startsWith("/api")) return new NextResponse("Admin sign-in required", { status: 401 });
+    const signIn = new URL("/sign-in", req.url);
+    signIn.searchParams.set("redirect_url", pathname + req.nextUrl.search);
+    return NextResponse.redirect(signIn);
   }
 
   // 2. Order gate — must have a Clerk account to reach checkout/orders.
