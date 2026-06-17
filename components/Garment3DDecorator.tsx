@@ -80,9 +80,8 @@ function EditBackdrop({ url, hex, view, onRect }: { url: string; hex: string; vi
 // PREVIEW backdrop: model at rest, free orbit; every placement projected onto
 // the surface (front placements from a front cam, back from a back cam) as flat
 // planes parented to the model so they rotate with it.
-function PreviewBackdrop({ url, hex, artUrl, placements, frontZones, backZones }: {
+export function PreviewBackdrop({ url, hex, artUrl, placements }: {
   url: string; hex: string; artUrl: string; placements: Placement[];
-  frontZones: Zone[]; backZones: Zone[];
 }) {
   const cloned = useNormalizedModel(url, 1.45);
   const art = useTexture(artUrl);
@@ -210,7 +209,7 @@ export default function Garment3DDecorator({
           <directionalLight position={[-4, 2, -2]} intensity={0.3} />
           <Suspense fallback={<Html center>Loading…</Html>}>
             {preview ? (
-              <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} frontZones={frontList} backZones={backList} />
+              <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} />
             ) : (
               <EditBackdrop url={url} hex={hex} view={view} onRect={setRect} />
             )}

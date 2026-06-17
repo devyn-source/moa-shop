@@ -8,6 +8,7 @@ import { METHOD_MEDIA } from "@/lib/method-media";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import Garment3DClient from "./Garment3DClient";
 import Garment3DDecoratorClient from "./Garment3DDecoratorClient";
+import Garment3DPreviewClient from "./Garment3DPreviewClient";
 import type { StudioCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
@@ -812,7 +813,12 @@ export function PdpConfigurator({
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DClient url={modelUrl} hex={variant?.colorHex} showSwatches={false} />
+              {place3d.length && artworkUrl ? (
+                /* Keep the placed artwork on the garment across all other steps. */
+                <Garment3DPreviewClient url={modelUrl} hex={variant?.colorHex || "#C9C4B8"} artUrl={artworkUrl} placements={place3d} />
+              ) : (
+                <Garment3DClient url={modelUrl} hex={variant?.colorHex} showSwatches={false} />
+              )}
             </div>
           ) : (
           <div
