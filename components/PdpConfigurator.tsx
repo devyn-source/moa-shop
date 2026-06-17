@@ -7,6 +7,8 @@ import { useToast } from "./ToastProvider";
 import { METHOD_MEDIA } from "@/lib/method-media";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import Garment3DClient from "./Garment3DClient";
+import Garment3DDecoratorClient from "./Garment3DDecoratorClient";
+import type { DecalCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
@@ -214,14 +216,18 @@ export function PdpConfigurator({
   // 3D REPLACES 2D as the default hero — the 2D flat is kept only as a fallback
   // and for artwork placement (you can't drag art onto a spinning model).
   const has3d = Boolean(modelUrl);
+  // 3D SKUs place artwork ON the model (decal → captured UV). Non-3D SKUs keep
+  // the proven 2D flat zone flow. Blast radius = only SKUs that have a GLB.
+  const use3dPlacement = has3d;
   const [stageMode, setStageMode] = useState<"2d" | "3d">(has3d ? "3d" : "2d");
+  const [place3d, setPlace3d] = useState<DecalCapture | null>(null);
   const is3d = has3d && stageMode === "3d";
-  // No user-facing 2D/3D toggle — 3D fully replaces 2D as the hero. The flat is
-  // used ONLY for artwork placement (you can't drag art onto a rotating model),
-  // so the stage tracks the step automatically: flat on placement, 3D elsewhere.
+  // The decal editor takes over the stage during the placement step; 3D is the
+  // hero on every other step. (No user-facing 2D/3D toggle for model SKUs.)
+  const placing3d = use3dPlacement && step === "placement";
   useEffect(() => {
-    if (has3d) setStageMode(step === "placement" ? "2d" : "3d");
-  }, [step, has3d]);
+    if (has3d) setStageMode("3d");
+  }, [has3d]);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
   const fabricOption = product.fabricOptions?.find((o) => o.id === fabricOptionId);
@@ -279,7 +285,9 @@ export function PdpConfigurator({
   // First placement is included in the decoration price; each additional one
   // (saved below, or the editor on top of saved ones) adds the flat fee.
   const editorComplete = Boolean(artworkUrl && placement);
-  const placementCount = savedPlacements.length + (editorComplete ? 1 : 0);
+  const placementCount = use3dPlacement
+    ? place3d && artworkUrl ? 1 : 0
+    : savedPlacements.length + (editorComplete ? 1 : 0);
   const extraPlacementCount = Math.max(0, placementCount - 1);
   const extraPlacementAdder = extraPlacementCount * EXTRA_PLACEMENT_ADDER;
   const perUnit = tier.perUnitUsd + decorationAdder + wovenAdder + extraPlacementAdder + fabricAdder;
@@ -325,6 +333,30 @@ export function PdpConfigurator({
     const colors = pantones.length || undefined;
     const pms = pantones.length ? pantones : undefined;
     const maxColors = decoSelected[0]?.maxColors;
+    // 3D SKUs: a single placement carrying the captured UV. Zone label is a rough
+    // wearer-relative read of uv.x; the BOX is nominal (proof fallback) — the real
+    // inch spec is derived from placement3d.uv via the pattern (Phase 2).
+    if (use3dPlacement) {
+      if (!place3d || !artworkUrl) return [];
+      const uvx = place3d.uv?.[0] ?? 0.5;
+      const zoneLabel = uvx < 0.4 ? "Right chest" : uvx > 0.6 ? "Left chest" : "Center front";
+      return [
+        {
+          view: "front" as const,
+          zoneId: "front-3d",
+          zoneLabel,
+          box: { x: 0.32, y: 0.3, w: 0.36, h: 0.3 },
+          art: { ox: 0, oy: 0, sx: 1, sy: 1 },
+          method,
+          colors,
+          pantones: pms,
+          maxColors,
+          artworkFileUrl: artworkUrl ?? undefined,
+          artworkFileName: artworkName ?? undefined,
+          placement3d: { uv: place3d.uv, sizeUv: place3d.sizeUv, rotationDeg: place3d.rotationDeg },
+        },
+      ];
+    }
     const out: import("@/lib/types").ArtworkPlacement[] = savedPlacements.map((s) => ({
       view: s.view,
       zoneId: s.zoneId,
@@ -355,7 +387,7 @@ export function PdpConfigurator({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements]);
+  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements, use3dPlacement, place3d]);
 
   // Print-resolution QA: native art pixels spread across the REAL printed width
   // (derived from this SKU's calibration). Vectors skip it (scalable). <150 DPI
@@ -383,10 +415,12 @@ export function PdpConfigurator({
     if (s === "color") return variant?.colorLabel ?? "—";
     if (s === "decoration")
       return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
-    if (s === "placement")
+    if (s === "placement") {
+      if (use3dPlacement) return place3d ? "Placed on garment" : artworkUrl ? "Place on garment" : "Upload artwork";
       return placementCount > 1
         ? `${placementCount} placements`
         : placement?.label ?? (savedPlacements[0]?.zoneLabel ?? (artworkUrl ? "Pick a location" : "Upload artwork"));
+    }
     if (s === "size") return `${qty.toLocaleString()} units`;
     return "";
   };
@@ -774,7 +808,11 @@ export function PdpConfigurator({
           onPointerMove={is3d ? undefined : onStagePointerMove}
           onPointerLeave={is3d ? undefined : onStagePointerLeave}
         >
-          {is3d && modelUrl ? (
+          {placing3d && artworkUrl && modelUrl ? (
+            <div className="pdpx-canvas-3d">
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} onChange={setPlace3d} />
+            </div>
+          ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">
               <Garment3DClient url={modelUrl} hex={variant?.colorHex} showSwatches={false} />
             </div>
@@ -1050,6 +1088,12 @@ export function PdpConfigurator({
                           </span>
                         </button>
 
+                        {use3dPlacement ? (
+                          <p className="pdpx-place-hint">
+                            Place your artwork on the 3D garment — drag it to move, then use the size &amp; rotate sliders below the model. We capture the exact spot on the garment for production.
+                          </p>
+                        ) : (
+                          <>
                         <p className="pdpx-place-label">Step 02 · Location</p>
                         {placements.length === 0 ? (
                           <p className="pdpx-place-hint">
@@ -1133,6 +1177,8 @@ export function PdpConfigurator({
                               : `Want it in more than one spot? Add artwork + a location above, then save it to start another. First placement included; each extra +${currency(EXTRA_PLACEMENT_ADDER)}/unit.`}
                           </p>
                         </div>
+                          </>
+                        )}
                       </div>
                     ) : null}
 

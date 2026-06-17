@@ -169,10 +169,26 @@ function DecoModel({
   );
 }
 
-export default function Garment3DDecorator({ url, artUrl, hex = "#C9C4B8" }: { url: string; artUrl: string; hex?: string }) {
+export default function Garment3DDecorator({
+  url,
+  artUrl,
+  hex = "#C9C4B8",
+  onChange,
+}: {
+  url: string;
+  artUrl: string;
+  hex?: string;
+  onChange?: (c: DecalCapture) => void;
+}) {
   const [size, setSize] = useState(0.18);
   const [rot, setRot] = useState(0);
   const [cap, setCap] = useState<DecalCapture | null>(null);
+  // Emit on place AND on size/rotate changes (UV is unchanged by those, so reuse
+  // the last capture). The configurator stores this on the placement record.
+  const emit = (next: DecalCapture) => { setCap(next); onChange?.(next); };
+  const onPlaceCapture = (c: DecalCapture) => emit(c);
+  const setSizeEmit = (v: number) => { setSize(v); if (cap) emit({ ...cap, sizeUv: v }); };
+  const setRotEmit = (v: number) => { setRot(v); if (cap) emit({ ...cap, rotationDeg: v }); };
 
   return (
     <div className="g3d">
@@ -184,7 +200,7 @@ export default function Garment3DDecorator({ url, artUrl, hex = "#C9C4B8" }: { u
           <directionalLight position={[3, 5, 4]} intensity={0.95} castShadow shadow-mapSize={[2048, 2048]} />
           <directionalLight position={[-4, 2, -2]} intensity={0.3} />
           <Suspense fallback={<Html center>Loading…</Html>}>
-            <DecoModel url={url} hex={hex} artUrl={artUrl} size={size} rotationDeg={rot} onPlace={setCap} />
+            <DecoModel url={url} hex={hex} artUrl={artUrl} size={size} rotationDeg={rot} onPlace={onPlaceCapture} />
             <ContactShadows position={[0, -0.85, 0]} opacity={0.3} scale={4} blur={2.6} far={2.5} />
           </Suspense>
           <OrbitControls makeDefault enablePan={false} minDistance={1.6} maxDistance={6} enableDamping dampingFactor={0.08} />
@@ -192,8 +208,8 @@ export default function Garment3DDecorator({ url, artUrl, hex = "#C9C4B8" }: { u
       </div>
 
       <div className="g3d-decal-controls">
-        <label>Size<input type="range" min={0.06} max={0.4} step={0.005} value={size} onChange={(e) => setSize(parseFloat(e.target.value))} /></label>
-        <label>Rotate<input type="range" min={-180} max={180} step={1} value={rot} onChange={(e) => setRot(parseInt(e.target.value, 10))} /></label>
+        <label>Size<input type="range" min={0.06} max={0.4} step={0.005} value={size} onChange={(e) => setSizeEmit(parseFloat(e.target.value))} /></label>
+        <label>Rotate<input type="range" min={-180} max={180} step={1} value={rot} onChange={(e) => setRotEmit(parseInt(e.target.value, 10))} /></label>
         <span className="g3d-decal-readout">
           {cap?.uv ? `UV ${cap.uv[0].toFixed(3)}, ${cap.uv[1].toFixed(3)} · size ${(size * 100).toFixed(0)}% · ${rot}°` : "Place artwork to capture UV"}
         </span>

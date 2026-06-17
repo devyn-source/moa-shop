@@ -166,6 +166,11 @@ export type ArtworkPlacement = {
   // which inherits the order-level artworkFileUrl/Name.
   artworkFileUrl?: string;
   artworkFileName?: string;
+  // 3D-driven placement capture (buyer placed art on the 3D garment). `uv` is the
+  // mesh UV at the decal center — the production invariant that maps to the DXF
+  // pattern → real inches (lib/uv-pattern.ts). Additive: the 2D pipeline ignores
+  // it; Phase 2 reads it to derive the exact tech-pack spec.
+  placement3d?: { uv: [number, number] | null; sizeUv: number; rotationDeg: number };
 };
 
 export type ShopOrder = {

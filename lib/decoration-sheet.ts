@@ -5,6 +5,7 @@
 import type { ShopOrder } from "./types";
 import { getProductById, getProductCalibration } from "./store";
 import { derivePlacement, normaliseCalibration } from "./zones";
+import { buildRegistration, uvToPatternSpec } from "./uv-pattern";
 
 const MOA_PDF_URL = process.env.MOA_PDF_URL || "https://moa-pdf-fawn.vercel.app";
 
@@ -48,6 +49,10 @@ export async function buildDecorationSheetData(order: ShopOrder, mockupUrl: stri
   const orderDecoLabel =
     product.decorations.filter((d) => order.decorationIds.includes(d.id)).map((d) => d.label).join(" + ") || "Screen print";
   const cal = normaliseCalibration(await getProductCalibration(product.slug).catch(() => null));
+  // Phase 2: the pattern registration. Used only when the SKU has a VERIFIED
+  // aligned model (reg.aligned) AND the placement carries a 3D UV capture —
+  // otherwise the 2D calibration path below is the source of truth.
+  const reg = await buildRegistration(product.slug).catch(() => null);
   const sizes = product.sizes ?? [];
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
   const shot = variant?.frontImage || product.greyFront || null;
@@ -59,6 +64,18 @@ export async function buildDecorationSheetData(order: ShopOrder, mockupUrl: stri
     const isScreen = /screen|print/i.test(method);
     const underbase = isScreen && needsUnderbase(variant?.colorHex, pl.pantones);
     const viewLabel = pl.zoneLabel || (pl.view === "back" ? "Back" : "Front");
+    // 3D-driven spec: when the buyer placed on the 3D garment AND the model is
+    // pattern-aligned, derive the inches straight from the captured UV (the 98%
+    // path). Falls through to the 2D calibration when not aligned.
+    const spec3d = reg?.aligned && pl.placement3d ? uvToPatternSpec(reg, pl.placement3d) : null;
+    if (spec3d) {
+      return {
+        view: viewLabel, method, colors, underbase, mockupUrl: fallbackShot,
+        widthIn: spec3d.widthIn, heightIn: spec3d.heightIn,
+        topBelowCollarIn: spec3d.belowHpsIn, horizontal: spec3d.horizontal,
+        fromOffsetIn: Math.abs(spec3d.fromCenterIn), source: "3d-pattern",
+      };
+    }
     const vcal = cal?.[pl.view];
     if (vcal && pl.box && pl.art) {
       // calibrated body zone → real-inch placement spec
