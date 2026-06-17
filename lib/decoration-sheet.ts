@@ -64,19 +64,36 @@ export async function buildDecorationSheetData(order: ShopOrder, mockupUrl: stri
     const isScreen = /screen|print/i.test(method);
     const underbase = isScreen && needsUnderbase(variant?.colorHex, pl.pantones);
     const viewLabel = pl.zoneLabel || (pl.view === "back" ? "Back" : "Front");
-    // 3D-driven spec: when the buyer placed on the 3D garment AND the model is
-    // pattern-aligned, derive the inches straight from the captured UV (the 98%
-    // path). Falls through to the 2D calibration when not aligned.
-    const spec3d = reg?.aligned && pl.placement3d ? uvToPatternSpec(reg, pl.placement3d) : null;
-    if (spec3d) {
+    const vcal = cal?.[pl.view];
+    // 3D-ANCHORED spec (the exact path): the buyer placed art on the 3D garment
+    // and the Studio captured the real-inch spec off the mesh surface, scaled by
+    // the SKU's 3D calibration. Read it VERBATIM — this is the production number.
+    // The 2D ruler (when present) is reused only to draw the dimensioned overlay
+    // on the garment image; the callout values come from the 3D capture.
+    if (pl.spec3d) {
+      const s = pl.spec3d;
+      const base = {
+        view: viewLabel, method, colors, underbase, mockupUrl: fallbackShot,
+        widthIn: s.widthIn, heightIn: s.heightIn, topBelowCollarIn: s.belowHpsIn,
+        horizontal: s.horizontal, fromOffsetIn: Math.abs(s.fromCenterIn), source: "3d",
+      };
+      if (vcal && pl.box && pl.art) {
+        const d = derivePlacement(vcal, pl.box, pl.art, pl.view);
+        return { ...base, box: d.printBox, hpsY: d.hpsY, cfX: vcal.cfX };
+      }
+      return base;
+    }
+    // Legacy UV path (only when a SKU has a VERIFIED pattern-aligned model). Dead
+    // until a model is registered aligned; spec3d above is the live exact path.
+    const uvSpec = reg?.aligned && pl.placement3d ? uvToPatternSpec(reg, pl.placement3d) : null;
+    if (uvSpec) {
       return {
         view: viewLabel, method, colors, underbase, mockupUrl: fallbackShot,
-        widthIn: spec3d.widthIn, heightIn: spec3d.heightIn,
-        topBelowCollarIn: spec3d.belowHpsIn, horizontal: spec3d.horizontal,
-        fromOffsetIn: Math.abs(spec3d.fromCenterIn), source: "3d-pattern",
+        widthIn: uvSpec.widthIn, heightIn: uvSpec.heightIn,
+        topBelowCollarIn: uvSpec.belowHpsIn, horizontal: uvSpec.horizontal,
+        fromOffsetIn: Math.abs(uvSpec.fromCenterIn), source: "3d-pattern",
       };
     }
-    const vcal = cal?.[pl.view];
     if (vcal && pl.box && pl.art) {
       // calibrated body zone → real-inch placement spec
       const d = derivePlacement(vcal, pl.box, pl.art, pl.view);

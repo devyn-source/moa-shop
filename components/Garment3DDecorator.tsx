@@ -5,6 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, useGLTF, useTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
+import { STUDIO_FIT_UNITS, model3dPlacement, type Model3DCalibration, type Model3DHit, type Model3DPlacement } from "@/lib/zones";
 
 // MOA Studio — direct-manipulation placement on the 3D garment, with
 // multi-placement, front/back views, and a 3D rotate-to-preview.
@@ -18,7 +19,12 @@ export type Zone = { id: string; label: string; box: { x: number; y: number; w: 
 type View = "front" | "back";
 type Box = { x: number; y: number; w: number; h: number; r?: number };
 
-export type Placement = { id: string; view: View; zoneId: string; zoneLabel: string; box: Box; art: ArtTransform };
+export type Placement = {
+  id: string; view: View; zoneId: string; zoneLabel: string; box: Box; art: ArtTransform;
+  // Exact production spec captured off the 3D mesh surface (when the SKU is
+  // 3D-calibrated). Frozen at placement time so it travels with the order.
+  spec3d?: Model3DPlacement;
+};
 export type StudioCapture = Placement & { widthIn: number | null; dpi: number | null };
 
 const Z = new THREE.Vector3(0, 0, 1);
@@ -52,10 +58,20 @@ function useNormalizedModel(url: string, fit: number) {
   }, [scene, fit]);
 }
 
-// EDIT backdrop: model rotated so the chosen view faces the locked front camera;
-// reports the garment's projected screen rect so the HTML overlay sits over it.
-function EditBackdrop({ url, hex, view, onRect }: { url: string; hex: string; view: View; onRect: (r: Box) => void }) {
-  const cloned = useNormalizedModel(url, 1.45);
+// EDIT backdrop: model rotated so the chosen view faces the locked front camera.
+// Reports (a) the garment's projected screen rect so the HTML overlay sits over
+// it, and (b) the real 3D surface hit of the active art — center + extents
+// raycast onto the mesh — so placement converts to EXACT inches via the SKU's
+// 3D-anchored calibration (lib/zones model3dPlacement). This is the live tie
+// between what the buyer drags and the production spec.
+function EditBackdrop({ url, hex, view, zoneBox, art, model3d, onRect, onHit }: {
+  url: string; hex: string; view: View;
+  zoneBox: Box; art: ArtTransform;
+  model3d?: Model3DCalibration | null;
+  onRect: (r: Box) => void;
+  onHit: (h: Model3DHit | null) => void;
+}) {
+  const cloned = useNormalizedModel(url, model3d?.fitUnits ?? STUDIO_FIT_UNITS);
   const { camera, size } = useThree();
   useEffect(() => recolor(cloned, hex), [cloned, hex]);
   const rotY = view === "back" ? Math.PI : 0;
@@ -71,9 +87,32 @@ function EditBackdrop({ url, hex, view, onRect }: { url: string; hex: string; vi
           minx = Math.min(minx, (v.x + 1) / 2); maxx = Math.max(maxx, (v.x + 1) / 2);
           miny = Math.min(miny, (1 - v.y) / 2); maxy = Math.max(maxy, (1 - v.y) / 2);
         }
-    onRect({ x: minx, y: miny, w: Math.max(0.01, maxx - minx), h: Math.max(0.01, maxy - miny) });
+    const rect = { x: minx, y: miny, w: Math.max(0.01, maxx - minx), h: Math.max(0.01, maxy - miny) };
+    onRect(rect);
+
+    // Raycast the art's center + L/R/T/B edges onto the surface → world hit.
+    if (!model3d) { onHit(null); return; }
+    const ray = new THREE.Raycaster();
+    const hitAt = (cx: number, cy: number): THREE.Vector3 | null => {
+      ray.setFromCamera(new THREE.Vector2(cx * 2 - 1, -(cy * 2 - 1)), camera);
+      return ray.intersectObject(cloned, true)[0]?.point ?? null;
+    };
+    const sp = (fx: number, fy: number) => [rect.x + fx * rect.w, rect.y + fy * rect.h] as const;
+    const aCx = art.ox + art.sx / 2, aCy = art.oy + art.sy / 2;
+    const [cx, cy] = sp(zoneBox.x + zoneBox.w * aCx, zoneBox.y + zoneBox.h * aCy);
+    const [lx] = sp(zoneBox.x + zoneBox.w * art.ox, 0);
+    const [rx] = sp(zoneBox.x + zoneBox.w * (art.ox + art.sx), 0);
+    const [, ty] = sp(0, zoneBox.y + zoneBox.h * art.oy);
+    const [, by] = sp(0, zoneBox.y + zoneBox.h * (art.oy + art.sy));
+    const c = hitAt(cx, cy);
+    if (!c) { onHit(null); return; }
+    const lh = hitAt(lx, cy), rh = hitAt(rx, cy);
+    const th = hitAt(cx, ty), bh = hitAt(cx, by);
+    const widthWorld = lh && rh ? lh.distanceTo(rh) : 0;
+    const heightWorld = th && bh ? th.distanceTo(bh) : widthWorld;
+    onHit({ centerWorldX: c.x, centerWorldY: c.y, widthWorld, heightWorld });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cloned, rotY, camera, size.width, size.height]);
+  }, [cloned, rotY, camera, size.width, size.height, zoneBox.x, zoneBox.y, zoneBox.w, zoneBox.h, art.ox, art.oy, art.sx, art.sy, model3d]);
   return <primitive object={cloned} />;
 }
 
@@ -83,7 +122,7 @@ function EditBackdrop({ url, hex, view, onRect }: { url: string; hex: string; vi
 export function PreviewBackdrop({ url, hex, artUrl, placements }: {
   url: string; hex: string; artUrl: string; placements: Placement[];
 }) {
-  const cloned = useNormalizedModel(url, 1.45);
+  const cloned = useNormalizedModel(url, STUDIO_FIT_UNITS);
   const art = useTexture(artUrl);
   const aspect = useMemo(() => {
     const img = art.image as { width?: number; height?: number } | undefined;
@@ -148,12 +187,13 @@ export function PreviewBackdrop({ url, hex, artUrl, placements }: {
 }
 
 export default function Garment3DDecorator({
-  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, initialPlacements, onChange,
+  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, model3d, initialPlacements, onChange,
 }: {
   url: string; artUrl: string; hex?: string;
   zones: Zone[]; // front zones
   backZones?: Zone[];
   artPxWidth?: number; garmentRefWidthIn?: number;
+  model3d?: Model3DCalibration | null; // the 3D-anchored ruler — exact inches off the surface
   initialPlacements?: Placement[]; // restore a shared / re-opened config
   onChange?: (c: StudioCapture[]) => void;
 }) {
@@ -168,21 +208,30 @@ export default function Garment3DDecorator({
   const [zoneId, setZoneId] = useState(seedCur?.zoneId ?? frontList[0].id);
   const [art, setArt] = useState<ArtTransform>(seedCur?.art ?? clampDef);
   const [rect, setRect] = useState<Box>({ x: 0.18, y: 0.12, w: 0.64, h: 0.76 });
+  const [hit, setHit] = useState<Model3DHit | null>(null);
   const [preview, setPreview] = useState(false);
 
   const activeZones = view === "front" ? frontList : backList;
   const zone = activeZones.find((z) => z.id === zoneId) ?? activeZones[0];
 
-  const current: Placement = { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art };
-  const all = useMemo(() => [...saved, current], [saved, view, zoneId, art]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Exact production spec for the active art, straight off the 3D surface hit.
+  const spec3d = model3d && hit && hit.widthWorld > 0 ? model3dPlacement(model3d, hit, view) : undefined;
+  const current: Placement = { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art, spec3d };
+  const all = useMemo(() => [...saved, current], [saved, view, zoneId, art, spec3d]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Prefer the exact 3D-derived width; fall back to the rough ref-width estimate
+  // for SKUs without a 3D calibration.
   const artFrac = zone.box.w * art.sx;
-  const widthIn = Math.round(artFrac * garmentRefWidthIn * 4) / 4;
+  const widthIn = spec3d ? spec3d.widthIn : Math.round(artFrac * garmentRefWidthIn * 4) / 4;
   const dpi = artPxWidth && widthIn > 0 ? Math.round(artPxWidth / widthIn) : null;
   const dpiLevel = dpi == null ? "na" : dpi >= 150 ? "ok" : dpi >= 100 ? "warn" : "bad";
 
   useEffect(() => {
-    onChange?.(all.map((p) => ({ ...p, widthIn: p.id === "current" ? widthIn : null, dpi: p.id === "current" ? dpi : null })));
+    onChange?.(all.map((p) => ({
+      ...p,
+      widthIn: p.id === "current" ? widthIn : p.spec3d?.widthIn ?? null,
+      dpi: p.id === "current" ? dpi : null,
+    })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all]);
 
@@ -215,7 +264,7 @@ export default function Garment3DDecorator({
             {preview ? (
               <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} />
             ) : (
-              <EditBackdrop url={url} hex={hex} view={view} onRect={setRect} />
+              <EditBackdrop url={url} hex={hex} view={view} zoneBox={zone.box} art={art} model3d={model3d} onRect={setRect} onHit={setHit} />
             )}
             <ContactShadows position={[0, -0.8, 0]} opacity={0.28} scale={4} blur={2.6} far={2.5} />
           </Suspense>
@@ -244,7 +293,7 @@ export default function Garment3DDecorator({
         ) : null}
 
         <div className="studio3dx-hud">
-          {!preview ? <span className="studio3dx-dim">{widthIn}&Prime; wide</span> : <span className="studio3dx-dim">Drag to rotate · {all.length} placement{all.length > 1 ? "s" : ""}</span>}
+          {!preview ? <span className="studio3dx-dim">{widthIn}&Prime; wide{spec3d ? ` · ${spec3d.belowHpsIn}″ below HPS` : ""}</span> : <span className="studio3dx-dim">Drag to rotate · {all.length} placement{all.length > 1 ? "s" : ""}</span>}
           {!preview && dpi != null ? (
             <span className={`studio3dx-dpi studio3dx-dpi--${dpiLevel}`}>
               {dpiLevel === "ok" ? "Print-ready" : dpiLevel === "warn" ? "OK — softer at this size" : "Too low to print"} · {dpi} DPI

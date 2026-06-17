@@ -171,6 +171,11 @@ export type ArtworkPlacement = {
   // pattern → real inches (lib/uv-pattern.ts). Additive: the 2D pipeline ignores
   // it; Phase 2 reads it to derive the exact tech-pack spec.
   placement3d?: { uv: [number, number] | null; sizeUv: number; rotationDeg: number };
+  // 3D-ANCHORED spec: the exact real-inch placement captured off the 3D mesh
+  // surface, scaled by the SKU's calibration (lib/zones model3dPlacement). This
+  // is the production number — the decoration sheet / tech pack read it verbatim
+  // (no re-derivation), so the buyer's preview and the vendor's spec are equal.
+  spec3d?: { belowHpsIn: number; fromCenterIn: number; widthIn: number; heightIn: number; horizontal: string };
 };
 
 export type ShopOrder = {

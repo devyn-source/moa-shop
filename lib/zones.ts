@@ -33,11 +33,38 @@ export type ViewCalibration = {
   scaleY?: number; // ruler's vertical position — fraction of canvas HEIGHT (place it on the chest line, 1" below armhole). Display-only; not used in derivation.
   realInches: number; // the real garment width the A→B span represents
 };
-export type ProductCalibration = Partial<Record<View, ViewCalibration>>;
+// ---------- 3D-anchored calibration (the exact path) ----------
+// Anchors the 3D garment model to its real dimensions so placement is derived
+// off the ACTUAL surface, not a 2D silhouette guess. One scalar does the work:
+// inchesPerWorld — real inches per unit of the viewer's normalized world space.
+// Derived once per SKU from (GLB raw bbox → normalization) + (DXF/spec body
+// length). The Studio raycasts art onto the mesh, multiplies the world-space
+// hit by inchesPerWorld, and gets exact below-HPS / from-CF / width inches that
+// match everywhere (Studio readout = decoration sheet = tech pack).
+export type Model3DCalibration = {
+  fitUnits: number; // the viewer's normalization target (max model dim → this). Must match the Studio.
+  inchesPerWorld: number; // THE scalar: real inches per normalized world unit
+  hpsWorldY: number; // garment top / HPS line, in normalized world Y (centered model)
+  cfWorldX: number; // center-front plane, in normalized world X (≈ 0 for a centered model)
+  bodyLengthIn: number; // the real HPS→hem length the scale was anchored to
+  chestWidthIn: number | null; // flat front chest width (cross-check / display)
+  confidence: "high" | "medium" | "low" | "unknown";
+  source: "dxf" | "spec" | "dxf+spec";
+};
+
+export type ProductCalibration = Partial<Record<View, ViewCalibration>> & {
+  model3d?: Model3DCalibration; // present once the SKU has a GLB + a length spec
+};
 
 // The PDP canvas is 4:5 (width:height), so one unit of HEIGHT spans 1.25× the
 // real distance of one unit of WIDTH. Vertical inch conversion scales by this.
 export const CANVAS_H_OVER_W = 5 / 4;
+
+// The 3D viewer normalizes every model so its largest dimension == this many
+// world units (lib/Garment3DDecorator `useNormalizedModel`). The 3D-anchored
+// calibration must use the SAME value to convert world units → inches, so this
+// is the single source of truth shared by the Studio and the calibration job.
+export const STUDIO_FIT_UNITS = 1.45;
 
 export function defaultCalibration(): ViewCalibration {
   return { hpsY: 0.13, cfX: 0.5, scaleAx: 0.3, scaleBx: 0.7, scaleY: 0.5, realInches: 20 };
@@ -65,10 +92,44 @@ export function normaliseCalibration(raw: unknown): ProductCalibration | null {
   const b = one(r.back);
   if (f) out.front = f;
   if (b) out.back = b;
-  return f || b ? out : null;
+  const m = normaliseModel3d(r.model3d);
+  if (m) out.model3d = m;
+  return f || b || m ? out : null;
+}
+
+export function normaliseModel3d(raw: unknown): Model3DCalibration | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const num = (k: string): number | null => (typeof o[k] === "number" && Number.isFinite(o[k]) ? (o[k] as number) : null);
+  const ipw = num("inchesPerWorld");
+  const bl = num("bodyLengthIn");
+  if (!ipw || ipw <= 0 || !bl || bl <= 0) return null; // a calibration with no scale is useless
+  const conf = o.confidence;
+  return {
+    fitUnits: num("fitUnits") ?? 1.45,
+    inchesPerWorld: ipw,
+    hpsWorldY: num("hpsWorldY") ?? 0,
+    cfWorldX: num("cfWorldX") ?? 0,
+    bodyLengthIn: bl,
+    chestWidthIn: num("chestWidthIn"),
+    confidence: conf === "high" || conf === "medium" || conf === "low" ? conf : "unknown",
+    source: o.source === "dxf" || o.source === "spec" || o.source === "dxf+spec" ? o.source : "dxf",
+  };
 }
 
 const quarter = (n: number) => Math.round(n * 4) / 4; // nearest 1/4" — factory-friendly
+
+// Wearer-relative horizontal callout from a signed inches-from-datum. Positive =
+// screen-right; the wearer's L/R flips on a back view. Shared by the 2D and 3D
+// derivations so the spec reads identically whichever path produced it.
+export function horizontalLabel(fromCenterIn: number, view: View): string {
+  const datum = view === "back" ? "CB" : "CF";
+  if (Math.abs(fromCenterIn) < 0.26) return "Centered";
+  const screenRight = fromCenterIn > 0;
+  const wearerLeft = view === "back" ? !screenRight : screenRight;
+  const abs = Math.abs(fromCenterIn).toFixed(2).replace(/\.?0+$/, "");
+  return `${abs}" ${wearerLeft ? "wearer's L" : "wearer's R"} of ${datum}`;
+}
 
 export type DerivedPlacement = {
   widthIn: number;
@@ -108,20 +169,42 @@ export function derivePlacement(
   const fromCenterIn = quarter((centerX - cal.cfX) * inPerWFrac);
 
   // Horizontal datum: CF on the front, CB on the back. Left/right is reported
-  // WEARER-relative (garment convention), not viewer-relative. On a front view
-  // the wearer's left is screen-right; on a back view it's screen-left.
-  const datum = view === "back" ? "CB" : "CF";
-  let horizontal: string;
-  if (Math.abs(fromCenterIn) < 0.26) {
-    horizontal = "Centered";
-  } else {
-    const screenRight = fromCenterIn > 0;
-    const wearerLeft = view === "back" ? !screenRight : screenRight;
-    const abs = Math.abs(fromCenterIn).toFixed(2).replace(/\.?0+$/, "");
-    horizontal = `${abs}" ${wearerLeft ? "wearer's L" : "wearer's R"} of ${datum}`;
-  }
+  // WEARER-relative (garment convention), not viewer-relative.
+  const horizontal = horizontalLabel(fromCenterIn, view);
 
   return { widthIn, heightIn, topBelowCollarIn, fromCenterIn, horizontal, hpsY: cal.hpsY, printBox };
+}
+
+// ---------- 3D-anchored derivation (the exact path) ----------
+// A decal hit captured on the 3D mesh, in the viewer's normalized world space
+// (model centered; camera frame where +X = screen-right, +Y = up). The Studio
+// raycasts the art's center + extents onto the garment surface to fill this.
+export type Model3DHit = {
+  centerWorldX: number; // decal center, world X (signed from CF plane)
+  centerWorldY: number; // decal center, world Y
+  widthWorld: number; // printed width across the surface, world units
+  heightWorld: number; // printed height, world units
+};
+
+export type Model3DPlacement = {
+  widthIn: number;
+  heightIn: number;
+  belowHpsIn: number; // top edge of the art below HPS
+  fromCenterIn: number; // signed
+  horizontal: string;
+};
+
+// Convert a 3D surface hit → exact real inches using the SKU's anchored scalar.
+// This is the production number: identical in the Studio readout, decoration
+// sheet, and tech pack because they all read this one result.
+export function model3dPlacement(cal: Model3DCalibration, hit: Model3DHit, view: View = "front"): Model3DPlacement {
+  const ipw = cal.inchesPerWorld;
+  const widthIn = quarter(hit.widthWorld * ipw);
+  const heightIn = quarter(hit.heightWorld * ipw);
+  const topWorldY = hit.centerWorldY + hit.heightWorld / 2; // Y up → top edge
+  const belowHpsIn = quarter(Math.max(0, (cal.hpsWorldY - topWorldY) * ipw));
+  const fromCenterIn = quarter((hit.centerWorldX - cal.cfWorldX) * ipw);
+  return { widthIn, heightIn, belowHpsIn, fromCenterIn, horizontal: horizontalLabel(fromCenterIn, view) };
 }
 
 // ---------- Garment measurements (points of measure × sizes) ----------

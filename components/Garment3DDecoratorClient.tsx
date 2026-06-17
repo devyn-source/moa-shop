@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { Model3DCalibration } from "@/lib/zones";
 import type { StudioCapture, Zone, Placement } from "./Garment3DDecorator";
 
 const Garment3DDecorator = dynamic(() => import("./Garment3DDecorator"), {
@@ -16,6 +17,7 @@ export default function Garment3DDecoratorClient(props: {
   backZones?: Zone[];
   artPxWidth?: number;
   garmentRefWidthIn?: number;
+  model3d?: Model3DCalibration | null;
   initialPlacements?: Placement[];
   onChange?: (c: StudioCapture[]) => void;
 }) {

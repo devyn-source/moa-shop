@@ -233,7 +233,8 @@ export function PdpConfigurator({
           zoneLabel: p.zoneLabel,
           box: p.box,
           art: p.art,
-          widthIn: null,
+          spec3d: p.spec3d,
+          widthIn: p.spec3d?.widthIn ?? null,
           dpi: null,
         }))
       : []
@@ -370,6 +371,8 @@ export function PdpConfigurator({
         maxColors,
         artworkFileUrl: artworkUrl ?? undefined,
         artworkFileName: artworkName ?? undefined,
+        // exact 3D-anchored spec (off the mesh surface) — production truth
+        spec3d: p.spec3d ?? undefined,
       }));
     }
     const out: import("@/lib/types").ArtworkPlacement[] = savedPlacements.map((s) => ({
@@ -827,7 +830,7 @@ export function PdpConfigurator({
         >
           {placing3d && artworkUrl && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} initialPlacements={place3d} onChange={setPlace3d} />
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} model3d={calibration?.model3d} initialPlacements={place3d} onChange={setPlace3d} />
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">

@@ -4,7 +4,7 @@ import { buildDecorationSheetData, buildDecorationSheetUrl } from "@/lib/decorat
 import { buildTechPackUrl } from "@/lib/tech-pack";
 import { getCatalogSpec } from "@/lib/garment-spec-store";
 import { isPassportLocked } from "@/lib/garment-spec";
-import { getDefaultZones } from "@/lib/zones";
+import { getDefaultZones, normaliseCalibration, model3dPlacement } from "@/lib/zones";
 import { apiError } from "@/lib/errors";
 import type { ShopOrder, ArtworkPlacement } from "@/lib/types";
 
@@ -12,6 +12,8 @@ import type { ShopOrder, ArtworkPlacement } from "@/lib/types";
 // tech-pack chain for a SKU with a sample left-chest placement. Surfaces the
 // derived real-inch spec, the decoration-sheet PDF (Layer 2), the merged tech
 // pack (Layer 1+2), and every gate state — so we can verify production-readiness.
+// When the SKU is 3D-calibrated, it attaches a spec3d computed off the stored
+// calibration (the exact path) so the QA mirrors a real 3D Studio capture.
 export const runtime = "nodejs";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -22,6 +24,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     const variant = product.variants[0];
     const zone = getDefaultZones(product).front.find((z) => z.id === "left-chest") ?? getDefaultZones(product).front[0];
     const origin = new URL(request.url).origin;
+
+    // 3D-anchored exact spec for a representative 3.5" left-chest logo, derived
+    // off the SKU's stored calibration (mirrors what the Studio captures live).
+    const cal = normaliseCalibration(await getProductCalibration(slug).catch(() => null));
+    const m3d = cal?.model3d;
+    const spec3d = m3d
+      ? model3dPlacement(
+          m3d,
+          { centerWorldX: 3.5 / m3d.inchesPerWorld, centerWorldY: m3d.hpsWorldY - 4.25 / m3d.inchesPerWorld, widthWorld: 3.5 / m3d.inchesPerWorld, heightWorld: 3.5 / m3d.inchesPerWorld },
+          "front"
+        )
+      : undefined;
 
     const placement: ArtworkPlacement = {
       view: "front",
@@ -35,6 +49,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       maxColors: 4,
       artworkFileUrl: `${origin}/work/bigface-tee.png`,
       artworkFileName: "logo.png",
+      spec3d,
     };
 
     const order = {
