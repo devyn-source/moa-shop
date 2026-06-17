@@ -50,8 +50,20 @@ function fabricNormalMap(): THREE.Texture {
 
 function Model({ url, hex }: { url: string; hex: string }) {
   const { scene } = useGLTF(url);
-  // clone so multiple instances / HMR don't share mutated materials
-  const cloned = useMemo(() => scene.clone(true), [scene]);
+  // Clone (so instances/HMR don't share mutated materials) and NORMALIZE scale:
+  // GLBs arrive in wildly different unit scales (a cap fills the frame while a
+  // tee is tiny), so fit every model's largest dimension to a fixed world size.
+  // With this, the fixed camera + contact shadow frame all garments consistently.
+  const cloned = useMemo(() => {
+    const c = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(c);
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z) || 1;
+    // Target fits the NARROW (width) axis of the portrait 4:5 stage with margin,
+    // so wide items (caps) aren't cropped and tall items (tees) sit centered.
+    c.scale.setScalar(1.55 / maxDim);
+    return c;
+  }, [scene]);
   useEffect(() => {
     const color = new THREE.Color(hex);
     cloned.traverse((o) => {
@@ -134,7 +146,7 @@ export default function Garment3D({
           <directionalLight position={[0, 3, -5]} intensity={0.3} />
           <Suspense fallback={<Loader />}>
             <Model url={url} hex={hex} />
-            <ContactShadows position={[0, -1.15, 0]} opacity={0.35} scale={6} blur={2.6} far={3} />
+            <ContactShadows position={[0, -0.85, 0]} opacity={0.3} scale={4} blur={2.6} far={2.5} />
           </Suspense>
           <OrbitControls enablePan={false} minDistance={2} maxDistance={6} enableDamping dampingFactor={0.08} />
         </Canvas>
