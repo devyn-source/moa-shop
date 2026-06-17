@@ -22,8 +22,16 @@ function Model({ url, hex }: { url: string; hex: string }) {
       if (!m.isMesh) return;
       const mat = m.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
       const apply = (mm: THREE.MeshStandardMaterial) => {
+        // Exact brand color: a baked color/AO/light map would MULTIPLY the hue
+        // (olive base × bone = muddy), so strip them and set the sRGB brand hex
+        // straight. Keep the normal map — it only perturbs shading, not hue.
+        mm.map = null;
+        mm.aoMap = null;
+        mm.lightMap = null;
+        mm.emissiveMap = null;
+        mm.emissive?.set("#000000");
         mm.color = color;
-        mm.roughness = Math.min(1, (mm.roughness ?? 0.8) * 0.9 + 0.55);
+        mm.roughness = 0.65; // even matte fabric — no per-material variance
         mm.metalness = 0;
         mm.needsUpdate = true;
       };
@@ -41,20 +49,43 @@ function Loader() {
   return <Html center><div style={{ font: "600 0.7rem/1 system-ui", letterSpacing: "0.14em", textTransform: "uppercase", color: "#8A8680" }}>Loading…</div></Html>;
 }
 
-export default function Garment3D({ url, swatches }: { url: string; swatches: Swatch[] }) {
-  const [hex, setHex] = useState(swatches[0]?.hex ?? "#2D2C2F");
+export default function Garment3D({
+  url,
+  swatches = [],
+  hex: hexProp,
+  showSwatches = true,
+}: {
+  url: string;
+  swatches?: Swatch[];
+  // When provided, color is CONTROLLED by the parent (e.g. the PDP configurator's
+  // selected variant) — the internal swatch picker is hidden.
+  hex?: string;
+  showSwatches?: boolean;
+}) {
+  const [hex, setHex] = useState(hexProp ?? swatches[0]?.hex ?? "#2D2C2F");
   const [active, setActive] = useState(swatches[0]?.label ?? "");
   const wrap = useRef<HTMLDivElement>(null);
+
+  // Follow the controlled color when the parent changes it.
+  useEffect(() => {
+    if (hexProp) setHex(hexProp);
+  }, [hexProp]);
+  const swatchesVisible = showSwatches && swatches.length > 0;
 
   return (
     <div className="g3d" ref={wrap}>
       <div className="g3d-stage">
-        <Canvas shadows camera={{ position: [0, 0.2, 3.4], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+        {/* `flat` = NoToneMapping: render the brand sRGB color faithfully instead
+            of ACES-filmic shifting it away from the Pantone target. Lighting is
+            kept low-contrast + even so a swatch reads close to its hex (bright
+            key lights would wash a flat color lighter than the Pantone chip). */}
+        <Canvas flat shadows camera={{ position: [0, 0.2, 3.4], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
           <color attach="background" args={["#EEEAE3"]} />
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[3, 5, 4]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
-          <directionalLight position={[-4, 2, -2]} intensity={0.5} />
-          <directionalLight position={[0, 3, -5]} intensity={0.7} />
+          <ambientLight intensity={0.9} />
+          <hemisphereLight args={["#ffffff", "#dcd6cc", 0.45]} />
+          <directionalLight position={[3, 5, 4]} intensity={0.8} castShadow shadow-mapSize={[2048, 2048]} />
+          <directionalLight position={[-4, 2, -2]} intensity={0.28} />
+          <directionalLight position={[0, 3, -5]} intensity={0.32} />
           <Suspense fallback={<Loader />}>
             <Model url={url} hex={hex} />
             <ContactShadows position={[0, -1.15, 0]} opacity={0.35} scale={6} blur={2.6} far={3} />
@@ -63,6 +94,7 @@ export default function Garment3D({ url, swatches }: { url: string; swatches: Sw
         </Canvas>
       </div>
 
+      {swatchesVisible ? (
       <div className="g3d-swatches" role="group" aria-label="Color">
         {swatches.map((s) => (
           <button
@@ -77,6 +109,7 @@ export default function Garment3D({ url, swatches }: { url: string; swatches: Sw
         ))}
         <span className="g3d-colorname">{active}</span>
       </div>
+      ) : null}
     </div>
   );
 }

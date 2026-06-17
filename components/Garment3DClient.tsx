@@ -8,6 +8,11 @@ const Garment3D = dynamic(() => import("./Garment3D"), {
   loading: () => <div className="g3d-loading">Preparing 3D…</div>,
 });
 
-export default function Garment3DClient(props: { url: string; swatches: { label: string; hex: string }[] }) {
+export default function Garment3DClient(props: {
+  url: string;
+  swatches?: { label: string; hex: string }[];
+  hex?: string;
+  showSwatches?: boolean;
+}) {
   return <Garment3D {...props} />;
 }

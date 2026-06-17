@@ -6,6 +6,7 @@ import { ProductShot } from "./ProductShot";
 import { useToast } from "./ToastProvider";
 import { METHOD_MEDIA } from "@/lib/method-media";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
+import Garment3DClient from "./Garment3DClient";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
@@ -115,12 +116,15 @@ export function PdpConfigurator({
   product,
   editOrder,
   seed,
-  bundle
+  bundle,
+  modelUrl
 }: {
   product: CatalogProduct;
   editOrder?: EditSeed;
   seed?: EditSeed;
   bundle?: BundleMode;
+  // Public GLB URL for this SKU (sku-models bucket) — enables the 3D viewer.
+  modelUrl?: string | null;
 }) {
   // editOrder = editing an existing order (CTA updates it). seed = a shared config
   // pre-fill (CTA adds to cart normally). Both seed the same initial state.
@@ -206,6 +210,18 @@ export function PdpConfigurator({
   const [submitting, setSubmitting] = useState(false);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  // 2D recolor mock vs the rotatable 3D model. Policy: where a SKU has a GLB,
+  // 3D REPLACES 2D as the default hero — the 2D flat is kept only as a fallback
+  // and for artwork placement (you can't drag art onto a spinning model).
+  const has3d = Boolean(modelUrl);
+  const [stageMode, setStageMode] = useState<"2d" | "3d">(has3d ? "3d" : "2d");
+  const is3d = has3d && stageMode === "3d";
+  // Artwork placement needs the flat mockup (you can't drag art onto a rotating
+  // model), so drop to 2D when the buyer enters that step; 3D stays the hero
+  // everywhere else.
+  useEffect(() => {
+    if (has3d && step === "placement") setStageMode("2d");
+  }, [step, has3d]);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
   const fabricOption = product.fabricOptions?.find((o) => o.id === fabricOptionId);
@@ -504,13 +520,22 @@ export function PdpConfigurator({
     setTilt({ x: 0, y: 0 });
     try {
       await new Promise((r) => setTimeout(r, 60));
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(stageRef.current, { pixelRatio: 2, cacheBust: true, backgroundColor: "#EEEAE3" });
+      let dataUrl: string;
+      if (is3d) {
+        // WebGL: read the rendered frame straight off the canvas. Works because
+        // the 3D Canvas is created with preserveDrawingBuffer (see Garment3D).
+        const canvas = stageRef.current.querySelector("canvas");
+        if (!canvas) throw new Error("no 3d canvas");
+        dataUrl = canvas.toDataURL("image/png");
+      } else {
+        const { toPng } = await import("html-to-image");
+        dataUrl = await toPng(stageRef.current, { pixelRatio: 2, cacheBust: true, backgroundColor: "#EEEAE3" });
+      }
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `${product.slug}-${variant?.colorLabel ?? "mockup"}.png`.replace(/\s+/g, "-").toLowerCase();
+      a.download = `${product.slug}-${variant?.colorLabel ?? "mockup"}${is3d ? "-3d" : ""}.png`.replace(/\s+/g, "-").toLowerCase();
       a.click();
-      analytics.track("mockup_downloaded", { slug: product.slug });
+      analytics.track("mockup_downloaded", { slug: product.slug, mode: is3d ? "3d" : "2d" });
     } catch {
       /* ignore — download is best-effort */
     } finally {
@@ -709,7 +734,9 @@ export function PdpConfigurator({
       <div className="pdpx-stage">
         <div className="pdpx-stage-toolbar">
           <span className="pdpx-eyebrow">{product.category}</span>
-          {hasBack ? (
+          {is3d ? (
+            <span className="pdpx-eyebrow pdpx-eyebrow--muted">Drag to rotate</span>
+          ) : hasBack ? (
             <div className="pdpx-view-pills" role="tablist" aria-label="Garment view">
               <button
                 type="button"
@@ -733,8 +760,30 @@ export function PdpConfigurator({
           ) : (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
           )}
+          {has3d ? (
+            <div className="pdpx-view-pills pdpx-mode-pills" role="tablist" aria-label="View mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!is3d}
+                className={`pdpx-pill${!is3d ? " is-on" : ""}`}
+                onClick={() => setStageMode("2d")}
+              >
+                2D
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={is3d}
+                className={`pdpx-pill${is3d ? " is-on" : ""}`}
+                onClick={() => setStageMode("3d")}
+              >
+                3D
+              </button>
+            </div>
+          ) : null}
           <button type="button" className="pdpx-download" onClick={handleDownload} disabled={downloading}>
-            {downloading ? "Saving…" : "Download ↓"}
+            {downloading ? "Saving…" : is3d ? "Download still ↓" : "Download ↓"}
           </button>
         </div>
 
@@ -743,10 +792,15 @@ export function PdpConfigurator({
             two image layers, and the entrance keyframe only plays on first load. */}
         <div
           ref={stageRef}
-          className={`pdpx-canvas${downloading ? " is-capturing" : ""}`}
-          onPointerMove={onStagePointerMove}
-          onPointerLeave={onStagePointerLeave}
+          className={`pdpx-canvas${downloading ? " is-capturing" : ""}${is3d ? " is-3d" : ""}`}
+          onPointerMove={is3d ? undefined : onStagePointerMove}
+          onPointerLeave={is3d ? undefined : onStagePointerLeave}
         >
+          {is3d && modelUrl ? (
+            <div className="pdpx-canvas-3d">
+              <Garment3DClient url={modelUrl} hex={variant?.colorHex} showSwatches={false} />
+            </div>
+          ) : (
           <div
             className="pdpx-canvas-tilt"
             style={{ transform: `perspective(1400px) rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)` }}
@@ -809,10 +863,13 @@ export function PdpConfigurator({
               ) : null}
             </div>
           </div>
+          )}
         </div>
 
         <p className="pdpx-shotnote">
-          Live preview · {variant?.colorLabel}{placement ? ` · ${placement.label}` : ""}
+          {is3d
+            ? `3D preview · ${variant?.colorLabel} · drag to rotate, scroll to zoom`
+            : `Live preview · ${variant?.colorLabel}${placement ? ` · ${placement.label}` : ""}`}
         </p>
       </div>
 

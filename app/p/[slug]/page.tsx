@@ -6,6 +6,7 @@ import { CaseStudies } from "@/components/CaseStudies";
 import { BoxBuilder } from "@/components/BoxBuilder";
 import { currency } from "@/lib/pricing";
 import { getProductBySlug, getProducts } from "@/lib/store";
+import { getModelUrl } from "@/lib/pattern-files";
 import { isBundleEligible } from "@/lib/seed";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 import { getKit } from "@/lib/use-cases";
@@ -127,7 +128,7 @@ export default async function ProductPage({
         <span className="crumb-current">{product.skuCode}</span>
       </nav>
 
-      <PdpConfigurator product={product} />
+      <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} />
 
       {isPromoWithinWindow(PR_BOX_PROMO) ? (
         <Link href="/p/pr-box" className="pdp-prbox-nudge">

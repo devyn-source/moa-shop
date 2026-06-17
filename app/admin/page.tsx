@@ -41,6 +41,11 @@ export default async function AdminPage() {
           <strong className="stat-value">2</strong>
           <span className="stat-sub">Apparel + headwear partners</span>
         </Link>
+        <Link className="stat-card" href="/admin/assets">
+          <span className="stat-label">Production assets</span>
+          <strong className="stat-value">{products.length}</strong>
+          <span className="stat-sub">CAD pattern files (gated) + 3D models per style</span>
+        </Link>
       </section>
 
       <section className="info-section">

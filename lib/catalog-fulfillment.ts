@@ -10,6 +10,7 @@ import { sendShippingNotification } from "./email";
 import { seedVendors } from "./seed";
 import { derivePlacement, normaliseCalibration } from "./zones";
 import { buildTechPackUrl } from "./tech-pack";
+import { listPatternFilesSigned } from "./pattern-files";
 
 export type FulfillmentMode = "off" | "dry_run" | "draft_only" | "manual_release" | "auto";
 
@@ -82,6 +83,11 @@ async function buildIntakePayload(order: ShopOrder) {
   const approved = Boolean(order.proofApprovedAt);
   const techPackUrl = approved ? await buildTechPackUrl(order, order.proofUrl ?? null) : null;
 
+  // CAD pattern files for this SKU (DXF/AI/PLT), freshly signed. MoaOS surfaces
+  // these in the vendor PO email so the factory gets the cut patterns when the
+  // style is ordered. Empty array when none have been uploaded yet.
+  const patternFiles = product ? await listPatternFilesSigned(product.slug).catch(() => []) : [];
+
   return {
     shopOrderId: order.id,
     // Drives the intake stage: false on the payment push (creates an
@@ -129,6 +135,8 @@ async function buildIntakePayload(order: ShopOrder) {
         // Full vendor tech pack PDF (locked passport + decoration sheet) —
         // null until the passport is locked AND the customer has approved.
         techPackUrl,
+        // CAD pattern files (DXF/AI/PLT) for the factory — MOA + vendor only.
+        patternFiles: patternFiles.map((f) => ({ filename: f.filename, format: f.format, url: f.url })),
         underbase: needsUnderbase(variant?.colorHex, placement?.pantones),
         quantity: order.quantity,
         clientUnitCost: order.perUnitUsd + order.decorationAdderUsd,

@@ -8,16 +8,45 @@
 // so the operator knows which SKUs are trustworthy vs need a nudge in Studio.
 import sharp from "sharp";
 import { getProductMeasurements } from "./store";
-import { normaliseMeasurements, type ProductCalibration } from "./zones";
+import { normaliseMeasurements, type ProductCalibration, type ViewCalibration, type View } from "./zones";
 
 type Analysis = { W: number; H: number; bbox: { l: number; t: number; r: number; b: number }; chest: { y: number; l: number; r: number } };
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 const quarter = (n: number) => Math.round(n * 4) / 4;
 
+// Turn a silhouette analysis into a ViewCalibration. Positions (HPS/CF/chest
+// ruler) come from the mockup; the SCALE comes from realInches. When the caller
+// supplies a measured chest (e.g. from the DXF pattern), it's used verbatim —
+// that's the pattern-driven calibration. Otherwise chest is derived from the
+// silhouette + body length (the photo-only estimate).
+export function viewCalFromAnalysis(a: Analysis, bodyLenIn: number, realChestIn?: number): ViewCalibration {
+  const ippLen = bodyLenIn / ((a.bbox.b - a.bbox.t) * a.H); // inches per pixel
+  const chestWpx = (a.chest.r - a.chest.l) * a.W;
+  return {
+    hpsY: round3(a.bbox.t),
+    cfX: round3((a.chest.l + a.chest.r) / 2),
+    scaleAx: round3(a.chest.l),
+    scaleBx: round3(a.chest.r),
+    scaleY: round3(a.chest.y),
+    realInches: realChestIn != null && realChestIn > 0 ? quarter(realChestIn) : quarter(chestWpx * ippLen),
+  };
+}
+
+// Fetch a SKU's base mockup for one view and run the silhouette analysis.
+export async function fetchViewAnalysis(slug: string, origin: string, view: View): Promise<Analysis | null> {
+  try {
+    const res = await fetch(`${origin}/products/${slug}/base-${view}.png`);
+    if (!res.ok) return null;
+    return analyze(Buffer.from(await res.arrayBuffer()));
+  } catch {
+    return null;
+  }
+}
+
 // Silhouette bbox + chest-line width, as fractions of the image. Uses the alpha
 // channel when the mockup is a cutout; falls back to a non-white mask otherwise.
-async function analyze(buf: Buffer): Promise<Analysis | null> {
+export async function analyze(buf: Buffer): Promise<Analysis | null> {
   const { data, info } = await sharp(buf).resize({ width: 420 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, ch = info.channels;
   const A = (x: number, y: number) => data[(y * W + x) * ch + (ch - 1)];
@@ -97,16 +126,7 @@ export async function autoCalibrate(slug: string, origin: string): Promise<AutoC
       continue;
     }
     if (view === "front") frontA = a;
-    const ippLen = bodyLen / ((a.bbox.b - a.bbox.t) * a.H); // inches per pixel
-    const chestWpx = (a.chest.r - a.chest.l) * a.W;
-    cal[view] = {
-      hpsY: round3(a.bbox.t),
-      cfX: round3((a.chest.l + a.chest.r) / 2),
-      scaleAx: round3(a.chest.l),
-      scaleBx: round3(a.chest.r),
-      scaleY: round3(a.chest.y), // ruler sits on the detected chest line
-      realInches: quarter(chestWpx * ippLen),
-    };
+    cal[view] = viewCalFromAnalysis(a, bodyLen);
   }
   if (!cal.front) return { ok: false, error: `No base mockup at /products/${slug}/base-front.png to detect the garment.` };
   if (!cal.back) cal.back = { ...cal.front };
