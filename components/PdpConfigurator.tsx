@@ -216,11 +216,11 @@ export function PdpConfigurator({
   const has3d = Boolean(modelUrl);
   const [stageMode, setStageMode] = useState<"2d" | "3d">(has3d ? "3d" : "2d");
   const is3d = has3d && stageMode === "3d";
-  // Artwork placement needs the flat mockup (you can't drag art onto a rotating
-  // model), so drop to 2D when the buyer enters that step; 3D stays the hero
-  // everywhere else.
+  // No user-facing 2D/3D toggle — 3D fully replaces 2D as the hero. The flat is
+  // used ONLY for artwork placement (you can't drag art onto a rotating model),
+  // so the stage tracks the step automatically: flat on placement, 3D elsewhere.
   useEffect(() => {
-    if (has3d && step === "placement") setStageMode("2d");
+    if (has3d) setStageMode(step === "placement" ? "2d" : "3d");
   }, [step, has3d]);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
@@ -760,28 +760,6 @@ export function PdpConfigurator({
           ) : (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
           )}
-          {has3d ? (
-            <div className="pdpx-view-pills pdpx-mode-pills" role="tablist" aria-label="View mode">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={!is3d}
-                className={`pdpx-pill${!is3d ? " is-on" : ""}`}
-                onClick={() => setStageMode("2d")}
-              >
-                2D
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={is3d}
-                className={`pdpx-pill${is3d ? " is-on" : ""}`}
-                onClick={() => setStageMode("3d")}
-              >
-                3D
-              </button>
-            </div>
-          ) : null}
           <button type="button" className="pdpx-download" onClick={handleDownload} disabled={downloading}>
             {downloading ? "Saving…" : is3d ? "Download still ↓" : "Download ↓"}
           </button>

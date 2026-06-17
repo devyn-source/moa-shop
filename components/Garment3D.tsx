@@ -31,8 +31,13 @@ function Model({ url, hex }: { url: string; hex: string }) {
         mm.emissiveMap = null;
         mm.emissive?.set("#000000");
         mm.color = color;
-        mm.roughness = 0.65; // even matte fabric — no per-material variance
+        mm.roughness = 0.96; // matte cotton — kills the plastic specular sheen
         mm.metalness = 0;
+        // Some GLBs ship a PhysicalMaterial clearcoat/specular layer — those are
+        // the glossy hotspots. Zero them so it reads like fabric, not vinyl.
+        const phys = mm as unknown as { clearcoat?: number; specularIntensity?: number };
+        if (phys.clearcoat !== undefined) phys.clearcoat = 0;
+        if (phys.specularIntensity !== undefined) phys.specularIntensity = 0;
         mm.needsUpdate = true;
       };
       Array.isArray(mat) ? mat.forEach(apply) : apply(mat);
@@ -76,16 +81,16 @@ export default function Garment3D({
     <div className="g3d" ref={wrap}>
       <div className="g3d-stage">
         {/* `flat` = NoToneMapping: render the brand sRGB color faithfully instead
-            of ACES-filmic shifting it away from the Pantone target. Lighting is
-            kept low-contrast + even so a swatch reads close to its hex (bright
-            key lights would wash a flat color lighter than the Pantone chip). */}
+            of ACES-filmic shifting it off the Pantone target. A brighter key over
+            dimmer ambient/fill gives natural form contrast (soft studio look);
+            the matte material means that contrast is diffuse shading, not shine. */}
         <Canvas flat shadows camera={{ position: [0, 0.2, 3.4], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
           <color attach="background" args={["#EEEAE3"]} />
-          <ambientLight intensity={0.9} />
-          <hemisphereLight args={["#ffffff", "#dcd6cc", 0.45]} />
-          <directionalLight position={[3, 5, 4]} intensity={0.8} castShadow shadow-mapSize={[2048, 2048]} />
-          <directionalLight position={[-4, 2, -2]} intensity={0.28} />
-          <directionalLight position={[0, 3, -5]} intensity={0.32} />
+          <ambientLight intensity={0.55} />
+          <hemisphereLight args={["#ffffff", "#d8d2c8", 0.3]} />
+          <directionalLight position={[3, 5, 4]} intensity={1.15} castShadow shadow-mapSize={[2048, 2048]} />
+          <directionalLight position={[-4, 2, -2]} intensity={0.3} />
+          <directionalLight position={[0, 3, -5]} intensity={0.3} />
           <Suspense fallback={<Loader />}>
             <Model url={url} hex={hex} />
             <ContactShadows position={[0, -1.15, 0]} opacity={0.35} scale={6} blur={2.6} far={3} />
