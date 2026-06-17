@@ -2,6 +2,7 @@
 // saved config (no order yet). The CTA adds it to the cart normally. PUBLIC.
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/lib/store";
+import { getModelUrl } from "@/lib/pattern-files";
 import { getSharedConfig } from "@/lib/shared-config";
 import { PdpConfigurator, type EditSeed } from "@/components/PdpConfigurator";
 
@@ -15,6 +16,7 @@ export default async function SharedConfigPage({ params }: { params: Promise<{ i
   if (!product) notFound();
 
   const seed = shared.config as EditSeed;
+  const modelUrl = await getModelUrl(product.slug);
 
   return (
     <main className="page">
@@ -25,7 +27,7 @@ export default async function SharedConfigPage({ params }: { params: Promise<{ i
           Someone shared this configuration with you. Review it, make any changes, and add it to your order — nothing is produced until a proof is approved.
         </p>
       </div>
-      <PdpConfigurator product={product} seed={seed} />
+      <PdpConfigurator product={product} seed={seed} modelUrl={modelUrl} />
     </main>
   );
 }

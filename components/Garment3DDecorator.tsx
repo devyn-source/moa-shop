@@ -148,21 +148,25 @@ export function PreviewBackdrop({ url, hex, artUrl, placements }: {
 }
 
 export default function Garment3DDecorator({
-  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, onChange,
+  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, initialPlacements, onChange,
 }: {
   url: string; artUrl: string; hex?: string;
   zones: Zone[]; // front zones
   backZones?: Zone[];
   artPxWidth?: number; garmentRefWidthIn?: number;
+  initialPlacements?: Placement[]; // restore a shared / re-opened config
   onChange?: (c: StudioCapture[]) => void;
 }) {
   const frontList = zones.length ? zones : [{ id: "full-front", label: "Full front", box: { x: 0.3, y: 0.34, w: 0.4, h: 0.34 } }];
   const backList = backZones.length ? backZones : [{ id: "center-back", label: "Center back", box: { x: 0.3, y: 0.3, w: 0.4, h: 0.34 } }];
 
-  const [saved, setSaved] = useState<Placement[]>([]);
-  const [view, setView] = useState<View>("front");
-  const [zoneId, setZoneId] = useState(frontList[0].id);
-  const [art, setArt] = useState<ArtTransform>(clampDef);
+  // Seed from a shared config: edit the last placement, the rest bank as saved.
+  const seed0 = initialPlacements ?? [];
+  const seedCur = seed0[seed0.length - 1];
+  const [saved, setSaved] = useState<Placement[]>(seed0.slice(0, -1).map((p, i) => ({ ...p, id: `seed${i}` })));
+  const [view, setView] = useState<View>(seedCur?.view ?? "front");
+  const [zoneId, setZoneId] = useState(seedCur?.zoneId ?? frontList[0].id);
+  const [art, setArt] = useState<ArtTransform>(seedCur?.art ?? clampDef);
   const [rect, setRect] = useState<Box>({ x: 0.18, y: 0.12, w: 0.64, h: 0.76 });
   const [preview, setPreview] = useState(false);
 

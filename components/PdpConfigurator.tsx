@@ -75,6 +75,9 @@ export type EditSeed = {
   artworkFileName?: string;
   sizeQty?: Record<string, number>;
   extraPlacements?: ExtraPlacement[];
+  // Canonical placement list (box + art + view) — works for BOTH 2D and the 3D
+  // Studio, so a shared config restores the exact placement on either path.
+  placements?: import("@/lib/types").ArtworkPlacement[];
 };
 
 // A fully-configured box item produced by the PDP in bundle mode. It is the
@@ -221,7 +224,20 @@ export function PdpConfigurator({
   // the proven 2D flat zone flow. Blast radius = only SKUs that have a GLB.
   const use3dPlacement = has3d;
   const [stageMode, setStageMode] = useState<"2d" | "3d">(has3d ? "3d" : "2d");
-  const [place3d, setPlace3d] = useState<StudioCapture[]>([]);
+  const [place3d, setPlace3d] = useState<StudioCapture[]>(() =>
+    has3d && seed0?.placements?.length
+      ? seed0.placements.map((p, i) => ({
+          id: `seed-${i}`,
+          view: p.view,
+          zoneId: p.zoneId,
+          zoneLabel: p.zoneLabel,
+          box: p.box,
+          art: p.art,
+          widthIn: null,
+          dpi: null,
+        }))
+      : []
+  );
   const is3d = has3d && stageMode === "3d";
   // The decal editor takes over the stage during the placement step; 3D is the
   // hero on every other step. (No user-facing 2D/3D toggle for model SKUs.)
@@ -586,6 +602,8 @@ export function PdpConfigurator({
         zoneId: placementId ?? undefined, art: artTransform,
         artworkFileUrl: artworkUrl ?? undefined, artworkFileName: artworkName ?? undefined, sizeQty,
         extraPlacements: savedPlacements.length ? savedPlacements : undefined,
+        // The actual placement list (3D Studio OR 2D) — restores exactly on open.
+        placements: allPlacements.length ? allPlacements : undefined,
       };
       const res = await fetch("/api/config/share", {
         method: "POST", headers: { "content-type": "application/json" },
@@ -809,7 +827,7 @@ export function PdpConfigurator({
         >
           {placing3d && artworkUrl && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} onChange={setPlace3d} />
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} initialPlacements={place3d} onChange={setPlace3d} />
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">
