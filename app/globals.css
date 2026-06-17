@@ -8743,3 +8743,34 @@ p { line-height: 1.65; }
 .moa-clerk-primary:hover { background: var(--color-terracotta-light) !important; }
 .moa-clerk-social { border: 1px solid var(--color-cream-dark) !important; border-radius: 0.6rem !important; }
 .moa-clerk-link { color: var(--color-terracotta) !important; font-weight: 600 !important; }
+
+/* ---- 3D Calibration panel (admin assets) ---------------------------------- */
+.m3dcal { margin-top: 22px; padding: 20px 22px; background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 12px; box-shadow: 0 10px 30px -24px rgba(30,30,30,0.3); }
+.m3dcal-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.m3dcal-title { margin: 0; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 1.05rem; font-weight: 800; color: var(--color-charcoal); }
+.m3dcal-badge { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.56rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.m3dcal-badge--high { background: rgba(61,122,74,0.14); color: var(--color-success); }
+.m3dcal-badge--med { background: rgba(196,136,13,0.16); color: var(--color-warning); }
+.m3dcal-badge--low { background: rgba(176,71,49,0.14); color: var(--color-danger); }
+.m3dcal-state { margin-left: auto; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.56rem; font-weight: 700; color: var(--color-success); }
+.m3dcal-state--off { color: var(--color-neutral); }
+.m3dcal-lede { margin: 8px 0 0; font-size: 0.8rem; color: var(--color-neutral); line-height: 1.5; max-width: 560px; }
+.m3dcal-error { margin: 12px 0 0; color: var(--color-danger); font-size: 0.82rem; font-weight: 600; }
+.m3dcal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
+.m3dcal-stat { background: var(--color-cream); border: 1px solid var(--color-cream-dark); border-radius: 9px; padding: 11px 13px; display: flex; flex-direction: column; gap: 2px; }
+.m3dcal-label { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.07em; font-size: 0.55rem; font-weight: 700; color: var(--color-neutral); }
+.m3dcal-value { font-size: 1.25rem; font-weight: 800; color: var(--color-charcoal); line-height: 1.1; }
+.m3dcal-sub { font-size: 0.66rem; color: var(--color-neutral); }
+.m3dcal-sanity { margin-top: 14px; padding: 11px 14px; border-radius: 9px; background: rgba(176,71,49,0.06); border: 1px dashed var(--color-cream-dark); display: flex; flex-direction: column; gap: 3px; }
+.m3dcal-sanity-label { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.07em; font-size: 0.55rem; font-weight: 700; color: var(--color-neutral); }
+.m3dcal-sanity-val { font-size: 0.92rem; font-weight: 700; color: var(--color-terracotta); }
+.m3dcal-dirty { margin: 12px 0 0; font-size: 0.78rem; color: var(--color-warning); font-weight: 600; }
+.m3dcal-empty { margin: 10px 0 0; font-size: 0.82rem; color: var(--color-neutral); }
+.m3dcal-actions { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.m3dcal-btn { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.68rem; font-weight: 700; padding: 9px 16px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+.m3dcal-btn:disabled { opacity: 0.5; cursor: default; }
+.m3dcal-btn--primary { background: var(--color-terracotta); color: #fff; }
+.m3dcal-btn--primary:not(:disabled):hover { background: var(--color-terracotta-light); }
+.m3dcal-btn--ghost { background: var(--color-card); color: var(--color-charcoal); border-color: var(--color-cream-dark); }
+.m3dcal-btn--ghost:not(:disabled):hover { background: var(--color-cream); }
+.m3dcal-applied { color: var(--color-success); font-size: 0.82rem; font-weight: 600; }

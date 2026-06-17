@@ -4,6 +4,7 @@ import { getProductBySlug } from "@/lib/store";
 import { listPatternFilesSigned, getModelUrl } from "@/lib/pattern-files";
 import AssetManager from "@/components/AssetManager";
 import PatternCalibration from "@/components/PatternCalibration";
+import Model3DCalibrator from "@/components/Model3DCalibrator";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function AssetsPage({ params }: { params: Promise<{ slug: s
         initialModelUrl={modelUrl}
         swatches={swatches}
       />
+      <Model3DCalibrator slug={slug} hasModel={Boolean(modelUrl)} />
       <PatternCalibration slug={slug} hasDxf={patternFiles.some((f) => f.format === "dxf")} />
     </main>
   );
