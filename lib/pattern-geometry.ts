@@ -47,6 +47,8 @@ export type PatternFront = {
   onFold: boolean; // single piece is a half → width doubled
   bodyLengthIn: number; // HPS → hem (vertical extent of the front shell)
   frontWidthIn: number; // full flat front width across the chest
+  hemWidthIn: number; // flat width at the bottom hem
+  shoulderWidthIn: number; // flat width near the shoulder line
   chestCircIn: number; // implied finished chest ≈ frontWidth × 2 (display aid)
   outlineIn: Pt[]; // front shell outline in inches, origin at top-left (for the confirm preview)
   pieces: string[]; // chosen piece block names
@@ -207,7 +209,19 @@ export function parsePatternFront(
     const straight = (side: number) => p.outline.filter(([x]) => Math.abs(x - side) < spanX * 0.02).length;
     onFold = Math.max(straight(minx), straight(maxx)) > p.outline.length * 0.25;
   }
-  const frontWidthIn = round1(toIn(chestRaw) * (paneled ? 1 : onFold ? 2 : 1));
+  const factor = paneled ? 1 : onFold ? 2 : 1;
+  const frontWidthIn = round1(toIn(chestRaw) * factor);
+
+  // Hem (bottom band) + shoulder (top band) widths for the size chart seed.
+  let hemRaw = 0, shoulderRaw = 0;
+  for (const p of pieces) {
+    const top = p.bbox[1], h = p.bbox[3] - p.bbox[1];
+    let hw = 0; for (let fr = 0.86; fr <= 0.98; fr += 0.02) hw = Math.max(hw, widthAtY(p.outline, top + fr * h));
+    let sw = 0; for (let fr = 0.03; fr <= 0.12; fr += 0.02) sw = Math.max(sw, widthAtY(p.outline, top + fr * h));
+    hemRaw += hw; shoulderRaw += sw;
+  }
+  const hemWidthIn = round1(toIn(hemRaw) * factor);
+  const shoulderWidthIn = round1(toIn(shoulderRaw) * factor);
 
   // Build a normalized front outline (inches, top-left origin) for the confirm
   // preview. For a paneled front, render the widest panel (representative).
@@ -232,6 +246,8 @@ export function parsePatternFront(
     onFold,
     bodyLengthIn,
     frontWidthIn,
+    hemWidthIn,
+    shoulderWidthIn,
     chestCircIn: round1(frontWidthIn * 2),
     outlineIn,
     pieces: pieces.map((p) => p.name),

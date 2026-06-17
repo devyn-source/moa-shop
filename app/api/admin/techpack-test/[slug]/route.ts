@@ -60,6 +60,34 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     const calibration = await getProductCalibration(slug).catch(() => null);
     const view = (data as { views?: unknown[] })?.views?.[0] ?? null;
 
+    // ?forcePassport=1 — render the MERGED tech pack with the current draft
+    // passport force-completed IN MEMORY (no DB write), to verify the moa-pdf
+    // catalog-tech-pack template renders. NOT a real lock.
+    let forcedTechPackUrl: string | null = null;
+    if (new URL(request.url).searchParams.get("forcePassport") === "1" && spec) {
+      const complete = {
+        ...spec,
+        audience: "vendor",
+        dateCreated: new Date().toISOString().slice(0, 10),
+        bom: spec.bom.map((r) => ({ ...r, _assumed: false })),
+        construction: spec.construction.map((r) => ({ ...r, _assumed: false })),
+        sizeChart: { ...spec.sizeChart, poms: spec.sizeChart.poms.map((r) => ({ ...r, _assumed: false })) },
+        labelsPackaging: { ...spec.labelsPackaging, _assumed: false },
+        openQuestions: [],
+        _status: "approved" as const,
+      };
+      try {
+        const r = await fetch(`${process.env.MOA_PDF_URL || "https://moa-pdf-fawn.vercel.app"}/api/catalog-tech-pack`, {
+          method: "POST",
+          headers: { "content-type": "application/json", ...(process.env.PDF_API_SECRET ? { authorization: `Bearer ${process.env.PDF_API_SECRET}` } : {}) },
+          body: JSON.stringify({ passport: complete, ...(data && !(data as { error?: string }).error ? { decoration: data } : {}) }),
+        });
+        forcedTechPackUrl = r.ok ? (await r.json()).url ?? null : `moa-pdf ${r.status}`;
+      } catch (e) {
+        forcedTechPackUrl = `error: ${String(e)}`;
+      }
+    }
+
     return NextResponse.json({
       slug,
       gates: {
@@ -70,6 +98,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       derivedSpec: view, // the real-inch placement callouts (width/height, below-collar, from-CF)
       decorationSheetUrl, // Layer 2 — the per-order placement spec PDF
       techPackUrl, // Layer 1+2 merged — null until a locked passport exists
+      forcedTechPackUrl, // ?forcePassport=1 — merged render with an in-memory complete passport (QA only)
     });
   } catch (err) {
     return apiError(err, { fallback: "techpack test failed" });
