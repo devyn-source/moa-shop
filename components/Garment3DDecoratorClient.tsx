@@ -13,9 +13,10 @@ export default function Garment3DDecoratorClient(props: {
   artUrl: string;
   hex?: string;
   zones: Zone[];
+  backZones?: Zone[];
   artPxWidth?: number;
   garmentRefWidthIn?: number;
-  onChange?: (c: StudioCapture) => void;
+  onChange?: (c: StudioCapture[]) => void;
 }) {
   return <Garment3DDecorator {...props} />;
 }

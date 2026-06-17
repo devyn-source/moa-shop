@@ -220,7 +220,7 @@ export function PdpConfigurator({
   // the proven 2D flat zone flow. Blast radius = only SKUs that have a GLB.
   const use3dPlacement = has3d;
   const [stageMode, setStageMode] = useState<"2d" | "3d">(has3d ? "3d" : "2d");
-  const [place3d, setPlace3d] = useState<StudioCapture | null>(null);
+  const [place3d, setPlace3d] = useState<StudioCapture[]>([]);
   const is3d = has3d && stageMode === "3d";
   // The decal editor takes over the stage during the placement step; 3D is the
   // hero on every other step. (No user-facing 2D/3D toggle for model SKUs.)
@@ -286,7 +286,7 @@ export function PdpConfigurator({
   // (saved below, or the editor on top of saved ones) adds the flat fee.
   const editorComplete = Boolean(artworkUrl && placement);
   const placementCount = use3dPlacement
-    ? place3d && artworkUrl ? 1 : 0
+    ? artworkUrl && place3d.length ? place3d.length : 0
     : savedPlacements.length + (editorComplete ? 1 : 0);
   const extraPlacementCount = Math.max(0, placementCount - 1);
   const extraPlacementAdder = extraPlacementCount * EXTRA_PLACEMENT_ADDER;
@@ -340,22 +340,20 @@ export function PdpConfigurator({
     // existing derivePlacement → real-inch dims / DPI / proof / tech-pack all
     // work natively — the 3D garment is just the editing surface.
     if (use3dPlacement) {
-      if (!place3d || !artworkUrl) return [];
-      return [
-        {
-          view: "front" as const,
-          zoneId: place3d.zoneId,
-          zoneLabel: place3d.zoneLabel,
-          box: place3d.box,
-          art: place3d.art,
-          method,
-          colors,
-          pantones: pms,
-          maxColors,
-          artworkFileUrl: artworkUrl ?? undefined,
-          artworkFileName: artworkName ?? undefined,
-        },
-      ];
+      if (!place3d.length || !artworkUrl) return [];
+      return place3d.map((p) => ({
+        view: p.view,
+        zoneId: p.zoneId,
+        zoneLabel: p.zoneLabel,
+        box: p.box,
+        art: p.art,
+        method,
+        colors,
+        pantones: pms,
+        maxColors,
+        artworkFileUrl: artworkUrl ?? undefined,
+        artworkFileName: artworkName ?? undefined,
+      }));
     }
     const out: import("@/lib/types").ArtworkPlacement[] = savedPlacements.map((s) => ({
       view: s.view,
@@ -416,7 +414,7 @@ export function PdpConfigurator({
     if (s === "decoration")
       return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
     if (s === "placement") {
-      if (use3dPlacement) return place3d ? "Placed on garment" : artworkUrl ? "Place on garment" : "Upload artwork";
+      if (use3dPlacement) return place3d.length ? (place3d.length > 1 ? `${place3d.length} placements` : "Placed on garment") : artworkUrl ? "Place on garment" : "Upload artwork";
       return placementCount > 1
         ? `${placementCount} placements`
         : placement?.label ?? (savedPlacements[0]?.zoneLabel ?? (artworkUrl ? "Pick a location" : "Upload artwork"));
@@ -810,7 +808,7 @@ export function PdpConfigurator({
         >
           {placing3d && artworkUrl && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} artPxWidth={artMeta?.width} onChange={setPlace3d} />
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} onChange={setPlace3d} />
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">

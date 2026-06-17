@@ -2475,6 +2475,31 @@ button {
 .studio3dx-dpi--warn { background: rgba(196,136,13,0.92); }
 .studio3dx-dpi--bad { background: rgba(176,71,49,0.92); }
 .studio3dx-hint { font-size: 0.74rem; color: var(--color-neutral); text-align: center; line-height: 1.4; }
+.studio3dx-saved-art { position: absolute; background-size: contain; background-repeat: no-repeat; background-position: center; transform-origin: center center; opacity: 0.96; pointer-events: none; }
+/* front / back / preview toggle, top-right of the stage */
+.studio3dx-views { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+.studio3dx-viewpill {
+  font: 700 0.54rem/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 7px 11px; border-radius: 99px; cursor: pointer;
+  background: rgba(255,255,255,0.85); border: 1px solid var(--color-cream-dark); color: var(--color-charcoal);
+  backdrop-filter: blur(4px); transition: background 140ms ease;
+}
+.studio3dx-viewpill.is-on { background: var(--color-terracotta); border-color: var(--color-terracotta); color: #fff; }
+.studio3dx-multi { display: flex; flex-direction: column; gap: 8px; }
+.studio3dx-saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.studio3dx-saved-chip { display: flex; align-items: center; gap: 10px; background: var(--color-cream); border: 1px solid var(--color-cream-dark); border-radius: 8px; padding: 6px 9px; }
+.studio3dx-saved-thumb { width: 30px; height: 30px; border-radius: 5px; background: #fff; background-size: contain; background-repeat: no-repeat; background-position: center; border: 1px solid var(--color-cream-dark); flex: none; }
+.studio3dx-saved-meta { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.studio3dx-saved-meta strong { font-size: 0.8rem; color: var(--color-charcoal); }
+.studio3dx-saved-meta em { font-style: normal; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-neutral); }
+.studio3dx-saved-x { background: none; border: 0; cursor: pointer; color: var(--color-neutral); font-size: 0.85rem; padding: 4px; }
+.studio3dx-saved-x:hover { color: var(--color-danger); }
+.studio3dx-addbtn {
+  width: 100%; text-align: left; background: #fff; border: 1px dashed var(--color-cream-dark); border-radius: 8px;
+  padding: 10px 12px; cursor: pointer; font: 700 0.62rem/1 var(--font-display); letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--color-terracotta);
+}
+.studio3dx-addbtn:hover { border-color: var(--color-terracotta); }
 
 /* 3D decorator — placement zone chips (bounding boxes) */
 .g3d-zones { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }

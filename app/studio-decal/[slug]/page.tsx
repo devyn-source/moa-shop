@@ -24,7 +24,7 @@ export default async function StudioDecalPage({ params }: { params: Promise<{ sl
       </div>
 
       {modelUrl ? (
-        <Garment3DDecoratorClient url={modelUrl} artUrl="/woven-label.png" hex="#C9C4B8" zones={getDefaultZones(product).front} />
+        <Garment3DDecoratorClient url={modelUrl} artUrl="/woven-label.png" hex="#C9C4B8" zones={getDefaultZones(product).front} backZones={getDefaultZones(product).back} />
       ) : (
         <div className="studio3d-empty">
           No 3D model for <code>{slug}</code>. Upload a GLB at <code>/admin/assets/{slug}</code>.
