@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { getProductBySlug } from "@/lib/store";
+import { getProductBySlug, getProductMeasurements } from "@/lib/store";
 import { getProductSpec, reviewBurden, type GarmentPassport, type SizeChartPom, type BomRow, type ConstructionRow } from "@/lib/garment-spec";
 import { getCatalogSpec, saveCatalogSpec } from "@/lib/garment-spec-store";
 import { loadPatternDxfText } from "@/lib/pattern-files";
 import { parsePatternFront } from "@/lib/pattern-geometry";
-import { defaultMeasurements } from "@/lib/zones";
+import { defaultMeasurements, normaliseMeasurements } from "@/lib/zones";
 import { apiError } from "@/lib/errors";
+
+const tolFor = (pom: string) => (/(length|sleeve|chest|width|waist|hip|bottom|opening|thigh|inseam|outseam|sweep|sleeve)/i.test(pom) ? 0.5 : 0.25);
+const colCode = (i: number) => String.fromCharCode(65 + (i % 26));
 
 // Admin (Basic Auth): create a DRAFT garment passport so /admin/specs/[slug] opens
 // for review + lock. Seeds from the generated file spec where it exists, else from
@@ -33,29 +36,41 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       draft = { ...fileSpec, _generatedAt: now, _status: "draft" };
       source = "generated-file";
     } else {
-      const dxf = await loadPatternDxfText(slug).catch(() => null);
-      const front = dxf ? parsePatternFront(dxf.text) : null;
       const variant = product.variants[0];
       const sizes = product.sizes.length ? product.sizes : ["S", "M", "L", "XL"];
-      const baseSize = sizes[Math.floor(sizes.length / 2)];
 
-      // DXF-derived base-size measurements keyed by POM-name fragment.
-      const seed: { match: string; val: number | undefined }[] = [
-        { match: "body length", val: front?.bodyLengthIn },
-        { match: "chest width", val: front?.frontWidthIn },
-        { match: "hem width", val: front?.hemWidthIn },
-        { match: "shoulder width", val: front?.shoulderWidthIn },
-      ];
-      const poms: SizeChartPom[] = defaultMeasurements(product.category, sizes).rows.map((r) => {
-        const hit = seed.find((s) => r.pom.toLowerCase().includes(s.match) && s.val != null);
-        return {
-          code: r.id.toUpperCase(),
+      // Prefer REAL factory grading (product_zones.measurements, ingested from the
+      // FGS) — verbatim, all sizes, _assumed:false. Fall back to the DXF base size.
+      const meas = normaliseMeasurements(await getProductMeasurements(slug).catch(() => null));
+      let poms: SizeChartPom[];
+      let baseSize: string;
+      let gradingSource: string;
+      if (meas && meas.rows.length) {
+        baseSize = meas.sampleSize || sizes[Math.floor(sizes.length / 2)];
+        poms = meas.rows.map((r, i) => ({
+          code: colCode(i),
           name: r.pom,
-          tolerance: 0.5,
-          bySize: hit ? { [baseSize]: hit.val as number } : {},
-          _assumed: true, // grading + finished values await confirmation
-        };
-      });
+          tolerance: tolFor(r.pom),
+          bySize: Object.fromEntries(Object.entries(r.values).filter(([, v]) => v != null)) as Record<string, number>,
+          _assumed: false, // real factory grading
+        }));
+        gradingSource = "factory-grading";
+      } else {
+        baseSize = sizes[Math.floor(sizes.length / 2)];
+        const dxf = await loadPatternDxfText(slug).catch(() => null);
+        const front = dxf ? parsePatternFront(dxf.text) : null;
+        const seed: { match: string; val: number | undefined }[] = [
+          { match: "body length", val: front?.bodyLengthIn },
+          { match: "chest width", val: front?.frontWidthIn },
+          { match: "hem width", val: front?.hemWidthIn },
+          { match: "shoulder width", val: front?.shoulderWidthIn },
+        ];
+        poms = defaultMeasurements(product.category, sizes).rows.map((r) => {
+          const hit = seed.find((s) => r.pom.toLowerCase().includes(s.match) && s.val != null);
+          return { code: r.id.toUpperCase(), name: r.pom, tolerance: 0.5, bySize: hit ? { [baseSize]: hit.val as number } : {}, _assumed: true };
+        });
+        gradingSource = front ? "dxf-base" : "none";
+      }
 
       const bom: BomRow[] = [
         { component: "Shell fabric", spec: variant?.fabric ?? "—", composition: "", weightGsm: null, color: variant?.colorLabel ?? "", pantoneTcx: variant?.colorTcx ?? "", supplier: "", _assumed: true },
@@ -78,14 +93,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         flatsNeeded: ["Front", "Back"],
         openQuestions: [
           "Confirm shell fabric composition + weight (GSM).",
-          "Confirm the full graded size chart — DXF seeded the base size only; add all sizes.",
+          ...(gradingSource === "factory-grading" ? [] : ["Confirm the full graded size chart — only the base size is seeded; add all sizes."]),
           "Confirm construction (stitch type, SPI, seam class).",
           "Confirm labels + packaging.",
         ],
         _generatedAt: now,
         _status: "draft",
       };
-      source = front ? "dxf+catalog" : "catalog";
+      source = `${gradingSource}+catalog`;
     }
 
     await saveCatalogSpec(slug, draft, "draft");
