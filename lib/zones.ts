@@ -436,15 +436,17 @@ const SKU_OVERRIDES: Record<string, Partial<ProductZones>> = {
   // Zip sherpa — stand-collar full-zip. The center-front zipper rules out a
   // center-chest or full-front print, so the front offers ONLY left chest (off
   // the placket) + sleeves; the back carries the big graphic (center back) + yoke.
+  // Positions are rect-relative (fractions of the garment's projected silhouette)
+  // and tuned on the 3D model: left chest ≈ 2.75" below HPS, sleeves ≈ 7".
   "zip-sherpa": {
     front: [
-      { id: "left-chest", label: "Left chest", box: { x: 0.55, y: 0.30, w: 0.10, h: 0.08 } },
-      { id: "left-sleeve", label: "Left sleeve", box: { x: 0.80, y: 0.42, w: 0.06, h: 0.10 } },
-      { id: "right-sleeve", label: "Right sleeve", box: { x: 0.14, y: 0.42, w: 0.06, h: 0.10 } }
+      { id: "left-chest", label: "Left chest", box: { x: 0.55, y: 0.13, w: 0.10, h: 0.07 } },
+      { id: "left-sleeve", label: "Left sleeve", box: { x: 0.80, y: 0.28, w: 0.06, h: 0.10 } },
+      { id: "right-sleeve", label: "Right sleeve", box: { x: 0.14, y: 0.28, w: 0.06, h: 0.10 } }
     ],
     back: [
-      { id: "yoke", label: "Upper back (yoke)", box: { x: 0.40, y: 0.22, w: 0.20, h: 0.08 } },
-      { id: "center-back", label: "Center back", box: { x: 0.30, y: 0.30, w: 0.40, h: 0.34 } }
+      { id: "yoke", label: "Upper back (yoke)", box: { x: 0.40, y: 0.11, w: 0.20, h: 0.07 } },
+      { id: "center-back", label: "Center back", box: { x: 0.30, y: 0.24, w: 0.40, h: 0.34 } }
     ]
   }
 };
