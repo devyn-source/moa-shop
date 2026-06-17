@@ -6,6 +6,7 @@ import {
   getDefaultZones,
   normaliseZonesPayload,
   defaultCalibration,
+  derivePlacement,
   normaliseCalibration,
   defaultMeasurements,
   normaliseMeasurements,
@@ -37,6 +38,19 @@ type DragState = {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const MIN = 0.02; // smallest allowed box dimension as a fraction
+
+// Max imprint WIDTH (inches) by decoration method — the box caps the art, so a
+// box wider than a method's max means that method can't fill it. Guides the
+// operator on which methods a zone supports as they size it.
+const IMPRINT_MAX = { embroidery: 5, dtf: 12, screen: 14 };
+function methodFit(widthIn: number): { label: string; over: boolean } {
+  if (widthIn > IMPRINT_MAX.screen) return { label: "over print max", over: true };
+  const fits: string[] = [];
+  if (widthIn <= IMPRINT_MAX.embroidery) fits.push("emb");
+  if (widthIn <= IMPRINT_MAX.dtf) fits.push("DTF");
+  if (widthIn <= IMPRINT_MAX.screen) fits.push("screen");
+  return { label: fits.join(" · ") || "—", over: false };
+}
 
 function applyDrag(state: DragState, x: number, y: number): Box {
   const dx = (x - state.startX) / state.width;
@@ -467,6 +481,11 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
           <ProductShot product={product} variant={heroVariant} view={view} />
           {mode === "zones" && currentView.map((zone) => {
             const on = zone.id === activeId;
+            // Live real-inch size of the box (via the view's calibration) + which
+            // decoration methods can fill it. This is how the operator knows how
+            // big a placement can get and where it sits.
+            const d = derivePlacement(cal, zone.box, { ox: 0, oy: 0, sx: 1, sy: 1 }, view);
+            const fit = methodFit(d.widthIn);
             return (
               <div
                 key={zone.id}
@@ -481,7 +500,12 @@ export function ZoneEditor({ products }: { products: CatalogProduct[] }) {
                 }}
                 onPointerDown={startDrag(zone, "move")}
               >
-                <span className="ze-zone-label">{zone.label}</span>
+                <span className="ze-zone-label">
+                  {zone.label}
+                  <span className={`ze-zone-dims${fit.over ? " is-over" : ""}`}>
+                    {d.widthIn}&Prime;×{d.heightIn}&Prime; · {d.topBelowCollarIn}&Prime; ↓HPS · {fit.over ? "⚠ over print max" : fit.label}
+                  </span>
+                </span>
                 <span className="ze-handle ze-handle--nw" onPointerDown={startDrag(zone, "nw")} />
                 <span className="ze-handle ze-handle--ne" onPointerDown={startDrag(zone, "ne")} />
                 <span className="ze-handle ze-handle--sw" onPointerDown={startDrag(zone, "sw")} />

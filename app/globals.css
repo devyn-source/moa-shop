@@ -6749,19 +6749,31 @@ a.stat-card:hover {
 
 .ze-zone-label {
   position: absolute;
-  top: -22px;
+  top: -34px;
   left: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
   font-family: var(--font-display);
   font-size: 0.55rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-terracotta);
   background: var(--color-cream);
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
 }
+.ze-zone-dims {
+  font-size: 0.5rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--color-neutral);
+}
+.ze-zone-dims.is-over { color: var(--color-danger); font-weight: 700; }
 
 .ze-handle {
   position: absolute;
