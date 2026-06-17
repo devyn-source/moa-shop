@@ -8786,6 +8786,16 @@ p { line-height: 1.65; }
 .m3dcal-btn--ghost { background: var(--color-card); color: var(--color-charcoal); border-color: var(--color-cream-dark); }
 .m3dcal-btn--ghost:not(:disabled):hover { background: var(--color-cream); }
 .m3dcal-applied { color: var(--color-success); font-size: 0.82rem; font-weight: 600; }
+.m3dcal-cal { display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 18px; margin-top: 14px; align-items: start; }
+@media (max-width: 760px) { .m3dcal-cal { grid-template-columns: 1fr; } }
+.m3dcal-stage { position: relative; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden; background: var(--color-cream); border: 1px solid var(--color-cream-dark); touch-action: none; }
+.m3dcal-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+.m3dcal-guide { position: absolute; left: 0; right: 0; height: 14px; transform: translateY(-7px); cursor: ns-resize; z-index: 5; display: flex; align-items: center; }
+.m3dcal-guide::before { content: ""; flex: 1; height: 0; border-top: 2px dashed var(--color-neutral); }
+.m3dcal-guide--hps::before { border-top-color: var(--color-terracotta); border-top-style: solid; }
+.m3dcal-guide-tag { position: absolute; left: 6px; top: -2px; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.5rem; font-weight: 700; color: #fff; background: var(--color-terracotta); padding: 2px 6px; border-radius: 3px; white-space: nowrap; pointer-events: none; }
+.m3dcal-guide-tag--hem { background: var(--color-neutral); }
+.m3dcal-readout { display: flex; flex-direction: column; gap: 0; }
 
 /* ---- 3D Zone editor (/admin/zones) --------------------------------------- */
 .z3d { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }

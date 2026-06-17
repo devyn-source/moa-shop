@@ -35,6 +35,8 @@ type Computed =
         chestWidthIn: number | null;
         impliedModelWidthIn: number;
         chestRatio: number | null;
+        hpsFrac: number;
+        hemFrac: number;
         source: string;
         confidence: string;
       };
@@ -63,7 +65,7 @@ function fromSpec(meas: ReturnType<typeof normaliseMeasurements>): { bodyLen: nu
   };
 }
 
-async function compute(slug: string): Promise<Computed> {
+async function compute(slug: string, hpsFrac = 0, hemFrac = 1): Promise<Computed> {
   const modelUrl = await getModelUrl(slug);
   if (!modelUrl) return { ok: false, error: "No 3D model (GLB) uploaded for this SKU — add the model first.", status: 404 };
   const bbox = await fetchGlbBBox(modelUrl);
@@ -86,8 +88,16 @@ async function compute(slug: string): Promise<Computed> {
   const [rx, ry, rz] = bbox.size;
   const maxRaw = Math.max(rx, ry, rz) || 1;
   const worldHeight = (ry / maxRaw) * STUDIO_FIT_UNITS; // vertical extent after the viewer normalizes
-  const inchesPerWorld = bodyLengthIn / (worldHeight || 1);
-  const hpsWorldY = worldHeight / 2; // centered model → top edge is +H/2
+  const topWorldY = worldHeight / 2; // centered model → top edge is +H/2
+  // Anchor the scale to the real body length across the operator-set HPS→hem span
+  // (default 0/1 = full bbox). Excluding a stand collar above the HPS keeps both
+  // the datum AND the scale honest.
+  hpsFrac = Math.min(0.6, Math.max(0, hpsFrac));
+  hemFrac = Math.min(1, Math.max(hpsFrac + 0.05, hemFrac));
+  const hpsWorldY = topWorldY - hpsFrac * worldHeight;
+  const hemWorldY = topWorldY - hemFrac * worldHeight;
+  const spanWorld = Math.max(1e-4, hpsWorldY - hemWorldY);
+  const inchesPerWorld = bodyLengthIn / spanWorld;
 
   // Cross-check: what real flat width does the model imply, vs the spec chest?
   const impliedModelWidthIn = round((rx / maxRaw) * STUDIO_FIT_UNITS * inchesPerWorld, 2);
@@ -117,6 +127,8 @@ async function compute(slug: string): Promise<Computed> {
     cfWorldX: 0,
     bodyLengthIn: round(bodyLengthIn, 2),
     chestWidthIn: chestWidthIn != null ? round(chestWidthIn, 2) : null,
+    hpsFrac: round(hpsFrac),
+    hemFrac: round(hemFrac),
     confidence,
     source,
   };
@@ -132,16 +144,24 @@ async function compute(slug: string): Promise<Computed> {
       chestWidthIn: chestWidthIn != null ? round(chestWidthIn, 2) : null,
       impliedModelWidthIn,
       chestRatio,
+      hpsFrac: round(hpsFrac),
+      hemFrac: round(hemFrac),
       source,
       confidence,
     },
   };
 }
 
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+const numParam = (v: string | null, d: number) => {
+  const n = v == null ? NaN : Number(v);
+  return Number.isFinite(n) ? n : d;
+};
+
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const r = await compute(slug);
+    const sp = new URL(request.url).searchParams;
+    const r = await compute(slug, numParam(sp.get("hpsFrac"), 0), numParam(sp.get("hemFrac"), 1));
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ ok: true, slug, model3d: r.model3d, report: r.report });
   } catch (err) {
@@ -149,10 +169,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   }
 }
 
-export async function POST(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const r = await compute(slug);
+    const body = (await request.json().catch(() => ({}))) as { hpsFrac?: number; hemFrac?: number };
+    const r = await compute(
+      slug,
+      typeof body.hpsFrac === "number" ? body.hpsFrac : 0,
+      typeof body.hemFrac === "number" ? body.hemFrac : 1
+    );
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     // Merge model3d into the existing calibration so the 2D ruler stays as a fallback.
     const existing = (normaliseCalibration(await getProductCalibration(slug).catch(() => null)) ?? {}) as ProductCalibration;

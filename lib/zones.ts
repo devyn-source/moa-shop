@@ -44,10 +44,16 @@ export type ViewCalibration = {
 export type Model3DCalibration = {
   fitUnits: number; // the viewer's normalization target (max model dim → this). Must match the Studio.
   inchesPerWorld: number; // THE scalar: real inches per normalized world unit
-  hpsWorldY: number; // garment top / HPS line, in normalized world Y (centered model)
+  hpsWorldY: number; // TRUE HPS line, in normalized world Y (centered model)
   cfWorldX: number; // center-front plane, in normalized world X (≈ 0 for a centered model)
   bodyLengthIn: number; // the real HPS→hem length the scale was anchored to
   chestWidthIn: number | null; // flat front chest width (cross-check / display)
+  // Operator-set anchors as fractions of the model's vertical bbox, measured from
+  // the TOP (0 = top of model, 1 = bottom). The scale is anchored to the real
+  // body length across the HPS→hem span, so a stand collar above the HPS no
+  // longer skews the datum or the scale. Default 0 / 1 = top / bottom (auto).
+  hpsFrac: number;
+  hemFrac: number;
   confidence: "high" | "medium" | "low" | "unknown";
   source: "dxf" | "spec" | "dxf+spec";
 };
@@ -112,6 +118,8 @@ export function normaliseModel3d(raw: unknown): Model3DCalibration | null {
     cfWorldX: num("cfWorldX") ?? 0,
     bodyLengthIn: bl,
     chestWidthIn: num("chestWidthIn"),
+    hpsFrac: num("hpsFrac") ?? 0,
+    hemFrac: num("hemFrac") ?? 1,
     confidence: conf === "high" || conf === "medium" || conf === "low" ? conf : "unknown",
     source: o.source === "dxf" || o.source === "spec" || o.source === "dxf+spec" ? o.source : "dxf",
   };
