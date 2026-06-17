@@ -8,7 +8,7 @@ import { METHOD_MEDIA } from "@/lib/method-media";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import Garment3DClient from "./Garment3DClient";
 import Garment3DDecoratorClient from "./Garment3DDecoratorClient";
-import type { DecalCapture } from "./Garment3DDecorator";
+import type { StudioCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
@@ -220,7 +220,7 @@ export function PdpConfigurator({
   // the proven 2D flat zone flow. Blast radius = only SKUs that have a GLB.
   const use3dPlacement = has3d;
   const [stageMode, setStageMode] = useState<"2d" | "3d">(has3d ? "3d" : "2d");
-  const [place3d, setPlace3d] = useState<DecalCapture | null>(null);
+  const [place3d, setPlace3d] = useState<StudioCapture | null>(null);
   const is3d = has3d && stageMode === "3d";
   // The decal editor takes over the stage during the placement step; 3D is the
   // hero on every other step. (No user-facing 2D/3D toggle for model SKUs.)
@@ -336,23 +336,24 @@ export function PdpConfigurator({
     // 3D SKUs: a single placement carrying the captured UV. Zone label is a rough
     // wearer-relative read of uv.x; the BOX is nominal (proof fallback) — the real
     // inch spec is derived from placement3d.uv via the pattern (Phase 2).
+    // 3D Studio: emits a STANDARD placement (zone box + art transform), so the
+    // existing derivePlacement → real-inch dims / DPI / proof / tech-pack all
+    // work natively — the 3D garment is just the editing surface.
     if (use3dPlacement) {
       if (!place3d || !artworkUrl) return [];
-      const z = zones.front.find((zz) => zz.id === place3d.zoneId);
       return [
         {
           view: "front" as const,
-          zoneId: place3d.zoneId || "front-3d",
-          zoneLabel: place3d.zoneLabel || "Front",
-          box: z?.box ?? { x: 0.32, y: 0.3, w: 0.36, h: 0.3 },
-          art: { ox: 0, oy: 0, sx: 1, sy: 1 },
+          zoneId: place3d.zoneId,
+          zoneLabel: place3d.zoneLabel,
+          box: place3d.box,
+          art: place3d.art,
           method,
           colors,
           pantones: pms,
           maxColors,
           artworkFileUrl: artworkUrl ?? undefined,
           artworkFileName: artworkName ?? undefined,
-          placement3d: { uv: place3d.uv, sizeUv: place3d.sizeUv, rotationDeg: place3d.rotationDeg },
         },
       ];
     }
@@ -809,7 +810,7 @@ export function PdpConfigurator({
         >
           {placing3d && artworkUrl && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} onChange={setPlace3d} />
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} artPxWidth={artMeta?.width} onChange={setPlace3d} />
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">

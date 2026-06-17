@@ -2440,6 +2440,42 @@ button {
 .render-model { width: 100vw; height: 100vh; overflow: hidden; }
 .render-model .g3d, .render-model .g3d-stage { height: 100vh; gap: 0; }
 .render-model .g3d-stage { border: none; border-radius: 0; }
+/* MOA Studio — direct-manipulation placement on the 3D garment */
+.studio3dx { display: flex; flex-direction: column; gap: 12px; }
+.studio3dx-stage {
+  position: relative; aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden;
+  background: radial-gradient(120% 70% at 50% 35%, #f8f5ee 0%, #ece6dc 60%, #e2dad0 100%);
+  box-shadow: 0 18px 50px rgba(30,30,30,0.07), inset 0 0 0 1px rgba(30,30,30,0.04);
+  touch-action: none;
+}
+.studio3dx-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+.studio3dx-overlay { position: absolute; inset: 0; pointer-events: none; }
+.studio3dx-guide { position: absolute; pointer-events: none; }
+.studio3dx-guide--v { top: 6%; bottom: 6%; width: 1px; background: repeating-linear-gradient(180deg, rgba(176,71,49,0.35) 0 5px, transparent 5px 11px); }
+.studio3dx-zonebox {
+  position: absolute; pointer-events: auto;
+  border: 1.5px dashed rgba(176,71,49,0.65); border-radius: 5px;
+  box-shadow: 0 0 0 9999px rgba(30,30,30,0.06);
+}
+.studio3dx-zonebox-label {
+  position: absolute; top: -17px; left: 0;
+  font: 700 0.5rem/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--color-terracotta); white-space: nowrap;
+}
+.studio3dx-hud { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+.studio3dx-dim {
+  background: rgba(30,30,30,0.85); color: #fff;
+  font: 700 0.62rem/1 var(--font-display); letter-spacing: 0.03em; padding: 6px 10px; border-radius: 99px;
+}
+.studio3dx-dpi {
+  font: 700 0.54rem/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 6px 10px; border-radius: 99px; color: #fff;
+}
+.studio3dx-dpi--ok { background: rgba(61,122,74,0.92); }
+.studio3dx-dpi--warn { background: rgba(196,136,13,0.92); }
+.studio3dx-dpi--bad { background: rgba(176,71,49,0.92); }
+.studio3dx-hint { font-size: 0.74rem; color: var(--color-neutral); text-align: center; line-height: 1.4; }
+
 /* 3D decorator — placement zone chips (bounding boxes) */
 .g3d-zones { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
 .g3d-zone-chip {
