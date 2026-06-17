@@ -11,43 +11,6 @@ import * as THREE from "three";
 // so material.color tints the baked texture.
 type Swatch = { label: string; hex: string };
 
-// A fine procedural plain-weave normal map (built once, shared) so every garment
-// reads as cloth instead of a smooth matte blob — it scatters specular into
-// fabric micro-sheen rather than a plastic highlight. No per-model assets.
-let _fabricNormal: THREE.Texture | null = null;
-function fabricNormalMap(): THREE.Texture {
-  if (_fabricNormal) return _fabricNormal;
-  const S = 128;
-  const cv = document.createElement("canvas");
-  cv.width = cv.height = S;
-  const ctx = cv.getContext("2d")!;
-  const img = ctx.createImageData(S, S);
-  const threads = 16; // weave frequency across the tile
-  for (let y = 0; y < S; y++) {
-    for (let x = 0; x < S; x++) {
-      // plain-weave height field → slope → tangent-space normal
-      let nx = Math.cos((x / S) * Math.PI * 2 * threads) * 0.6;
-      let ny = Math.cos((y / S) * Math.PI * 2 * threads) * 0.6;
-      let nz = 1;
-      const inv = 1 / Math.hypot(nx, ny, nz);
-      nx *= inv; ny *= inv; nz *= inv;
-      const i = (y * S + x) * 4;
-      img.data[i] = (nx * 0.5 + 0.5) * 255;
-      img.data[i + 1] = (ny * 0.5 + 0.5) * 255;
-      img.data[i + 2] = (nz * 0.5 + 0.5) * 255;
-      img.data[i + 3] = 255;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  const tex = new THREE.CanvasTexture(cv);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(60, 60);
-  tex.colorSpace = THREE.NoColorSpace; // normals are linear data, not sRGB
-  tex.needsUpdate = true;
-  _fabricNormal = tex;
-  return tex;
-}
-
 function Model({ url, hex }: { url: string; hex: string }) {
   const { scene } = useGLTF(url);
   // Clone (so instances/HMR don't share mutated materials) and NORMALIZE scale:
@@ -71,20 +34,17 @@ function Model({ url, hex }: { url: string; hex: string }) {
       if (!m.isMesh) return;
       const mat = m.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
       const apply = (mm: THREE.MeshStandardMaterial) => {
-        // Exact brand color: a baked color/AO/light map would MULTIPLY the hue
-        // (olive base × bone = muddy), so strip them and set the sRGB brand hex
-        // straight. Keep the normal map — it only perturbs shading, not hue.
+        // Strip ONLY the baked albedo (its olive color would muddy the tint) and
+        // set the exact sRGB brand color. KEEP the model's own normal + AO maps —
+        // those carry the garment detail (folds, seams, collar rib, knit grain),
+        // and they don't affect hue. (Earlier we wrongly replaced them with a
+        // procedural weave, which flattened the garment and looked like a grid.)
         mm.map = null;
-        mm.aoMap = null;
-        mm.lightMap = null;
         mm.emissiveMap = null;
         mm.emissive?.set("#000000");
         mm.color = color;
-        mm.roughness = 1.0; // fully matte cotton — no plastic specular
+        mm.roughness = 0.9; // matte; the model's normalMap supplies the fabric feel
         mm.metalness = 0;
-        // Cloth weave micro-surface so it looks like fabric, not a smooth blob.
-        mm.normalMap = fabricNormalMap();
-        mm.normalScale = new THREE.Vector2(0.35, 0.35);
         // Some GLBs ship a PhysicalMaterial clearcoat/specular layer — those are
         // the glossy hotspots. Zero them so it reads like fabric, not vinyl.
         const phys = mm as unknown as { clearcoat?: number; specularIntensity?: number; sheen?: number };

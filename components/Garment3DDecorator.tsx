@@ -22,33 +22,6 @@ export type DecalCapture = {
 
 const Z = new THREE.Vector3(0, 0, 1);
 
-function makeFabricNormal(): THREE.Texture {
-  const S = 128;
-  const cv = document.createElement("canvas");
-  cv.width = cv.height = S;
-  const ctx = cv.getContext("2d")!;
-  const img = ctx.createImageData(S, S);
-  for (let y = 0; y < S; y++)
-    for (let x = 0; x < S; x++) {
-      let nx = Math.cos((x / S) * Math.PI * 2 * 16) * 0.6;
-      let ny = Math.cos((y / S) * Math.PI * 2 * 16) * 0.6;
-      const inv = 1 / Math.hypot(nx, ny, 1);
-      const i = (y * S + x) * 4;
-      img.data[i] = (nx * inv * 0.5 + 0.5) * 255;
-      img.data[i + 1] = (ny * inv * 0.5 + 0.5) * 255;
-      img.data[i + 2] = (inv * 0.5 + 0.5) * 255;
-      img.data[i + 3] = 255;
-    }
-  ctx.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(cv);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(60, 60);
-  t.colorSpace = THREE.NoColorSpace;
-  return t;
-}
-let _fab: THREE.Texture | null = null;
-const fabric = () => (_fab ||= makeFabricNormal());
-
 function DecoModel({
   url,
   hex,
@@ -90,13 +63,12 @@ function DecoModel({
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       mats.forEach((mm) => {
         const s = mm as THREE.MeshStandardMaterial;
+        // Strip only the baked albedo; KEEP the model's own normal + AO maps so the
+        // garment detail (folds, seams, knit grain) survives the recolor.
         s.map = null;
-        s.aoMap = null;
         s.color = color;
-        s.roughness = 1;
+        s.roughness = 0.9;
         s.metalness = 0;
-        s.normalMap = fabric();
-        s.normalScale = new THREE.Vector2(0.35, 0.35);
         s.needsUpdate = true;
       });
     });
