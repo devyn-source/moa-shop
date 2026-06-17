@@ -8786,3 +8786,55 @@ p { line-height: 1.65; }
 .m3dcal-btn--ghost { background: var(--color-card); color: var(--color-charcoal); border-color: var(--color-cream-dark); }
 .m3dcal-btn--ghost:not(:disabled):hover { background: var(--color-cream); }
 .m3dcal-applied { color: var(--color-success); font-size: 0.82rem; font-weight: 600; }
+
+/* ---- 3D Zone editor (/admin/zones) --------------------------------------- */
+.z3d { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
+.z3d-loading, .z3d-empty { padding: 40px; text-align: center; color: var(--color-neutral); background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 12px; }
+.z3d-side { background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 12px; padding: 14px; }
+.z3d-side-h { margin: 0 0 8px; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.56rem; font-weight: 700; color: var(--color-neutral); }
+.z3d-skus { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.z3d-sku { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; text-align: left; color: var(--color-charcoal); font-size: 0.82rem; }
+.z3d-sku:hover { background: var(--color-cream); }
+.z3d-sku.is-on { background: var(--color-cream); border-color: var(--color-cream-dark); font-weight: 700; }
+.z3d-sku em { font-style: normal; font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-neutral); }
+.z3d-sku.is-on em { color: var(--color-terracotta); }
+
+.z3d-main { background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 12px; padding: 18px; }
+.z3d-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.z3d-title { margin: 0; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; font-size: 1.1rem; font-weight: 800; color: var(--color-charcoal); }
+.z3d-sub { margin: 4px 0 0; font-size: 0.78rem; color: var(--color-neutral); max-width: 520px; }
+.z3d-viewtabs { display: inline-flex; gap: 4px; background: var(--color-cream); padding: 3px; border-radius: 9px; }
+.z3d-tab { border: none; background: transparent; padding: 6px 14px; border-radius: 7px; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.62rem; font-weight: 700; color: var(--color-neutral); cursor: pointer; }
+.z3d-tab.is-on { background: var(--color-card); color: var(--color-charcoal); box-shadow: 0 1px 3px rgba(30,30,30,0.12); }
+
+.z3d-stage { position: relative; margin-top: 14px; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: var(--color-cream); }
+.z3d-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+.z3d-overlay { position: absolute; inset: 0; pointer-events: none; }
+.z3d-box { position: absolute; border: 1.5px dashed rgba(138,134,128,0.8); border-radius: 4px; background: rgba(176,71,49,0.05); pointer-events: auto; cursor: move; }
+.z3d-box.is-on { border-color: var(--color-terracotta); border-style: solid; background: rgba(176,71,49,0.10); box-shadow: 0 0 0 1px rgba(176,71,49,0.25); }
+.z3d-box-label { position: absolute; top: -34px; left: 0; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-terracotta); background: var(--color-cream); padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
+.z3d-box-dims { font-size: 0.5rem; letter-spacing: 0.02em; text-transform: none; font-weight: 600; color: var(--color-neutral); }
+.z3d-box-dims.is-over { color: var(--color-danger); font-weight: 700; }
+.z3d-h { position: absolute; width: 12px; height: 12px; background: var(--color-card); border: 2px solid var(--color-terracotta); border-radius: 50%; pointer-events: auto; }
+.z3d-h--nw { top: -6px; left: -6px; cursor: nwse-resize; }
+.z3d-h--ne { top: -6px; right: -6px; cursor: nesw-resize; }
+.z3d-h--sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.z3d-h--se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+.z3d-zones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.z3d-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--color-cream-dark); border-radius: 999px; padding: 2px 4px 2px 4px; background: var(--color-card); }
+.z3d-chip.is-on { border-color: var(--color-terracotta); }
+.z3d-chip-pick { border: none; background: transparent; padding: 5px 8px; font-size: 0.78rem; color: var(--color-charcoal); cursor: pointer; }
+.z3d-chip-input { border: none; background: transparent; font-size: 0.78rem; color: var(--color-charcoal); width: 110px; }
+.z3d-chip-input:focus { outline: none; }
+.z3d-chip-x { border: none; background: transparent; color: var(--color-neutral); cursor: pointer; font-size: 0.72rem; padding: 4px 6px; border-radius: 999px; }
+.z3d-chip-x:hover { color: var(--color-danger); }
+.z3d-add { border: 1px dashed var(--color-cream-dark); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: 0.78rem; color: var(--color-neutral); cursor: pointer; }
+.z3d-add:hover { color: var(--color-terracotta); border-color: var(--color-terracotta); }
+
+.z3d-actions { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.z3d-save { background: var(--color-terracotta); color: #fff; border: none; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.7rem; font-weight: 700; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+.z3d-save:hover { background: var(--color-terracotta-light); }
+.z3d-save:disabled { opacity: 0.5; cursor: default; }
+.z3d-saved { color: var(--color-success); font-size: 0.82rem; font-weight: 600; }
+.z3d-hint { font-size: 0.72rem; color: var(--color-neutral); }
