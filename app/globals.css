@@ -2436,6 +2436,10 @@ button {
 .g3d-stage canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; }
 .g3d-stage canvas:active { cursor: grabbing; }
 .g3d-swatches { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+/* Full-bleed single-model render (thumbnail capture) */
+.render-model { width: 100vw; height: 100vh; overflow: hidden; }
+.render-model .g3d, .render-model .g3d-stage { height: 100vh; gap: 0; }
+.render-model .g3d-stage { border: none; border-radius: 0; }
 /* 3D decorator — placement zone chips (bounding boxes) */
 .g3d-zones { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
 .g3d-zone-chip {

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { getProducts } from "@/lib/store";
+import { listModelThumbs } from "@/lib/pattern-files";
 import { USE_CASES, getUseCase, getKit } from "@/lib/use-cases";
 
 export function generateStaticParams() {
@@ -30,6 +31,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
 
   const kit = getKit(uc.kitId);
   const products = await getProducts();
+  const modelThumbs = await listModelThumbs();
   const kitProducts = (kit?.components ?? [])
     .map((c) => products.find((p) => p.id === c.productId))
     .filter(Boolean) as NonNullable<ReturnType<typeof products.find>>[];
@@ -72,7 +74,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
         </div>
         <div className="catalog-grid">
           {featured.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} modelThumbUrl={modelThumbs[p.slug]} />
           ))}
         </div>
       </section>

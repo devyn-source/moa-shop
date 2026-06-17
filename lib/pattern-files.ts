@@ -85,6 +85,23 @@ export async function loadPatternDxfText(slug: string): Promise<{ filename: stri
 // One GLB per SKU at `sku-models/<slug>.glb`. Returns the public URL (with an
 // updated-at cache-buster so a re-upload invalidates the CDN/browser cache), or
 // null when no model has been uploaded yet.
+// Pre-rendered 3D still per SKU (sku-models/thumbs/<slug>.png) used as the
+// product photo across grids. Returns slug → public URL for every thumb present.
+export async function listModelThumbs(): Promise<Record<string, string>> {
+  const sb = getSupabase();
+  const { data, error } = await sb.storage.from(MODEL_BUCKET).list("thumbs", { limit: 1000 });
+  if (error || !data) return {};
+  const out: Record<string, string> = {};
+  for (const o of data) {
+    if (!o.name.endsWith(".png")) continue;
+    const slug = o.name.replace(/\.png$/, "");
+    const { data: pub } = sb.storage.from(MODEL_BUCKET).getPublicUrl(`thumbs/${o.name}`);
+    const v = o.updated_at ?? o.created_at ?? "";
+    out[slug] = v ? `${pub.publicUrl}?v=${encodeURIComponent(v)}` : pub.publicUrl;
+  }
+  return out;
+}
+
 export async function getModelUrl(slug: string): Promise<string | null> {
   const sb = getSupabase();
   const target = `${slug}.glb`;

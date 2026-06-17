@@ -6,11 +6,15 @@ import type { CatalogProduct } from "@/lib/types";
 export function ProductCard({
   product,
   featured = false,
-  bundleStartFromUsd
+  bundleStartFromUsd,
+  modelThumbUrl
 }: {
   product: CatalogProduct;
   featured?: boolean;
   bundleStartFromUsd?: number;
+  // Pre-rendered 3D still — when present it IS the product photo (replaces the
+  // 2D recolor mock), so the catalog shows the real 3D garment.
+  modelThumbUrl?: string;
 }) {
   const cheapestTier = product.priceTiers[product.priceTiers.length - 1] ?? product.priceTiers[0];
   const startTier = product.priceTiers[0];
@@ -58,8 +62,12 @@ export function ProductCard({
   return (
     <Link className={`product-card${featured ? " product-card--featured" : ""}`} href={`/p/${product.slug}`}>
       {featured ? <span className="card-ribbon">Featured</span> : null}
-      <div className={`visual-frame${isPhoto ? " visual-frame--photo" : ""}`}>
-        <ProductShot product={product} variant={heroVariant} view="front" />
+      <div className={`visual-frame${isPhoto || modelThumbUrl ? " visual-frame--photo" : ""}`}>
+        {modelThumbUrl ? (
+          <img className="product-photo" src={modelThumbUrl} alt={product.displayName} loading="lazy" />
+        ) : (
+          <ProductShot product={product} variant={heroVariant} view="front" />
+        )}
         <span className="visual-meta">{product.category}</span>
       </div>
       <div className="card-body">

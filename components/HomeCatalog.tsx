@@ -95,10 +95,12 @@ const PRICE_OPTIONS = [
 
 export function HomeCatalog({
   products,
-  bundleStartFromUsd
+  bundleStartFromUsd,
+  modelThumbs
 }: {
   products: CatalogProduct[];
   bundleStartFromUsd?: number;
+  modelThumbs?: Record<string, string>;
 }) {
   const [category, setCategory] = useState<string | null>(null);
   const [method, setMethod] = useState("");
@@ -249,6 +251,7 @@ export function HomeCatalog({
                   <ProductCard
                     product={product}
                     bundleStartFromUsd={product.isBundleBuilder ? bundleStartFromUsd : undefined}
+                    modelThumbUrl={modelThumbs?.[product.slug]}
                   />
                 </motion.div>
               ))}

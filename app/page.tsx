@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { getProducts } from "@/lib/store";
+import { listModelThumbs } from "@/lib/pattern-files";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductShot } from "@/components/ProductShot";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
@@ -72,6 +73,7 @@ const I = {
 
 export default async function LandingPage() {
   const products = await getProducts();
+  const modelThumbs = await listModelThumbs();
   const shoppable = products.filter(
     (p) => !p.isBundleBuilder && p.category !== "packaging" && p.slug !== "test-sku"
   );
@@ -215,7 +217,7 @@ export default async function LandingPage() {
         <div className="lp-grid">
           {featured.map((p, i) => (
             <div key={p.id} data-reveal style={stagger(i % 4)}>
-              <ProductCard product={p} />
+              <ProductCard product={p} modelThumbUrl={modelThumbs[p.slug]} />
             </div>
           ))}
         </div>
