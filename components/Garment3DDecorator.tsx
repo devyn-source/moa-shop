@@ -33,6 +33,7 @@ function DecoScene({
   offset,
   size,
   rotationDeg,
+  locked,
   setOffset,
   onCapture,
 }: {
@@ -43,6 +44,7 @@ function DecoScene({
   offset: { ox: number; oy: number };
   size: number;
   rotationDeg: number;
+  locked: boolean; // when finalized, the garment rotates and drag no longer moves the art
   setOffset: (o: { ox: number; oy: number }) => void;
   onCapture: (c: Omit<DecalCapture, "zoneId" | "zoneLabel">) => void;
 }) {
@@ -151,7 +153,9 @@ function DecoScene({
 
   // Drag the decal — project the hit back to front-fraction, clamp to the zone.
   const onDrag = (e: ThreeEvent<PointerEvent>) => {
-    if (!dragging.current) return;
+    // Once finalized, the pointer drives camera rotation (OrbitControls) instead
+    // of moving the art — so ignore drag here.
+    if (!dragging.current || locked) return;
     e.stopPropagation();
     const ndc = e.point.clone().project(frontCam);
     const fx = (ndc.x + 1) / 2;
@@ -197,10 +201,13 @@ export default function Garment3DDecorator({
   const [offset, setOffset] = useState({ ox: 0, oy: 0 });
   const [size, setSize] = useState(0.6);
   const [rot, setRot] = useState(0);
+  // While placing, the garment is LOCKED (drag moves the art, no camera spin).
+  // Finalizing unlocks rotation so the buyer can spin to preview the result.
+  const [finalized, setFinalized] = useState(false);
   const zone = list.find((z) => z.id === zoneId) ?? list[0];
 
-  // Reset the offset to centre when switching zones.
-  const pickZone = (id: string) => { setZoneId(id); setOffset({ ox: 0, oy: 0 }); };
+  // Reset the offset to centre when switching zones; switching re-enters placing.
+  const pickZone = (id: string) => { setZoneId(id); setOffset({ ox: 0, oy: 0 }); setFinalized(false); };
 
   const capture = (c: Omit<DecalCapture, "zoneId" | "zoneLabel">) =>
     onChange?.({ ...c, zoneId: zone.id, zoneLabel: zone.label });
@@ -215,11 +222,13 @@ export default function Garment3DDecorator({
           <directionalLight position={[3, 5, 4]} intensity={0.95} castShadow shadow-mapSize={[2048, 2048]} />
           <directionalLight position={[-4, 2, -2]} intensity={0.3} />
           <Suspense fallback={<Html center>Loading…</Html>}>
-            <DecoScene url={url} hex={hex} artUrl={artUrl} zone={zone} offset={offset} size={size} rotationDeg={rot} setOffset={setOffset} onCapture={capture} />
+            <DecoScene url={url} hex={hex} artUrl={artUrl} zone={zone} offset={offset} size={size} rotationDeg={rot} locked={finalized} setOffset={setOffset} onCapture={capture} />
             <ContactShadows position={[0, -0.85, 0]} opacity={0.3} scale={4} blur={2.6} far={2.5} />
           </Suspense>
-          {/* Limit orbit so the front (where zones live) stays in view while placing */}
-          <OrbitControls makeDefault enablePan={false} minDistance={1.8} maxDistance={5} minPolarAngle={Math.PI * 0.3} maxPolarAngle={Math.PI * 0.62} minAzimuthAngle={-0.7} maxAzimuthAngle={0.7} enableDamping dampingFactor={0.08} />
+          {/* Rotation is OFF while placing (drag moves the art, not the camera);
+              it turns ON only once the placement is finalized — so positioning
+              the artwork never spins the garment. */}
+          <OrbitControls makeDefault enableRotate={finalized} enablePan={false} enableZoom={false} minDistance={1.8} maxDistance={5} minPolarAngle={Math.PI * 0.32} maxPolarAngle={Math.PI * 0.6} enableDamping dampingFactor={0.08} />
         </Canvas>
       </div>
 
@@ -232,9 +241,14 @@ export default function Garment3DDecorator({
       </div>
 
       <div className="g3d-decal-controls">
-        <label>Size<input type="range" min={0.2} max={1} step={0.02} value={size} onChange={(e) => setSize(parseFloat(e.target.value))} /></label>
-        <label>Rotate<input type="range" min={-180} max={180} step={1} value={rot} onChange={(e) => setRot(parseInt(e.target.value, 10))} /></label>
-        <span className="g3d-decal-readout">{zone.label} · drag to position within the box</span>
+        <label>Size<input type="range" min={0.2} max={1} step={0.02} value={size} disabled={finalized} onChange={(e) => setSize(parseFloat(e.target.value))} /></label>
+        <label>Rotate<input type="range" min={-180} max={180} step={1} value={rot} disabled={finalized} onChange={(e) => setRot(parseInt(e.target.value, 10))} /></label>
+        <button type="button" className={`g3d-finalize${finalized ? " is-editing" : ""}`} onClick={() => setFinalized((f) => !f)}>
+          {finalized ? "← Edit placement" : "Finalize ✓"}
+        </button>
+        <span className="g3d-decal-readout">
+          {finalized ? `${zone.label} · drag to rotate & preview` : `${zone.label} · drag to position in the box`}
+        </span>
       </div>
     </div>
   );

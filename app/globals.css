@@ -2455,6 +2455,14 @@ button {
 .g3d-decal-controls label { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.1em; font-weight: 700; color: var(--color-neutral); }
 .g3d-decal-controls input[type="range"] { accent-color: var(--color-terracotta); }
 .g3d-decal-readout { margin-left: auto; font-size: 0.72rem; color: var(--color-charcoal); font-variant-numeric: tabular-nums; }
+.g3d-finalize {
+  font-family: var(--font-display); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.08em;
+  font-weight: 700; padding: 7px 14px; border-radius: 99px; cursor: pointer;
+  background: var(--color-terracotta); border: 1px solid var(--color-terracotta); color: #fff;
+  transition: opacity 140ms ease;
+}
+.g3d-finalize:hover { opacity: 0.85; }
+.g3d-finalize.is-editing { background: #fff; color: var(--color-charcoal); border-color: var(--color-cream-dark); }
 .g3d-dot {
   width: 26px; height: 26px; border-radius: 999px; cursor: pointer; padding: 0;
   border: 1px solid rgba(30,30,30,0.18);
