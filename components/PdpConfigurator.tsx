@@ -338,14 +338,13 @@ export function PdpConfigurator({
     // inch spec is derived from placement3d.uv via the pattern (Phase 2).
     if (use3dPlacement) {
       if (!place3d || !artworkUrl) return [];
-      const uvx = place3d.uv?.[0] ?? 0.5;
-      const zoneLabel = uvx < 0.4 ? "Right chest" : uvx > 0.6 ? "Left chest" : "Center front";
+      const z = zones.front.find((zz) => zz.id === place3d.zoneId);
       return [
         {
           view: "front" as const,
-          zoneId: "front-3d",
-          zoneLabel,
-          box: { x: 0.32, y: 0.3, w: 0.36, h: 0.3 },
+          zoneId: place3d.zoneId || "front-3d",
+          zoneLabel: place3d.zoneLabel || "Front",
+          box: z?.box ?? { x: 0.32, y: 0.3, w: 0.36, h: 0.3 },
           art: { ox: 0, oy: 0, sx: 1, sy: 1 },
           method,
           colors,
@@ -387,7 +386,7 @@ export function PdpConfigurator({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements, use3dPlacement, place3d]);
+  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements, use3dPlacement, place3d, zones]);
 
   // Print-resolution QA: native art pixels spread across the REAL printed width
   // (derived from this SKU's calibration). Vectors skip it (scalable). <150 DPI
@@ -810,7 +809,7 @@ export function PdpConfigurator({
         >
           {placing3d && artworkUrl && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} onChange={setPlace3d} />
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} onChange={setPlace3d} />
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">

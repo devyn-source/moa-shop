@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/lib/store";
 import { getModelUrl } from "@/lib/pattern-files";
+import { getDefaultZones } from "@/lib/zones";
 import Garment3DDecoratorClient from "@/components/Garment3DDecoratorClient";
 
 // Hidden Phase-1 test harness for the 3D artwork decorator (noindex via robots).
@@ -23,7 +24,7 @@ export default async function StudioDecalPage({ params }: { params: Promise<{ sl
       </div>
 
       {modelUrl ? (
-        <Garment3DDecoratorClient url={modelUrl} artUrl="/woven-label.png" hex="#C9C4B8" />
+        <Garment3DDecoratorClient url={modelUrl} artUrl="/woven-label.png" hex="#C9C4B8" zones={getDefaultZones(product).front} />
       ) : (
         <div className="studio3d-empty">
           No 3D model for <code>{slug}</code>. Upload a GLB at <code>/admin/assets/{slug}</code>.

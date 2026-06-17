@@ -2436,7 +2436,17 @@ button {
 .g3d-stage canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; }
 .g3d-stage canvas:active { cursor: grabbing; }
 .g3d-swatches { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-/* 3D decorator (Phase 1) — decal size/rotate controls + UV capture readout */
+/* 3D decorator — placement zone chips (bounding boxes) */
+.g3d-zones { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
+.g3d-zone-chip {
+  font-family: var(--font-display); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.08em;
+  font-weight: 700; padding: 7px 12px; border-radius: 99px; cursor: pointer;
+  background: #fff; border: 1px solid var(--color-cream-dark); color: var(--color-charcoal);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.g3d-zone-chip:hover { border-color: var(--color-terracotta); }
+.g3d-zone-chip.is-on { background: var(--color-terracotta); border-color: var(--color-terracotta); color: #fff; }
+/* 3D decorator — decal size/rotate controls + UV capture readout */
 .g3d-decal-controls { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 4px 2px; }
 .g3d-decal-controls label { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.1em; font-weight: 700; color: var(--color-neutral); }
 .g3d-decal-controls input[type="range"] { accent-color: var(--color-terracotta); }

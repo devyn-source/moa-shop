@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { DecalCapture } from "./Garment3DDecorator";
+import type { DecalCapture, Zone } from "./Garment3DDecorator";
 
 const Garment3DDecorator = dynamic(() => import("./Garment3DDecorator"), {
   ssr: false,
@@ -12,6 +12,7 @@ export default function Garment3DDecoratorClient(props: {
   url: string;
   artUrl: string;
   hex?: string;
+  zones: Zone[];
   onChange?: (c: DecalCapture) => void;
 }) {
   return <Garment3DDecorator {...props} />;
