@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, ContactShadows, useGLTF, useTexture, Decal, Html, Line } from "@react-three/drei";
+import { OrbitControls, ContactShadows, useGLTF, useTexture, Html, Line } from "@react-three/drei";
 import * as THREE from "three";
 
 // PHASE 1c — ZONE-CONSTRAINED 3D placement. Artwork is placed inside the SKU's
@@ -96,72 +96,87 @@ function DecoScene({
     return c;
   }, [viewport.width, viewport.height]);
 
-  // Raycast a front-view fraction (fx,fy ∈ 0..1, top-left origin) onto the mesh.
-  const hitAt = useMemo(() => {
-    const ray = new THREE.Raycaster();
-    return (fx: number, fy: number): THREE.Intersection | null => {
-      ray.setFromCamera(new THREE.Vector2(fx * 2 - 1, -(fy * 2 - 1)), frontCam);
-      return ray.intersectObject(cloned, true)[0] ?? null;
-    };
+  // Garment's projected screen rect — zones map to the GARMENT's silhouette, not
+  // the whole canvas, so a "left chest" box lands on the chest for ANY model
+  // proportion (a bulky jacket and a tee both work).
+  const screenRect = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(cloned);
+    let minx = 1, miny = 1, maxx = 0, maxy = 0;
+    for (const x of [box.min.x, box.max.x])
+      for (const y of [box.min.y, box.max.y])
+        for (const z of [box.min.z, box.max.z]) {
+          const v = new THREE.Vector3(x, y, z).project(frontCam);
+          const fx = (v.x + 1) / 2, fy = (1 - v.y) / 2;
+          minx = Math.min(minx, fx); maxx = Math.max(maxx, fx);
+          miny = Math.min(miny, fy); maxy = Math.max(maxy, fy);
+        }
+    return { x: minx, y: miny, w: Math.max(0.01, maxx - minx), h: Math.max(0.01, maxy - miny) };
   }, [cloned, frontCam]);
 
-  // Decal placement derived from the zone + offset + size.
+  // Raycast a GARMENT-relative fraction (0..1 within the garment's screen rect).
+  const hitAt = useMemo(() => {
+    const ray = new THREE.Raycaster();
+    return (gfx: number, gfy: number): THREE.Intersection | null => {
+      const sx = screenRect.x + gfx * screenRect.w;
+      const sy = screenRect.y + gfy * screenRect.h;
+      ray.setFromCamera(new THREE.Vector2(sx * 2 - 1, -(sy * 2 - 1)), frontCam);
+      return ray.intersectObject(cloned, true)[0] ?? null;
+    };
+  }, [cloned, frontCam, screenRect]);
+
+  const worldNormal = (i: THREE.Intersection) =>
+    i.face ? i.face.normal.clone().transformDirection(i.object.matrixWorld).normalize() : new THREE.Vector3(0, 0, 1);
+
+  // Box (at the zone centre) + art plane (zone centre + offset). Both are flat
+  // quads laid on the surface — far more robust than projected DecalGeometry +
+  // independently-raycast corners (which produced the broken outline).
   const placement = useMemo(() => {
-    const cx = zone.box.x + zone.box.w * (0.5 + offset.ox * 0.5);
-    const cy = zone.box.y + zone.box.h * (0.5 + offset.oy * 0.5);
-    const c = hitAt(cx, cy);
-    if (!c || !c.face) return null;
-    const l = hitAt(zone.box.x + 0.02, cy);
-    const r = hitAt(zone.box.x + zone.box.w - 0.02, cy);
-    const zoneW = l && r ? l.point.distanceTo(r.point) : 0.5;
-    const w = Math.max(0.04, size * zoneW);
-    const h = w / aspect;
-    const mesh = c.object as THREE.Mesh;
-    const localPoint = mesh.worldToLocal(c.point.clone());
-    const q = new THREE.Quaternion().setFromUnitVectors(Z, c.face.normal.clone());
-    q.multiply(new THREE.Quaternion().setFromAxisAngle(Z, (rotationDeg * Math.PI) / 180));
+    const zcx = zone.box.x + zone.box.w * 0.5;
+    const zcy = zone.box.y + zone.box.h * 0.5;
+    const zoneHit = hitAt(zcx, zcy);
+    if (!zoneHit) return null;
+    const l = hitAt(zone.box.x + 0.01, zcy), r = hitAt(zone.box.x + zone.box.w - 0.01, zcy);
+    const t = hitAt(zcx, zone.box.y + 0.01), b = hitAt(zcx, zone.box.y + zone.box.h - 0.01);
+    const zoneW = l && r ? l.point.distanceTo(r.point) : 0.3;
+    const zoneH = t && b ? t.point.distanceTo(b.point) : zoneW * (zone.box.h / zone.box.w);
+
+    const acx = zone.box.x + zone.box.w * (0.5 + offset.ox * 0.5);
+    const acy = zone.box.y + zone.box.h * (0.5 + offset.oy * 0.5);
+    const artHit = hitAt(acx, acy) ?? zoneHit;
+
+    const zoneN = worldNormal(zoneHit);
+    const artN = worldNormal(artHit);
+    const artW = Math.max(0.03, size * zoneW);
     return {
-      mesh,
-      localPoint,
-      rotation: new THREE.Euler().setFromQuaternion(q),
-      scale: [w, h, Math.max(w, h) * 1.5] as [number, number, number],
-      uv: c.uv ? ([c.uv.x, c.uv.y] as [number, number]) : null,
-      surfaceW: w,
+      boxPos: zoneHit.point.clone().add(zoneN.clone().multiplyScalar(0.006)),
+      boxQuat: new THREE.Quaternion().setFromUnitVectors(Z, zoneN),
+      zoneW, zoneH,
+      artPos: artHit.point.clone().add(artN.clone().multiplyScalar(0.012)),
+      artQuat: new THREE.Quaternion().setFromUnitVectors(Z, artN).multiply(new THREE.Quaternion().setFromAxisAngle(Z, (rotationDeg * Math.PI) / 180)),
+      artW,
+      artH: artW / aspect,
+      uv: artHit.uv ? ([artHit.uv.x, artHit.uv.y] as [number, number]) : null,
     };
   }, [zone, offset, size, rotationDeg, hitAt, aspect]);
 
-  // Emit the capture whenever placement settles.
   useEffect(() => {
-    if (placement) onCapture({ uv: placement.uv, sizeUv: placement.surfaceW, rotationDeg });
+    if (placement) onCapture({ uv: placement.uv, sizeUv: placement.artW, rotationDeg });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placement]);
 
-  // Zone outline on the garment (4 corners ray-projected) — the visible bounds.
-  const outline = useMemo(() => {
-    const { x, y, w, h } = zone.box;
-    const corners: [number, number][] = [
-      [x, y],
-      [x + w, y],
-      [x + w, y + h],
-      [x, y + h],
-      [x, y],
-    ];
-    const pts = corners.map(([fx, fy]) => hitAt(fx, fy)?.point).filter(Boolean) as THREE.Vector3[];
-    // nudge slightly toward camera so the line isn't buried in the mesh
-    return pts.length >= 4 ? pts.map((p) => p.clone().add(new THREE.Vector3(0, 0, 0.01))) : null;
-  }, [zone, hitAt]);
+  const rectPoints = (w: number, h: number): [number, number, number][] => [
+    [-w / 2, -h / 2, 0], [w / 2, -h / 2, 0], [w / 2, h / 2, 0], [-w / 2, h / 2, 0], [-w / 2, -h / 2, 0],
+  ];
 
-  // Drag the decal — project the hit back to front-fraction, clamp to the zone.
+  // Drag → project the hit to a garment fraction, clamp inside the zone box.
   const onDrag = (e: ThreeEvent<PointerEvent>) => {
-    // Once finalized, the pointer drives camera rotation (OrbitControls) instead
-    // of moving the art — so ignore drag here.
     if (!dragging.current || locked) return;
     e.stopPropagation();
     const ndc = e.point.clone().project(frontCam);
-    const fx = (ndc.x + 1) / 2;
-    const fy = (1 - ndc.y) / 2;
-    const ox = Math.max(-1, Math.min(1, ((fx - zone.box.x) / zone.box.w - 0.5) * 2));
-    const oy = Math.max(-1, Math.min(1, ((fy - zone.box.y) / zone.box.h - 0.5) * 2));
+    const gfx = ((ndc.x + 1) / 2 - screenRect.x) / screenRect.w;
+    const gfy = ((1 - ndc.y) / 2 - screenRect.y) / screenRect.h;
+    const ox = Math.max(-1, Math.min(1, ((gfx - zone.box.x) / zone.box.w - 0.5) * 2));
+    const oy = Math.max(-1, Math.min(1, ((gfy - zone.box.y) / zone.box.h - 0.5) * 2));
     setOffset({ ox, oy });
   };
 
@@ -173,11 +188,16 @@ function DecoScene({
         onPointerMove={onDrag}
         onPointerUp={() => { dragging.current = false; }}
       />
-      {outline ? <Line points={outline} color="#B04731" lineWidth={1.5} dashed dashSize={0.03} gapSize={0.02} /> : null}
       {placement ? (
-        <Decal mesh={{ current: placement.mesh } as RefObject<THREE.Mesh>} position={placement.localPoint} rotation={placement.rotation} scale={placement.scale}>
-          <meshBasicMaterial map={art} transparent polygonOffset polygonOffsetFactor={-10} toneMapped={false} />
-        </Decal>
+        <>
+          <group position={placement.boxPos} quaternion={placement.boxQuat}>
+            <Line points={rectPoints(placement.zoneW, placement.zoneH)} color="#B04731" lineWidth={1.6} transparent opacity={0.85} />
+          </group>
+          <mesh position={placement.artPos} quaternion={placement.artQuat}>
+            <planeGeometry args={[placement.artW, placement.artH]} />
+            <meshBasicMaterial map={art} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+        </>
       ) : null}
     </group>
   );
