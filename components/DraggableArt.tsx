@@ -62,13 +62,18 @@ export function DraggableArt({
   url,
   transform,
   onChange,
+  onCommit,
   maskColor,
   alwaysShowHandles,
-  snapCenter
+  snapCenter,
+  ghost
 }: {
   url: string;
   transform: ArtTransform;
   onChange: (t: ArtTransform) => void;
+  // Fires once on pointer-up with the final transform — lets the caller defer
+  // expensive work (e.g. rebuilding a 3D decal) to drag-end instead of per frame.
+  onCommit?: (t: ArtTransform) => void;
   // When set, the art renders as a solid-color mask of `url` (single-color woven
   // thread look) instead of a full-color image. Used by the woven-label modal.
   maskColor?: string;
@@ -77,10 +82,14 @@ export function DraggableArt({
   alwaysShowHandles?: boolean;
   // Magnetically snap to the box's horizontal/vertical center while moving.
   snapCenter?: boolean;
+  // Handles only — don't paint the art image (a conforming 3D decal shows it
+  // instead). The box becomes a faint, draggable control surface.
+  ghost?: boolean;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [hover, setHover] = useState(false);
+  const lastRef = useRef<ArtTransform>(transform);
 
   useEffect(() => {
     if (!drag) return;
@@ -95,16 +104,17 @@ export function DraggableArt({
         if (Math.abs(next.ox + next.sx / 2 - 0.5) < SNAP) next = { ...next, ox: 0.5 - next.sx / 2 };
         if (Math.abs(next.oy + next.sy / 2 - 0.5) < SNAP) next = { ...next, oy: 0.5 - next.sy / 2 };
       }
+      lastRef.current = next;
       onChange(next);
     };
-    const onUp = () => setDrag(null);
+    const onUp = () => { setDrag(null); onCommit?.(lastRef.current); };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [drag, onChange, snapCenter]);
+  }, [drag, onChange, onCommit, snapCenter]);
 
   const start = useCallback(
     (mode: DragMode) => (e: React.PointerEvent) => {
@@ -148,6 +158,7 @@ export function DraggableArt({
     if (next) {
       e.preventDefault();
       onChange(next);
+      onCommit?.(next);
     }
   };
 
@@ -157,7 +168,7 @@ export function DraggableArt({
       tabIndex={0}
       role="button"
       aria-label="Artwork — drag to move, corners to resize, top handle to rotate, arrow keys to nudge"
-      className={`pdpx-art-handle${showHandles ? " is-on" : ""}`}
+      className={`pdpx-art-handle${showHandles ? " is-on" : ""}${ghost ? " pdpx-art-handle--ghost" : ""}`}
       style={{
         left: `${transform.ox * 100}%`,
         top: `${transform.oy * 100}%`,
@@ -165,9 +176,9 @@ export function DraggableArt({
         height: `${transform.sy * 100}%`,
         transform: `rotate(${transform.r ?? 0}deg)`,
         transformOrigin: "center center",
-        // Non-mask: paint the art as the handle background. Mask mode renders the
-        // art in an inner fill span instead, so the mask doesn't clip the handles.
-        ...(maskColor ? {} : { backgroundImage: `url("${url}")` })
+        // Non-mask: paint the art as the handle background. Mask mode (and ghost
+        // mode, where a 3D decal shows the art) render nothing here.
+        ...(maskColor || ghost ? {} : { backgroundImage: `url("${url}")` })
       }}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}

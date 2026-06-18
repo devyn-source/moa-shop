@@ -18,6 +18,7 @@ export default function Garment3DDecoratorClient(props: {
   artPxWidth?: number;
   garmentRefWidthIn?: number;
   model3d?: Model3DCalibration | null;
+  method?: string;
   initialPlacements?: Placement[];
   onChange?: (c: StudioCapture[]) => void;
 }) {

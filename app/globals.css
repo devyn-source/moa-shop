@@ -8797,6 +8797,11 @@ p { line-height: 1.65; }
 .m3dcal-guide-tag--hem { background: var(--color-neutral); }
 .m3dcal-readout { display: flex; flex-direction: column; gap: 0; }
 
+/* Ghost art handle — the conforming 3D decal shows the art, this is just the
+   draggable control surface over it. */
+.pdpx-art-handle--ghost { background: rgba(176, 71, 49, 0.05); border-radius: 4px; }
+.pdpx-art-handle--ghost.is-on { background: rgba(176, 71, 49, 0.10); }
+
 /* ---- 3D Zone editor (/admin/zones) --------------------------------------- */
 .z3d { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
 .z3d-loading, .z3d-empty { padding: 40px; text-align: center; color: var(--color-neutral); background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 12px; }

@@ -4,16 +4,17 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, useGLTF, useTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { DecalGeometry } from "three-stdlib";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { STUDIO_FIT_UNITS, model3dPlacement, type Model3DCalibration, type Model3DHit, type Model3DPlacement } from "@/lib/zones";
 
-// MOA Studio — direct-manipulation placement on the 3D garment, with
-// multi-placement, front/back views, and a 3D rotate-to-preview.
-//   • EDIT: garment locked to the current view; the DraggableArt handle-editor
-//     positions the active art inside the chosen zone (banked placements show as
-//     static overlays). Live dimensions + DPI.
-//   • PREVIEW: every placement is projected onto the garment surface and the
-//     model is free to rotate, so the buyer sees front + back logos in 3D.
+// MOA Studio — places artwork on the 3D garment as a CONFORMING, LIT decal that
+// wraps the surface and shades with the fabric, so the preview reads as real ink
+// on the real product (not a flat sticker). The decal is sized to the exact real
+// inches via the SKU's 3D calibration, so what the buyer sees IS what prints.
+//   • EDIT: garment locked to the view; handles position the active art (the live
+//     conforming decal shows the true result). Live real-inch dims + DPI.
+//   • PREVIEW: free orbit; every placement conforms to the surface.
 
 export type Zone = { id: string; label: string; box: { x: number; y: number; w: number; h: number } };
 type View = "front" | "back";
@@ -21,14 +22,19 @@ type Box = { x: number; y: number; w: number; h: number; r?: number };
 
 export type Placement = {
   id: string; view: View; zoneId: string; zoneLabel: string; box: Box; art: ArtTransform;
-  // Exact production spec captured off the 3D mesh surface (when the SKU is
-  // 3D-calibrated). Frozen at placement time so it travels with the order.
+  method?: string; // decoration method — drives the decal's material (ink vs thread)
   spec3d?: Model3DPlacement;
 };
 export type StudioCapture = Placement & { widthIn: number | null; dpi: number | null };
 
 const Z = new THREE.Vector3(0, 0, 1);
 const clampDef: ArtTransform = { ox: 0.1, oy: 0.1, sx: 0.8, sy: 0.8, r: 0 };
+
+// Decoration method → surface finish. Screen/DTF print = flat matte ink;
+// embroidery = lower roughness (slight thread sheen) and sits a touch prouder.
+function methodFinish(method?: string): { roughness: number; offset: number } {
+  return /embroid/i.test(method || "") ? { roughness: 0.5, offset: -10 } : { roughness: 0.85, offset: -6 };
+}
 
 function recolor(root: THREE.Object3D, hex: string) {
   const color = new THREE.Color(hex);
@@ -37,11 +43,7 @@ function recolor(root: THREE.Object3D, hex: string) {
     if (!m.isMesh) return;
     (Array.isArray(m.material) ? m.material : [m.material]).forEach((mm) => {
       const s = mm as THREE.MeshStandardMaterial;
-      s.map = null;
-      s.color = color;
-      s.roughness = 0.9;
-      s.metalness = 0;
-      s.needsUpdate = true;
+      s.map = null; s.color = color; s.roughness = 0.9; s.metalness = 0; s.needsUpdate = true;
     });
   });
 }
@@ -58,24 +60,86 @@ function useNormalizedModel(url: string, fit: number) {
   }, [scene, fit]);
 }
 
-// EDIT backdrop: model rotated so the chosen view faces the locked front camera.
-// Reports (a) the garment's projected screen rect so the HTML overlay sits over
-// it, and (b) the real 3D surface hit of the active art — center + extents
-// raycast onto the mesh — so placement converts to EXACT inches via the SKU's
-// 3D-anchored calibration (lib/zones model3dPlacement). This is the live tie
-// between what the buyer drags and the production spec.
-function EditBackdrop({ url, hex, view, zoneBox, art, model3d, onRect, onHit }: {
+// A conforming decal descriptor built off a real surface hit.
+type DecalDesc = { geo: THREE.BufferGeometry; key: string; method?: string };
+
+function buildDecalGeo(target: THREE.Mesh, point: THREE.Vector3, normal: THREE.Vector3, rotDeg: number, w: number, h: number): THREE.BufferGeometry {
+  const q = new THREE.Quaternion().setFromUnitVectors(Z, normal).multiply(new THREE.Quaternion().setFromAxisAngle(Z, (rotDeg * Math.PI) / 180));
+  const e = new THREE.Euler().setFromQuaternion(q);
+  const depth = Math.max(w, h) * 2.2; // deep enough to wrap surface curvature
+  return new DecalGeometry(target, point, e, new THREE.Vector3(Math.max(0.02, w), Math.max(0.02, h), depth));
+}
+
+// Raycast a placement's center + horizontal/vertical extents onto the mesh from a
+// camera, given the garment's projected screen rect, and return a conforming
+// decal geometry (or null if it misses). `flipX` mirrors the back camera's X.
+function decalForPlacement(
+  cloned: THREE.Object3D, cam: THREE.Camera, rect: { x: number; y: number; w: number; h: number },
+  box: Box, art: ArtTransform, aspect: number, flipX: boolean, ray: THREE.Raycaster
+): { geo: THREE.BufferGeometry } | null {
+  const ndc = (fx: number, fy: number) => new THREE.Vector2(flipX ? -((rect.x + fx * rect.w) * 2 - 1) : (rect.x + fx * rect.w) * 2 - 1, -((rect.y + fy * rect.h) * 2 - 1));
+  const hitPt = (fx: number, fy: number) => { ray.setFromCamera(ndc(fx, fy), cam); return ray.intersectObject(cloned, true)[0] ?? null; };
+  const gx = (f: number) => box.x + box.w * f, gy = (f: number) => box.y + box.h * f;
+  const aCx = art.ox + art.sx / 2, aCy = art.oy + art.sy / 2;
+  const c = hitPt(gx(aCx), gy(aCy));
+  if (!c || !c.face) return null;
+  const l = hitPt(gx(art.ox), gy(aCy))?.point, r = hitPt(gx(art.ox + art.sx), gy(aCy))?.point;
+  const w = l && r ? l.distanceTo(r) : 0.15;
+  const n = c.face.normal.clone().transformDirection(c.object.matrixWorld).normalize();
+  try {
+    return { geo: buildDecalGeo(c.object as THREE.Mesh, c.point.clone(), n, art.r ?? 0, w, w / aspect) };
+  } catch {
+    return null;
+  }
+}
+
+function DecalMeshes({ decals, tex }: { decals: DecalDesc[]; tex: THREE.Texture }) {
+  return (
+    <>
+      {decals.map((d) => {
+        const f = methodFinish(d.method);
+        return (
+          <mesh key={d.key} geometry={d.geo} renderOrder={3}>
+            <meshStandardMaterial
+              map={tex} transparent alphaTest={0.05} depthWrite={false}
+              polygonOffset polygonOffsetFactor={f.offset} roughness={f.roughness} metalness={0}
+              side={THREE.FrontSide}
+            />
+          </mesh>
+        );
+      })}
+    </>
+  );
+}
+
+function useArtAspect(tex: THREE.Texture): number {
+  return useMemo(() => {
+    const img = tex.image as { width?: number; height?: number } | undefined;
+    return img?.width && img?.height ? img.width / img.height : 1;
+  }, [tex]);
+}
+
+// EDIT backdrop: model rotated so the chosen view faces the camera. Reports the
+// projected rect (for the handle overlay) + the active art's real-surface hit
+// (for the exact inches), and renders every visible placement as a conforming
+// decal so the buyer sees the true wrapped result while editing.
+function EditBackdrop({ url, hex, view, decalPlacements, activeBox, activeArt, model3d, artUrl, onRect, onHit }: {
   url: string; hex: string; view: View;
-  zoneBox: Box; art: ArtTransform;
+  decalPlacements: Placement[]; // committed placements on this view (incl. current)
+  activeBox: Box; activeArt: ArtTransform;
   model3d?: Model3DCalibration | null;
+  artUrl: string;
   onRect: (r: Box) => void;
   onHit: (h: Model3DHit | null) => void;
 }) {
   const cloned = useNormalizedModel(url, model3d?.fitUnits ?? STUDIO_FIT_UNITS);
   const { camera, size } = useThree();
+  const tex = useTexture(artUrl);
+  const aspect = useArtAspect(tex);
   useEffect(() => recolor(cloned, hex), [cloned, hex]);
   const rotY = view === "back" ? Math.PI : 0;
-  useEffect(() => {
+
+  const built = useMemo(() => {
     cloned.rotation.y = rotY;
     cloned.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(cloned);
@@ -88,54 +152,64 @@ function EditBackdrop({ url, hex, view, zoneBox, art, model3d, onRect, onHit }: 
           miny = Math.min(miny, (1 - v.y) / 2); maxy = Math.max(maxy, (1 - v.y) / 2);
         }
     const rect = { x: minx, y: miny, w: Math.max(0.01, maxx - minx), h: Math.max(0.01, maxy - miny) };
-    onRect(rect);
 
-    // Raycast the art's center + L/R/T/B edges onto the surface → world hit.
-    if (!model3d) { onHit(null); return; }
     const ray = new THREE.Raycaster();
-    const hitAt = (cx: number, cy: number): THREE.Vector3 | null => {
-      ray.setFromCamera(new THREE.Vector2(cx * 2 - 1, -(cy * 2 - 1)), camera);
-      return ray.intersectObject(cloned, true)[0]?.point ?? null;
-    };
-    const sp = (fx: number, fy: number) => [rect.x + fx * rect.w, rect.y + fy * rect.h] as const;
-    const aCx = art.ox + art.sx / 2, aCy = art.oy + art.sy / 2;
-    const [cx, cy] = sp(zoneBox.x + zoneBox.w * aCx, zoneBox.y + zoneBox.h * aCy);
-    const [lx] = sp(zoneBox.x + zoneBox.w * art.ox, 0);
-    const [rx] = sp(zoneBox.x + zoneBox.w * (art.ox + art.sx), 0);
-    const [, ty] = sp(0, zoneBox.y + zoneBox.h * art.oy);
-    const [, by] = sp(0, zoneBox.y + zoneBox.h * (art.oy + art.sy));
-    const c = hitAt(cx, cy);
-    if (!c) { onHit(null); return; }
-    const lh = hitAt(lx, cy), rh = hitAt(rx, cy);
-    const th = hitAt(cx, ty), bh = hitAt(cx, by);
-    const widthWorld = lh && rh ? lh.distanceTo(rh) : 0;
-    const heightWorld = th && bh ? th.distanceTo(bh) : widthWorld;
-    onHit({ centerWorldX: c.x, centerWorldY: c.y, widthWorld, heightWorld });
+    // Conforming decals for every committed placement on this view (model faces cam).
+    const decals: DecalDesc[] = [];
+    for (const p of decalPlacements) {
+      const d = decalForPlacement(cloned, camera, rect, p.box, p.art, aspect, false, ray);
+      if (d) decals.push({ geo: d.geo, key: p.id, method: p.method });
+    }
+
+    // Live hit for the ACTIVE art → exact inches (cheap; runs every frame).
+    let hit: Model3DHit | null = null;
+    if (model3d) {
+      const sp = (fx: number, fy: number) => [rect.x + fx * rect.w, rect.y + fy * rect.h] as const;
+      const hitAt = (cx: number, cy: number) => { ray.setFromCamera(new THREE.Vector2(cx * 2 - 1, -(cy * 2 - 1)), camera); return ray.intersectObject(cloned, true)[0]?.point ?? null; };
+      const aCx = activeArt.ox + activeArt.sx / 2, aCy = activeArt.oy + activeArt.sy / 2;
+      const [cx, cy] = sp(activeBox.x + activeBox.w * aCx, activeBox.y + activeBox.h * aCy);
+      const [lx] = sp(activeBox.x + activeBox.w * activeArt.ox, 0);
+      const [rx] = sp(activeBox.x + activeBox.w * (activeArt.ox + activeArt.sx), 0);
+      const [, ty] = sp(0, activeBox.y + activeBox.h * activeArt.oy);
+      const [, by] = sp(0, activeBox.y + activeBox.h * (activeArt.oy + activeArt.sy));
+      const c = hitAt(cx, cy);
+      if (c) {
+        const lh = hitAt(lx, cy), rh = hitAt(rx, cy), th = hitAt(cx, ty), bh = hitAt(cx, by);
+        hit = { centerWorldX: c.x, centerWorldY: c.y, widthWorld: lh && rh ? lh.distanceTo(rh) : 0, heightWorld: th && bh ? th.distanceTo(bh) : 0 };
+      }
+    }
+    return { rect, decals, hit };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cloned, rotY, camera, size.width, size.height, zoneBox.x, zoneBox.y, zoneBox.w, zoneBox.h, art.ox, art.oy, art.sx, art.sy, model3d]);
-  return <primitive object={cloned} />;
+  }, [cloned, rotY, camera, size.width, size.height, aspect, model3d,
+      activeBox.x, activeBox.y, activeBox.w, activeBox.h, activeArt.ox, activeArt.oy, activeArt.sx, activeArt.sy, activeArt.r,
+      JSON.stringify(decalPlacements.map((p) => [p.id, p.box, p.art]))]);
+
+  useEffect(() => { onRect(built.rect); onHit(built.hit); }, [built, onRect, onHit]);
+
+  return (
+    <group>
+      <primitive object={cloned} />
+      <DecalMeshes decals={built.decals} tex={tex} />
+    </group>
+  );
 }
 
-// PREVIEW backdrop: model at rest, free orbit; every placement projected onto
-// the surface (front placements from a front cam, back from a back cam) as flat
-// planes parented to the model so they rotate with it.
+// PREVIEW backdrop: model at rest, free orbit; every placement conforms to the
+// surface (front placements from a front cam, back from a back cam).
 export function PreviewBackdrop({ url, hex, artUrl, placements }: {
   url: string; hex: string; artUrl: string; placements: Placement[];
 }) {
   const cloned = useNormalizedModel(url, STUDIO_FIT_UNITS);
-  const art = useTexture(artUrl);
-  const aspect = useMemo(() => {
-    const img = art.image as { width?: number; height?: number } | undefined;
-    return img?.width && img?.height ? img.width / img.height : 1;
-  }, [art]);
+  const tex = useTexture(artUrl);
+  const aspect = useArtAspect(tex);
   useEffect(() => recolor(cloned, hex), [cloned, hex]);
 
-  const planes = useMemo(() => {
+  const decals = useMemo(() => {
     cloned.rotation.y = 0; cloned.updateMatrixWorld(true);
     const ray = new THREE.Raycaster();
-    const frontCam = new THREE.PerspectiveCamera(35, 0.8, 0.1, 100); frontCam.position.set(0, 0.2, 3.2); frontCam.lookAt(0, 0, 0); frontCam.updateMatrixWorld();
-    const backCam = new THREE.PerspectiveCamera(35, 0.8, 0.1, 100); backCam.position.set(0, 0.2, -3.2); backCam.lookAt(0, 0, 0); backCam.updateMatrixWorld();
-    const rect = (cam: THREE.Camera) => {
+    const mkCam = (z: number) => { const c = new THREE.PerspectiveCamera(35, 0.8, 0.1, 100); c.position.set(0, 0.2, z); c.lookAt(0, 0, 0); c.updateMatrixWorld(); return c; };
+    const frontCam = mkCam(3.2), backCam = mkCam(-3.2);
+    const rectFor = (cam: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(cloned);
       let mnx = 1, mny = 1, mxx = 0, mxy = 0;
       for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
@@ -145,30 +219,12 @@ export function PreviewBackdrop({ url, hex, artUrl, placements }: {
       }
       return { x: mnx, y: mny, w: mxx - mnx, h: mxy - mny };
     };
-    const fr = rect(frontCam), br = rect(backCam);
-    const out: { pos: THREE.Vector3; quat: THREE.Quaternion; w: number; h: number; key: string }[] = [];
+    const fr = rectFor(frontCam), br = rectFor(backCam);
+    const out: DecalDesc[] = [];
     for (const p of placements) {
-      const cam = p.view === "back" ? backCam : frontCam;
-      const r = p.view === "back" ? br : fr;
-      // art centre in garment-relative fraction → screen → ray
-      const gfx = p.box.x + p.box.w * (p.art.ox + p.art.sx / 2);
-      const gfy = p.box.y + p.box.h * (p.art.oy + p.art.sy / 2);
-      const sx = r.x + gfx * r.w, sy = r.y + gfy * r.h;
-      // back cam sees a mirrored X — flip so it lands on the correct side
-      const ndcX = (p.view === "back" ? -(sx * 2 - 1) : sx * 2 - 1);
-      ray.setFromCamera(new THREE.Vector2(ndcX, -(sy * 2 - 1)), cam);
-      const hit = ray.intersectObject(cloned, true)[0];
-      if (!hit || !hit.face) continue;
-      const lf = (gx: number) => {
-        const lsx = r.x + gx * r.w; const lndc = (p.view === "back" ? -(lsx * 2 - 1) : lsx * 2 - 1);
-        ray.setFromCamera(new THREE.Vector2(lndc, -(sy * 2 - 1)), cam);
-        return ray.intersectObject(cloned, true)[0]?.point;
-      };
-      const a = lf(p.box.x + p.box.w * p.art.ox), b = lf(p.box.x + p.box.w * (p.art.ox + p.art.sx));
-      const w = a && b ? a.distanceTo(b) : 0.15;
-      const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
-      const quat = new THREE.Quaternion().setFromUnitVectors(Z, n).multiply(new THREE.Quaternion().setFromAxisAngle(Z, ((p.art.r ?? 0) * Math.PI) / 180));
-      out.push({ pos: hit.point.clone().add(n.multiplyScalar(0.012)), quat, w: Math.max(0.03, w), h: Math.max(0.03, w) / aspect, key: p.id });
+      const back = p.view === "back";
+      const d = decalForPlacement(cloned, back ? backCam : frontCam, back ? br : fr, p.box, p.art, aspect, back, ray);
+      if (d) out.push({ geo: d.geo, key: p.id, method: p.method });
     }
     return out;
   }, [cloned, placements, aspect]);
@@ -176,37 +232,33 @@ export function PreviewBackdrop({ url, hex, artUrl, placements }: {
   return (
     <group>
       <primitive object={cloned} />
-      {planes.map((pl) => (
-        <mesh key={pl.key} position={pl.pos} quaternion={pl.quat}>
-          <planeGeometry args={[pl.w, pl.h]} />
-          <meshBasicMaterial map={art} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} />
-        </mesh>
-      ))}
+      <DecalMeshes decals={decals} tex={tex} />
     </group>
   );
 }
 
 export default function Garment3DDecorator({
-  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, model3d, initialPlacements, onChange,
+  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, model3d, method, initialPlacements, onChange,
 }: {
   url: string; artUrl: string; hex?: string;
-  zones: Zone[]; // front zones
+  zones: Zone[];
   backZones?: Zone[];
   artPxWidth?: number; garmentRefWidthIn?: number;
-  model3d?: Model3DCalibration | null; // the 3D-anchored ruler — exact inches off the surface
-  initialPlacements?: Placement[]; // restore a shared / re-opened config
+  model3d?: Model3DCalibration | null;
+  method?: string; // current decoration method → decal finish
+  initialPlacements?: Placement[];
   onChange?: (c: StudioCapture[]) => void;
 }) {
   const frontList = zones.length ? zones : [{ id: "full-front", label: "Full front", box: { x: 0.3, y: 0.34, w: 0.4, h: 0.34 } }];
   const backList = backZones.length ? backZones : [{ id: "center-back", label: "Center back", box: { x: 0.3, y: 0.3, w: 0.4, h: 0.34 } }];
 
-  // Seed from a shared config: edit the last placement, the rest bank as saved.
   const seed0 = initialPlacements ?? [];
   const seedCur = seed0[seed0.length - 1];
   const [saved, setSaved] = useState<Placement[]>(seed0.slice(0, -1).map((p, i) => ({ ...p, id: `seed${i}` })));
   const [view, setView] = useState<View>(seedCur?.view ?? "front");
   const [zoneId, setZoneId] = useState(seedCur?.zoneId ?? frontList[0].id);
   const [art, setArt] = useState<ArtTransform>(seedCur?.art ?? clampDef);
+  const [committedArt, setCommittedArt] = useState<ArtTransform>(seedCur?.art ?? clampDef);
   const [rect, setRect] = useState<Box>({ x: 0.18, y: 0.12, w: 0.64, h: 0.76 });
   const [hit, setHit] = useState<Model3DHit | null>(null);
   const [preview, setPreview] = useState(false);
@@ -214,33 +266,31 @@ export default function Garment3DDecorator({
   const activeZones = view === "front" ? frontList : backList;
   const zone = activeZones.find((z) => z.id === zoneId) ?? activeZones[0];
 
-  // Exact production spec for the active art, straight off the 3D surface hit.
   const spec3d = model3d && hit && hit.widthWorld > 0 ? model3dPlacement(model3d, hit, view) : undefined;
-  const current: Placement = { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art, spec3d };
+  const current: Placement = { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art, method, spec3d };
   const all = useMemo(() => [...saved, current], [saved, view, zoneId, art, spec3d]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prefer the exact 3D-derived width; fall back to the rough ref-width estimate
-  // for SKUs without a 3D calibration.
+  // Committed placements (for the heavy conforming decals — rebuilt on drag-end).
+  const savedOnView = useMemo(() => saved.filter((p) => p.view === view), [saved, view]);
+  const editDecalPlacements = useMemo(
+    () => [...savedOnView, { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art: committedArt, method }],
+    [savedOnView, view, zone.id, zone.box, committedArt, method] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const artFrac = zone.box.w * art.sx;
   const widthIn = spec3d ? spec3d.widthIn : Math.round(artFrac * garmentRefWidthIn * 4) / 4;
   const dpi = artPxWidth && widthIn > 0 ? Math.round(artPxWidth / widthIn) : null;
   const dpiLevel = dpi == null ? "na" : dpi >= 150 ? "ok" : dpi >= 100 ? "warn" : "bad";
 
   useEffect(() => {
-    onChange?.(all.map((p) => ({
-      ...p,
-      widthIn: p.id === "current" ? widthIn : p.spec3d?.widthIn ?? null,
-      dpi: p.id === "current" ? dpi : null,
-    })));
+    onChange?.(all.map((p) => ({ ...p, widthIn: p.id === "current" ? widthIn : p.spec3d?.widthIn ?? null, dpi: p.id === "current" ? dpi : null })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all]);
 
-  const setViewTo = (v: View) => { setView(v); const zs = v === "front" ? frontList : backList; setZoneId(zs[0].id); setArt(clampDef); };
-  const pickZone = (id: string) => { setZoneId(id); setArt(clampDef); };
-  const addPlacement = () => {
-    setSaved((s) => [...s, { ...current, id: `p${s.length + 1}-${zone.id}` }]);
-    setArt(clampDef);
-  };
+  const resetArt = (t: ArtTransform = clampDef) => { setArt(t); setCommittedArt(t); };
+  const setViewTo = (v: View) => { setView(v); const zs = v === "front" ? frontList : backList; setZoneId(zs[0].id); resetArt(); };
+  const pickZone = (id: string) => { setZoneId(id); resetArt(); };
+  const addPlacement = () => { setSaved((s) => [...s, { ...current, id: `p${s.length + 1}-${zone.id}` }]); resetArt(); };
   const removeSaved = (id: string) => setSaved((s) => s.filter((p) => p.id !== id));
 
   const boxStyle = {
@@ -249,7 +299,6 @@ export default function Garment3DDecorator({
     width: `${zone.box.w * rect.w * 100}%`,
     height: `${zone.box.h * rect.h * 100}%`,
   };
-  const savedOnView = saved.filter((p) => p.view === view);
 
   return (
     <div className="studio3dx">
@@ -264,7 +313,7 @@ export default function Garment3DDecorator({
             {preview ? (
               <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} />
             ) : (
-              <EditBackdrop url={url} hex={hex} view={view} zoneBox={zone.box} art={art} model3d={model3d} onRect={setRect} onHit={setHit} />
+              <EditBackdrop url={url} hex={hex} view={view} decalPlacements={editDecalPlacements} activeBox={zone.box} activeArt={art} model3d={model3d} artUrl={artUrl} onRect={setRect} onHit={setHit} />
             )}
             <ContactShadows position={[0, -0.8, 0]} opacity={0.28} scale={4} blur={2.6} far={2.5} />
           </Suspense>
@@ -274,34 +323,23 @@ export default function Garment3DDecorator({
         {!preview ? (
           <div className="studio3dx-overlay">
             <span className="studio3dx-guide studio3dx-guide--v" style={{ left: `${(rect.x + (zone.box.x + zone.box.w / 2) * rect.w) * 100}%` }} />
-            {/* banked placements on this view — static */}
-            {savedOnView.map((p) => (
-              <span key={p.id} className="studio3dx-saved-art" style={{
-                left: `${(rect.x + (p.box.x + p.box.w * p.art.ox) * rect.w) * 100}%`,
-                top: `${(rect.y + (p.box.y + p.box.h * p.art.oy) * rect.h) * 100}%`,
-                width: `${p.box.w * p.art.sx * rect.w * 100}%`,
-                height: `${p.box.h * p.art.sy * rect.h * 100}%`,
-                transform: `rotate(${p.art.r ?? 0}deg)`,
-                backgroundImage: `url("${artUrl}")`,
-              }} />
-            ))}
             <div className="studio3dx-zonebox" style={boxStyle}>
               <span className="studio3dx-zonebox-label">{zone.label} · print area</span>
-              <DraggableArt url={artUrl} transform={art} onChange={setArt} snapCenter alwaysShowHandles />
+              {/* handles only — the conforming 3D decal shows the actual art */}
+              <DraggableArt url={artUrl} transform={art} onChange={setArt} onCommit={setCommittedArt} snapCenter alwaysShowHandles ghost />
             </div>
           </div>
         ) : null}
 
         <div className="studio3dx-hud">
-          {!preview ? <span className="studio3dx-dim">{widthIn}&Prime; wide{spec3d ? ` · ${spec3d.belowHpsIn}″ below HPS` : ""}</span> : <span className="studio3dx-dim">Drag to rotate · {all.length} placement{all.length > 1 ? "s" : ""}</span>}
-          {!preview && dpi != null ? (
+          <span className="studio3dx-dim">{widthIn}&Prime; wide{spec3d ? ` · ${spec3d.belowHpsIn}″ below HPS` : ""}</span>
+          {dpi != null ? (
             <span className={`studio3dx-dpi studio3dx-dpi--${dpiLevel}`}>
               {dpiLevel === "ok" ? "Print-ready" : dpiLevel === "warn" ? "OK — softer at this size" : "Too low to print"} · {dpi} DPI
             </span>
           ) : null}
         </div>
 
-        {/* View + preview toggles */}
         <div className="studio3dx-views">
           <button type="button" className={`studio3dx-viewpill${view === "front" && !preview ? " is-on" : ""}`} onClick={() => { setPreview(false); setViewTo("front"); }}>Front</button>
           <button type="button" className={`studio3dx-viewpill${view === "back" && !preview ? " is-on" : ""}`} onClick={() => { setPreview(false); setViewTo("back"); }}>Back</button>
@@ -330,7 +368,7 @@ export default function Garment3DDecorator({
             ) : null}
             <button type="button" className="studio3dx-addbtn" onClick={addPlacement}>+ Save &amp; add another placement</button>
           </div>
-          <p className="studio3dx-hint">Drag to move · pull a corner to resize · top handle to rotate · arrow keys to nudge.</p>
+          <p className="studio3dx-hint">Drag to move · pull a corner to resize · top handle to rotate · arrow keys to nudge. The logo wraps the garment exactly as it prints.</p>
         </>
       ) : (
         <p className="studio3dx-hint">Spin the garment to preview every placement in 3D. Tap <b>Edit</b> to keep adjusting.</p>
