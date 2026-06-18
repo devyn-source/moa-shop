@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, useGLTF, useTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { DecalGeometry } from "three-stdlib";
@@ -123,14 +123,16 @@ function useArtAspect(tex: THREE.Texture): number {
 // projected rect (for the handle overlay) + the active art's real-surface hit
 // (for the exact inches), and renders every visible placement as a conforming
 // decal so the buyer sees the true wrapped result while editing.
-function EditBackdrop({ url, hex, view, decalPlacements, activeBox, activeArt, model3d, artUrl, onRect, onHit }: {
+function EditBackdrop({ url, hex, view, bankedPlacements, activeBox, activeArt, activeMethod, model3d, artUrl, onRect, onHit, onArtChange, onArtCommit }: {
   url: string; hex: string; view: View;
-  decalPlacements: Placement[]; // committed placements on this view (incl. current)
-  activeBox: Box; activeArt: ArtTransform;
+  bankedPlacements: Placement[]; // saved placements on this view (static decals)
+  activeBox: Box; activeArt: ArtTransform; activeMethod?: string;
   model3d?: Model3DCalibration | null;
   artUrl: string;
   onRect: (r: Box) => void;
   onHit: (h: Model3DHit | null) => void;
+  onArtChange: (t: ArtTransform) => void; // direct on-mesh move
+  onArtCommit: () => void;
 }) {
   const cloned = useNormalizedModel(url, model3d?.fitUnits ?? STUDIO_FIT_UNITS);
   const { camera, size } = useThree();
@@ -138,8 +140,10 @@ function EditBackdrop({ url, hex, view, decalPlacements, activeBox, activeArt, m
   const aspect = useArtAspect(tex);
   useEffect(() => recolor(cloned, hex), [cloned, hex]);
   const rotY = view === "back" ? Math.PI : 0;
+  const [dragging, setDragging] = useState(false);
 
-  const built = useMemo(() => {
+  // The garment's projected screen rect — stable in edit (camera locked).
+  const rect = useMemo(() => {
     cloned.rotation.y = rotY;
     cloned.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(cloned);
@@ -151,17 +155,25 @@ function EditBackdrop({ url, hex, view, decalPlacements, activeBox, activeArt, m
           minx = Math.min(minx, (v.x + 1) / 2); maxx = Math.max(maxx, (v.x + 1) / 2);
           miny = Math.min(miny, (1 - v.y) / 2); maxy = Math.max(maxy, (1 - v.y) / 2);
         }
-    const rect = { x: minx, y: miny, w: Math.max(0.01, maxx - minx), h: Math.max(0.01, maxy - miny) };
+    return { x: minx, y: miny, w: Math.max(0.01, maxx - minx), h: Math.max(0.01, maxy - miny) };
+  }, [cloned, rotY, camera, size.width, size.height]);
 
+  // Banked decals — static, rebuilt only when a placement is saved/removed.
+  const bankedDecals = useMemo(() => {
     const ray = new THREE.Raycaster();
-    // Conforming decals for every committed placement on this view (model faces cam).
-    const decals: DecalDesc[] = [];
-    for (const p of decalPlacements) {
+    const out: DecalDesc[] = [];
+    for (const p of bankedPlacements) {
       const d = decalForPlacement(cloned, camera, rect, p.box, p.art, aspect, false, ray);
-      if (d) decals.push({ geo: d.geo, key: p.id, method: p.method });
+      if (d) out.push({ geo: d.geo, key: p.id, method: p.method });
     }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cloned, camera, rect, aspect, JSON.stringify(bankedPlacements.map((p) => [p.id, p.box, p.art]))]);
 
-    // Live hit for the ACTIVE art → exact inches (cheap; runs every frame).
+  // Active decal + exact-inch hit — rebuilt live as the art moves (follows the drag).
+  const active = useMemo(() => {
+    const ray = new THREE.Raycaster();
+    const d = decalForPlacement(cloned, camera, rect, activeBox, activeArt, aspect, false, ray);
     let hit: Model3DHit | null = null;
     if (model3d) {
       const sp = (fx: number, fy: number) => [rect.x + fx * rect.w, rect.y + fy * rect.h] as const;
@@ -178,18 +190,43 @@ function EditBackdrop({ url, hex, view, decalPlacements, activeBox, activeArt, m
         hit = { centerWorldX: c.x, centerWorldY: c.y, widthWorld: lh && rh ? lh.distanceTo(rh) : 0, heightWorld: th && bh ? th.distanceTo(bh) : 0 };
       }
     }
-    return { rect, decals, hit };
+    return { decal: d ? { geo: d.geo, key: "active", method: activeMethod } : null, hit };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cloned, rotY, camera, size.width, size.height, aspect, model3d,
-      activeBox.x, activeBox.y, activeBox.w, activeBox.h, activeArt.ox, activeArt.oy, activeArt.sx, activeArt.sy, activeArt.r,
-      JSON.stringify(decalPlacements.map((p) => [p.id, p.box, p.art]))]);
+  }, [cloned, camera, rect, aspect, model3d, activeMethod, activeBox.x, activeBox.y, activeBox.w, activeBox.h, activeArt.ox, activeArt.oy, activeArt.sx, activeArt.sy, activeArt.r]);
 
-  useEffect(() => { onRect(built.rect); onHit(built.hit); }, [built, onRect, onHit]);
+  useEffect(() => { onRect(rect); }, [rect, onRect]);
+  useEffect(() => { onHit(active.hit); }, [active.hit, onHit]);
+
+  // Direct on-mesh placement: a surface hit → the art's offset within its zone
+  // (clamped to the print area), with a magnetic center-front snap.
+  const moveTo = (point: THREE.Vector3) => {
+    const ndc = point.clone().project(camera);
+    const gfx = ((ndc.x + 1) / 2 - rect.x) / rect.w;
+    const gfy = ((1 - ndc.y) / 2 - rect.y) / rect.h;
+    let ox = (gfx - activeBox.x) / activeBox.w - activeArt.sx / 2;
+    let oy = (gfy - activeBox.y) / activeBox.h - activeArt.sy / 2;
+    ox = Math.min(1 - activeArt.sx, Math.max(0, ox));
+    oy = Math.min(1 - activeArt.sy, Math.max(0, oy));
+    const centerGx = activeBox.x + (ox + activeArt.sx / 2) * activeBox.w;
+    if (Math.abs(centerGx - 0.5) < 0.022) {
+      const sox = (0.5 - activeBox.x) / activeBox.w - activeArt.sx / 2;
+      if (sox >= 0 && sox <= 1 - activeArt.sx) ox = sox;
+    }
+    onArtChange({ ...activeArt, ox, oy });
+  };
+
+  const decals = active.decal ? [...bankedDecals, active.decal] : bankedDecals;
 
   return (
     <group>
-      <primitive object={cloned} />
-      <DecalMeshes decals={built.decals} tex={tex} />
+      <primitive
+        object={cloned}
+        onPointerDown={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); setDragging(true); moveTo(e.point); }}
+        onPointerMove={(e: ThreeEvent<PointerEvent>) => { if (dragging) { e.stopPropagation(); moveTo(e.point); } }}
+        onPointerUp={() => { if (dragging) { setDragging(false); onArtCommit(); } }}
+        onPointerOut={() => { if (dragging) { setDragging(false); onArtCommit(); } }}
+      />
+      <DecalMeshes decals={decals} tex={tex} />
     </group>
   );
 }
@@ -258,7 +295,6 @@ export default function Garment3DDecorator({
   const [view, setView] = useState<View>(seedCur?.view ?? "front");
   const [zoneId, setZoneId] = useState(seedCur?.zoneId ?? frontList[0].id);
   const [art, setArt] = useState<ArtTransform>(seedCur?.art ?? clampDef);
-  const [committedArt, setCommittedArt] = useState<ArtTransform>(seedCur?.art ?? clampDef);
   const [rect, setRect] = useState<Box>({ x: 0.18, y: 0.12, w: 0.64, h: 0.76 });
   const [hit, setHit] = useState<Model3DHit | null>(null);
   const [preview, setPreview] = useState(false);
@@ -270,12 +306,7 @@ export default function Garment3DDecorator({
   const current: Placement = { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art, method, spec3d };
   const all = useMemo(() => [...saved, current], [saved, view, zoneId, art, spec3d]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Committed placements (for the heavy conforming decals — rebuilt on drag-end).
   const savedOnView = useMemo(() => saved.filter((p) => p.view === view), [saved, view]);
-  const editDecalPlacements = useMemo(
-    () => [...savedOnView, { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art: committedArt, method }],
-    [savedOnView, view, zone.id, zone.box, committedArt, method] // eslint-disable-line react-hooks/exhaustive-deps
-  );
 
   const artFrac = zone.box.w * art.sx;
   const widthIn = spec3d ? spec3d.widthIn : Math.round(artFrac * garmentRefWidthIn * 4) / 4;
@@ -287,7 +318,7 @@ export default function Garment3DDecorator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all]);
 
-  const resetArt = (t: ArtTransform = clampDef) => { setArt(t); setCommittedArt(t); };
+  const resetArt = (t: ArtTransform = clampDef) => { setArt(t); };
   const setViewTo = (v: View) => { setView(v); const zs = v === "front" ? frontList : backList; setZoneId(zs[0].id); resetArt(); };
   const pickZone = (id: string) => { setZoneId(id); resetArt(); };
   const addPlacement = () => { setSaved((s) => [...s, { ...current, id: `p${s.length + 1}-${zone.id}` }]); resetArt(); };
@@ -313,7 +344,7 @@ export default function Garment3DDecorator({
             {preview ? (
               <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} />
             ) : (
-              <EditBackdrop url={url} hex={hex} view={view} decalPlacements={editDecalPlacements} activeBox={zone.box} activeArt={art} model3d={model3d} artUrl={artUrl} onRect={setRect} onHit={setHit} />
+              <EditBackdrop url={url} hex={hex} view={view} bankedPlacements={savedOnView} activeBox={zone.box} activeArt={art} activeMethod={method} model3d={model3d} artUrl={artUrl} onRect={setRect} onHit={setHit} onArtChange={setArt} onArtCommit={() => {}} />
             )}
             <ContactShadows position={[0, -0.8, 0]} opacity={0.28} scale={4} blur={2.6} far={2.5} />
           </Suspense>
@@ -325,8 +356,9 @@ export default function Garment3DDecorator({
             <span className="studio3dx-guide studio3dx-guide--v" style={{ left: `${(rect.x + (zone.box.x + zone.box.w / 2) * rect.w) * 100}%` }} />
             <div className="studio3dx-zonebox" style={boxStyle}>
               <span className="studio3dx-zonebox-label">{zone.label} · print area</span>
-              {/* handles only — the conforming 3D decal shows the actual art */}
-              <DraggableArt url={artUrl} transform={art} onChange={setArt} onCommit={setCommittedArt} snapCenter alwaysShowHandles ghost />
+              {/* handles for resize/rotate — move by dragging on the garment too;
+                  the conforming 3D decal shows the actual art */}
+              <DraggableArt url={artUrl} transform={art} onChange={setArt} snapCenter snapStraighten alwaysShowHandles ghost />
             </div>
           </div>
         ) : null}

@@ -66,6 +66,7 @@ export function DraggableArt({
   maskColor,
   alwaysShowHandles,
   snapCenter,
+  snapStraighten,
   ghost
 }: {
   url: string;
@@ -82,6 +83,8 @@ export function DraggableArt({
   alwaysShowHandles?: boolean;
   // Magnetically snap to the box's horizontal/vertical center while moving.
   snapCenter?: boolean;
+  // Magnetically snap rotation to the nearest right angle (0/90/180/270).
+  snapStraighten?: boolean;
   // Handles only — don't paint the art image (a conforming 3D decal shows it
   // instead). The box becomes a faint, draggable control surface.
   ghost?: boolean;
@@ -104,6 +107,11 @@ export function DraggableArt({
         if (Math.abs(next.ox + next.sx / 2 - 0.5) < SNAP) next = { ...next, ox: 0.5 - next.sx / 2 };
         if (Math.abs(next.oy + next.sy / 2 - 0.5) < SNAP) next = { ...next, oy: 0.5 - next.sy / 2 };
       }
+      // Magnetic straighten (rotate only): pull to the nearest right angle.
+      if (snapStraighten && drag.mode === "rotate" && next.r != null) {
+        const nearest = Math.round(next.r / 90) * 90;
+        if (Math.abs(next.r - nearest) < 6) next = { ...next, r: ((nearest % 360) + 360) % 360 };
+      }
       lastRef.current = next;
       onChange(next);
     };
@@ -114,7 +122,7 @@ export function DraggableArt({
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [drag, onChange, onCommit, snapCenter]);
+  }, [drag, onChange, onCommit, snapCenter, snapStraighten]);
 
   const start = useCallback(
     (mode: DragMode) => (e: React.PointerEvent) => {
