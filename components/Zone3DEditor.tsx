@@ -127,6 +127,7 @@ function Backdrop({
 
 type DragMode = "move" | "nw" | "ne" | "sw" | "se";
 type DragState = { id: string; mode: DragMode; sx: number; sy: number; origin: Box };
+type CalReport = { rawSize: { x: number; y: number; z: number }; worldHeight: number; bodyLengthIn: number; chestWidthIn: number | null; source: string };
 
 export default function Zone3DEditor({
   products, modelUrls,
@@ -152,19 +153,35 @@ export default function Zone3DEditor({
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  // Load saved zones + 3D calibration for the SKU.
+  // Calibration mode — same 3D view, HPS/hem datum lines.
+  const [mode, setMode] = useState<"calibrate" | "zones">("zones");
+  const [report, setReport] = useState<CalReport | null>(null);
+  const [hpsFrac, setHpsFrac] = useState(0);
+  const [hemFrac, setHemFrac] = useState(1);
+  const [lineDrag, setLineDrag] = useState<"hps" | "hem" | null>(null);
+  const [applyingCal, setApplyingCal] = useState(false);
+  const [calSavedAt, setCalSavedAt] = useState<string | null>(null);
+
+  // Load saved zones + 3D calibration (report + stored datum) for the SKU.
   useEffect(() => {
     let cancelled = false;
-    setSavedAt(null);
+    setSavedAt(null); setCalSavedAt(null); setReport(null);
     fetch(`/api/zones/${slug}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled) return;
         const saved = normaliseZonesPayload(data?.zones);
         setZones(saved ?? seed());
-        setModel3d(normaliseCalibration(data?.calibration)?.model3d ?? null);
+        const stored = normaliseCalibration(data?.calibration)?.model3d ?? null;
+        setModel3d(stored);
+        setHpsFrac(stored?.hpsFrac ?? 0);
+        setHemFrac(stored?.hemFrac ?? 1);
       })
       .catch(() => setZones(seed()));
+    fetch(`/api/admin/calibrate-3d/${slug}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d?.report) setReport(d.report); })
+      .catch(() => {});
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
@@ -211,6 +228,77 @@ export default function Zone3DEditor({
     if (z) setDrag({ id, mode, sx: e.clientX, sy: e.clientY, origin: { ...z.box } });
   };
 
+  // ---- Calibration (same 3D view) ----
+  // Live calibration from the report + the HPS/hem lines (anchored to body length
+  // across that span). This same cal drives the zone inch labels, so calibrating
+  // and placing read off one source.
+  const live = useMemo(() => {
+    if (!report) return null;
+    const fit = STUDIO_FIT_UNITS;
+    const wh = report.worldHeight;
+    const hpsWorldY = wh / 2 - hpsFrac * wh;
+    const span = Math.max(1e-4, (hemFrac - hpsFrac) * wh);
+    const ipw = report.bodyLengthIn / span;
+    const maxRaw = Math.max(report.rawSize.x, report.rawSize.y, report.rawSize.z) || 1;
+    const impliedWidthIn = (report.rawSize.x / maxRaw) * fit * ipw;
+    let ratio: number | null = null;
+    let conf: Model3DCalibration["confidence"] = report.source.includes("dxf") ? "medium" : "low";
+    if (report.chestWidthIn) {
+      let best = Infinity;
+      for (const c of [report.chestWidthIn, report.chestWidthIn / 2]) {
+        const e = Math.abs(Math.log(impliedWidthIn / c));
+        if (e < best) { best = e; ratio = impliedWidthIn / c; }
+      }
+      conf = best < 0.2 ? "high" : best < 0.45 ? "medium" : "low";
+    } else if (report.source.includes("dxf")) conf = "high";
+    const cal: Model3DCalibration = { fitUnits: fit, inchesPerWorld: ipw, hpsWorldY, cfWorldX: 0, bodyLengthIn: report.bodyLengthIn, chestWidthIn: report.chestWidthIn, hpsFrac, hemFrac, confidence: conf, source: report.source as Model3DCalibration["source"] };
+    return { cal, ipw, impliedWidthIn, ratio, conf, collarIn: hpsFrac * wh * ipw };
+  }, [report, hpsFrac, hemFrac]);
+
+  const calForInches = live?.cal ?? model3d;
+
+  // Drag the HPS / hem datum line (fraction of the projected rect).
+  useEffect(() => {
+    if (!lineDrag) return;
+    const move = (e: PointerEvent) => {
+      const el = stageRef.current?.getBoundingClientRect();
+      if (!el) return;
+      const frac = ((e.clientY - el.top) / el.height - rect.y) / rect.h;
+      if (lineDrag === "hps") setHpsFrac(Math.min(hemFrac - 0.05, Math.max(0, frac)));
+      else setHemFrac(Math.max(hpsFrac + 0.05, Math.min(1, frac)));
+    };
+    const up = () => setLineDrag(null);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+  }, [lineDrag, rect.y, rect.h, hpsFrac, hemFrac]);
+
+  const autoFitHps = () => {
+    if (!report?.chestWidthIn) return;
+    const maxRaw = Math.max(report.rawSize.x, report.rawSize.y, report.rawSize.z) || 1;
+    const modelWidthWorld = (report.rawSize.x / maxRaw) * STUDIO_FIT_UNITS;
+    const cands = report.source.includes("dxf") ? [report.chestWidthIn] : [report.chestWidthIn, report.chestWidthIn / 2];
+    let best: number | null = null, bestErr = Infinity;
+    for (const c of cands) {
+      const span = (report.bodyLengthIn * modelWidthWorld) / c;
+      const hf = hemFrac - span / report.worldHeight;
+      if (hf >= 0 && hf <= 0.35) { const err = Math.abs(hf - 0.06); if (err < bestErr) { bestErr = err; best = hf; } }
+    }
+    if (best != null) setHpsFrac(Math.round(best * 1000) / 1000);
+  };
+
+  const applyCalibration = async () => {
+    setApplyingCal(true);
+    try {
+      const r = await fetch(`/api/admin/calibrate-3d/${slug}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hpsFrac, hemFrac }) });
+      const d = await r.json();
+      if (r.ok && d.model3d) { setModel3d(d.model3d); setCalSavedAt(new Date().toLocaleTimeString()); }
+    } finally {
+      setApplyingCal(false);
+    }
+  };
+  const lineTop = (frac: number) => `${(rect.y + frac * rect.h) * 100}%`;
+
   const addZone = () => {
     const id = `zone-${Date.now().toString(36)}`;
     const box = { x: 0.4, y: 0.34, w: 0.2, h: 0.16 };
@@ -224,8 +312,8 @@ export default function Zone3DEditor({
 
   const inchesFor = (id: string) => {
     const h = hits[id];
-    if (!model3d || !h || h.widthWorld <= 0) return null;
-    return model3dPlacement(model3d, h, view);
+    if (!calForInches || !h || h.widthWorld <= 0) return null;
+    return model3dPlacement(calForInches, h, view);
   };
 
   const save = async () => {
@@ -284,12 +372,20 @@ export default function Zone3DEditor({
           <div>
             <h2 className="z3d-title">{product.displayName}</h2>
             <p className="z3d-sub">
-              Drag the boxes onto the garment. Sizes are real inches off the 3D surface · {model3d ? `${model3d.confidence} calibration` : "no 3D calibration — run it on the Assets page"}.
+              {mode === "calibrate"
+                ? "Drag the HPS line to the shoulder + the hem line to the bottom (or Auto-fit), then Apply — this sets the real-inch ruler."
+                : `Drag the boxes onto the garment — real inches off the 3D surface · ${calForInches ? `${calForInches.confidence} calibration` : "not calibrated yet — do the Calibrate tab first"}.`}
             </p>
           </div>
-          <div className="z3d-viewtabs">
-            <button type="button" className={`z3d-tab${view === "front" ? " is-on" : ""}`} onClick={() => setView("front")}>Front</button>
-            <button type="button" className={`z3d-tab${view === "back" ? " is-on" : ""}`} onClick={() => setView("back")}>Back</button>
+          <div className="z3d-tabset">
+            <div className="z3d-viewtabs z3d-modetabs">
+              <button type="button" className={`z3d-tab${mode === "calibrate" ? " is-on" : ""}`} onClick={() => setMode("calibrate")}>1 · Calibrate</button>
+              <button type="button" className={`z3d-tab${mode === "zones" ? " is-on" : ""}`} onClick={() => setMode("zones")}>2 · Zones</button>
+            </div>
+            <div className="z3d-viewtabs">
+              <button type="button" className={`z3d-tab${view === "front" ? " is-on" : ""}`} onClick={() => setView("front")}>Front</button>
+              <button type="button" className={`z3d-tab${view === "back" ? " is-on" : ""}`} onClick={() => setView("back")}>Back</button>
+            </div>
           </div>
         </header>
 
@@ -301,14 +397,14 @@ export default function Zone3DEditor({
             <directionalLight position={[3, 5, 4]} intensity={0.95} />
             <directionalLight position={[-4, 2, -2]} intensity={0.3} />
             <Suspense fallback={<Html center>Loading…</Html>}>
-              <Backdrop url={modelUrl} hex={hex} view={view} zones={list} model3d={model3d} idle={!drag} onRect={setRect} onHits={setHits} />
+              <Backdrop url={modelUrl} hex={hex} view={view} zones={list} model3d={calForInches} idle={!drag} onRect={setRect} onHits={setHits} />
               <ContactShadows position={[0, -0.8, 0]} opacity={0.28} scale={4} blur={2.6} far={2.5} />
             </Suspense>
             <OrbitControls enableRotate={false} enablePan={false} enableZoom={false} />
           </Canvas>
 
           <div className="z3d-overlay">
-            {list.map((z) => {
+            {mode === "zones" && list.map((z) => {
               const on = z.id === activeId;
               const spec = inchesFor(z.id);
               const fit = spec ? methodFit(spec.widthIn) : null;
@@ -343,32 +439,62 @@ export default function Zone3DEditor({
                 </div>
               );
             })}
+            {mode === "calibrate" && (
+              <>
+                <div className="m3dcal-guide m3dcal-guide--hps" style={{ top: lineTop(hpsFrac) }} onPointerDown={() => setLineDrag("hps")}>
+                  <span className="m3dcal-guide-tag">HPS{live ? ` · ${Math.round(live.collarIn * 100) / 100}″ below top` : ""}</span>
+                </div>
+                <div className="m3dcal-guide m3dcal-guide--hem" style={{ top: lineTop(hemFrac) }} onPointerDown={() => setLineDrag("hem")}>
+                  <span className="m3dcal-guide-tag m3dcal-guide-tag--hem">HEM</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="z3d-zones">
-          {list.map((z) => (
-            <div key={z.id} className={`z3d-chip${z.id === activeId ? " is-on" : ""}`}>
-              <button type="button" className="z3d-chip-pick" onClick={() => setActiveId(z.id)}>
-                {z.id === activeId ? (
-                  <input className="z3d-chip-input" value={z.label} onChange={(e) => renameZone(z.id, e.target.value)} onClick={(e) => e.stopPropagation()} />
-                ) : (
-                  <span>{z.label}</span>
-                )}
-              </button>
-              <button type="button" className="z3d-chip-x" onClick={() => removeZone(z.id)} aria-label={`Remove ${z.label}`}>✕</button>
+        {mode === "zones" ? (
+          <>
+            <div className="z3d-zones">
+              {list.map((z) => (
+                <div key={z.id} className={`z3d-chip${z.id === activeId ? " is-on" : ""}`}>
+                  <button type="button" className="z3d-chip-pick" onClick={() => setActiveId(z.id)}>
+                    {z.id === activeId ? (
+                      <input className="z3d-chip-input" value={z.label} onChange={(e) => renameZone(z.id, e.target.value)} onClick={(e) => e.stopPropagation()} />
+                    ) : (
+                      <span>{z.label}</span>
+                    )}
+                  </button>
+                  <button type="button" className="z3d-chip-x" onClick={() => removeZone(z.id)} aria-label={`Remove ${z.label}`}>✕</button>
+                </div>
+              ))}
+              <button type="button" className="z3d-add" onClick={addZone}>+ Add zone</button>
             </div>
-          ))}
-          <button type="button" className="z3d-add" onClick={addZone}>+ Add zone</button>
-        </div>
-
-        <div className="z3d-actions">
-          <button type="button" className="z3d-save" onClick={save} disabled={saving}>
-            {saving ? "Saving…" : "Save zones"}
-          </button>
-          {savedAt ? <span className="z3d-saved">Saved {savedAt} ✓</span> : null}
-          <span className="z3d-hint">Boxes are stored relative to the garment, so they land identically in the customer’s 3D configurator.</span>
-        </div>
+            <div className="z3d-actions">
+              <button type="button" className="z3d-save" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save zones"}</button>
+              {savedAt ? <span className="z3d-saved">Saved {savedAt} ✓</span> : null}
+              <span className="z3d-hint">Boxes are stored relative to the garment, so they land identically in the customer’s 3D configurator.</span>
+            </div>
+          </>
+        ) : (
+          <>
+            {live ? (
+              <div className="m3dcal-grid" style={{ marginTop: 16 }}>
+                <div className="m3dcal-stat"><span className="m3dcal-label">Inches / world</span><strong className="m3dcal-value">{Math.round(live.ipw * 100) / 100}</strong><span className="m3dcal-sub">the scale</span></div>
+                <div className="m3dcal-stat"><span className="m3dcal-label">Body length</span><strong className="m3dcal-value">{report?.bodyLengthIn}&Prime;</strong><span className="m3dcal-sub">HPS→hem · {report?.source}</span></div>
+                <div className="m3dcal-stat"><span className="m3dcal-label">Chest cross-check</span><strong className="m3dcal-value">{live.ratio ? `${Math.round(live.ratio * 100) / 100}×` : "—"}</strong><span className="m3dcal-sub">model {Math.round(live.impliedWidthIn * 100) / 100}″ vs spec {report?.chestWidthIn ?? "—"}″</span></div>
+              </div>
+            ) : (
+              <p className="z3d-hint" style={{ marginTop: 16 }}>{report === null ? "Loading calibration…" : "No body-length spec for this SKU — can't calibrate."}</p>
+            )}
+            <div className="z3d-actions">
+              <button type="button" className="z3d-add" onClick={autoFitHps} disabled={!report?.chestWidthIn} title="Snap HPS so chest matches spec (ratio → 1.0×)">Auto-fit HPS</button>
+              <button type="button" className="z3d-save" onClick={applyCalibration} disabled={applyingCal || !report}>{applyingCal ? "Applying…" : "Apply calibration"}</button>
+              {calSavedAt ? <span className="z3d-saved">Calibrated {calSavedAt} ✓</span> : null}
+              {live ? <span className={`m3dcal-badge ${live.conf === "high" ? "m3dcal-badge--high" : live.conf === "medium" ? "m3dcal-badge--med" : "m3dcal-badge--low"}`}>{live.conf} confidence</span> : null}
+              <span className="z3d-hint">Then switch to <b>2 · Zones</b> to place the print areas.</span>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

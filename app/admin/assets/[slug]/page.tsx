@@ -4,7 +4,6 @@ import { getProductBySlug } from "@/lib/store";
 import { listPatternFilesSigned, getModelUrl } from "@/lib/pattern-files";
 import AssetManager from "@/components/AssetManager";
 import PatternCalibration from "@/components/PatternCalibration";
-import Model3DCalibratorClient from "@/components/Model3DCalibratorClient";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +37,17 @@ export default async function AssetsPage({ params }: { params: Promise<{ slug: s
         initialModelUrl={modelUrl}
         swatches={swatches}
       />
-      <Model3DCalibratorClient slug={slug} hasModel={Boolean(modelUrl)} modelUrl={modelUrl} />
+      {modelUrl ? (
+        <div className="m3dcal">
+          <header className="m3dcal-head"><h2 className="m3dcal-title">3D Calibration &amp; Zones</h2></header>
+          <p className="m3dcal-lede">
+            Calibrate the real-inch ruler and place the print areas together on the 3D garment.
+          </p>
+          <div className="m3dcal-actions">
+            <Link className="m3dcal-btn m3dcal-btn--primary" href="/admin/zones" style={{ textDecoration: "none" }}>Open Garment Studio →</Link>
+          </div>
+        </div>
+      ) : null}
       <PatternCalibration slug={slug} hasDxf={patternFiles.some((f) => f.format === "dxf")} />
     </main>
   );

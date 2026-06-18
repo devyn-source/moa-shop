@@ -18,11 +18,11 @@ export default async function AdminZonesPage() {
       <header className="ze-page-head">
         <div>
           <p className="eyebrow">Studio</p>
-          <h1 className="page-title">Decoration Zones</h1>
+          <h1 className="page-title">Garment Studio</h1>
           <p className="lede">
-            Author every SKU&apos;s print/embroidery zones <strong>on the 3D garment</strong> — the exact space the
-            customer configures in. Boxes show real-inch sizes off the surface; saved zones override the
-            category defaults and feed straight into the configurator.
+            Calibrate and place — on one 3D garment. <strong>1 · Calibrate</strong> sets the real-inch ruler
+            (drag the HPS/hem lines or Auto-fit), then <strong>2 · Zones</strong> places the print areas. Both
+            read off the same surface and feed straight into the customer&apos;s configurator.
           </p>
         </div>
       </header>

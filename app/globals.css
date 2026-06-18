@@ -8796,6 +8796,12 @@ p { line-height: 1.65; }
 .m3dcal-guide-tag { position: absolute; left: 6px; top: -2px; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.5rem; font-weight: 700; color: #fff; background: var(--color-terracotta); padding: 2px 6px; border-radius: 3px; white-space: nowrap; pointer-events: none; }
 .m3dcal-guide-tag--hem { background: var(--color-neutral); }
 .m3dcal-readout { display: flex; flex-direction: column; gap: 0; }
+.m3dcal-guide { pointer-events: auto; }
+
+/* Garment Studio — mode tabs (Calibrate / Zones) over the shared 3D view */
+.z3d-tabset { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.z3d-modetabs .z3d-tab.is-on { background: var(--color-terracotta); color: #fff; box-shadow: none; }
+.z3d-calpanel { margin-top: 16px; }
 
 /* Ghost art handle — the conforming 3D decal shows the art, this is just the
    draggable control surface over it. */
