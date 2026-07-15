@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Html } from "@react-three/drei";
 import { PreviewBackdrop, type Placement } from "./Garment3DDecorator";
 import { Garment3DSkeleton } from "./Garment3DSkeleton";
+import { useCanvasGuard, CanvasLostOverlay } from "@/components/CanvasGuard";
 
 // The garment with the buyer's placed artwork projected onto the surface,
 // rotatable. Used on every NON-placement step (color, fabric, decoration, size)
@@ -20,10 +21,12 @@ export default function Garment3DPreview({
   artUrl: string;
   placements: Placement[];
 }) {
+  const guard = useCanvasGuard();
   return (
     <div className="g3d">
       <div className="g3d-stage">
-        <Canvas flat shadows camera={{ position: [0, 0.2, 3.2], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+        {guard.lost ? <CanvasLostOverlay onReload={guard.reload} /> : null}
+        <Canvas key={guard.key} onCreated={guard.onCreated} flat shadows camera={{ position: [0, 0.2, 3.2], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
           <color attach="background" args={["#EEEAE3"]} />
           <ambientLight intensity={0.6} />
           <hemisphereLight args={["#ffffff", "#d8d2c8", 0.3]} />

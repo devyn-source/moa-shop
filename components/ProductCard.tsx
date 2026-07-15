@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ProductShot } from "./ProductShot";
+import { WishlistHeart } from "./WishlistHeart";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import type { CatalogProduct } from "@/lib/types";
 
@@ -69,6 +70,8 @@ export function ProductCard({
         ) : (
           <ProductShot product={product} variant={heroVariant} view="front" />
         )}
+        {/* tiny client island — the card itself stays server-rendered */}
+        <WishlistHeart slug={product.slug} productName={product.displayName} />
         <span className="visual-meta">{product.category}</span>
       </div>
       <div className="card-body">

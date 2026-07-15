@@ -386,11 +386,13 @@ export async function sendPaymentIncomplete(
 }
 
 // Internal ops notification (e.g. a customer requested changes) — to the MOA
-// catalog ops inbox, via the same accounting/production sender + channel.
+// catalog ops inbox by default, via the same accounting/production sender +
+// channel. `to` overrides the recipient for notifications that route to a
+// specific person (e.g. invoice/PO requests → Devyn).
 const OPS_EMAIL = process.env.CATALOG_OPS_EMAIL || "production@magnumopus.agency";
-export async function notifyOps(subject: string, html: string): Promise<void> {
+export async function notifyOps(subject: string, html: string, to: string = OPS_EMAIL): Promise<void> {
   try {
-    await deliver(OPS_EMAIL, subject, html);
+    await deliver(to, subject, html);
   } catch {
     /* best-effort */
   }

@@ -64,6 +64,21 @@ export const sampleRequestSchema = z.object({
   notes: z.string().max(2000).optional()
 });
 
+// /api/wishlist POST — heart toggle (Clerk-authed; slug is re-checked against
+// the catalog in the handler).
+export const wishlistToggleSchema = z.object({
+  slug: z.string().min(1).max(128)
+});
+
+// /api/invoice-request — "pay by invoice / PO" hand-raise from checkout
+// (rate-limited + bounded; creates a lead, never touches Stripe or the cart).
+export const invoiceRequestSchema = z.object({
+  companyName: z.string().min(1).max(160),
+  workEmail: z.string().email().max(254),
+  poNumber: z.string().max(64).optional(),
+  note: z.string().max(2000).optional()
+});
+
 // /api/orders/[id]/update — self-serve edit patch. Only these fields may change.
 export const orderUpdateSchema = z.object({
   variantId: z.string().min(1).optional(),

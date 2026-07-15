@@ -2,9 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { getOrdersByEmail, getProducts, statusLabel, bundleStatus } from "@/lib/store";
+import { listSharedConfigsByEmail } from "@/lib/shared-config";
+import { listWishlistSlugs } from "@/lib/wishlist";
 import { currency } from "@/lib/pricing";
 import { ReorderButton } from "@/components/ReorderButton";
 import { ReorderBundleButton } from "@/components/ReorderBundleButton";
+import { ProductCard } from "@/components/ProductCard";
 import { reorderFrom } from "@/lib/reorder";
 import type { ShopOrder } from "@/lib/types";
 import type { CartItem } from "@/components/CartProvider";
@@ -36,9 +39,19 @@ export default async function OrdersPage() {
     redirect("/sign-in");
   }
 
-  const [orders, products] = await Promise.all([getOrdersByEmail(email), getProducts({ includeDrafts: true })]);
+  const [orders, products, savedDesigns, wishlistSlugs] = await Promise.all([
+    getOrdersByEmail(email),
+    getProducts({ includeDrafts: true }),
+    listSharedConfigsByEmail(email),
+    listWishlistSlugs(email)
+  ]);
   const nameById = new Map(products.map((p) => [p.id, p.displayName]));
   const productById = new Map(products.map((p) => [p.id, p]));
+  const productBySlug = new Map(products.map((p) => [p.slug, p]));
+  // Wishlist cards link to PDPs — only published products get a card.
+  const wishlistProducts = wishlistSlugs
+    .map((slug) => productBySlug.get(slug))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p && p.isPublished));
 
   return (
     <main className="page">
@@ -117,6 +130,56 @@ export default async function OrdersPage() {
           })}
         </div>
       )}
+
+      {/* Saved designs — shared configs + wishlist hearts, quiet, below orders. */}
+      <section className="sd-section" aria-label="Saved designs">
+        <h2 className="sd-title">Saved designs</h2>
+        {savedDesigns.length === 0 && wishlistProducts.length === 0 ? (
+          <p className="sd-empty">
+            Nothing saved yet — designs you share and products you heart land here.{" "}
+            <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the catalog →</Link>
+          </p>
+        ) : (
+          <>
+            {savedDesigns.length > 0 ? (
+              <div className="sd-list">
+                {savedDesigns.map((d) => {
+                  const product = productBySlug.get(d.slug);
+                  const variantId = typeof d.config.variantId === "string" ? d.config.variantId : null;
+                  const variant = variantId ? product?.variants.find((v) => v.id === variantId) : undefined;
+                  return (
+                    <div key={d.id} className="sd-card">
+                      <div>
+                        <p className="sd-name">{product?.displayName ?? "Catalog product"}</p>
+                        <p className="sd-meta">
+                          {variant ? (
+                            <>
+                              <span className="sd-chip" style={{ background: variant.colorHex }} aria-hidden />
+                              {variant.colorLabel} ·{" "}
+                            </>
+                          ) : null}
+                          {new Date(d.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Link href={`/c/${d.id}`} className="sd-resume">Resume →</Link>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+            {wishlistProducts.length > 0 ? (
+              <div className="sd-group">
+                <p className="sd-group-label">Wishlist</p>
+                <div className="sd-wish-grid">
+                  {wishlistProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
+      </section>
     </main>
   );
 }

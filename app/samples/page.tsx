@@ -16,7 +16,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function SamplesPage() {
+export default async function SamplesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ sku?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
   const products = await getProducts().catch(() => []);
   const options = products
     .filter((p) => p.isPublished)
@@ -33,7 +38,10 @@ export default async function SamplesPage() {
           screen print, embroidery and woven labels. No sales call required.
         </p>
       </header>
-      <SampleKitForm options={options} />
+      <SampleKitForm
+        options={options}
+        initialSelected={options.some((o) => o.slug === params.sku) ? [params.sku as string] : undefined}
+      />
     </main>
   );
 }

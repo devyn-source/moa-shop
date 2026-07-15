@@ -5887,6 +5887,98 @@ a.stat-card:hover {
 }
 .pdpx-share-link:hover { background: var(--color-terracotta); color: #fff; }
 
+/* Final-price assurance + sample hand-raise under the subtotal (quiet, no chrome) */
+.pdpx-final-price-note {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-neutral);
+  line-height: 1.45;
+}
+.pdpx-sample-link {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-neutral);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 150ms ease;
+}
+.pdpx-sample-link:hover { color: var(--color-terracotta); }
+/* WebGL context-loss recovery overlay (CanvasGuard) */
+.g3d-lost {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--color-cream);
+}
+.g3d-lost-msg {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-neutral);
+}
+.g3d-lost-btn {
+  padding: 11px 22px;
+  background: transparent;
+  border: 1.5px solid var(--color-terracotta);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+}
+.g3d-lost-btn:hover { background: var(--color-terracotta); color: #fff; }
+
+.pdpx-delivered { display: block; }
+.pdpx-delivered span.pdpx-delivered-est {
+  display: inline;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: var(--color-neutral);
+  font-weight: 500;
+}
+
+/* PDP trust strip — static, muted, calm (marquee stays landing-only) */
+.pdp-trust-logos {
+  margin: 56px auto 8px;
+  max-width: 860px;
+  text-align: center;
+}
+.pdp-trust-logos-label {
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+}
+.pdp-trust-logos-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 28px 44px;
+}
+.pdp-trust-logos-row img {
+  width: auto;
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+@media (max-width: 640px) {
+  .pdp-trust-logos-row { gap: 18px 26px; }
+  .pdp-trust-logos-row img { transform: scale(0.85); }
+}
+
 /* Woven-label upsell trigger */
 .pdpx-woven {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -7219,6 +7311,13 @@ body.is-scrolled .site-header {
 /* Sized garment box inside the proof stage so the chest logo positions against
    the garment (not the whole panel). Only the shot is 84% — not the tag. */
 .lp-proof-shot { position: relative; width: 82%; aspect-ratio: 4 / 5; display: flex; align-items: center; justify-content: center; }
+.lp-proof-shot--capture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
 .lp-proof-shot .recolor-shot, .lp-proof-shot .product-photo, .lp-proof-shot .product-visual { width: 100%; height: 100%; object-fit: contain; }
 /* Realistic chest print — the MOA mask rendered in light thread on the garment. */
 .lp-proof-logo {
@@ -8570,3 +8669,198 @@ p { line-height: 1.65; }
   .skel,
   .g3d-skel-shape { animation: none; opacity: 0.8; }
 }
+
+/* ============================================================================
+   Wishlist heart (ProductCard) — tiny client island, top-right of the image
+   area. Neutral outline at rest, terracotta when saved; absolutely positioned
+   so it never shifts card layout.
+   ============================================================================ */
+
+.wish-heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--color-neutral);
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease, transform 140ms var(--ease-out);
+}
+.wish-heart svg { display: block; }
+.wish-heart:hover { color: var(--color-charcoal); border-color: var(--color-neutral); }
+.wish-heart:active { transform: scale(0.92); }
+.wish-heart.is-saved { color: var(--color-terracotta); border-color: rgba(176, 71, 49, 0.35); }
+.wish-heart.is-saved:hover { color: var(--color-terracotta); }
+
+/* ============================================================================
+   Saved designs (/orders) — quiet section below the orders list: shared
+   configurations ("Resume →" to /c/<id>) + a Wishlist row group of product
+   cards. Mirrors the .ol-* orders-list proportions.
+   ============================================================================ */
+
+.sd-section { margin-top: 44px; max-width: 760px; }
+.sd-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+  margin: 0;
+}
+.sd-empty { margin-top: 10px; font-size: 0.85rem; color: var(--color-neutral); }
+.sd-list { margin-top: 14px; display: grid; gap: 10px; }
+.sd-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  transition: box-shadow var(--dur) var(--ease-out);
+}
+.sd-card:hover { box-shadow: 0 10px 30px rgba(30, 30, 30, 0.06); }
+.sd-name {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  color: var(--color-charcoal);
+  margin: 0;
+}
+.sd-meta { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--color-neutral); margin: 4px 0 0; }
+.sd-chip { display: inline-block; width: 12px; height: 12px; border-radius: 4px; border: 1px solid rgba(30, 30, 30, 0.15); }
+.sd-resume {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-terracotta);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sd-resume:hover { color: #8a3826; }
+.sd-group { margin-top: 22px; }
+.sd-group-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--color-neutral);
+  margin: 0 0 10px;
+}
+.sd-wish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
+/* ============================================================================
+   Invoice/PO request (checkout) — quiet trust-note link opening a premium-form
+   popover ANCHORED to the link (never page-center): warm cream surface,
+   borderless inputs with an inset ring, terracotta accents. Structure follows
+   the WovenLabelModal pattern (Escape, focus return, click-away).
+   ============================================================================ */
+
+.ir-anchor { position: relative; display: block; }
+.ir-trigger {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-terracotta);
+  font-weight: 600;
+}
+.ir-trigger:hover { text-decoration: underline; }
+.ir-clickaway { position: fixed; inset: 0; z-index: 90; background: transparent; }
+.ir-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 95;
+  width: min(340px, calc(100vw - 48px));
+  padding: 18px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px -24px rgba(30, 30, 30, 0.45);
+  text-align: left;
+  outline: none;
+}
+.ir-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.ir-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+  margin: 0;
+}
+.ir-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+  margin: 4px 0 0;
+}
+.ir-x { background: none; border: 0; padding: 2px; font-size: 0.95rem; color: var(--color-neutral); cursor: pointer; }
+.ir-field { display: block; margin-bottom: 11px; }
+.ir-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+  margin-bottom: 5px;
+}
+.ir-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-charcoal);
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.ir-input:focus { box-shadow: inset 0 0 0 1.5px var(--color-terracotta); }
+.ir-textarea { resize: vertical; min-height: 64px; }
+.ir-error { margin: 2px 0 10px; font-size: 0.75rem; color: var(--color-danger); }
+.ir-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.ir-hint { font-size: 0.66rem; line-height: 1.4; color: var(--color-neutral); }
+.ir-send {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-terracotta);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.ir-send:hover { background: #8a3826; }
+.ir-send:disabled { opacity: 0.6; cursor: default; }
+.ir-done { margin: 4px 0 2px; font-size: 0.85rem; line-height: 1.5; color: var(--color-success); }

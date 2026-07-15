@@ -12,7 +12,7 @@ import Garment3DDecoratorClient from "./Garment3DDecoratorClient";
 import Garment3DPreviewClient from "./Garment3DPreviewClient";
 import type { StudioCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
-import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
+import { currency, formatLeadTime, formatDeliveredBy, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
@@ -1302,7 +1302,10 @@ export function PdpConfigurator({
           <span className="pdpx-bespoke-link">Inquire now →</span>
         </a>
 
-        <p className="pdpx-delivered">Delivered in {formatLeadTime(product.leadTimeDays)}</p>
+        <p className="pdpx-delivered">
+          Delivered by {formatDeliveredBy(product.leadTimeDays)}
+          <span className="pdpx-delivered-est"> · {formatLeadTime(product.leadTimeDays)} from today, est.</span>
+        </p>
 
         {/* Woven-label upsell — garments only (boxes/packaging don't take labels) */}
         {!isPackaging ? (
@@ -1363,6 +1366,10 @@ export function PdpConfigurator({
             <span className="pdpx-from">Subtotal</span>
             <strong className="pdpx-total">{currency(subtotal)}</strong>
           </div>
+          <p className="pdpx-final-price-note">
+            This is your final price — decoration, placements and labels included. No quote,
+            no revised invoice later.
+          </p>
           {printDpi != null && (lowRes || blockRes) ? (
             <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 600 }}>
               {blockRes
@@ -1400,6 +1407,11 @@ export function PdpConfigurator({
             <button type="button" className="pdpx-share-link" onClick={handleShare}>
               {shareMsg ?? "Share this configuration ↗"}
             </button>
+          ) : null}
+          {!editOrder && !bundle && !isPackaging ? (
+            <a className="pdpx-sample-link" href={`/samples?sku=${product.slug}`}>
+              Not sure yet? Order a sample first →
+            </a>
           ) : null}
         </div>
       </aside>

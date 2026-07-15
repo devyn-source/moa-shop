@@ -8,6 +8,7 @@ import { DecalGeometry } from "three-stdlib";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
 import { Garment3DSkeleton } from "./Garment3DSkeleton";
 import { STUDIO_FIT_UNITS, model3dPlacement, type Model3DCalibration, type Model3DHit, type Model3DPlacement } from "@/lib/zones";
+import { useCanvasGuard, CanvasLostOverlay } from "@/components/CanvasGuard";
 
 // MOA Studio — places artwork on the 3D garment as a CONFORMING, LIT decal that
 // wraps the surface and shades with the fabric, so the preview reads as real ink
@@ -287,6 +288,7 @@ export default function Garment3DDecorator({
   initialPlacements?: Placement[];
   onChange?: (c: StudioCapture[]) => void;
 }) {
+  const guard = useCanvasGuard();
   const frontList = zones.length ? zones : [{ id: "full-front", label: "Full front", box: { x: 0.3, y: 0.34, w: 0.4, h: 0.34 } }];
   const backList = backZones.length ? backZones : [{ id: "center-back", label: "Center back", box: { x: 0.3, y: 0.3, w: 0.4, h: 0.34 } }];
 
@@ -335,7 +337,8 @@ export default function Garment3DDecorator({
   return (
     <div className="studio3dx">
       <div className="studio3dx-stage">
-        <Canvas flat shadows camera={{ position: [0, 0.2, 3.2], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+        {guard.lost ? <CanvasLostOverlay onReload={guard.reload} /> : null}
+        <Canvas key={guard.key} onCreated={guard.onCreated} flat shadows camera={{ position: [0, 0.2, 3.2], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
           <color attach="background" args={["#EEEAE3"]} />
           <ambientLight intensity={0.6} />
           <hemisphereLight args={["#ffffff", "#d8d2c8", 0.3]} />

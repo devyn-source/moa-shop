@@ -137,6 +137,31 @@ export default async function ProductPage({
         </Link>
       ) : null}
 
+      <section className="pdp-trust-logos" aria-label="Brands MOA has produced merch for">
+        <p className="pdp-trust-logos-label">The studio behind merch for</p>
+        <div className="pdp-trust-logos-row">
+          {(
+            [
+              ["nike", "Nike", 22],
+              ["burberry", "Burberry", 16],
+              ["ralph-lauren", "Ralph Lauren", 26],
+              ["google", "Google", 20],
+              ["canva", "Canva", 18],
+              ["activision", "Activision", 16],
+            ] as const
+          ).map(([slug, name, h]) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={slug}
+              src={`/brand/clients/${slug}.png`}
+              alt={name}
+              loading="lazy"
+              style={{ height: `${h}px` }}
+            />
+          ))}
+        </div>
+      </section>
+
       <CaseStudies slug={product.slug} />
     </main>
   );

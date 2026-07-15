@@ -26,7 +26,8 @@ const limiters = {
   upload: make(40, "1 h", "rl:upload"),
   approve: make(20, "1 h", "rl:approve"),
   update: make(20, "1 h", "rl:update"),
-  samples: make(5, "1 h", "rl:samples")
+  samples: make(5, "1 h", "rl:samples"),
+  invoice: make(5, "1 h", "rl:invoice")
 };
 
 export function clientIp(req: Request): string {

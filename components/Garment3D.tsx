@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Center, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Garment3DSkeleton } from "./Garment3DSkeleton";
+import { useCanvasGuard, CanvasLostOverlay } from "@/components/CanvasGuard";
 
 // Porsche-style garment viewer: a single hero stage, studio light on cream,
 // orbit + zoom, and live recolor across the MOA palette. Loads /models/<slug>.glb
@@ -94,6 +95,7 @@ export default function Garment3D({
   const [hex, setHex] = useState(hexProp ?? swatches[0]?.hex ?? "#2D2C2F");
   const [active, setActive] = useState(swatches[0]?.label ?? "");
   const wrap = useRef<HTMLDivElement>(null);
+  const guard = useCanvasGuard();
 
   // Follow the controlled color when the parent changes it.
   useEffect(() => {
@@ -104,11 +106,12 @@ export default function Garment3D({
   return (
     <div className="g3d" ref={wrap}>
       <div className="g3d-stage">
+        {guard.lost ? <CanvasLostOverlay onReload={guard.reload} /> : null}
         {/* `flat` = NoToneMapping: render the brand sRGB color faithfully instead
             of ACES-filmic shifting it off the Pantone target. A brighter key over
             dimmer ambient/fill gives natural form contrast (soft studio look);
             the matte material means that contrast is diffuse shading, not shine. */}
-        <Canvas flat shadows camera={{ position: [0, 0.2, 3.4], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+        <Canvas key={guard.key} onCreated={guard.onCreated} flat shadows camera={{ position: [0, 0.2, 3.4], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
           <color attach="background" args={["#EEEAE3"]} />
           <ambientLight intensity={0.6} />
           <hemisphereLight args={["#ffffff", "#d8d2c8", 0.3]} />

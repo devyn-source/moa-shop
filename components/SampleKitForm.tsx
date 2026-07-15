@@ -5,8 +5,14 @@ import { analytics } from "@/lib/analytics";
 
 // Sample-kit request form (premium-form thesis: borderless inputs, terracotta
 // accent, no quote-wall friction — just enough to qualify and ship).
-export function SampleKitForm({ options }: { options: { slug: string; name: string }[] }) {
-  const [selected, setSelected] = useState<string[]>([]);
+export function SampleKitForm({
+  options,
+  initialSelected,
+}: {
+  options: { slug: string; name: string }[];
+  initialSelected?: string[];
+}) {
+  const [selected, setSelected] = useState<string[]>(initialSelected ?? []);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");

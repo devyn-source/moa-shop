@@ -6,6 +6,7 @@ import { useCart } from "@/components/CartProvider";
 import { analytics } from "@/lib/analytics";
 import { currency } from "@/lib/pricing";
 import { BrandSelect } from "@/components/BrandSelect";
+import { InvoiceRequestDialog } from "@/components/InvoiceRequestDialog";
 import { useUser } from "@clerk/nextjs";
 
 // Clerk is mounted only when configured (app/layout.tsx MaybeClerk). On envs
@@ -262,6 +263,9 @@ export default function CheckoutPage() {
                 Email a real person →
               </a>
             </p>
+            {/* Invoice/PO hand-raise lane — a lead, not a payment path. Never
+                touches the Stripe flow or cart state. */}
+            <InvoiceRequestDialog prefillEmail={accountEmail ?? f.contactEmail} />
           </div>
         </aside>
       </div>

@@ -18,6 +18,14 @@ export function formatLeadTime(days: number): string {
   return `${weeks} weeks`;
 }
 
+// Concrete date beats a range: "Delivered by Sep 8" reads as a promise a buyer
+// can plan around (lead times are delivered-to-door already). Always label it
+// an estimate where shown.
+export function formatDeliveredBy(days: number, from: Date = new Date()): string {
+  const eta = new Date(from.getTime() + days * 24 * 60 * 60 * 1000);
+  return eta.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export function getPriceTier(product: CatalogProduct, quantity: number): PriceTier {
   const tier = product.priceTiers.find((item) => {
     const aboveMin = quantity >= item.minQty;

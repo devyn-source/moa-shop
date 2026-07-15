@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { getProducts } from "@/lib/store";
@@ -246,12 +247,18 @@ export default async function LandingPage() {
           <Link className="lp-btn lp-btn--primary" href="#shop">Try it on a product →</Link>
         </div>
         <div className="lp-proof-stage" data-reveal style={stagger(1)}>
-          <div className="lp-proof-shot">
-            {hero ? <ProductShot product={hero} variant={heroVariant(hero)} view="front" /> : null}
-            {/* a real logo printed on the chest — what an approved proof looks like */}
-            <span className="lp-proof-logo" aria-hidden />
+          <div className="lp-proof-shot lp-proof-shot--capture">
+            {/* A real frame from the configurator: artwork placed on the 3D
+                garment with the live inch + print-QA readout. Not a mockup. */}
+            <Image
+              src="/landing/studio-live.webp"
+              alt="The MOA configurator: artwork placed on a 3D garment, reading 4 inches wide, 3.5 inches below HPS, print-ready at 526 DPI"
+              width={858}
+              height={1072}
+              sizes="(max-width: 900px) 92vw, 480px"
+            />
           </div>
-          <span className="lp-proof-tag">Live preview</span>
+          <span className="lp-proof-tag">Captured live from the configurator</span>
         </div>
       </section>
 
