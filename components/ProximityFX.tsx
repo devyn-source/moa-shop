@@ -10,6 +10,7 @@ const SELECTOR = ".product-card";
 export function ProximityFX() {
   useEffect(() => {
     if (window.matchMedia("(pointer: coarse)").matches) return; // skip touch
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; // respect reduced motion
 
     let x = 0;
     let y = 0;

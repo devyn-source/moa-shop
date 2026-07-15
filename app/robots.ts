@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 const BASE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
-const DISALLOW = ["/admin", "/api/", "/adjust/", "/orders", "/cart", "/checkout", "/sign-in", "/login", "/studio-3d", "/studio-decal", "/render-model", "/c/"];
+const DISALLOW = ["/admin", "/api/", "/adjust/", "/orders", "/cart", "/checkout", "/sign-in", "/sign-up", "/studio", "/studio-3d", "/studio-decal", "/render-model", "/c/"];
 // AI answer-engine crawlers — explicitly welcomed so MOA can be read + cited
 // in ChatGPT, Perplexity, Google AI Overviews, Claude, Gemini, etc. (GEO).
 const AI_BOTS = [

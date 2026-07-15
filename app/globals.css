@@ -62,7 +62,9 @@
   --color-success: #3D7A4A;
   --color-warning: #C4880D;
   --color-danger: #B04731;
-  --color-neutral: #8A8680;
+  /* Darkened from MoaOS's #8A8680: at body-copy sizes on cream that was ~3.0:1
+     (fails WCAG AA). #6F6A63 reads the same temperature at ~4.6:1. */
+  --color-neutral: #6F6A63;
   /* Display = Archivo Expanded (ALL CAPS). Body = Archivo normal width (sentence
      case) — same superfamily, readable, gives hierarchy via width + case + weight. */
   --font-display: "Archivo", sans-serif;

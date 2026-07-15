@@ -3,13 +3,28 @@ import { getProducts } from "@/lib/store";
 import { listModelThumbs } from "@/lib/pattern-files";
 import { isBundleEligible } from "@/lib/seed";
 import { bundleStartingPriceUsd } from "@/lib/pricing";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Shop the Catalog — Production-Grade Custom Merch | MOA Catalog",
+  description:
+    "Browse production-grade blanks — tees, hoodies, outerwear, headwear, totes and PR boxes. Configure color, fabric and decoration, see your price instantly, and order with no quotes and no sales calls.",
+  alternates: { canonical: "/shop" },
+  openGraph: {
+    title: "Shop the MOA Catalog — production-grade custom merch, made to order",
+    description:
+      "Configure a premium blank, upload your artwork, approve an instant proof. Transparent per-unit pricing, MOQ 50.",
+  },
+};
 
 export default async function HomePage() {
-  const products = await getProducts();
-  const modelThumbs = await listModelThumbs();
   // Packaging assets are hidden (unpublished), so read the full catalog to price
   // the PR Box card's "from $X/box".
-  const all = await getProducts({ includeDrafts: true });
+  const [products, modelThumbs, all] = await Promise.all([
+    getProducts(),
+    listModelThumbs(),
+    getProducts({ includeDrafts: true }),
+  ]);
   const bundleStartFromUsd = bundleStartingPriceUsd(
     all.filter(isBundleEligible),
     all.filter((p) => p.category === "packaging")

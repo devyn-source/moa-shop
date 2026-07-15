@@ -38,13 +38,13 @@ export async function GET() {
 ## How it works
 1. Choose a garment style and colorway.
 2. Build your size run above the style's minimum order.
-3. Upload your artwork, choose a decoration method (screen printing or embroidery), and select Pantone ink colors.
+3. Upload your artwork, choose a decoration method (screen printing, embroidery, or rubber appliqué), and select Pantone ink colors.
 4. Place the print exactly where you want it and pay securely via Stripe.
 5. Receive an instant proof and a decoration spec sheet. Adjust placement, color, artwork, or sizes yourself and regenerate — nothing is produced until you approve.
 6. MOA manufactures your order to spec and ships it with carrier tracking.
 
 ## Key facts
-- Decoration methods: screen printing (plastisol) and embroidery.
+- Decoration methods: screen printing (plastisol), embroidery, and rubber appliqué; woven labels available as an add-on.
 - Pricing: fixed quantity-based price ladders per style; business-to-business.
 - Lead time: typically from ${minLead ?? "about 30"} days, depending on the style and run.
 - Every order includes automated artwork quality checks and a customer-approved proof before production.

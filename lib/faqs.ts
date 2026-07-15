@@ -49,7 +49,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "What decoration methods are available?",
-        a: "Screen printing (plastisol) and embroidery, with Pantone ink color selection. Every order goes through automated artwork quality checks and a customer-approved proof before production.",
+        a: "Screen printing (plastisol), embroidery, and rubber appliqué, with Pantone ink color selection — plus woven labels sewn in as an add-on. Every order goes through automated artwork quality checks and a customer-approved proof before production.",
       },
     ],
   },
