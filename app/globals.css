@@ -7714,6 +7714,13 @@ body.is-scrolled .site-header {
    Landing page — v2 refinements (luxury / high-conversion)
    ============================================================ */
 
+/* Page enter — CSS-only so it can never stall mid-fade (see app/template.tsx). */
+@keyframes page-enter-fade { from { opacity: 0; } to { opacity: 1; } }
+.page-enter { animation: page-enter-fade 300ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .page-enter { animation: none; }
+}
+
 /* Scroll-reveal motion (one client island toggles .lp-in).
    Hiding is gated on html.lp-motion, added by ScrollReveal at runtime —
    before hydration (or with JS off) every section paints visible, so the

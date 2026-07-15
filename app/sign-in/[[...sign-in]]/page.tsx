@@ -1,32 +1,9 @@
 import { SignIn } from "@clerk/nextjs";
+import { moaClerkAppearance } from "@/lib/clerk-appearance";
 
 export const dynamic = "force-dynamic";
 
-// MOA brand appearance for Clerk — terracotta primary, Archivo, warm linen card.
-const moaAppearance = {
-  variables: {
-    colorPrimary: "#B04731",
-    colorText: "#1E1E1E",
-    colorTextSecondary: "#8A8680",
-    colorBackground: "#FFFFFF",
-    colorInputBackground: "#FFFFFF",
-    colorInputText: "#1E1E1E",
-    colorDanger: "#B04731",
-    borderRadius: "0.6rem",
-    fontFamily: "Archivo, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontSize: "0.95rem",
-  },
-  elements: {
-    rootBox: "moa-clerk-root",
-    card: "moa-clerk-card",
-    headerTitle: "moa-clerk-title",
-    headerSubtitle: "moa-clerk-subtitle",
-    socialButtonsBlockButton: "moa-clerk-social",
-    formButtonPrimary: "moa-clerk-primary",
-    formFieldInput: "moa-clerk-input",
-    footerActionLink: "moa-clerk-link",
-  },
-} as const;
+export const metadata = { title: "Sign in · MOA Catalog" };
 
 export default function SignInPage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -45,11 +22,11 @@ export default function SignInPage() {
         <div className="signin-brand">
           <span className="signin-wordmark">MOA</span>
           <span className="signin-rule" aria-hidden />
-          <p className="signin-eyebrow">MOA Catalog · Operator Console</p>
+          <p className="signin-eyebrow">MOA Catalog · Your account</p>
           <h1 className="signin-headline">Sign in to continue</h1>
-          <p className="signin-sub">Back-office access for the standardized MOA Catalog.</p>
+          <p className="signin-sub">Track orders, approve proofs, and pick up saved designs.</p>
         </div>
-        <SignIn appearance={moaAppearance} signUpUrl="/sign-up" fallbackRedirectUrl="/admin" />
+        <SignIn appearance={moaClerkAppearance} signUpUrl="/sign-up" fallbackRedirectUrl="/orders" />
       </div>
     </main>
   );
