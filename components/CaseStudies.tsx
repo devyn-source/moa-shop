@@ -7,7 +7,10 @@ import { caseStudiesFor } from "@/lib/case-studies";
 // omit it for the full diverse grid. Each card links into the configurator for
 // that style ("Make yours →").
 export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string }) {
-  const { items, styleSpecific } = caseStudiesFor(slug);
+  const { items: allItems, styleSpecific } = caseStudiesFor(slug);
+  // Landing shows the full grid in a 3-up layout: trim to a full row so the
+  // last row never strands a single orphan card next to a viewport of blank.
+  const items = !styleSpecific && allItems.length > 3 ? allItems.slice(0, allItems.length - (allItems.length % 3)) : allItems;
   if (!items.length) return null;
   const heading = styleSpecific ? "This style, in the wild" : "Merch we've put into the world";
   return (

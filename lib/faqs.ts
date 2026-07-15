@@ -32,7 +32,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "How do I pay?",
-        a: "Securely by card at checkout, powered by Stripe. You pay when you place the order, then receive your proof to approve. Nothing goes into production until you approve that proof.",
+        a: "Securely by card at checkout, powered by Stripe. You pay when you place the order, then receive your proof to approve. Nothing goes into production until you approve that proof. Need to pay by invoice or PO instead? There's a request link at checkout — a real person replies within one business day.",
       },
       {
         q: "What artwork files can I upload?",
