@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCart, type CartItem } from "@/components/CartProvider";
@@ -17,7 +18,7 @@ function SingleLine({ item, onRemove }: { item: CartItem; onRemove: (id: string)
       <Link href={`/p/${item.slug}`} className="cart-thumb" aria-label={`Reconfigure ${item.displayName}`}>
         {item.image ? (
           <>
-            <img className="cart-thumb-base" src={item.image} alt="" loading="lazy" />
+            <Image className="cart-thumb-base" src={item.image} alt="" width={1600} height={2000} sizes="110px" />
             {item.colorHex ? (
               <span
                 className="cart-thumb-tint"

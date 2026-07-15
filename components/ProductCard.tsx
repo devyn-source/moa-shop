@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ProductShot } from "./ProductShot";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import type { CatalogProduct } from "@/lib/types";
@@ -64,7 +65,7 @@ export function ProductCard({
       {featured ? <span className="card-ribbon">Featured</span> : null}
       <div className={`visual-frame${isPhoto || modelThumbUrl ? " visual-frame--photo" : ""}`}>
         {modelThumbUrl ? (
-          <img className="product-photo" src={modelThumbUrl} alt={product.displayName} loading="lazy" />
+          <Image className="product-photo" src={modelThumbUrl} alt={product.displayName} width={1600} height={2000} sizes="(max-width: 768px) 90vw, 400px" />
         ) : (
           <ProductShot product={product} variant={heroVariant} view="front" />
         )}

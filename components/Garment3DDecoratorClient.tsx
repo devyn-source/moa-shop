@@ -3,10 +3,11 @@
 import dynamic from "next/dynamic";
 import type { Model3DCalibration } from "@/lib/zones";
 import type { StudioCapture, Zone, Placement } from "./Garment3DDecorator";
+import { Garment3DSkeleton } from "./Garment3DSkeleton";
 
 const Garment3DDecorator = dynamic(() => import("./Garment3DDecorator"), {
   ssr: false,
-  loading: () => <div className="g3d-loading">Preparing 3D…</div>,
+  loading: () => <Garment3DSkeleton />,
 });
 
 export default function Garment3DDecoratorClient(props: {

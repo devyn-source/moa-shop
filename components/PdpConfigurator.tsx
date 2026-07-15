@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
@@ -849,11 +850,12 @@ export function PdpConfigurator({
             <div className={`pdpx-canvas-breathe${idle ? " is-breathing" : ""}`}>
               <span className="pdpx-ground-shadow" aria-hidden />
               <span className={`pdpx-view-layer${view === "front" ? " is-on" : ""}`}>
-                <ProductShot product={product} variant={variant} view="front" />
+                {/* The PDP's LCP — the initial front stage shot loads eagerly. */}
+                <ProductShot product={product} variant={variant} view="front" priority sizes="(max-width: 900px) 92vw, 700px" />
               </span>
               {hasBack ? (
                 <span className={`pdpx-view-layer${view === "back" ? " is-on" : ""}`}>
-                  <ProductShot product={product} variant={variant} view="back" />
+                  <ProductShot product={product} variant={variant} view="back" sizes="(max-width: 900px) 92vw, 700px" />
                 </span>
               ) : null}
               {/* Saved placements on this view — static (the editor above is the
@@ -963,7 +965,7 @@ export function PdpConfigurator({
                             style={{ background: v.colorHex }}
                             data-label={v.colorLabel}
                             aria-label={v.colorLabel}
-                            onClick={() => setVariantId(v.id)}
+                            onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); }}
                           />
                         ))}
                         {(() => {
@@ -1014,15 +1016,16 @@ export function PdpConfigurator({
                               key={d.id}
                               type="button"
                               className={`pdpx-deco${on ? " is-on" : ""}`}
-                              onClick={() =>
+                              onClick={() => {
+                                if (!on) analytics.decorationSelected({ slug: product.slug, method: d.label });
                                 setDecorationIds((prev) =>
                                   on ? prev.filter((x) => x !== d.id) : [...prev, d.id]
-                                )
-                              }
+                                );
+                              }}
                             >
                               {METHOD_MEDIA[d.id] ? (
                                 <span className="pdpx-deco-shot">
-                                  <img src={METHOD_MEDIA[d.id]!.image} alt="" loading="lazy" />
+                                  <Image src={METHOD_MEDIA[d.id]!.image} alt="" width={800} height={800} sizes="96px" />
                                 </span>
                               ) : null}
                               <span className="pdpx-deco-text">

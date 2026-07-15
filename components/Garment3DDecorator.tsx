@@ -6,6 +6,7 @@ import { OrbitControls, ContactShadows, useGLTF, useTexture, Html } from "@react
 import * as THREE from "three";
 import { DecalGeometry } from "three-stdlib";
 import { DraggableArt, type ArtTransform } from "./DraggableArt";
+import { Garment3DSkeleton } from "./Garment3DSkeleton";
 import { STUDIO_FIT_UNITS, model3dPlacement, type Model3DCalibration, type Model3DHit, type Model3DPlacement } from "@/lib/zones";
 
 // MOA Studio — places artwork on the 3D garment as a CONFORMING, LIT decal that
@@ -340,7 +341,7 @@ export default function Garment3DDecorator({
           <hemisphereLight args={["#ffffff", "#d8d2c8", 0.3]} />
           <directionalLight position={[3, 5, 4]} intensity={0.95} castShadow shadow-mapSize={[2048, 2048]} />
           <directionalLight position={[-4, 2, -2]} intensity={0.3} />
-          <Suspense fallback={<Html center>Loading…</Html>}>
+          <Suspense fallback={<Html center><Garment3DSkeleton inCanvas /></Html>}>
             {preview ? (
               <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} />
             ) : (

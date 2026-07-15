@@ -58,6 +58,15 @@ export function WovenLabelModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Focus the dialog on open; return focus to the trigger element on close.
+  const modalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    modalRef.current?.focus();
+    return () => trigger?.focus();
+  }, [open]);
+
   const handleLogo = async (file: File | undefined | null) => {
     if (!file) return;
     setUploading(true);
@@ -83,7 +92,7 @@ export function WovenLabelModal({
 
   return (
     <div className="wl-overlay" onClick={onClose}>
-      <div className="wl-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Design woven label">
+      <div ref={modalRef} tabIndex={-1} className="wl-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Design woven label">
         <div className="wl-head">
           <div>
             <p className="wl-eyebrow">Woven label</p>

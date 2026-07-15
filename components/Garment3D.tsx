@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Center, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { Garment3DSkeleton } from "./Garment3DSkeleton";
 
 // Porsche-style garment viewer: a single hero stage, studio light on cream,
 // orbit + zoom, and live recolor across the MOA palette. Loads /models/<slug>.glb
@@ -64,7 +65,13 @@ function Model({ url, hex, fit = 1.55 }: { url: string; hex: string; fit?: numbe
 }
 
 function Loader() {
-  return <Html center><div style={{ font: "600 0.7rem/1 system-ui", letterSpacing: "0.14em", textTransform: "uppercase", color: "#8A8680" }}>Loading…</div></Html>;
+  // The GLB itself streams inside the canvas — show the branded skeleton here
+  // too so the stage never sits empty while the model downloads.
+  return (
+    <Html center>
+      <Garment3DSkeleton inCanvas />
+    </Html>
+  );
 }
 
 export default function Garment3D({

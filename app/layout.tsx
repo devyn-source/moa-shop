@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
@@ -77,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <NavLink href="/faq">FAQ</NavLink>
           </nav>
           <Link className="brand-lockup" href="/" aria-label="MOA — Magnum Opus, made-to-order catalog">
-            <img className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" />
+            <Image className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" width={2104} height={766} sizes="110px" priority />
           </Link>
           <div className="site-actions">
             <AccountNav />
@@ -88,7 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="ft">
           <div className="ft-top">
             <div className="ft-brand">
-              <img className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" />
+              <Image className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" width={2104} height={766} sizes="232px" />
               <p className="ft-statement">
                 The MOA Catalog is bounded by design — fixed MOQs, fixed price ladders, fixed lead times.
                 Need something the catalog can&apos;t do?

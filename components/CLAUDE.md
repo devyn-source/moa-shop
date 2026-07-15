@@ -5,7 +5,7 @@ Storefront, configurator, admin, and studio UI. Client Components where interact
 ## Product display (storefront)
 - `ProductCard.tsx` — catalog grid tile: image-on-cream, name, From-price pill, swatch dots, spec strip (MOQ · Lead · Starts). Hero color = `variants[0]` (per-category, hero-ordered).
 - `ProductShot.tsx` — renders a product mock; recolors the grey base by `variant.colorHex` (or shows a baked `frontImage`, e.g. trucker).
-- `ProductVisual.tsx` — interactive color-tint overlay. · `ProductGallery.tsx` — multi-view carousel. · `ProductTop.tsx` — PDP header.
+- `ProductVisual.tsx` — interactive color-tint overlay.
 
 ## Configurator (the conversion core)
 - `PdpConfigurator.tsx` — the PDP flow: color → artwork → decoration → size run → live price. Has `editOrder` mode (seeds from an order for `/adjust/[id]`). Print-resolution QA: `printDpi = artMeta.width / widthIn`; warns <150 DPI, blocks CTA <100.
@@ -18,10 +18,7 @@ Storefront, configurator, admin, and studio UI. Client Components where interact
 - `OrderTracker.tsx` / `StatusTimeline.tsx` — order status progression (the premium dark stepped tracker).
 
 ## Admin tools
-- `ProductEditor.tsx`, `NewProductForm.tsx` — product CRUD forms. · `ZoneEditor.tsx` — placement-zone editor. · `AdminOrderActions.tsx` — order status/vendor/revision actions.
-
-## Studio (proofing)
-- `StudioPreview.tsx` — multi-variant proof viewer (one decoration across colorways). Reuses `DraggableArt`.
+- `ProductEditor.tsx`, `NewProductForm.tsx` — product CRUD forms. · `Zone3DEditor.tsx` — placement-zone editor. · `AdminOrderActions.tsx` — order status/vendor/revision actions.
 
 ## Layout & nav
 - `HomeCatalog.tsx` — homepage grid + filter bar (method/category/MOQ/price/search). · `NavLink.tsx`, `AccountNav.tsx`, `HeaderScroll.tsx`, `ProximityFX.tsx` (cursor-proximity card lift), `PrintButton.tsx`.

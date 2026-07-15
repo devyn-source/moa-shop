@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCart } from "./CartProvider";
@@ -83,7 +84,7 @@ export function CartButton() {
                   {singles.map((it) => (
                     <div className="cart-pop-line" key={it.lineId}>
                       <span className="cart-pop-thumb">
-                        {it.image ? <img src={it.image} alt="" loading="lazy" /> : null}
+                        {it.image ? <Image src={it.image} alt="" width={1600} height={2000} sizes="34px" /> : null}
                       </span>
                       <span className="cart-pop-name">{it.displayName} · {it.quantity.toLocaleString()} units</span>
                       <span className="cart-pop-price">{currency(it.totalUsd)}</span>

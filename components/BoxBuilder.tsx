@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ProductShot } from "./ProductShot";
 import { PdpConfigurator, type BundleItemConfig } from "./PdpConfigurator";
 import { useCart } from "./CartProvider";
+import { analytics } from "@/lib/analytics";
 import { buildFullBundleCartLines, packagingUnitPrice, priceFullBundle, type FullBundlePackaging } from "@/lib/bundle";
 import { currency, getPriceTier, round2 } from "@/lib/pricing";
 import { PR_BOX_PROMO } from "@/lib/promo";
@@ -181,6 +182,31 @@ export function BoxBuilder({
   );
   const [submitting, setSubmitting] = useState(false);
   const [modal, setModal] = useState<{ product: CatalogProduct; seed?: BundleItemConfig["seed"]; editKey?: string } | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Builder-start — fires once, on the first meaningful interaction (first item
+  // added or first config open).
+  const builderStartedRef = useRef(false);
+  const trackBuilderStart = useCallback(() => {
+    if (builderStartedRef.current) return;
+    builderStartedRef.current = true;
+    analytics.track("box_builder_started", { slug: product.slug, bundle: true });
+  }, [product.slug]);
+
+  // Modal a11y — Escape-to-close (mirrors WovenLabelModal) + focus the dialog on
+  // open, return focus to the trigger element on close.
+  const modalOpen = Boolean(modal);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setModal(null);
+    window.addEventListener("keydown", onKey);
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    modalRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      trigger?.focus();
+    };
+  }, [modalOpen]);
 
   // --- program size breakdown (re-applies to every item's size run) ---
   const applyProgramSizes = useCallback(
@@ -207,9 +233,10 @@ export function BoxBuilder({
     (productId: string) => {
       const p = eligibleById.get(productId);
       if (!p) return;
+      trackBuilderStart();
       setItems((prev) => [...prev, { key: nextKey(), config: defaultConfig(p, boxSizes) }]);
     },
-    [eligibleById, boxSizes]
+    [eligibleById, boxSizes, trackBuilderStart]
   );
   const removeItem = useCallback((key: string) => setItems((prev) => prev.filter((it) => it.key !== key)), []);
   const handleModalUse = useCallback(
@@ -238,9 +265,10 @@ export function BoxBuilder({
     (id: string) => {
       const p = packagingById.get(id);
       if (!p) return;
+      trackBuilderStart();
       setPackItems((prev) => (prev.some((it) => it.config.productId === id) ? prev : [...prev, { key: nextKey(), config: defaultConfig(p, boxSizes) }]));
     },
-    [packagingById, boxSizes]
+    [packagingById, boxSizes, trackBuilderStart]
   );
   const removePackaging = useCallback(
     (key: string) => {
@@ -286,9 +314,14 @@ export function BoxBuilder({
       boxQty,
       promo
     });
+    analytics.addToCart({
+      slug: product.slug, name: "PR Box", category: "bundle", bundle: true,
+      boxes: boxQty, items: items.length, packaging: packItems.length,
+      quantity: boxQty, value: round2(price.totalUsd),
+    });
     addBundle(lines);
     router.push("/cart");
-  }, [canAdd, items, packItems, packagingById, packBrandedOf, boxQty, promo, addBundle, router]);
+  }, [canAdd, items, packItems, packagingById, packBrandedOf, boxQty, promo, addBundle, router, product.slug, price.totalUsd]);
 
   return (
     <div className="boxbuilder">
@@ -339,7 +372,7 @@ export function BoxBuilder({
                           {cfg.wovenLabel ? " · woven label" : ""}
                         </p>
                         <div className="bb-summary-foot">
-                          <button type="button" className="bb-customize" onClick={() => p && setModal({ product: p, seed: cfg.seed, editKey: it.key })}>
+                          <button type="button" className="bb-customize" onClick={() => { if (!p) return; trackBuilderStart(); setModal({ product: p, seed: cfg.seed, editKey: it.key }); }}>
                             Customize in full configurator →
                           </button>
                           <span className="bb-summary-price">
@@ -411,7 +444,7 @@ export function BoxBuilder({
                     </p>
                     <div className="bb-summary-foot">
                       {printable ? (
-                        <button type="button" className="bb-customize" onClick={() => setModal({ product: p, seed: cfg.seed, editKey: it.key })}>
+                        <button type="button" className="bb-customize" onClick={() => { trackBuilderStart(); setModal({ product: p, seed: cfg.seed, editKey: it.key }); }}>
                           {branded ? "Edit in full configurator →" : "Add branding in configurator →"}
                         </button>
                       ) : <span className="bb-art-status">Always plain</span>}
@@ -552,6 +585,7 @@ export function BoxBuilder({
             className="bb-modal-overlay"
             role="dialog"
             aria-modal="true"
+            aria-label={`Configure ${modal.product.displayName}`}
             onClick={() => setModal(null)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -559,6 +593,8 @@ export function BoxBuilder({
             transition={{ duration: 0.22, ease: EASE }}
           >
             <motion.div
+              ref={modalRef}
+              tabIndex={-1}
               className="bb-modal"
               onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, y: 18, scale: 0.975 }}

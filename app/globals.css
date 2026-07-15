@@ -3878,399 +3878,6 @@ a.stat-card:hover {
   color: #FFFFFF;
 }
 
-/* ===== Design studio (prototype) ===== */
-
-.studio {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-  gap: 18px;
-  align-items: start;
-}
-
-.studio-stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  background: var(--frame-bg);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.studio-base {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.studio-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.studio-recolor {
-  mix-blend-mode: color;
-}
-
-/* transform box: move + aspect-locked resize + rotate (no warp) */
-.studio-tbox {
-  position: absolute;
-  touch-action: none;
-  cursor: grab;
-}
-
-.studio-tbox:active {
-  cursor: grabbing;
-}
-
-.studio-tbox-art {
-  width: 100%;
-  height: 100%;
-  display: block;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.studio-tbox--on {
-  outline: 1px solid rgba(176, 71, 49, 0.9);
-  outline-offset: 0;
-}
-
-.tbox-handle {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
-  padding: 0;
-  background: #fff;
-  border: 2px solid var(--terracotta);
-  border-radius: 3px;
-  box-shadow: 0 1px 4px rgba(30, 30, 30, 0.25);
-  cursor: nwse-resize;
-  touch-action: none;
-}
-
-.tbox-handle--tl { left: 0; top: 0; }
-.tbox-handle--tr { left: 100%; top: 0; }
-.tbox-handle--br { left: 100%; top: 100%; }
-.tbox-handle--bl { left: 0; top: 100%; }
-
-.tbox-rotate {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 16px;
-  height: 16px;
-  margin: -32px 0 0 -8px;
-  padding: 0;
-  background: #fff;
-  border: 2px solid var(--terracotta);
-  border-radius: 999px;
-  box-shadow: 0 1px 4px rgba(30, 30, 30, 0.25);
-  cursor: grab;
-  touch-action: none;
-}
-
-.tbox-rotate::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 14px;
-  width: 1.5px;
-  height: 16px;
-  margin-left: -0.75px;
-  background: var(--terracotta);
-}
-
-.studio-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: var(--ink);
-}
-
-.studio-check input {
-  margin-top: 2px;
-  accent-color: var(--terracotta);
-}
-
-/* front / back view toggle */
-.studio-views {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin-bottom: 10px;
-  padding: 4px;
-  background: var(--cream);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.studio-views .studio-seg-btn {
-  padding: 10px 12px 9px;
-  text-align: center;
-  font-size: 0.6rem;
-}
-
-/* print-location selector */
-.studio-locs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-
-.studio-loc-btn {
-  position: relative;
-  padding: 10px 12px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-stretch: 125%;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: left;
-  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
-}
-
-.studio-loc-btn:hover {
-  border-color: rgba(176, 71, 49, 0.34);
-}
-
-.studio-loc-btn--active {
-  background: rgba(176, 71, 49, 0.08);
-  border-color: var(--terracotta);
-  color: var(--terracotta);
-}
-
-.studio-loc-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--terracotta);
-}
-
-/* active location zone on the garment */
-.studio-locbox {
-  position: absolute;
-  border: 1.5px dashed rgba(176, 71, 49, 0.6);
-  border-radius: 4px;
-  background: rgba(176, 71, 49, 0.05);
-  pointer-events: none;
-}
-
-.studio-locbox-tag {
-  position: absolute;
-  top: -9px;
-  left: 6px;
-  padding: 2px 6px;
-  background: var(--terracotta);
-  border-radius: 3px;
-  color: #fff;
-  font-family: var(--font-display);
-  font-stretch: 125%;
-  font-size: 0.44rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.studio-group-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.studio-group-head .label {
-  margin-bottom: 0;
-}
-
-/* editable zone (author mode) */
-.studio-azone {
-  position: absolute;
-  z-index: 1;
-  border: 1.5px dashed rgba(176, 71, 49, 0.55);
-  border-radius: 4px;
-  background: rgba(176, 71, 49, 0.06);
-  cursor: move;
-  touch-action: none;
-}
-
-.studio-azone--active {
-  z-index: 6;
-  border-style: solid;
-  border-color: var(--terracotta);
-  background: rgba(176, 71, 49, 0.12);
-}
-
-.azone-handle {
-  position: absolute;
-  width: 13px;
-  height: 13px;
-  margin: -7px 0 0 -7px;
-  padding: 0;
-  background: #fff;
-  border: 2px solid var(--terracotta);
-  border-radius: 3px;
-  box-shadow: 0 1px 4px rgba(30, 30, 30, 0.25);
-  touch-action: none;
-}
-
-.azone-handle--nw { left: 0; top: 0; cursor: nwse-resize; }
-.azone-handle--ne { left: 100%; top: 0; cursor: nesw-resize; }
-.azone-handle--se { left: 100%; top: 100%; cursor: nwse-resize; }
-.azone-handle--sw { left: 0; top: 100%; cursor: nesw-resize; }
-
-.azone-rotate {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 15px;
-  height: 15px;
-  margin: -30px 0 0 -7.5px;
-  padding: 0;
-  background: var(--terracotta);
-  border: 2px solid #fff;
-  border-radius: 999px;
-  box-shadow: 0 1px 5px rgba(30, 30, 30, 0.3);
-  cursor: grab;
-  touch-action: none;
-}
-
-.azone-rotate::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 13px;
-  width: 1.5px;
-  height: 15px;
-  margin-left: -0.75px;
-  background: var(--terracotta);
-}
-
-.studio-controls {
-  position: sticky;
-  top: 90px;
-}
-
-.studio-group {
-  margin-top: 16px;
-}
-
-.studio-group:first-of-type {
-  margin-top: 14px;
-}
-
-.studio-group .label {
-  display: block;
-  margin-bottom: 8px;
-}
-
-.studio-group--row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.studio-mini .label {
-  font-size: 0.5rem;
-}
-
-.studio-swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.studio-swatch {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--line-strong);
-  border-radius: 7px;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-  line-height: 1;
-  transition: box-shadow 120ms ease, transform 120ms ease;
-}
-
-.studio-swatch--none {
-  background: var(--white);
-}
-
-.studio-swatch:hover {
-  transform: scale(1.06);
-}
-
-.studio-swatch--active {
-  box-shadow: 0 0 0 2px var(--terracotta);
-}
-
-.studio-seg {
-  display: inline-flex;
-  padding: 3px;
-  background: var(--cream);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.studio-seg-btn {
-  padding: 7px 12px 6px;
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  color: var(--muted-foreground);
-  font-family: var(--font-display);
-  font-stretch: 125%;
-  font-size: 0.56rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background 120ms ease, color 120ms ease;
-}
-
-.studio-seg-btn--active {
-  background: var(--white);
-  color: var(--terracotta);
-  box-shadow: var(--shadow);
-}
-
-.studio-group input[type="range"] {
-  width: 100%;
-  accent-color: var(--terracotta);
-}
-
-.studio-uploads {
-  display: grid;
-  gap: 8px;
-}
-
-@media (max-width: 980px) {
-  .studio {
-    grid-template-columns: 1fr;
-  }
-  .studio-controls {
-    position: static;
-  }
-  .studio-stage {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-}
-
 /* ===== Footer ===== */
 
 .site-footer {
@@ -8871,3 +8478,95 @@ p { line-height: 1.65; }
 .z3d-save:disabled { opacity: 0.5; cursor: default; }
 .z3d-saved { color: var(--color-success); font-size: 0.82rem; font-weight: 600; }
 .z3d-hint { font-size: 0.72rem; color: var(--color-neutral); }
+
+/* ============================================================================
+   Route loading skeletons
+   Shared by app/(shop|p/[slug]|orders)/loading.tsx and the 3D stage
+   placeholder (Garment3DSkeleton) — soft pulsing cream-dark blocks on cream.
+   ============================================================================ */
+
+@keyframes skel-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skel {
+  display: block;
+  background: var(--color-cream-dark);
+  border-radius: 8px;
+  animation: skel-pulse 1.5s ease-in-out infinite;
+}
+
+.skel--line { height: 12px; border-radius: 6px; }
+.skel--title { height: 30px; }
+
+/* Shop — catalog grid of card-shaped blocks (mirrors .catalog-grid / .product-card) */
+.skel-intro { display: grid; gap: 12px; margin: 8px 0 24px; }
+.skel-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.skel-card { background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 12px; overflow: hidden; }
+.skel-card-visual { width: 100%; aspect-ratio: 4 / 5; border-radius: 0; }
+.skel-card-body { display: grid; gap: 10px; padding: 14px 16px 18px; }
+
+/* PDP — stage + configurator rail (mirrors .pdpx) */
+.skel-pdp { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(360px, 0.85fr); gap: 40px; align-items: start; margin-top: 18px; }
+.skel-stage { width: 100%; aspect-ratio: 4 / 5; border-radius: 18px; }
+.skel-rail { display: grid; gap: 16px; align-content: start; padding-top: 8px; }
+
+/* Orders — list rows and the order-detail receipt (mirrors .ol-list / .ord-grid) */
+.skel-rows { margin-top: 24px; display: grid; gap: 12px; max-width: 760px; }
+.skel-row { height: 96px; border-radius: 12px; }
+.skel-ord { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); max-width: 940px; margin-top: 20px; background: var(--color-card); border: 1px solid var(--color-cream-dark); border-radius: 18px; overflow: hidden; }
+.skel-ord-mockup { aspect-ratio: 4 / 5; border-radius: 0; }
+.skel-ord-detail { display: grid; gap: 14px; align-content: start; padding: 26px; }
+
+@media (max-width: 960px) {
+  .skel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .skel-pdp { grid-template-columns: 1fr; }
+  .skel-ord { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .skel-grid { grid-template-columns: 1fr; }
+}
+
+/* 3D stage placeholder — pulsing garment silhouette while the chunk/GLB streams */
+.g3d-skel {
+  width: 100%;
+  height: 100%;
+  min-height: min(60vh, 560px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.g3d-skel-shape {
+  display: block;
+  width: min(46%, 220px);
+  aspect-ratio: 4 / 5;
+  background: var(--color-cream-dark);
+  /* simple tee silhouette: neck, sleeves, body */
+  clip-path: polygon(33% 0%, 42% 4%, 58% 4%, 67% 0%, 96% 12%, 100% 32%, 78% 40%, 78% 100%, 22% 100%, 22% 40%, 0% 32%, 4% 12%);
+  animation: skel-pulse 1.5s ease-in-out infinite;
+}
+
+.g3d-skel-caption {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+}
+
+/* Compact variant for react-three-fiber <Html center> Suspense fallbacks —
+   percent widths collapse inside the auto-sized Html wrapper. */
+.g3d-skel--canvas { width: auto; height: auto; min-height: 0; }
+.g3d-skel--canvas .g3d-skel-shape { width: 120px; }
+.g3d-skel--canvas .g3d-skel-caption { white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skel,
+  .g3d-skel-shape { animation: none; opacity: 0.8; }
+}

@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Garment3DSkeleton } from "./Garment3DSkeleton";
 
 // WebGL must not SSR — load the canvas client-only.
 const Garment3D = dynamic(() => import("./Garment3D"), {
   ssr: false,
-  loading: () => <div className="g3d-loading">Preparing 3D…</div>,
+  loading: () => <Garment3DSkeleton />,
 });
 
 export default function Garment3DClient(props: {

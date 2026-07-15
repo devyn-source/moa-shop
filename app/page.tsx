@@ -137,7 +137,8 @@ export default async function LandingPage() {
         <div className="lp-hero-stage" data-reveal style={stagger(1)}>
           {hero ? (
             <div className="lp-hero-shot">
-              <ProductShot product={hero} variant={heroVariant(hero)} view="front" />
+              {/* The landing LCP — eager, high-priority load. */}
+              <ProductShot product={hero} variant={heroVariant(hero)} view="front" priority sizes="(max-width: 900px) 88vw, 40vw" />
               {/* a real logo printed on the chest — what a finished proof looks like */}
               <span className="lp-hero-logo" aria-hidden />
             </div>

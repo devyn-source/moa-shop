@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Html } from "@react-three/drei";
 import { PreviewBackdrop, type Placement } from "./Garment3DDecorator";
+import { Garment3DSkeleton } from "./Garment3DSkeleton";
 
 // The garment with the buyer's placed artwork projected onto the surface,
 // rotatable. Used on every NON-placement step (color, fabric, decoration, size)
@@ -28,7 +29,7 @@ export default function Garment3DPreview({
           <hemisphereLight args={["#ffffff", "#d8d2c8", 0.3]} />
           <directionalLight position={[3, 5, 4]} intensity={0.95} castShadow shadow-mapSize={[2048, 2048]} />
           <directionalLight position={[-4, 2, -2]} intensity={0.3} />
-          <Suspense fallback={<Html center>Loading…</Html>}>
+          <Suspense fallback={<Html center><Garment3DSkeleton inCanvas /></Html>}>
             <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={placements} />
             <ContactShadows position={[0, -0.8, 0]} opacity={0.28} scale={4} blur={2.6} far={2.5} />
           </Suspense>

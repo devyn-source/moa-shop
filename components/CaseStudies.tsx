@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { caseStudiesFor } from "@/lib/case-studies";
 
 // Completed-work showcase. On a PDP, pass the product's `slug` to show only the
@@ -19,7 +20,8 @@ export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string
         {items.map((c) => (
           <Link href={`/p/${c.slugs[0]}`} className="cs-card" key={c.id}>
             <div className={`cs-shot${c.fit === "contain" ? " cs-shot--contain" : ""}`}>
-              <img src={c.image} alt={c.product} loading="lazy" />
+              {/* /work shots are 1000×1250; .cs-shot img CSS drives the layout. */}
+              <Image src={c.image} alt={c.product} width={1000} height={1250} sizes="(max-width: 700px) 92vw, 400px" />
             </div>
             <div className="cs-meta">
               {c.logo ? <img className="cs-logo" src={`/brand/clients/${c.logo}.png`} alt="" loading="lazy" /> : null}
