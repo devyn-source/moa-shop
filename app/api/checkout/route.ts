@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createOrder, getProductById } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
+import { expressCheckoutEnabled, pushExpressOrder } from "@/lib/express-bridge";
+import { generateProof } from "@/lib/proof";
+import { setOrderProof, setOrderFulfillment } from "@/lib/store";
 import { calculateOrderPrice, getPriceTier, round2 } from "@/lib/pricing";
 import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
 import { apiError } from "@/lib/errors";
@@ -60,8 +63,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please confirm you own or have the rights to use this artwork." }, { status: 400 });
     }
 
-    // Validate Stripe is configured before creating any orders (avoids orphans).
-    const stripe = getStripe();
+    // Express mode submits the priced order to MoaOS for proof + a single 100%
+    // invoice instead of taking card payment here. Otherwise validate Stripe is
+    // configured before creating any orders (avoids orphans).
+    const express = expressCheckoutEnabled();
+    const stripe = express ? null : getStripe();
 
     // Split standalone SKUs from PR Box groups (lines sharing a bundleId).
     const singles: CartLine[] = [];
@@ -220,6 +226,28 @@ export async function POST(request: Request) {
     }
 
     const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+
+    if (express) {
+      // Render each line's mockup now so the customer sees it immediately and
+      // MOA reviews the exact image the customer approved on screen.
+      const proofOrigin = process.env.NEXT_PUBLIC_SITE_ORIGIN || origin;
+      for (const c of created) {
+        try {
+          const url = await generateProof(c.order, proofOrigin);
+          if (url) { await setOrderProof(c.order.id, url); c.order.proofUrl = url; }
+        } catch (e) { console.warn("[express] proof render failed", c.order.id, e); }
+      }
+      const pushed = await pushExpressOrder(created.map((c) => c.order), contact, contact.shipToName, contact.shipToAddress);
+      if (!pushed.ok) {
+        console.error("[express] push to MoaOS failed:", pushed.error);
+        return NextResponse.json({ error: "We could not submit your order. Please try again in a minute." }, { status: 502 });
+      }
+      const pushedAt = new Date().toISOString();
+      for (const c of created) await setOrderFulfillment(c.order.id, { mode: "express", pushedAt, catalogOrderId: pushed.orderNumber });
+      return NextResponse.json({ url: `${origin}/checkout/success?orders=${created.map(({ order }) => order.id).join(",")}&express=${encodeURIComponent(pushed.orderNumber)}` });
+    }
+
+    if (!stripe) throw new Error("Stripe is not configured");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: contact.contactEmail,
