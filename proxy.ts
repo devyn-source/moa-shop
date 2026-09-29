@@ -57,7 +57,10 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // 2. Order gate — must have a Clerk account to reach checkout/orders.
-  if (requiresAccount(req)) {
+  // EXPRESS_GUEST_CHECKOUT=1 lets Express customers submit an order without an
+  // account (checkout only; order history and reorder still need one).
+  const guestExpress = process.env.EXPRESS_GUEST_CHECKOUT === "1" && (pathname.startsWith("/checkout") || pathname.startsWith("/api/checkout"));
+  if (requiresAccount(req) && !guestExpress) {
     const { userId } = await auth();
     if (!userId) {
       // API calls get a 401; pages bounce to sign-up (the "sign up to order"
