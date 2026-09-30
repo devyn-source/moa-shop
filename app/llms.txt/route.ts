@@ -32,7 +32,7 @@ export async function GET() {
 - Fully custom apparel and accessories for smaller orders, cut and sewn to MOA's own patterns.
 - Six styles at launch: heavyweight tee, pullover hoodie, fleece sweatpant, dad cap, rib knit beanie and canvas tote.
 - Fixed per-style price ladders by quantity. No quotes and no sales calls.
-- Operated by Magnum Opus Agency, a product design, development and production studio (https://magnumopus.agency).
+- Operated by Magnum Opus Agency, a product design, development and production studio.
 - Best for brands, companies, events, tours, creators and teams ordering their own branded product.
 
 ## How it works
@@ -61,7 +61,7 @@ ${productLines || "(Styles loading.)"}
 - Privacy Policy: ${SITE}/privacy
 
 ## About Magnum Opus Agency
-Magnum Opus Agency (MOA) is a product design studio that designs, develops and produces custom product for brands, artists and companies. MOA Shop is its self-serve lane for smaller orders. For full programs, new styles or larger runs, see https://magnumopus.agency/workwithus.
+Magnum Opus Agency (MOA) is a product design studio that designs, develops and produces custom product for brands, artists and companies. MOA Shop is its self-serve lane for smaller orders.
 
 ## Contact
 - Email: production@magnumopus.agency

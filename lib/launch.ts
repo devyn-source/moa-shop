@@ -8,7 +8,7 @@ export const LAUNCH_STYLES = [
   "heavyweight-tee",
   "vintage-cut-tee",
   "heavyweight-hoodie",
-  "wide-leg-sweatpant",
+  "work-jacket",
   "dad-hat",
   "rib-knit-beanie",
   "standard-tote",

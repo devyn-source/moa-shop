@@ -59,7 +59,6 @@ const ORG_JSONLD = {
   email: "production@magnumopus.agency",
 };
 
-const MAIN = "https://magnumopus.agency";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -76,17 +75,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {launchMode() ? null : <PromoBanner />}
         <header className="site-header site-header--sticky">
           <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
-            <a className="nav-link nav-link--main" href={`${MAIN}/catalog`}>Catalog</a>
-            <a className="nav-link nav-link--main" href={`${MAIN}/work`}>Case Studies</a>
-            <a className="nav-link nav-link--main" href={`${MAIN}/about`}>About</a>
             <NavLink href="/shop">Shop</NavLink>
             <NavLink href="/faq">FAQ</NavLink>
           </nav>
           <Link className="brand-lockup" href="/" aria-label="MOA Shop home">
-            <Image className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" width={2104} height={766} sizes="110px" priority />
+            <Image className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA Magnum Opus" width={2104} height={766} sizes="110px" priority />
           </Link>
           <div className="site-actions">
-            <a className="nav-link nav-link--main" href={`${MAIN}/workwithus`}>Start a Project</a>
             <AccountNav />
             <CartButton />
           </div>
@@ -95,34 +90,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="ft">
           <div className="ft-top">
             <div className="ft-brand">
-              <Image className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" width={2104} height={766} sizes="232px" />
+              <Image className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA Magnum Opus" width={2104} height={766} sizes="232px" />
               <p className="ft-statement">
-                The shop is built for smaller orders: six styles cut and sewn to our own patterns, fixed
-                price ladders and a proof in 24 business hours. Need a full program, new styles or larger runs?
+                Every style is cut and sewn to our own patterns. Fixed prices, a proof in 24 hours and one invoice.
               </p>
-              <a className="ft-cta" href="https://magnumopus.agency/workwithus" target="_blank" rel="noreferrer">
-                <span className="ft-cta-headline">Start a custom project</span>
-                <span className="ft-cta-action">
-                  Inquire with the studio
-                  <svg className="ft-cta-arrow" aria-hidden width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h11M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" /></svg>
-                </span>
-              </a>
             </div>
             <nav className="ft-nav" aria-label="Footer">
               <div className="ft-col">
                 <p className="ft-h">Shop</p>
                 <Link href="/shop">All styles</Link>
-                <Link href="/orders">Your orders</Link>
+                <Link href="/orders">My orders</Link>
                 <Link href="/cart">Cart</Link>
                 <Link href="/faq">FAQ</Link>
               </div>
               <div className="ft-col">
-                <p className="ft-h">Studio</p>
-                <a href={`${MAIN}/catalog`}>Catalog</a>
-                <a href={`${MAIN}/work`}>Case Studies</a>
-                <a href={`${MAIN}/about`}>About</a>
-                <a href={`${MAIN}/workwithus`}>Start a Project</a>
-                <a href="https://instagram.com/magnumopus" target="_blank" rel="noreferrer">Instagram @magnumopus</a>
+                <p className="ft-h">Socials</p>
+                <a href="https://instagram.com/magnumopus" target="_blank" rel="noreferrer">Instagram</a>
               </div>
             </nav>
           </div>
@@ -130,9 +113,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="ft-rule" aria-hidden />
 
           <div className="ft-base">
-            <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus Agency · LLC</span>
+            <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus LLC, all rights reserved</span>
             <div className="ft-base-right">
-              <span className="ft-tagline">Custom cut and sew · Proof in 24 hours · One invoice</span>
+              <span className="ft-tagline">Custom cut and sew. Proof in 24 hours. One invoice.</span>
               <span className="ft-legal">
                 <Link href="/terms">Terms</Link>
                 <Link href="/refund-policy">Refunds</Link>

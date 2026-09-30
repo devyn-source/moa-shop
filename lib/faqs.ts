@@ -19,7 +19,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "Who is Magnum Opus Agency?",
-        a: "Magnum Opus Agency (MOA) is a Los Angeles product design studio that designs and produces premium branded merchandise for brands, artists, and companies, working with our partner factories. The MOA Shop is its self-serve channel for smaller orders, cut and sewn to our own patterns. For larger bespoke programs, see magnumopus.agency.",
+        a: "Magnum Opus Agency (MOA) is a Los Angeles product design studio that designs and produces premium branded merchandise for brands, artists, and companies, working with our partner factories. The MOA Shop is its self-serve channel for smaller orders, cut and sewn to our own patterns.",
       },
     ],
   },

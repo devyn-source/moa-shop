@@ -1294,14 +1294,6 @@ export function PdpConfigurator({
           })}
         </div>
 
-        <a className="pdpx-bespoke" href="https://magnumopus.agency/workwithus" target="_blank" rel="noreferrer">
-          <span className="pdpx-bespoke-text">
-            <span className="pdpx-bespoke-q">Need something more bespoke?</span>
-            <span className="pdpx-bespoke-sub">Different sizes, colors, or finishes? Our studio builds it with you.</span>
-          </span>
-          <span className="pdpx-bespoke-link">Inquire now →</span>
-        </a>
-
         <p className="pdpx-delivered">
           Delivered by {formatDeliveredBy(product.leadTimeDays)}
           <span className="pdpx-delivered-est"> · {formatLeadTime(product.leadTimeDays)} from today, est.</span>
