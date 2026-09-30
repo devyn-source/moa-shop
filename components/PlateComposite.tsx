@@ -27,7 +27,7 @@ in vec2 vSt; out vec4 outColor;
 uniform sampler2D uBeauty, uShading, uArt0, uArt1, uArt2, uArt3;
 uniform highp usampler2D uUv; uniform highp usampler2D uPieces;
 uniform vec2 uSize; uniform int uCount;
-uniform float uBaseLum; uniform vec3 uTargetLin; uniform float uTint;
+uniform float uBaseLum; uniform vec3 uTargetLin; uniform float uTint; uniform float uContrast;
 uniform vec4 uRect[${MAX}];   // u0, vTop, w, h (mm)
 uniform vec4 uMeta[${MAX}];   // piece, method, rotation (rad), unused
 
@@ -45,6 +45,7 @@ void main() {
     // move the fabric onto the target colour. Work in linear light.
     vec3 lin = pow(max(base.rgb, 0.0), vec3(2.2));
     float rel = dot(lin, vec3(0.2126, 0.7152, 0.0722)) / max(1e-4, uBaseLum);
+    rel = pow(max(rel, 0.0), uContrast); // a dark photo exaggerates texture; tame it
     vec3 outLin = uTargetLin * rel;
     base.rgb = pow(clamp(outLin, 0.0, 1.0), vec3(1.0 / 2.2));
   }
@@ -283,6 +284,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     const lin = (hex: string) => [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));
     gl.uniform1f(gl.getUniformLocation(prog, "uTint"), tint ? 1 : 0);
     gl.uniform1f(gl.getUniformLocation(prog, "uBaseLum"), c.baseLum);
+    gl.uniform1f(gl.getUniformLocation(prog, "uContrast"), c.baseLum < 0.05 ? 0.55 : 1.0);
     gl.uniform3fv(gl.getUniformLocation(prog, "uTargetLin"), lin(tint ?? manifest.colours[colour] ?? "#808080"));
     gl.uniform1i(gl.getUniformLocation(prog, "uCount"), list.length);
     gl.uniform4fv(gl.getUniformLocation(prog, "uRect"), rect);

@@ -353,10 +353,15 @@ export function PdpConfigurator({
   const plateOn = Boolean(plate && !bundle && Object.keys(plate.manifest.colours ?? {}).length);
   const lumOf = (hex: string) => { const c = [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
   const exactPlate = Boolean(plate?.manifest.colours?.[wantSlug]);
-  // Nearest base by lightness: light colours from the light plate, dark from the dark one.
+  // Which plate to build a colour from: the light plate (natural fold contrast) for
+  // everything except near-black targets, which come from the dark plate.
   const plateColour = exactPlate || !plate
     ? wantSlug
-    : Object.entries(plate.manifest.colours).sort((a, b) => Math.abs(lumOf(a[1]) - lumOf(variant?.colorHex ?? "#808080")) - Math.abs(lumOf(b[1]) - lumOf(variant?.colorHex ?? "#808080")))[0][0];
+    : (() => {
+        const entries = Object.entries(plate.manifest.colours).sort((a, b) => lumOf(b[1]) - lumOf(a[1]));
+        const target = lumOf(variant?.colorHex ?? "#808080");
+        return (target < 0.023 ? entries[entries.length - 1] : entries[0])[0];
+      })();
   // Always correct to the colour's target value (even an exact plate's photo can sit off-target).
   const plateTint = variant?.colorHex ?? null;
   const [plateView, setPlateView] = useState<PlateView>("front");
