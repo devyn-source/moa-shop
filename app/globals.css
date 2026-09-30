@@ -6884,7 +6884,7 @@ body.is-scrolled .site-header {
 .pdpx-bb-cta:hover { background: #8a3826; }
 .pdpx-bb-cta:disabled { background: rgba(238, 234, 227, 0.16); color: rgba(238, 234, 227, 0.6); cursor: not-allowed; }
 /* Step values wrap instead of cutting off. */
-.pdpx-step-value { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: 48% !important; text-align: right; }
+
 
 /* ===================================================================
    PR Box — builder, bundle card, bundle cart group
@@ -8923,3 +8923,56 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .pdpx-reuse-text { display: flex; flex-direction: column; gap: 2px; font-size: 11px; line-height: 1.35; color: rgba(30, 30, 30, 0.55); }
 .pdpx-reuse-text strong { font-size: 12px; letter-spacing: 0.04em; color: var(--color-charcoal); }
 .pdpx-reuse-btn { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--color-terracotta); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; }
+.pdpx-download--icon { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid var(--color-cream-dark); background: #fff; color: var(--color-charcoal); cursor: pointer; }
+.pdpx-download--icon:hover { border-color: rgba(30, 30, 30, 0.3); }
+.pdpx-step-value { color: rgba(30, 30, 30, 0.55); }
+
+/* Decoration, readable: compact method rows + ink picker. */
+.pdpx-deco { display: grid !important; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; padding: 10px 12px !important; min-height: 76px; }
+.pdpx-deco-shot { width: 56px !important; height: 56px !important; border-radius: 8px; overflow: hidden; }
+.pdpx-deco-shot img { width: 100%; height: 100%; object-fit: cover; }
+.pdpx-deco-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pdpx-deco-text strong { font-size: 13px; letter-spacing: 0.04em; }
+.pdpx-deco-text em { font-style: normal; font-size: 11px; line-height: 1.4; color: rgba(30, 30, 30, 0.55); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pdpx-deco-adder { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.pdpx-inks { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.pdpx-inks-count { margin-left: 6px; color: rgba(30, 30, 30, 0.55); }
+.pdpx-inks-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; max-width: 360px; }
+.pdpx-ink { aspect-ratio: 1; min-height: 32px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.18); cursor: pointer; }
+.pdpx-ink.is-on { box-shadow: 0 0 0 2px var(--color-cream), 0 0 0 4px var(--color-charcoal); }
+.pdpx-ink:disabled { opacity: 0.35; cursor: not-allowed; }
+.pdpx-ink-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pdpx-ink-list li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; background: #fff; border: 1px solid var(--color-cream-dark); border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+.pdpx-ink-list li span { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.15); }
+.pdpx-ink-list li em { font-style: normal; font-weight: 400; color: rgba(30, 30, 30, 0.55); }
+
+/* Size and quantity: ladder, one total, size steppers. */
+.pdpx-size2 { display: flex; flex-direction: column; gap: 14px; }
+.pdpx-ladder { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--color-cream-dark); border-radius: 10px; overflow: hidden; background: #fff; }
+.pdpx-rung { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 0; border-left: 1px solid var(--color-cream-dark); background: transparent; cursor: pointer; font-family: var(--font-display); color: var(--color-charcoal); }
+.pdpx-rung:first-child { border-left: 0; }
+.pdpx-rung strong { font-size: 14px; font-weight: 700; }
+.pdpx-rung span { font-size: 11px; color: rgba(30, 30, 30, 0.55); }
+.pdpx-rung.is-on { background: var(--color-charcoal); color: var(--color-cream); }
+.pdpx-rung.is-on span { color: rgba(238, 234, 227, 0.7); }
+.pdpx-nudge { margin: -4px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--color-terracotta); }
+.pdpx-total-row, .pdpx-split { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pdpx-split-btns { display: inline-flex; gap: 6px; }
+.pdpx-split-btns button { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--color-cream-dark); background: #fff; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; }
+.pdpx-stepper { display: inline-grid; grid-template-columns: 32px minmax(40px, 1fr) 32px; align-items: center; border: 1px solid var(--color-cream-dark); border-radius: 10px; background: #fff; overflow: hidden; }
+.pdpx-stepper button { height: 36px; border: 0; background: transparent; display: grid; place-items: center; color: var(--color-charcoal); cursor: pointer; }
+.pdpx-stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
+.pdpx-stepper input { width: 100%; height: 36px; border: 0; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; background: transparent; -moz-appearance: textfield; }
+.pdpx-stepper input::-webkit-outer-spin-button, .pdpx-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pdpx-stepper--lg { grid-template-columns: 44px 90px 44px; }
+.pdpx-stepper--lg button, .pdpx-stepper--lg input { height: 44px; font-size: 16px; }
+.pdpx-sizegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.pdpx-sizecell { display: flex; flex-direction: column; gap: 6px; }
+.pdpx-sizecell-name { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); }
+.pdpx-min { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--color-success); }
+.pdpx-min.is-warn { color: var(--color-terracotta); }
+
+/* Step rows: number, label, chosen value right-aligned on one line. */
+.pdpx-step-head { display: grid !important; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 12px; }
+.pdpx-step-value { justify-self: end; max-width: 60vw !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; text-align: right; line-height: 1.3; }
+@media (min-width: 901px) { .pdpx-step-value { max-width: 220px !important; } }

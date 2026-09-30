@@ -69,8 +69,8 @@ function distributeAcross(sizes: string[], total: number): Record<string, number
 }
 
 const STEPS: { key: Step; label: string }[] = [
-  { key: "placement", label: "Artwork" },
   { key: "color", label: "Colour" },
+  { key: "placement", label: "Artwork" },
   { key: "fabric", label: "Fabric" },
   { key: "decoration", label: "Decoration" },
   { key: "size", label: "Size & quantity" }
@@ -204,7 +204,7 @@ export function PdpConfigurator({
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
   const [step, setStep] = useState<Step>(
-    isPackaging ? (product.variants.length > 1 ? "color" : "placement") : "placement"
+    isPackaging ? (product.variants.length > 1 ? "color" : "placement") : seed0 ? "placement" : "color"
   );
   const [decorationIds, setDecorationIds] = useState<string[]>(seed0?.decorationIds ?? []);
   const [pantones, setPantones] = useState<PmsColor[]>(seed0?.pantones ?? []);
@@ -490,15 +490,15 @@ export function PdpConfigurator({
     return false;
   };
 
+  // The row shows what has been chosen, never an instruction; empty until chosen.
   const stepValue = (s: Step): string => {
-    if (s === "color") return variant?.colorLabel ?? "Choose colour";
-    if (s === "decoration")
-      return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
+    if (s === "color") return variant?.colorLabel ?? "";
+    if (s === "fabric") return fabricOption?.label ?? "";
+    if (s === "decoration") return decoSelected.map((d) => d.label).join(", ");
     if (s === "placement") {
-      if (use3dPlacement) return place3d.length ? (place3d.length > 1 ? `${place3d.length} placements` : "Placed on garment") : artworkUrl ? "Place on garment" : "Upload artwork";
-      return placementCount > 1
-        ? `${placementCount} placements`
-        : placement?.label ?? (savedPlacements[0]?.zoneLabel ?? (artworkUrl ? "Pick a location" : "Upload artwork"));
+      if (!artworkUrl) return "";
+      const labels = use3dPlacement ? [...new Set(place3d.map((p) => p.zoneLabel))] : [placement?.label, ...savedPlacements.map((p) => p.zoneLabel)].filter(Boolean);
+      return labels.join(", ");
     }
     if (s === "size") return `${qty.toLocaleString()} units`;
     return "";
@@ -862,7 +862,7 @@ export function PdpConfigurator({
                 : "Update proof"
               : submitting
               ? "Adding to order…"
-              : "Add to order"}
+              : "Review order"}
     </button>
   );
 
@@ -897,8 +897,8 @@ export function PdpConfigurator({
           ) : (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
           )}
-          <button type="button" className="pdpx-download" onClick={handleDownload} disabled={downloading}>
-            {downloading ? "Saving…" : is3d ? "Download still" : "Download"}
+          <button type="button" className="pdpx-download pdpx-download--icon" onClick={handleDownload} disabled={downloading} aria-label="Download image" title="Download image">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 13.5h11" stroke="currentColor" strokeWidth="1.6" /></svg>
           </button>
         </div>
 
@@ -1047,7 +1047,7 @@ export function PdpConfigurator({
                             style={{ background: v.colorHex }}
                             data-label={v.colorLabel}
                             aria-label={v.colorLabel}
-                            onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); }}
+                            onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); if (!artworkUrl) setTimeout(() => setStep("placement"), 350); }}
                           />
                         ))}
                         {(() => {
@@ -1119,11 +1119,9 @@ export function PdpConfigurator({
                           );
                         })}
                         {decorationIds.length > 0 ? (
-                          <div className="pdpx-inkcolors" style={{ marginTop: 16 }}>
-                            <p className="pdpx-place-label">
-                              Ink colours{pantones.length ? ` · ${pantones.length} of ${colorCap}` : ` · pick up to ${colorCap}`}
-                            </p>
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+                          <div className="pdpx-inks">
+                            <p className="pdpx-place-label">Ink colours <span className="pdpx-inks-count">{pantones.length} of {colorCap}</span></p>
+                            <div className="pdpx-inks-grid">
                               {PMS_PALETTE.map((c) => {
                                 const on = pantones.some((p) => p.code === c.code);
                                 const full = pantones.length >= colorCap;
@@ -1131,33 +1129,25 @@ export function PdpConfigurator({
                                   <button
                                     key={c.code}
                                     type="button"
-                                    title={`${c.name} · ${c.code}`}
+                                    className={`pdpx-ink${on ? " is-on" : ""}`}
+                                    title={`${c.name}, ${c.code}`}
+                                    aria-label={`${c.name}, ${c.code}`}
                                     aria-pressed={on}
                                     disabled={!on && full}
-                                    onClick={() =>
-                                      setPantones((prev) =>
-                                        on ? prev.filter((p) => p.code !== c.code) : prev.length < colorCap ? [...prev, c] : prev
-                                      )
-                                    }
-                                    style={{
-                                      width: 30,
-                                      height: 30,
-                                      borderRadius: 8,
-                                      background: c.hex,
-                                      border: on ? "2px solid var(--colour-charcoal)" : "1px solid rgba(0,0,0,0.18)",
-                                      boxShadow: on ? "0 0 0 2px var(--colour-cream)" : "none",
-                                      cursor: !on && full ? "not-allowed" : "pointer",
-                                      opacity: !on && full ? 0.4 : 1
-                                    }}
+                                    style={{ background: c.hex }}
+                                    onClick={() => setPantones((prev) => (on ? prev.filter((p) => p.code !== c.code) : prev.length < colorCap ? [...prev, c] : prev))}
                                   />
                                 );
                               })}
                             </div>
-                            {pantones.length > 0 && (
-                              <p style={{ fontSize: 12, color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
-                                {pantones.map((p) => `${p.name} (${p.code})`).join(" · ")}
-                                {pantones.length === 1 ? ". Your art prints in this ink." : ". Your art's spot colours."}
-                              </p>
+                            {pantones.length ? (
+                              <ul className="pdpx-ink-list">
+                                {pantones.map((p) => (
+                                  <li key={p.code}><span style={{ background: p.hex }} aria-hidden />{p.name}<em>{p.code}</em></li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="pdpx-place-hint">Pick the ink colours in your artwork.</p>
                             )}
                           </div>
                         ) : null}
@@ -1319,81 +1309,74 @@ export function PdpConfigurator({
                       </div>
                     ) : null}
 
-                    {s.key === "size" ? (
-                      <div className="pdpx-size">
-                        {product.sizes.length > 1 ? (
-                          <div className="pdpx-size-presets">
-                            <span className="pdpx-size-presets-label">Quick fill to {product.moq}</span>
-                            <button type="button" onClick={() => applyPreset("curve")}>Typical split</button>
-                            <button type="button" onClick={() => applyPreset("even")}>Even split</button>
-                            <button type="button" onClick={() => applyPreset("clear")}>Clear</button>
-                          </div>
-                        ) : null}
-                        <div className="pdpx-matrix">
-                          {product.sizes.map((size) => (
-                            <label key={size} className="pdpx-matrix-cell">
-                              <span className="pdpx-matrix-size">{size}</span>
-                              <input
-                                type="number"
-                                min={0}
-                                step={1}
-                                value={sizeQty[size] ?? 0}
-                                onChange={(e) =>
-                                  setSizeQty((prev) => ({
-                                    ...prev,
-                                    [size]: Math.max(0, parseInt(e.target.value || "0", 10) || 0)
-                                  }))
-                                }
-                                className="pdpx-matrix-input"
-                              />
-                            </label>
-                          ))}
-                        </div>
-                        <div className="pdpx-matrix-foot">
-                          <span>Total · MOQ {product.moq}</span>
-                          <strong className={belowMoq ? "is-warn" : undefined}>
-                            {qty.toLocaleString()} units{belowMoq ? " · below MOQ" : ""}
-                          </strong>
-                        </div>
-                        <div className="pdpx-tiers">
-                          {product.priceTiers.map((t) => {
+                    {s.key === "size" ? (() => {
+                      const tiers = [...product.priceTiers].sort((x, y) => x.minQty - y.minQty);
+                      const next = tiers.find((t) => t.minQty > qty);
+                      const bump = (n: number) => fillToTotal(Math.max(product.moq, qty + n));
+                      const setSize = (size: string, n: number) => setSizeQty((prev) => ({ ...prev, [size]: Math.max(0, n) }));
+                      return (
+                      <div className="pdpx-size pdpx-size2">
+                        <div className="pdpx-ladder" role="group" aria-label="Price per unit by quantity">
+                          {tiers.map((t) => {
                             const active = qty >= t.minQty && (t.maxQty == null || qty <= t.maxQty);
-                            // Upsell nudge: % saved per-unit vs the entry (MOQ) tier.
-                            const base = Math.max(...product.priceTiers.map((x) => x.perUnitUsd));
-                            const save = Math.round((1 - t.perUnitUsd / base) * 100);
                             return (
-                              <button
-                                type="button"
-                                key={t.minQty}
-                                className={`pdpx-tier${active ? " is-active" : ""}`}
-                                onClick={() => fillToTotal(t.minQty)}
-                                aria-pressed={active}
-                              >
-                                <span>
-                                  {t.minQty}
-                                  {t.maxQty ? `-${t.maxQty}` : "+"} units
-                                </span>
-                                <span className="pdpx-tier-price">
-                                  <strong>{currency(t.perUnitUsd)}/unit</strong>
-                                  {save > 0 ? <span className="pdpx-save">save {save}%</span> : null}
-                                </span>
+                              <button type="button" key={t.minQty} className={`pdpx-rung${active ? " is-on" : ""}`} onClick={() => fillToTotal(t.minQty)} aria-pressed={active}>
+                                <strong>{currency(t.perUnitUsd)}</strong>
+                                <span>{t.minQty}{t.maxQty ? `-${t.maxQty}` : "+"}</span>
                               </button>
                             );
                           })}
                         </div>
-                        <label className="pdpx-custom-qty">
-                          <span>Or enter an exact quantity</span>
-                          <input
-                            type="number"
-                            min={product.moq}
-                            step={1}
-                            value={qty || ""}
-                            onChange={(e) => fillToTotal(parseInt(e.target.value || "0", 10) || 0)}
-                            placeholder={`${product.moq}+`}
-                          />
-                        </label>
+                        {next ? (
+                          <p className="pdpx-nudge">Add {(next.minQty - qty).toLocaleString()} more for {currency(next.perUnitUsd)} per unit.</p>
+                        ) : null}
+
+                        <div className="pdpx-total-row">
+                          <span className="pdpx-place-label">Total</span>
+                          <div className="pdpx-stepper pdpx-stepper--lg">
+                            <button type="button" aria-label="Fewer" onClick={() => bump(-10)} disabled={qty <= product.moq}>
+                              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8" stroke="currentColor" strokeWidth="1.8" /></svg>
+                            </button>
+                            <input type="number" min={product.moq} step={1} value={qty || ""} onChange={(e) => fillToTotal(parseInt(e.target.value || "0", 10) || 0)} aria-label="Total units" />
+                            <button type="button" aria-label="More" onClick={() => bump(10)}>
+                              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8M7 3v8" stroke="currentColor" strokeWidth="1.8" /></svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {product.sizes.length > 1 ? (
+                          <>
+                            <div className="pdpx-split">
+                              <span className="pdpx-place-label">Sizes</span>
+                              <span className="pdpx-split-btns">
+                                <button type="button" onClick={() => applyPreset("curve")}>Typical split</button>
+                                <button type="button" onClick={() => applyPreset("even")}>Even split</button>
+                              </span>
+                            </div>
+                            <div className="pdpx-sizegrid">
+                              {product.sizes.map((size) => (
+                                <div key={size} className="pdpx-sizecell">
+                                  <span className="pdpx-sizecell-name">{size}</span>
+                                  <div className="pdpx-stepper">
+                                    <button type="button" aria-label={`Fewer ${size}`} onClick={() => setSize(size, (sizeQty[size] ?? 0) - 1)}>
+                                      <svg width="10" height="10" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8" stroke="currentColor" strokeWidth="2" /></svg>
+                                    </button>
+                                    <input type="number" min={0} step={1} value={sizeQty[size] ?? 0} onChange={(e) => setSize(size, parseInt(e.target.value || "0", 10) || 0)} aria-label={`${size} units`} />
+                                    <button type="button" aria-label={`More ${size}`} onClick={() => setSize(size, (sizeQty[size] ?? 0) + 1)}>
+                                      <svg width="10" height="10" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8M7 3v8" stroke="currentColor" strokeWidth="2" /></svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : null}
+                        <p className={`pdpx-min${belowMoq ? " is-warn" : ""}`}>
+                          {belowMoq ? `${(product.moq - qty).toLocaleString()} more to reach the ${product.moq} piece minimum.` : `${product.moq} piece minimum met.`}
+                        </p>
                       </div>
-                    ) : null}
+                      );
+                    })() : null}
                   </div>
                   </motion.div>
                 ) : null}
@@ -1478,7 +1461,7 @@ export function PdpConfigurator({
                 : `Low resolution at this size (~${effDpi} DPI). It may look soft. A higher-res image or vector prints sharper.`}
             </p>
           ) : null}
-          {ctaButton("pdpx-cta")}
+          {bundle || editOrder ? ctaButton("pdpx-cta") : null}
           {updateError ? <p className="pdpx-foot-note" style={{ color: "var(--color-terracotta)" }}>{updateError}</p> : null}
           <p className="pdpx-foot-note">
             Every order passes MOA quality control before it ships.

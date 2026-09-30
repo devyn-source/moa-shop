@@ -112,9 +112,9 @@ export function SampleKitForm({
                 fontWeight: 700,
                 cursor: "pointer",
                 border: selected.includes(o.slug)
-                  ? "1px solid var(--colour-terracotta)"
-                  : "1px solid var(--colour-cream-dark)",
-                background: selected.includes(o.slug) ? "rgba(176,71,49,0.08)" : "var(--colour-white, #fff)",
+                  ? "1px solid var(--color-terracotta)"
+                  : "1px solid var(--color-cream-dark)",
+                background: selected.includes(o.slug) ? "rgba(176,71,49,0.08)" : "var(--color-white, #fff)",
                 color: selected.includes(o.slug) ? "var(--color-terracotta)" : "var(--color-charcoal)",
               }}
             >
