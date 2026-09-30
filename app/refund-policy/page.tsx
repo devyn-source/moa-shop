@@ -1,13 +1,13 @@
-export const metadata = { title: "Refund Policy · MOA Shop" };
+export const metadata = { title: "Refund Policy | MOA Shop" };
 
 export default function RefundPolicyPage() {
   return (
     <main className="page" style={{ maxWidth: 760 }}>
       <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
       <h1 className="page-title">Refund Policy</h1>
-      <p className="lede">Magnum Opus Agency · MOA Shop. Last updated June 2026.</p>
+      <p className="lede">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
 
-      <div style={{ fontSize: "0.92rem", lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
+      <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
           <h2 style={hStyle}>Before you approve your proof</h2>
           <p>Cancel any time before approving your proof for a <strong>full refund</strong>, no questions asked. Until you approve, nothing has been produced.</p>
@@ -33,4 +33,4 @@ export default function RefundPolicyPage() {
   );
 }
 
-const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };
+const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };

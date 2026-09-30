@@ -54,7 +54,7 @@ function distributeAcross(sizes: string[], total: number): Record<string, number
 }
 
 const STEPS: { key: Step; label: string }[] = [
-  { key: "color", label: "Color" },
+  { key: "color", label: "Colour" },
   { key: "fabric", label: "Fabric" },
   { key: "placement", label: "Artwork placement" },
   { key: "decoration", label: "Decoration" },
@@ -431,7 +431,7 @@ export function PdpConfigurator({
   };
 
   const stepValue = (s: Step): string => {
-    if (s === "color") return variant?.colorLabel ?? "Choose color";
+    if (s === "color") return variant?.colorLabel ?? "Choose colour";
     if (s === "decoration")
       return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
     if (s === "placement") {
@@ -676,7 +676,7 @@ export function PdpConfigurator({
       fabricLabel: fabricOption?.label,
       fabricUpchargeUsd: fabricAdder,
     });
-    toast("Added to your order", { href: "/cart", cta: "View cart →" });
+    toast("Added to your order", { href: "/cart", cta: "View cart" });
   };
 
   // BUNDLE MODE — same full payload as add-to-cart, but handed to the box (no
@@ -775,8 +775,8 @@ export function PdpConfigurator({
       <section className="pdpx">
         <div className="pdpx-stage" style={{ textAlign: "center", padding: "64px 24px" }}>
           <p className="pdpx-eyebrow" style={{ color: "var(--color-terracotta)" }}>Updated</p>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.8rem", textTransform: "uppercase", letterSpacing: "0.5px", margin: "10px 0 12px" }}>Fresh proof on the way</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--color-neutral)", maxWidth: 460, margin: "0 auto" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.5px", margin: "10px 0 12px" }}>Fresh proof on the way</h2>
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--color-neutral)", maxWidth: 460, margin: "0 auto" }}>
             We&apos;ve saved your changes. The MOA team reviews them and your updated proof arrives within 24 business hours. Nothing goes to production until you approve the new version.
           </p>
         </div>
@@ -816,7 +816,7 @@ export function PdpConfigurator({
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
           )}
           <button type="button" className="pdpx-download" onClick={handleDownload} disabled={downloading}>
-            {downloading ? "Saving…" : is3d ? "Download still ↓" : "Download ↓"}
+            {downloading ? "Saving…" : is3d ? "Download still" : "Download"}
           </button>
         </div>
 
@@ -911,8 +911,8 @@ export function PdpConfigurator({
 
         <p className="pdpx-shotnote">
           {is3d
-            ? `3D preview · ${variant?.colorLabel} · drag to rotate, scroll to zoom`
-            : `Live preview · ${variant?.colorLabel}${placement ? ` · ${placement.label}` : ""}`}
+            ? `3D preview, ${variant?.colorLabel} · drag to rotate, scroll to zoom`
+            : `Live preview, ${variant?.colorLabel}${placement ? ` · ${placement.label}` : ""}`}
         </p>
       </div>
 
@@ -971,7 +971,7 @@ export function PdpConfigurator({
                         {(() => {
                           const sv = product.variants.find((v) => v.id === variantId);
                           return sv ? (
-                            <p style={{ width: "100%", fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 10 }}>
+                            <p style={{ width: "100%", fontSize: 12, color: "var(--color-neutral)", marginTop: 10 }}>
                               {sv.colorLabel}
                               {sv.colorTcx ? ` · Pantone ${sv.colorTcx}` : ""}
                             </p>
@@ -1039,7 +1039,7 @@ export function PdpConfigurator({
                         {decorationIds.length > 0 ? (
                           <div className="pdpx-inkcolors" style={{ marginTop: 16 }}>
                             <p className="pdpx-place-label">
-                              Ink colors{pantones.length ? ` · ${pantones.length} of ${colorCap}` : ` · pick up to ${colorCap}`}
+                              Ink colours{pantones.length ? ` · ${pantones.length} of ${colorCap}` : ` · pick up to ${colorCap}`}
                             </p>
                             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
                               {PMS_PALETTE.map((c) => {
@@ -1062,8 +1062,8 @@ export function PdpConfigurator({
                                       height: 30,
                                       borderRadius: 8,
                                       background: c.hex,
-                                      border: on ? "2px solid var(--color-charcoal)" : "1px solid rgba(0,0,0,0.18)",
-                                      boxShadow: on ? "0 0 0 2px var(--color-cream)" : "none",
+                                      border: on ? "2px solid var(--colour-charcoal)" : "1px solid rgba(0,0,0,0.18)",
+                                      boxShadow: on ? "0 0 0 2px var(--colour-cream)" : "none",
                                       cursor: !on && full ? "not-allowed" : "pointer",
                                       opacity: !on && full ? 0.4 : 1
                                     }}
@@ -1072,9 +1072,9 @@ export function PdpConfigurator({
                               })}
                             </div>
                             {pantones.length > 0 && (
-                              <p style={{ fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
+                              <p style={{ fontSize: 12, color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
                                 {pantones.map((p) => `${p.name} (${p.code})`).join(" · ")}
-                                {pantones.length === 1 ? ". Your art prints in this ink." : ". Your art's spot colors."}
+                                {pantones.length === 1 ? ". Your art prints in this ink." : ". Your art's spot colours."}
                               </p>
                             )}
                           </div>
@@ -1111,8 +1111,8 @@ export function PdpConfigurator({
                               : uploadWarning && artworkUrl && !uploading
                               ? `⚠ ${uploadWarning}`
                               : artworkUrl && !uploading
-                              ? "Uploaded · high-resolution, print-ready ✓"
-                              : "PNG, JPG, SVG, WEBP, PDF · vector preferred"}
+                              ? "Uploaded · high-resolution, print-ready"
+                              : "PNG, JPG, SVG, WEBP, PDF, vector preferred"}
                           </span>
                         </button>
 
@@ -1122,7 +1122,7 @@ export function PdpConfigurator({
                           </p>
                         ) : (
                           <>
-                        <p className="pdpx-place-label">Step 02 · Location</p>
+                        <p className="pdpx-place-label">Step 02, Location</p>
                         {placements.length === 0 ? (
                           <p className="pdpx-place-hint">
                             Placement options for this {view} are being finalised. We only show locations we can spec to the inch. More open up as each style is calibrated.
@@ -1150,7 +1150,7 @@ export function PdpConfigurator({
                             <div className="pdpx-place-actions">
                               {hasBack && view === "front" ? (
                                 <button type="button" className="pdpx-link" onClick={mirrorToBack}>
-                                  Mirror to back ↓
+                                  Mirror to back
                                 </button>
                               ) : null}
                               <button type="button" className="pdpx-link pdpx-link--danger" onClick={removeArtwork}>
@@ -1363,7 +1363,7 @@ export function PdpConfigurator({
             no revised invoice later.
           </p>
           {printDpi != null && (lowRes || blockRes) ? (
-            <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 600 }}>
+            <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 700 }}>
               {blockRes
                 ? `Artwork is too low-resolution for this print size (~${printDpi} DPI). Make the print smaller, or upload a higher-res image or vector (SVG/PDF).`
                 : `Low resolution at this size (~${printDpi} DPI). It may look soft. A higher-res image or vector prints sharper.`}
@@ -1381,19 +1381,19 @@ export function PdpConfigurator({
               ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
               : bundle
               ? bundle.editing
-                ? "Save changes ✓"
-                : "Add to box →"
+                ? "Save changes"
+                : "Add to box"
               : editOrder
               ? submitting
                 ? "Updating proof…"
-                : "Update proof →"
+                : "Update proof"
               : submitting
               ? "Adding to order…"
-              : "Add to order →"}
+              : "Add to order"}
           </button>
           {updateError ? <p className="pdpx-foot-note" style={{ color: "var(--color-terracotta)" }}>{updateError}</p> : null}
           <p className="pdpx-foot-note">
-            MOA-managed quality control · Artwork finalised in QA
+            MOA-managed quality control, Artwork finalised in QA
           </p>
           {!editOrder && !bundle ? (
             <button type="button" className="pdpx-share-link" onClick={handleShare}>
@@ -1402,7 +1402,7 @@ export function PdpConfigurator({
           ) : null}
           {!editOrder && !bundle && !isPackaging ? (
             <a className="pdpx-sample-link" href={`/samples?sku=${product.slug}`}>
-              Not sure yet? Order a sample first →
+              Not sure yet? Order a sample first
             </a>
           ) : null}
         </div>
@@ -1418,7 +1418,7 @@ export function PdpConfigurator({
             <strong>{product.skuCode}</strong>
           </div>
           <div className="pdpx-bb-cell">
-            <span>Color</span>
+            <span>Colour</span>
             <strong>
               <span className="pdpx-bb-dot" style={{ background: variant?.colorHex }} />
               {variant?.colorLabel}

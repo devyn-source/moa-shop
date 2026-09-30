@@ -92,7 +92,7 @@ export default function CartPage() {
         <div className="empty-state">Loading cart…</div>
       ) : items.length === 0 ? (
         <div className="empty-state">
-          Your cart is empty. <Link href="/shop" className="link-button">Browse the shop →</Link>
+          Your cart is empty. <Link href="/shop" className="link-button">Browse the shop</Link>
         </div>
       ) : (
         <>
@@ -106,7 +106,7 @@ export default function CartPage() {
                   : `Seeding to press or influencers? Bundle ${PR_BOX_PROMO.qualify.minComponents}+ items with branded packaging into a PR Box and save ${Math.round(PR_BOX_PROMO.discount.value * 100)}%.`}
               </p>
             </div>
-            <span className="cart-upsell-cta">{PR_BOX_PROMO.banner.ctaText} →</span>
+            <span className="cart-upsell-cta">{PR_BOX_PROMO.banner.ctaText} </span>
           </Link>
         ) : null}
         <div className="cart-layout">
@@ -181,7 +181,7 @@ export default function CartPage() {
                 <span className="price-total-sub">pre-tax · upfront</span>
               </div>
               <Link href="/checkout" className="button button--lg button--full" style={{ marginTop: 12 }}>
-                Checkout →
+                Checkout
               </Link>
               <p className="trust-note">Each line becomes its own production order. Enter contact + ship-to once at checkout.</p>
             </div>

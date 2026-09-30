@@ -81,7 +81,7 @@ export function InvoiceRequestDialog({ prefillEmail }: { prefillEmail: string })
             if (!open) analytics.track("invoice_request_opened");
           }}
         >
-          Request it →
+          Request it
         </button>
       </p>
 
@@ -140,7 +140,7 @@ export function InvoiceRequestDialog({ prefillEmail }: { prefillEmail: string })
                 <div className="ir-foot">
                   <span className="ir-hint">Your cart stays as-is. This just starts the conversation.</span>
                   <button type="submit" className="ir-send" disabled={submitting}>
-                    {submitting ? "Sending…" : "Send request →"}
+                    {submitting ? "Sending…" : "Send request"}
                   </button>
                 </div>
               </form>

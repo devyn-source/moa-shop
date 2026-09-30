@@ -80,7 +80,7 @@ export function WovenLabelModal({
       setLogoUrl(data.url);
       setLogoName(file.name);
       setLogoTransform(DEFAULT_LOGO_TF);
-      setUploadMsg(data.warning ?? "Uploaded ✓");
+      setUploadMsg(data.warning ?? "Uploaded");
     } catch (e) {
       setUploadMsg(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -125,7 +125,7 @@ export function WovenLabelModal({
               )}
             </span>
           </span>
-          {logoUrl ? <span className="wl-dim">Drag a corner to resize · drag the logo to move</span> : null}
+          {logoUrl ? <span className="wl-dim">Drag a corner to resize, drag the logo to move</span> : null}
         </div>
 
         {/* logo upload */}
@@ -135,9 +135,9 @@ export function WovenLabelModal({
           <button type="button" className="wl-upload" onClick={() => fileRef.current?.click()} disabled={uploading}>
             {uploading ? "Uploading…" : logoName ? `↻ ${logoName}` : "Upload logo"}
           </button>
-          <p className={`wl-hint${uploadMsg && uploadMsg !== "Uploaded ✓" ? " is-warn" : ""}`}>
+          <p className={`wl-hint${uploadMsg && uploadMsg !== "Uploaded" ? " is-warn" : ""}`}>
             {uploadMsg ??
-              "Woven labels are ~2 × 1 in. Use a vector (SVG / AI / PDF) or a transparent PNG ≥ 1200px. Keep it simple: woven art is solid thread colors, not gradients."}
+              "Woven labels are ~2 × 1 in. Use a vector (SVG / AI / PDF) or a transparent PNG ≥ 1200px. Keep it simple: woven art is solid thread colours, not gradients."}
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export function WovenLabelModal({
         </label>
 
         <div className="wl-field">
-          <span className="wl-label">Label color</span>
+          <span className="wl-label">Label colour</span>
           <div className="wl-threads">
             {LABEL_COLORS.map((c) => (
               <button key={c} type="button" className={`wl-thread${labelColor === c ? " is-on" : ""}`} style={{ background: c }} onClick={() => setLabelColor(c)} aria-label={c} />
@@ -156,7 +156,7 @@ export function WovenLabelModal({
         </div>
 
         <div className="wl-field">
-          <span className="wl-label">Thread color</span>
+          <span className="wl-label">Thread colour</span>
           <div className="wl-threads">
             {THREADS.map((t) => (
               <button key={t} type="button" className={`wl-thread${thread === t ? " is-on" : ""}`} style={{ background: t }} onClick={() => setThread(t)} aria-label={t} />
@@ -174,7 +174,7 @@ export function WovenLabelModal({
               disabled={!text.trim() && !logoUrl}
               onClick={() => onSave({ text: text.trim(), fold: "flat", placement: "neck", labelColor, thread, logoUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
             >
-              {initial ? "Update label" : "Add to order →"}
+              {initial ? "Update label" : "Add to order"}
             </button>
           </div>
         </div>

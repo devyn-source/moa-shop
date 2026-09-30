@@ -8,12 +8,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Shop Custom Cut and Sew Merch | MOA Shop",
   description:
-    "Browse custom styles cut and sewn to our own patterns: tees, hoodies, outerwear, headwear, totes and PR boxes. Built for smaller orders. Configure color, fabric and decoration, see your price as you go, and order with no quotes and no sales calls.",
+    "Custom styles cut and sewn to our own patterns: tees, hoodies, outerwear, headwear and totes, in smaller runs. Choose colour, fabric and decoration and see your price as you go.",
   alternates: { canonical: "/shop" },
   openGraph: {
-    title: "Shop MOA: custom cut and sew merch for smaller orders",
+    title: "MOA Shop: custom cut and sew in smaller runs",
     description:
-      "Pick a style cut and sewn to our own patterns, design it in 3D, and get your proof within 24 business hours. Transparent per-unit pricing, MOQ 50.",
+      "Pick a style cut and sewn to our own patterns, design it in 3D and get a proof within 24 business hours. Prices per unit, 50 piece minimum.",
   },
 };
 
@@ -35,11 +35,9 @@ export default async function HomePage() {
       <section className="catalog-intro">
         <div className="catalog-intro-text">
           <p className="eyebrow">The MOA Shop</p>
-          <h1 className="page-title">Fully custom merch, for smaller orders.</h1>
+          <h1 className="page-title">Custom cut and sew, in smaller runs.</h1>
           <p className="lede">
-            Every style is cut and sewn to our own patterns. Build your run by size, design it in 3D,
-            and your proof arrives within 24 business hours. We produce it to spec and ship it to you.
-            No quotes, no sales calls. The self-serve side of the studio brands trust for their best merch.
+            Every style is cut and sewn to our own patterns. Build your run by size, design it in 3D and your proof arrives within 24 business hours. We make it to spec and ship it to you.
           </p>
         </div>
       </section>
@@ -49,23 +47,23 @@ export default async function HomePage() {
       <section className="value-strip" aria-label="How it works">
         <div className="value-card">
           <span className="value-num">01</span>
-          <h3>No quotes, ever</h3>
-          <p>One transparent price ladder per style. What you see is what you pay. No RFQs, no sales calls, one invoice.</p>
+          <h3>Prices shown</h3>
+          <p>One price ladder per style. What you see is what you pay. One invoice.</p>
         </div>
         <div className="value-card">
           <span className="value-num">02</span>
           <h3>Proof in 24 business hours</h3>
-          <p>See your mockup as you design. Our team reviews it and your proof arrives within 24 business hours. Approve it in your account. Nothing is made until you do.</p>
+          <p>The mockup updates as you design. Our team reviews it and your proof arrives within 24 business hours. Nothing is made until you approve it.</p>
         </div>
         <div className="value-card">
           <span className="value-num">03</span>
           <h3>Cut and sewn to our patterns</h3>
-          <p>Every style is cut and sewn to our own patterns, the same ones we produce for top brands. Curated, not an endless generic catalog.</p>
+          <p>Every style is cut and sewn to the patterns we produce for our clients. A short range, not a catalog of blanks.</p>
         </div>
         <div className="value-card">
           <span className="value-num">04</span>
           <h3>Tracked to your door</h3>
-          <p>Live status from approval through production to delivery, with carrier tracking emailed the moment it ships.</p>
+          <p>Status from approval to delivery. Carrier tracking by email when it ships.</p>
         </div>
       </section>
     </main>

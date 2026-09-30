@@ -55,7 +55,7 @@ export function ProductCard({
             <span className="meta-tag"><span className="label">Lead</span><b>{formatLeadTime(product.leadTimeDays)}</b></span>
             <span className="meta-tag meta-tag--ghost"><span className="label">Save</span><b>up to 10%</b></span>
           </div>
-          <span className="bundle-card-cta">Build your box →</span>
+          <span className="bundle-card-cta">Build your box</span>
         </div>
       </Link>
     );
@@ -83,7 +83,7 @@ export function ProductCard({
           </span>
         </div>
         <p className="card-blurb">{product.headline}</p>
-        <div className="swatch-row" aria-label={`${swatchCount} colors available`}>
+        <div className="swatch-row" aria-label={`${swatchCount} colours available`}>
           {product.variants.slice(0, 5).map((variant) => (
             <span
               key={variant.id}
@@ -92,7 +92,7 @@ export function ProductCard({
               style={{ background: variant.colorHex }}
             />
           ))}
-          <span className="swatch-count">{swatchCount} {swatchCount === 1 ? "color" : "colors"}</span>
+          <span className="swatch-count">{swatchCount} {swatchCount === 1 ? "colour" : "colours"}</span>
         </div>
         <div className="card-meta-row">
           <span className="meta-tag">

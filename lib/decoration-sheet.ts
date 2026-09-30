@@ -122,7 +122,7 @@ export async function buildDecorationSheetData(order: ShopOrder, mockupUrl: stri
     underbase: views[0]?.underbase ?? false,
     views,
     placementToleranceIn: 0.25,
-    colorNote: "Match Pantone TCX · color tolerance dE 2.0 max",
+    colorNote: "Match Pantone TCX · colour tolerance dE 2.0 max",
   };
 
   return data;

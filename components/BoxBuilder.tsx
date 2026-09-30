@@ -368,12 +368,12 @@ export function BoxBuilder({
                         </div>
                         <p className="bb-summary-meta">
                           {cfg.colorLabel} · {cfg.decorationLabel} · {cfg.quantity.toLocaleString()} units
-                          {cfg.artworkFileUrl ? " · artwork ✓" : ""}
+                          {cfg.artworkFileUrl ? " · artwork" : ""}
                           {cfg.wovenLabel ? " · woven label" : ""}
                         </p>
                         <div className="bb-summary-foot">
                           <button type="button" className="bb-customize" onClick={() => { if (!p) return; trackBuilderStart(); setModal({ product: p, seed: cfg.seed, editKey: it.key }); }}>
-                            Customize in full configurator →
+                            Customize in full configurator
                           </button>
                           <span className="bb-summary-price">
                             <MoneyCount value={cfg.totalUsd} />
@@ -438,14 +438,14 @@ export function BoxBuilder({
                     </div>
                     <p className="bb-summary-meta">
                       {p.variants.length > 1 ? `${cfg.colorLabel} · ` : ""}
-                      {!printable ? "Plain · not printed" : branded ? "Branded · artwork ✓" : "Unprinted · no artwork"}
+                      {!printable ? "Plain · not printed" : branded ? "Branded · artwork" : "Unprinted · no artwork"}
                       {finishLabel ? ` · ${finishLabel}` : ""}
                       {` · ${currency(unit)}/box`}
                     </p>
                     <div className="bb-summary-foot">
                       {printable ? (
                         <button type="button" className="bb-customize" onClick={() => { trackBuilderStart(); setModal({ product: p, seed: cfg.seed, editKey: it.key }); }}>
-                          {branded ? "Edit in full configurator →" : "Add branding in configurator →"}
+                          {branded ? "Edit in full configurator" : "Add branding in configurator"}
                         </button>
                       ) : <span className="bb-art-status">Always plain</span>}
                       <span className="bb-summary-price">{currency(round2(unit * boxQty))}</span>
@@ -504,7 +504,7 @@ export function BoxBuilder({
           <p className="bb-moq-note">
             {boxQty < promo.qualify.minBoxes
               ? `Minimum ${promo.qualify.minBoxes} boxes. Add ${promo.qualify.minBoxes - boxQty} more.`
-              : `${boxQty.toLocaleString()} boxes · every item produced in this size run (caps & totes one-size).`}
+              : `${boxQty.toLocaleString()} boxes, every item produced in this size run (caps & totes one-size).`}
           </p>
 
           <div className="bb-breakdown">
@@ -572,7 +572,7 @@ export function BoxBuilder({
           </div>
 
           <button type="button" className="button button--lg button--full" disabled={!canAdd} onClick={handleAdd} style={{ marginTop: 12 }}>
-            {submitting ? "Adding…" : "Add box to cart →"}
+            {submitting ? "Adding…" : "Add box to cart"}
           </button>
           <p className="trust-note">Each item + packaging becomes a production line under one PR Box. Customize any item in the full configurator.</p>
         </div>

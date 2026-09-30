@@ -25,7 +25,7 @@ function stepIndex(o: ExpressOrderView): number {
   return 0;
 }
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" }) + " PT" : "");
-const label: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", opacity: 0.6 };
+const label: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", opacity: 0.6 };
 const card: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: 18, border: "1px solid rgba(30,30,30,.1)" };
 
 export default async function ExpressOrderPage({ params }: { params: Promise<{ number: string }> }) {
@@ -42,7 +42,7 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
     <main className="page" style={{ display: "grid", gap: 28 }}>
       <header style={{ display: "grid", gap: 8 }}>
         <Link href="/orders" style={{ ...label, textDecoration: "none", color: "inherit" }}>Your orders</Link>
-        <p className="eyebrow">{o.mode === "sandbox" ? "Sandbox order · " : ""}Order {o.orderNumber}</p>
+        <p className="eyebrow">{o.mode === "sandbox" ? "Sandbox order, " : ""}Order {o.orderNumber}</p>
         <h1 style={{ margin: 0 }}>{o.statusLabel}</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: 13 }}>
           Submitted {fmt(o.submittedAt)}
@@ -91,7 +91,7 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
       <section style={{ ...card, display: "grid", gap: 10 }}>
         <p style={{ ...label, margin: 0 }}>Invoice · one payment for the full order</p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <strong style={{ fontSize: 24 }}>{o.invoice.total ? currency(o.invoice.total) : "Sent with your proof"}</strong>
+          <strong style={{ fontSize: 22 }}>{o.invoice.total ? currency(o.invoice.total) : "Sent with your proof"}</strong>
           {o.invoice.paid ? <span style={label}>Paid</span>
             : o.invoice.canPay ? <a className="button" href={o.invoice.payUrl || "#"}>Pay invoice</a>
             : <span style={{ fontSize: 12, opacity: 0.7 }}>{o.rounds.length ? "Approve every piece to pay" : "Arrives with your proof"}</span>}

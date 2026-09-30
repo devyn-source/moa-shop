@@ -3,7 +3,7 @@ import { moaClerkAppearance } from "@/lib/clerk-appearance";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Create your account · MOA Shop" };
+export const metadata = { title: "Create your account | MOA Shop" };
 
 export default function SignUpPage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -22,7 +22,7 @@ export default function SignUpPage() {
         <div className="signin-brand">
           <span className="signin-wordmark">MOA</span>
           <span className="signin-rule" aria-hidden />
-          <p className="signin-eyebrow">MOA Shop · Your account</p>
+          <p className="signin-eyebrow">MOA Shop, Your account</p>
           <h1 className="signin-headline">Create your account</h1>
           <p className="signin-sub">
             One account for your whole program: save designs, approve proofs, and track every

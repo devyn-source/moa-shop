@@ -27,7 +27,7 @@ export function ReorderBundleButton({ lines, label, compact }: { lines: Omit<Car
         router.push("/cart");
       }}
     >
-      {busy ? "Adding…" : label ?? (compact ? "Reorder box ↻" : "Reorder box →")}
+      {busy ? "Adding…" : label ?? (compact ? "Reorder box ↻" : "Reorder box")}
     </button>
   );
 }

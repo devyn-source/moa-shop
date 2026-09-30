@@ -54,7 +54,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
         <p className="uc-sub">{uc.subcopy}</p>
         <p className="uc-frame">“{uc.frame}”</p>
         <div className="uc-cta-row">
-          <Link href={builderHref} className="button button--lg">{uc.ctaLabel} →</Link>
+          <Link href={builderHref} className="button button--lg">{uc.ctaLabel} </Link>
           <Link href="/shop" className="ghost-button">Browse all products</Link>
         </div>
         <ul className="uc-proof">
@@ -70,7 +70,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
             <p className="eyebrow">In the {kit ? kit.name.toLowerCase() : "box"}</p>
             <h2>What it ships with</h2>
           </div>
-          <Link href={builderHref} className="link-button">Customize the box →</Link>
+          <Link href={builderHref} className="link-button">Customize the box</Link>
         </div>
         <div className="catalog-grid">
           {featured.map((p) => (
@@ -81,7 +81,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
 
       <section className="uc-bottom">
         <p className="uc-bottom-head">Build it in minutes, no quotes, no sales calls.</p>
-        <Link href={builderHref} className="button button--lg">{uc.ctaLabel} →</Link>
+        <Link href={builderHref} className="button button--lg">{uc.ctaLabel} </Link>
       </section>
     </main>
   );

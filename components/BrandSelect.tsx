@@ -94,7 +94,7 @@ export function BrandSelect({
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => commit(index)}
               >
-                <span className="brand-select-check" aria-hidden>{isSelected ? "✓" : ""}</span>
+                <span className="brand-select-check" aria-hidden>{isSelected ? <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden><path d="M2 6.5l2.5 2.5L10 3.5" stroke="currentColor" strokeWidth="1.8" /></svg> : null}</span>
                 {option.label}
               </li>
             );

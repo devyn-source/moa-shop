@@ -5,12 +5,12 @@ import { SampleKitForm } from "@/components/SampleKitForm";
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
 export const metadata: Metadata = {
-  title: "Request a Sample Kit · MOA Shop",
+  title: "Request a Sample Kit | MOA Shop",
   description:
     "Feel the blanks before you commit. Request a sample kit of MOA Shop production-grade garments, heavyweight tees, fleece, outerwear and headwear with all three decoration methods demonstrated.",
   alternates: { canonical: `${SITE}/samples` },
   openGraph: {
-    title: "Request a Sample Kit · MOA Shop",
+    title: "Request a Sample Kit | MOA Shop",
     description: "Feel the production-grade blanks and decoration quality before you order.",
     url: `${SITE}/samples`,
   },

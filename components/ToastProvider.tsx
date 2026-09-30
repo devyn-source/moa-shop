@@ -37,7 +37,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              <span className="toast-check" aria-hidden>✓</span>
+              <span className="toast-check" aria-hidden><svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden><path d="M2 6.5l2.5 2.5L10 3.5" stroke="currentColor" strokeWidth="1.8" /></svg></span>
               <span className="toast-msg">{t.message}</span>
               {t.href ? (
                 <Link href={t.href} className="toast-cta">{t.cta ?? "View"}</Link>

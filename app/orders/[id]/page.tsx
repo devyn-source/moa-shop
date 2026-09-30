@@ -49,7 +49,7 @@ function OrderReceiptCard({ order, product, showActions }: { order: ShopOrder; p
 
           <dl className="ord-specs">
             <div>
-              <dt>Color</dt>
+              <dt>Colour</dt>
               <dd>
                 {variant ? (
                   <>
@@ -77,7 +77,7 @@ function OrderReceiptCard({ order, product, showActions }: { order: ShopOrder; p
               {files.map((f, i) => (
                 <a key={i} href={f.url} target="_blank" rel="noreferrer" className="ord-file">
                   <span className="ord-file-name">{f.name}{f.zone ? <em> · {f.zone}</em> : null}</span>
-                  <span className="ord-file-dl" aria-hidden>↓</span>
+                  <span className="ord-file-dl" aria-hidden><svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden><path d="M6 1.5v8M2.5 6L6 9.5 9.5 6" stroke="currentColor" strokeWidth="1.5" /></svg></span>
                 </a>
               ))}
             </div>
@@ -159,7 +159,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </div>
 
         <div className="ord-actions ord-box-actions">
-          {reorderLines.length ? <ReorderBundleButton lines={reorderLines} label="Reorder box →" /> : null}
+          {reorderLines.length ? <ReorderBundleButton lines={reorderLines} label="Reorder box" /> : null}
           <Link className="secondary-button" href="/shop">Back to the shop</Link>
         </div>
       </main>

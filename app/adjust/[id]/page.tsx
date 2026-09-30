@@ -64,7 +64,7 @@ export default async function AdjustPage({ params }: { params: Promise<{ id: str
         <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Adjust your order</p>
         <h1 className="page-title">Make your changes</h1>
         <p className="lede">
-          Order {order.orderNumber}: change the placement, garment color, ink, artwork, or size run, then update your proof. Nothing is produced until you approve the new one.
+          Order {order.orderNumber}: change the placement, garment colour, ink, artwork, or size run, then update your proof. Nothing is produced until you approve the new one.
         </p>
       </div>
       <PdpConfigurator product={product} editOrder={seed} />

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Terms of Service · MOA Shop" };
+export const metadata = { title: "Terms of Service | MOA Shop" };
 
 // First-draft Terms for the self-serve catalog. Review with counsel before launch.
 export default function TermsPage() {
@@ -8,9 +8,9 @@ export default function TermsPage() {
     <main className="page" style={{ maxWidth: 760 }}>
       <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
       <h1 className="page-title">Terms of Service</h1>
-      <p className="lede">Magnum Opus Agency · MOA Shop. Last updated June 2026.</p>
+      <p className="lede">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
 
-      <div style={{ fontSize: "0.92rem", lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
+      <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
           <h2 style={hStyle}>1. What we make</h2>
           <p>MOA Shop produces standardized, made-to-order merchandise decorated with artwork you supply. Every item is custom-produced to the specification you configure and approve, so orders are handled as personalized goods.</p>
@@ -21,11 +21,11 @@ export default function TermsPage() {
         </section>
         <section>
           <h2 style={hStyle}>3. Proof approval is the spec</h2>
-          <p>After payment we generate a digital proof and decoration specification. <strong>Nothing is sent to production until you approve it.</strong> Your approval confirms the artwork, placement, colors, sizes, and quantities are correct. You may adjust and regenerate your proof as many times as you like before approving. Once approved, the approved proof governs production.</p>
+          <p>After payment we generate a digital proof and decoration specification. <strong>Nothing is sent to production until you approve it.</strong> Your approval confirms the artwork, placement, colours, sizes, and quantities are correct. You may adjust and regenerate your proof as many times as you like before approving. Once approved, the approved proof governs production.</p>
         </section>
         <section>
-          <h2 style={hStyle}>4. Lead times, colors &amp; variance</h2>
-          <p>Lead times are good-faith estimates, not guarantees. Screen and printed colors may vary slightly from on-screen previews; Pantone references are targets within standard manufacturing tolerance. Minor placement variance within industry tolerance is normal.</p>
+          <h2 style={hStyle}>4. Lead times, colours &amp; variance</h2>
+          <p>Lead times are good-faith estimates, not guarantees. Screen and printed colours may vary slightly from on-screen previews; Pantone references are targets within standard manufacturing tolerance. Minor placement variance within industry tolerance is normal.</p>
         </section>
         <section>
           <h2 style={hStyle}>5. Shipping, customs &amp; duties</h2>
@@ -48,4 +48,4 @@ export default function TermsPage() {
   );
 }
 
-const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };
+const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };

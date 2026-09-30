@@ -5,12 +5,12 @@ import { FAQ_GROUPS, FAQ_JSONLD } from "@/lib/faqs";
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
 export const metadata: Metadata = {
-  title: "FAQ · MOA Shop",
+  title: "FAQ | MOA Shop",
   description:
     "How the MOA Shop works: custom cut and sew merch for smaller orders, minimums and pricing, proofs and changes, decoration methods, production and delivery. Answers from Magnum Opus Agency.",
   alternates: { canonical: `${SITE}/faq` },
   openGraph: {
-    title: "FAQ · MOA Shop",
+    title: "FAQ | MOA Shop",
     description:
       "How the MOA Shop works: ordering, pricing, proofs, decoration, production and delivery.",
     url: `${SITE}/faq`,
@@ -58,7 +58,7 @@ export default function FaqPage() {
             Email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> and we&apos;ll help.
           </p>
         </div>
-        <Link className="button button--lg" href="/shop">Browse the shop →</Link>
+        <Link className="button button--lg" href="/shop">Browse the shop</Link>
       </section>
     </main>
   );

@@ -66,7 +66,7 @@ export function SampleKitForm({
   if (done) {
     return (
       <div className="empty-state" style={{ maxWidth: 560 }}>
-        <p style={{ fontWeight: 600, color: "var(--color-charcoal)" }}>Request received.</p>
+        <p style={{ fontWeight: 700, color: "var(--color-charcoal)" }}>Request received.</p>
         <p>
           A real person reviews every kit. You&apos;ll hear from us at the email you provided,
           usually within one business day.
@@ -108,13 +108,13 @@ export function SampleKitForm({
               style={{
                 padding: "7px 14px",
                 borderRadius: 999,
-                fontSize: "0.72rem",
-                fontWeight: 600,
+                fontSize: 12,
+                fontWeight: 700,
                 cursor: "pointer",
                 border: selected.includes(o.slug)
-                  ? "1px solid var(--color-terracotta)"
-                  : "1px solid var(--color-cream-dark)",
-                background: selected.includes(o.slug) ? "rgba(176,71,49,0.08)" : "var(--color-white, #fff)",
+                  ? "1px solid var(--colour-terracotta)"
+                  : "1px solid var(--colour-cream-dark)",
+                background: selected.includes(o.slug) ? "rgba(176,71,49,0.08)" : "var(--colour-white, #fff)",
                 color: selected.includes(o.slug) ? "var(--color-terracotta)" : "var(--color-charcoal)",
               }}
             >

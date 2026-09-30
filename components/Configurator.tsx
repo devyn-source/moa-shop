@@ -137,7 +137,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
                     <strong>{item.colorLabel}</strong>
                     <span className="tile-sub">{item.label} · {item.fabric}</span>
                   </span>
-                  {selected ? <span className="tile-check" aria-hidden>✓</span> : null}
+                  {selected ? <span className="tile-check" aria-hidden><svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden><path d="M2 6.5l2.5 2.5L10 3.5" stroke="currentColor" strokeWidth="1.8" /></svg></span> : null}
                 </button>
               );
             })}
@@ -162,7 +162,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
                   aria-pressed={selected}
                 >
                   <span className={`tile-checkbox${selected ? " tile-checkbox--on" : ""}`} aria-hidden>
-                    {selected ? "✓" : ""}
+                    {selected ? <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden><path d="M2 6.5l2.5 2.5L10 3.5" stroke="currentColor" strokeWidth="1.8" /></svg> : null}
                   </span>
                   <span className="tile-body">
                     <strong>{item.label}</strong>
@@ -311,10 +311,10 @@ export function Configurator({ product }: { product: CatalogProduct }) {
               ? "Select a decoration"
               : belowMoq
                 ? `Add ${product.moq - total} more (MOQ ${product.moq})`
-                : "Add to cart →"}
+                : "Add to cart"}
           </button>
           <p className="trust-note">
-            Add multiple SKUs, then check out once. 100% upfront · artwork QA before production.
+            Add multiple SKUs, then check out once. 100% upfront, artwork QA before production.
           </p>
         </div>
       </aside>

@@ -62,7 +62,7 @@ export default async function CheckoutSuccessPage({
                   </p>
                 </div>
                 <Link href={`/orders/${order.id}`} className="success-order-link">
-                  Track →
+                  Track
                 </Link>
               </header>
               {expressNumber && order.proofUrl ? (

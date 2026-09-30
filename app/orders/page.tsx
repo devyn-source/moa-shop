@@ -62,8 +62,8 @@ export default async function OrdersPage() {
           <h1
             style={{
               fontFamily: "var(--font-display)",
-              fontWeight: 800,
-              fontSize: "1.8rem",
+              fontWeight: 700,
+              fontSize: 28,
               letterSpacing: "0.5px",
               textTransform: "uppercase",
               color: "var(--color-charcoal)",
@@ -103,7 +103,7 @@ export default async function OrdersPage() {
       {orders.length === 0 ? (
         <div className="empty-state" style={{ marginTop: 28 }}>
           No orders under this email yet.{" "}
-          <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the shop →</Link>
+          <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the shop</Link>
         </div>
       ) : (
         <div className="ol-list">
@@ -126,7 +126,7 @@ export default async function OrdersPage() {
                     <span className="ol-price">{currency(total)}</span>
                     <div className="ol-actions">
                       {lines.length ? <ReorderBundleButton lines={lines} compact /> : null}
-                      <Link href={`/orders/${first.id}`} className="ol-track">Track →</Link>
+                      <Link href={`/orders/${first.id}`} className="ol-track">Track</Link>
                     </div>
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default async function OrdersPage() {
                   <span className="ol-price">{currency(order.totalUsd)}</span>
                   <div className="ol-actions">
                     {reorder ? <ReorderButton item={reorder} compact /> : null}
-                    <Link href={`/orders/${order.id}`} className="ol-track">Track →</Link>
+                    <Link href={`/orders/${order.id}`} className="ol-track">Track</Link>
                   </div>
                 </div>
               </div>
@@ -162,7 +162,7 @@ export default async function OrdersPage() {
         {savedDesigns.length === 0 && wishlistProducts.length === 0 ? (
           <p className="sd-empty">
             Nothing saved yet. Designs you share and products you heart land here.{" "}
-            <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the shop →</Link>
+            <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the shop</Link>
           </p>
         ) : (
           <>
@@ -186,7 +186,7 @@ export default async function OrdersPage() {
                           {new Date(d.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <Link href={`/c/${d.id}`} className="sd-resume">Resume →</Link>
+                      <Link href={`/c/${d.id}`} className="sd-resume">Resume</Link>
                     </div>
                   );
                 })}

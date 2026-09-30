@@ -16,16 +16,16 @@ export type CaseStudy = {
 };
 
 export const CASE_STUDIES: CaseStudy[] = [
-  { id: "sunday-puffer", logo: "sunday", category: "outerwear", slugs: ["down-puffer"], product: "Sunday Puffer Jacket", line: "Down puffer · nylon shell, rubber appliqué", image: "/work/sunday-puffer.png", fit: "contain" },
-  { id: "backbone-jacket", logo: "backbone", category: "outerwear", slugs: ["work-jacket"], product: "Backbone Work Jacket", line: "Cotton canvas · corduroy collar, woven patch", image: "/work/backbone-jacket.png", fit: "contain" },
-  { id: "sunday-sherpa", logo: "sunday", category: "outerwear", slugs: ["zip-sherpa"], product: "Sunday Sherpa", line: "Sherpa fleece · jacquard floral, contrast trim", image: "/work/sunday-sherpa.png", fit: "contain" },
-  { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", slugs: ["heavyweight-hoodie"], product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece · screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
-  { id: "bigface-tee", logo: "bigface", category: "tee", slugs: ["heavyweight-tee"], product: "Bigface Tee", line: "Heavyweight tee · screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
-  { id: "shapes-sweater", logo: "shapes", category: "knitwear", slugs: ["knit-sweater"], product: "Shapes Knit Sweater", line: "Cotton knit · embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
-  { id: "bloody-sunday-cap", logo: "sunday", category: "headwear", slugs: ["five-panel"], product: "Bloody Sunday Cap", line: "Cotton twill · tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" },
-  { id: "google-hat", logo: "google", category: "headwear", slugs: ["dad-hat"], product: "Google Hat", line: "Cotton dad cap · embroidery, rubber appliqué", image: "/work/google-hat.png", fit: "contain" },
-  { id: "directv-box", category: "bundle", slugs: ["pr-box"], product: "DirecTV PR Box", line: "Custom rigid box · stencil print", image: "/work/directv-box.png", fit: "contain" }, // TODO: add directv logo
-  { id: "bigface-chore", logo: "bigface", category: "outerwear", slugs: ["nylon-chore-jacket"], product: "Bigface Coach Jacket", line: "Nylon coach jacket · embroidered patch, snap front", image: "/work/bigface-chore.png", fit: "contain" }
+  { id: "sunday-puffer", logo: "sunday", category: "outerwear", slugs: ["down-puffer"], product: "Sunday Puffer Jacket", line: "Down puffer, nylon shell, rubber appliqué", image: "/work/sunday-puffer.png", fit: "contain" },
+  { id: "backbone-jacket", logo: "backbone", category: "outerwear", slugs: ["work-jacket"], product: "Backbone Work Jacket", line: "Cotton canvas, corduroy collar, woven patch", image: "/work/backbone-jacket.png", fit: "contain" },
+  { id: "sunday-sherpa", logo: "sunday", category: "outerwear", slugs: ["zip-sherpa"], product: "Sunday Sherpa", line: "Sherpa fleece, jacquard floral, contrast trim", image: "/work/sunday-sherpa.png", fit: "contain" },
+  { id: "pudgy-hoodie", logo: "pudgy-penguins", category: "hoodie", slugs: ["heavyweight-hoodie"], product: "Pudgy Penguins Hoodie", line: "Heavyweight fleece, screen-print graphic", image: "/work/pudgy-hoodie.png", fit: "contain" },
+  { id: "bigface-tee", logo: "bigface", category: "tee", slugs: ["heavyweight-tee"], product: "Bigface Tee", line: "Heavyweight tee, screen-print graphics", image: "/work/bigface-tee.png", fit: "contain" },
+  { id: "shapes-sweater", logo: "shapes", category: "knitwear", slugs: ["knit-sweater"], product: "Shapes Knit Sweater", line: "Cotton knit, embroidered logo", image: "/work/shapes-sweater.png", fit: "contain" },
+  { id: "bloody-sunday-cap", logo: "sunday", category: "headwear", slugs: ["five-panel"], product: "Bloody Sunday Cap", line: "Cotton twill, tonal embossed logo", image: "/work/bloody-sunday-cap.png", fit: "contain" },
+  { id: "google-hat", logo: "google", category: "headwear", slugs: ["dad-hat"], product: "Google Hat", line: "Cotton dad cap, embroidery, rubber appliqué", image: "/work/google-hat.png", fit: "contain" },
+  { id: "directv-box", category: "bundle", slugs: ["pr-box"], product: "DirecTV PR Box", line: "Custom rigid box, stencil print", image: "/work/directv-box.png", fit: "contain" }, // TODO: add directv logo
+  { id: "bigface-chore", logo: "bigface", category: "outerwear", slugs: ["nylon-chore-jacket"], product: "Bigface Coach Jacket", line: "Nylon coach jacket, embroidered patch, snap front", image: "/work/bigface-chore.png", fit: "contain" }
 ];
 
 // PDP: exact product match by slug ("this style, in the wild"). Falls back to the

@@ -25,7 +25,7 @@ export function ReorderButton({ item, compact }: { item: Omit<CartItem, "lineId"
         router.push("/cart");
       }}
     >
-      {busy ? "Adding…" : compact ? "Reorder ↻" : "Reorder →"}
+      {busy ? "Adding…" : compact ? "Reorder ↻" : "Reorder"}
     </button>
   );
 }

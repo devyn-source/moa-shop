@@ -35,7 +35,7 @@ export type PrBoxPromo = {
 export const PR_BOX_PROMO: PrBoxPromo = {
   id: "pr-box-launch",
   active: true,
-  label: "BUILD A PR BOX · SAVE 10%",
+  label: "BUILD A PR BOX, SAVE 10%",
   banner: {
     headline: "Build a PR Box. Save 10%.",
     subcopy: "Bundle 3+ items with branded packaging and take 10% off every box.",

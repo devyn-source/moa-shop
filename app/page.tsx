@@ -16,7 +16,7 @@ import type { CatalogProduct } from "@/lib/types";
 export const metadata: Metadata = {
   title: "Custom Cut and Sew Merch for Smaller Orders | MOA Shop",
   description:
-    "Fully custom merch for smaller orders. Every style is cut and sewn to our own patterns. Design it yourself in 3D, get your proof within 24 business hours, pay one invoice. No quotes, no sales calls.",
+    "Custom cut and sew in smaller runs. Every style is made to our own patterns. Design it in 3D, a proof within 24 business hours and one invoice.",
 };
 
 const fromPrice = (p: CatalogProduct) => Math.min(...p.priceTiers.map((t) => t.perUnitUsd));
@@ -84,16 +84,16 @@ export default async function LandingPage() {
   const faqs = ALL_FAQS.slice(0, 6);
 
   const cred = [
-    { icon: I.badge, t: "Cut and sewn", d: "Every style made to our own patterns" },
-    { icon: I.tag, t: "Built for smaller orders", d: "One clear price ladder, MOQ 50" },
-    { icon: I.needle, t: "Decorated your way", d: "Screen print, embroidery, woven labels" },
-    { icon: I.truck, t: "One invoice", d: "Pay once, track it from proof to delivery" },
+    { icon: I.badge, t: "Cut and sewn", d: "Every style is made to our own patterns." },
+    { icon: I.tag, t: "Built for smaller orders", d: "One price ladder per style. 50 piece minimum." },
+    { icon: I.needle, t: "Decoration", d: "Screen print, embroidery and woven labels." },
+    { icon: I.truck, t: "One invoice", d: "Paid once. Tracked from proof to delivery." },
   ];
   const steps = [
-    { icon: I.shirt, t: "Pick a style", d: "Choose from a curated range of styles, each one cut and sewn to our own patterns." },
-    { icon: I.upload, t: "Design it in 3D", d: "Drop in your art, place it on the 3D garment, and pick colors. See your mockup as you design." },
-    { icon: I.check, t: "Approve your proof", d: "Our team reviews your design and your proof arrives within 24 business hours. Approve it in your account." },
-    { icon: I.box, t: "Pay once, we produce it", d: "Pay one invoice for the full order. We produce it to spec with our partner factories, run QC, and ship it with tracking." },
+    { icon: I.shirt, t: "Pick a style", d: "Every style is cut and sewn to our own patterns." },
+    { icon: I.upload, t: "Design it in 3D", d: "Place your artwork on the garment and choose your colours. The mockup updates as you design." },
+    { icon: I.check, t: "Approve your proof", d: "Our team reviews every design. Your proof arrives within 24 business hours." },
+    { icon: I.box, t: "We make it", d: "One invoice for the full order. Produced with our factory partners, checked by our quality control and shipped with tracking." },
   ];
   // Real clients (logos pulled from magnumopus.agency). Per-logo height is tuned
   // by aspect ratio so wide wordmarks and compact marks feel the same visual size.
@@ -115,17 +115,15 @@ export default async function LandingPage() {
         <div className="lp-hero-copy" data-reveal>
           <p className="lp-eyebrow">The MOA Shop</p>
           <h1 className="lp-h1">
-            Fully custom merch,
+            Custom cut and sew,
             <br />
-            <span className="lp-h1-accent">for smaller orders.</span>
+            <span className="lp-h1-accent">in smaller runs.</span>
           </h1>
           <p className="lp-sub">
-            Every style is cut and sewn to our own patterns. Design it yourself in 3D,
-            get your proof within 24 business hours, and pay one invoice for the full
-            order. No quotes, no sales calls.
+            Every style is cut and sewn to our own patterns, never a printed blank. Design it in 3D, get a proof within 24 business hours and pay one invoice.
           </p>
           <div className="lp-cta-row">
-            <Link className="lp-btn lp-btn--primary" href="#shop">Build your merch →</Link>
+            <Link className="lp-btn lp-btn--primary" href="#shop">Start designing</Link>
             <Link className="lp-btn lp-btn--ghost" href="/shop">Browse the shop</Link>
           </div>
           <ul className="lp-hero-trust">
@@ -152,7 +150,7 @@ export default async function LandingPage() {
 
       {/* ===== Trusted-by marquee (real clients) ===== */}
       <section className="lp-marquee" aria-label="Brands MOA has produced merch for">
-        <p className="lp-marquee-label">The studio behind merch for</p>
+        <p className="lp-marquee-label">Clientele</p>
         <div className="lp-marquee-viewport">
           <div className="lp-marquee-track">
             {[...clients, ...clients].map(([slug, name, h], i) => (
@@ -185,11 +183,10 @@ export default async function LandingPage() {
       {/* ===== How it works ===== */}
       <section className="lp-section" id="how">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">01 · Process</span>
-          <h2 className="lp-h2">From idea to doorstep in four steps</h2>
+          <span className="lp-index">01 · How it works</span>
+          <h2 className="lp-h2">Designed, made and delivered.</h2>
           <p className="lp-section-lede">
-            Design it yourself, and our team takes it from there. No RFQs, no waiting on a
-            sales rep to email you a quote.
+            You design it. Our studio takes it from there.
           </p>
         </div>
         <div className="lp-steps">
@@ -210,10 +207,9 @@ export default async function LandingPage() {
       <section className="lp-section lp-shop" id="shop">
         <div className="lp-section-head" data-reveal>
           <span className="lp-index">02 · The range</span>
-          <h2 className="lp-h2">Start with a best-seller</h2>
+          <h2 className="lp-h2">Our own patterns.</h2>
           <p className="lp-section-lede">
-            Every style is cut and sewn to our own patterns, the same ones we produce for
-            leading brands. Curated, not an endless generic catalog.
+            Every style is cut and sewn to the patterns we produce for our clients. A short range, not a catalog of blanks.
           </p>
         </div>
         <div className="lp-grid">
@@ -224,27 +220,25 @@ export default async function LandingPage() {
           ))}
         </div>
         <div className="lp-shop-cta" data-reveal>
-          <Link className="lp-btn lp-btn--primary" href="/shop">See the full catalog →</Link>
+          <Link className="lp-btn lp-btn--primary" href="/shop">See all styles</Link>
         </div>
       </section>
 
       {/* ===== Instant proof spotlight (dark, editorial) ===== */}
       <section className="lp-proof">
         <div className="lp-proof-copy" data-reveal>
-          <span className="lp-index lp-index--light">03 · The advantage</span>
-          <h2 className="lp-h2">See it before you buy it.</h2>
+          <span className="lp-index lp-index--light">03 · 3D design</span>
+          <h2 className="lp-h2">See it before it is made.</h2>
           <p className="lp-section-lede">
-            Upload your art and see your mockup as you design. Adjust placement, size, color
-            and decoration method on the 3D garment yourself. Our team reviews it and your
-            proof arrives within 24 business hours. The proof you approve is the spec we produce.
+            Place your artwork on the 3D garment and set size, placement, colour and decoration. Our team reviews it and your proof arrives within 24 business hours. The proof you approve is the spec we produce.
           </p>
           <ul className="lp-proof-list">
-            <li>Drag, scale and rotate your art on a live garment</li>
-            <li>Print-resolution check before you ever pay</li>
-            <li>Add a woven brand label, sewn in</li>
-            <li>No mockup fees, no waiting on a sales rep</li>
+            <li>Move, scale and rotate your artwork on the garment</li>
+            <li>Print resolution checked before you pay</li>
+            <li>Woven labels, sewn in</li>
+            <li>No mockup fees</li>
           </ul>
-          <Link className="lp-btn lp-btn--primary" href="#shop">Try it on a product →</Link>
+          <Link className="lp-btn lp-btn--primary" href="#shop">Start designing</Link>
         </div>
         <div className="lp-proof-stage" data-reveal style={stagger(1)}>
           <div className="lp-proof-shot lp-proof-shot--capture">
@@ -258,35 +252,35 @@ export default async function LandingPage() {
               sizes="(max-width: 900px) 92vw, 480px"
             />
           </div>
-          <span className="lp-proof-tag">Captured live from the configurator</span>
+          <span className="lp-proof-tag">Captured from the configurator</span>
         </div>
       </section>
 
       {/* ===== Comparison ===== */}
       <section className="lp-section">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">04 · Why teams switch</span>
-          <h2 className="lp-h2">The old way vs the MOA way</h2>
+          <span className="lp-index">04 · The difference</span>
+          <h2 className="lp-h2">Made, not printed.</h2>
         </div>
         <div className="lp-compare">
           <div className="lp-compare-col lp-compare-col--old" data-reveal>
-            <p className="lp-compare-title">Traditional merch vendors</p>
+            <p className="lp-compare-title">Print shops</p>
             <ul>
-              <li>Email an RFQ, wait days for a quote</li>
-              <li>Pay mockup fees, wait for PDF proofs</li>
-              <li>Opaque pricing, surprise add-ons</li>
-              <li>Printed stock garments</li>
-              <li>No visibility once you order</li>
+              <li>A quote by email, days later</li>
+              <li>Mockup fees and PDF proofs</li>
+              <li>Add-ons after the fact</li>
+              <li>Stock blanks with a print</li>
+              <li>No visibility after the order</li>
             </ul>
           </div>
           <div className="lp-compare-col lp-compare-col--moa" data-reveal style={stagger(1)}>
             <p className="lp-compare-title">MOA Shop</p>
             <ul>
-              <li>Self-serve, transparent per-unit pricing</li>
-              <li>Design in 3D, proof within 24 business hours</li>
+              <li>Prices shown per unit</li>
+              <li>Designed in 3D, proofed within 24 business hours</li>
               <li>One invoice for the full order</li>
               <li>Cut and sewn to our own patterns</li>
-              <li>Live tracking from proof to delivery</li>
+              <li>Tracked from proof to delivery</li>
             </ul>
           </div>
         </div>
@@ -295,12 +289,10 @@ export default async function LandingPage() {
       {/* ===== Guarantee (charcoal band) ===== */}
       <section className="lp-guarantee">
         <div data-reveal>
-          <span className="lp-index lp-index--light">05 · Zero-risk by design</span>
+          <span className="lp-index lp-index--light">05 · Approval</span>
           <h2 className="lp-h2">Nothing is made until you approve it.</h2>
           <p className="lp-section-lede">
-            Your approved proof <em>is</em> the quality bar. Production starts only after
-            you approve and pay, and every order runs through MOA quality control before it
-            ships. The same standard top brands trust us with.
+            Your approved proof <em>is</em> the standard. Production starts after you approve and pay, and every order passes our quality control before it ships.
           </p>
         </div>
       </section>
@@ -313,8 +305,8 @@ export default async function LandingPage() {
       {/* ===== FAQ ===== */}
       <section className="lp-section lp-faq" id="faq">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">06 · Good to know</span>
-          <h2 className="lp-h2">Questions, answered</h2>
+          <span className="lp-index">06 · FAQ</span>
+          <h2 className="lp-h2">Questions</h2>
         </div>
         <div className="lp-faq-list">
           {faqs.map((f, i) => (
@@ -322,20 +314,20 @@ export default async function LandingPage() {
           ))}
         </div>
         <div className="lp-faq-more" data-reveal>
-          <Link className="lp-link" href="/faq">Read all FAQs →</Link>
+          <Link className="lp-link" href="/faq">All questions</Link>
         </div>
       </section>
 
       {/* ===== Final CTA ===== */}
       <section className="lp-final">
         <div data-reveal>
-          <h2 className="lp-final-h">Make the merch your brand deserves.</h2>
+          <h2 className="lp-final-h">Start with a style.</h2>
           <p className="lp-final-sub">
-            Pick a style, design it in 3D, approve your proof. From {currency(fromLow)}/unit,
+            Pick a style, design it in 3D and approve your proof. From {currency(fromLow)}/unit,
             delivered in {hero ? formatLeadTime(hero.leadTimeDays) : "weeks"}.
           </p>
           <div className="lp-cta-row lp-cta-row--center">
-            <Link className="lp-btn lp-btn--primary lp-btn--lg" href="#shop">Build your merch →</Link>
+            <Link className="lp-btn lp-btn--primary lp-btn--lg" href="#shop">Start designing</Link>
             <Link className="lp-btn lp-btn--ghost lp-btn--lg" href="/shop">Browse the shop</Link>
           </div>
         </div>

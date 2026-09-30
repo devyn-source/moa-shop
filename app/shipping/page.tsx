@@ -1,13 +1,13 @@
-export const metadata = { title: "Shipping Policy · MOA Shop" };
+export const metadata = { title: "Shipping Policy | MOA Shop" };
 
 export default function ShippingPolicyPage() {
   return (
     <main className="page" style={{ maxWidth: 760 }}>
       <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
       <h1 className="page-title">Shipping Policy</h1>
-      <p className="lede">Magnum Opus Agency · MOA Shop. Last updated June 2026.</p>
+      <p className="lede">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
 
-      <div style={{ fontSize: "0.92rem", lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
+      <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
           <h2 style={hStyle}>Lead times</h2>
           <p>Every order is made to order. Each product page shows its full delivered lead time (production plus transit), and the clock starts when you <strong>approve your proof</strong>, not at checkout. Until you approve, nothing is produced and nothing ships.</p>
@@ -37,4 +37,4 @@ export default function ShippingPolicyPage() {
   );
 }
 
-const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };
+const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };

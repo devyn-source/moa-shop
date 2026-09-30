@@ -15,7 +15,7 @@ export default function OrdersError({ reset }: { error: Error & { digest?: strin
         <a className="secondary-button" href="/shop">Back to the catalog</a>
       </div>
       <p className="trust-note" style={{ marginTop: 22 }}>
-        Still stuck? <a href="mailto:production@magnumopus.agency" style={{ color: "var(--color-terracotta)", fontWeight: 600 }}>Email a real person</a> and include your order number and we&apos;ll sort it.
+        Still stuck? <a href="mailto:production@magnumopus.agency" style={{ color: "var(--color-terracotta)", fontWeight: 700 }}>Email a real person</a> and include your order number and we&apos;ll sort it.
       </p>
     </main>
   );

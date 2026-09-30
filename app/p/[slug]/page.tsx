@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!product) return { title: "MOA Shop" };
   const cheapest = product.priceTiers[product.priceTiers.length - 1] ?? product.priceTiers[0];
   const title = `${product.displayName} · MOA Shop`;
-  const description = `${product.headline} From ${currency(cheapest.perUnitUsd)}/unit · MOQ ${product.moq} · ${product.variants.length} colors.`;
+  const description = `${product.headline} From ${currency(cheapest.perUnitUsd)}/unit, ${product.moq} piece minimum, ${product.variants.length} colours.`;
   const image = product.greyFront ?? product.variants.find((v) => v.frontImage)?.frontImage;
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
   return {
@@ -134,7 +134,7 @@ export default async function ProductPage({
       {isPromoWithinWindow(PR_BOX_PROMO) ? (
         <Link href="/p/pr-box" className="pdp-prbox-nudge">
           <span className="pdp-prbox-nudge-text">Seeding {product.displayName} to press or influencers?</span>
-          <b>Build it into a PR Box → save {Math.round(PR_BOX_PROMO.discount.value * 100)}%</b>
+          <b>Build it into a PR Box, save {Math.round(PR_BOX_PROMO.discount.value * 100)}%</b>
         </Link>
       ) : null}
 

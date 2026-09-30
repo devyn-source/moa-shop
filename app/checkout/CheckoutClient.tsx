@@ -128,7 +128,7 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
   if (hydrated && items.length === 0) {
     return (
       <main className="page">
-        <div className="empty-state">Your cart is empty. <Link href="/shop" className="link-button">Browse the shop →</Link></div>
+        <div className="empty-state">Your cart is empty. <Link href="/shop" className="link-button">Browse the shop</Link></div>
       </main>
     );
   }
@@ -242,13 +242,13 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
             </div>
             <label style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "4px 0 14px", cursor: "pointer" }}>
               <input type="checkbox" checked={ipAttested} onChange={(e) => setIpAttested(e.target.checked)} style={{ marginTop: 3, accentColor: "var(--color-terracotta)", width: 16, height: 16 }} />
-              <span style={{ fontSize: "0.72rem", lineHeight: 1.5, color: "var(--color-neutral)" }}>
+              <span style={{ fontSize: 12, lineHeight: 1.5, color: "var(--color-neutral)" }}>
                 I own or have the rights to use this artwork, and agree to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "var(--color-terracotta)" }}>Terms</a> &amp; <a href="/refund-policy" target="_blank" rel="noreferrer" style={{ color: "var(--color-terracotta)" }}>Refund Policy</a>.
               </span>
             </label>
             <button className="button button--lg button--full" type="submit" form="checkout-form" disabled={submitting || !ipAttested}>
               {express
-                ? submitting ? "Submitting your order…" : `Submit order · ${currency(total)}`
+                ? submitting ? "Submitting your order…" : `Submit order, ${currency(total)}`
                 : submitting ? "Redirecting to checkout…" : `Pay ${currency(total)} · secure checkout`}
             </button>
             <p className="trust-note">{express
@@ -261,10 +261,10 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
               Prefer to talk it through first?{" "}
               <a
                 href={`mailto:production@magnumopus.agency?subject=${encodeURIComponent(`Order question: ${count.toLocaleString()} units, ${currency(total)}`)}`}
-                style={{ color: "var(--color-terracotta)", fontWeight: 600 }}
+                style={{ color: "var(--color-terracotta)", fontWeight: 700 }}
                 onClick={() => analytics.track("talk_to_us_clicked", { value: total, count })}
               >
-                Email a real person →
+                Email a real person
               </a>
             </p>
             {/* Invoice/PO hand-raise lane — a lead, not a payment path. Never

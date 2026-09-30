@@ -404,7 +404,7 @@ export default function Garment3DDecorator({
             ) : null}
             <button type="button" className="studio3dx-addbtn" onClick={addPlacement}>+ Save &amp; add another placement</button>
           </div>
-          <p className="studio3dx-hint">Drag to move · pull a corner to resize · top handle to rotate · arrow keys to nudge. The logo wraps the garment exactly as it prints.</p>
+          <p className="studio3dx-hint">Drag to move, pull a corner to resize, top handle to rotate, arrow keys to nudge. The logo wraps the garment exactly as it prints.</p>
         </>
       ) : (
         <p className="studio3dx-hint">Spin the garment to preview every placement in 3D. Tap <b>Edit</b> to keep adjusting.</p>

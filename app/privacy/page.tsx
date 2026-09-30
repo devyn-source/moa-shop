@@ -1,13 +1,13 @@
-export const metadata = { title: "Privacy Policy · MOA Shop" };
+export const metadata = { title: "Privacy Policy | MOA Shop" };
 
 export default function PrivacyPage() {
   return (
     <main className="page" style={{ maxWidth: 760 }}>
       <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
       <h1 className="page-title">Privacy Policy</h1>
-      <p className="lede">Magnum Opus Agency · MOA Shop. Last updated June 2026.</p>
+      <p className="lede">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
 
-      <div style={{ fontSize: "0.92rem", lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
+      <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
           <h2 style={hStyle}>What we collect</h2>
           <p>To fulfill your order we collect your contact details (name, email, phone, company), shipping address, the artwork you upload, and order details. Payment is processed by <strong>Stripe</strong>. We never see or store your full card details.</p>
@@ -33,4 +33,4 @@ export default function PrivacyPage() {
   );
 }
 
-const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };
+const hStyle: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px" };

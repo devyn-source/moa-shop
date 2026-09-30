@@ -13,7 +13,7 @@ export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string
   // last row never strands a single orphan card next to a viewport of blank.
   const items = !styleSpecific && allItems.length > 3 ? allItems.slice(0, allItems.length - (allItems.length % 3)) : allItems;
   if (!items.length) return null;
-  const heading = styleSpecific ? "This style, in the wild" : "Merch we've put into the world";
+  const heading = styleSpecific ? "This style, made for our clients" : "Signature work";
   return (
     <section className="cs" aria-label="Selected work">
       <div className="cs-head">

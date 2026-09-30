@@ -35,7 +35,7 @@ export function PromoBanner() {
       <Link href="/p/pr-box" className="promo-banner-link">
         <span className="promo-banner-head">{promo.banner.headline}</span>
         <span className="promo-banner-sub">{promo.banner.subcopy}</span>
-        <span className="promo-banner-cta">{promo.banner.ctaText} →</span>
+        <span className="promo-banner-cta">{promo.banner.ctaText} </span>
       </Link>
       <button
         type="button"

@@ -127,7 +127,7 @@ export default function Garment3D({
       </div>
 
       {swatchesVisible ? (
-      <div className="g3d-swatches" role="group" aria-label="Color">
+      <div className="g3d-swatches" role="group" aria-label="Colour">
         {swatches.map((s) => (
           <button
             key={s.label}

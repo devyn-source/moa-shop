@@ -65,7 +65,7 @@ export function CartButton() {
             {items.length === 0 ? (
               <div className="cart-pop-empty">
                 <span>Your cart is empty.</span>
-                <Link href="/p/pr-box" className="link-button">Build a PR Box →</Link>
+                <Link href="/p/pr-box" className="link-button">Build a PR Box</Link>
               </div>
             ) : (
               <>
@@ -96,7 +96,7 @@ export function CartButton() {
                   <strong>{currency(total)}</strong>
                 </div>
                 <div className="cart-pop-actions">
-                  <Link href="/cart" className="button button--full">View cart →</Link>
+                  <Link href="/cart" className="button button--full">View cart</Link>
                   <Link href="/checkout" className="cart-pop-checkout">Checkout</Link>
                 </div>
               </>

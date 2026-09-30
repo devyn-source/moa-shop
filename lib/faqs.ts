@@ -11,24 +11,24 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: "What is the MOA Shop?",
-        a: "The MOA Shop is the self-serve side of Magnum Opus Agency, built for smaller orders. Every style is fully custom, cut and sewn to our own patterns. You design it yourself in 3D, our team sends your proof within 24 business hours, you approve it and pay one invoice, and we produce it with our partner factories and ship it. No quotes, no sales calls.",
+        a: "The MOA Shop is the self-serve side of Magnum Opus Agency, built for smaller orders. Every style is fully custom, cut and sewn to our own patterns. You design it yourself in 3D, our team sends your proof within 24 business hours, you approve it and pay one invoice, and we make it with our factory partners and ship it.",
       },
       {
         q: "How does made-to-order merch work?",
-        a: "Choose a style and color, build your size run, upload your artwork, pick a decoration method and ink colors, and place the print on the 3D garment. You see your mockup as you design. After you submit, the MOA team reviews it and your proof arrives within 24 business hours. You approve it in your account and pay one invoice for the full order, then production starts. We produce it to spec and ship it with tracking.",
+        a: "Choose a style and colour, build your size run, upload your artwork, pick a decoration method and ink colours, and place the print on the 3D garment. You see your mockup as you design. After you submit, the MOA team reviews it and your proof arrives within 24 business hours. You approve it in your account and pay one invoice for the full order, then production starts. We produce it to spec and ship it with tracking.",
       },
       {
         q: "Who is Magnum Opus Agency?",
-        a: "Magnum Opus Agency (MOA) is a Los Angeles product design studio that designs and produces premium branded merchandise for brands, artists, and companies, working with our partner factories. The MOA Shop is its self-serve channel for smaller orders, cut and sewn to our own patterns.",
+        a: "Magnum Opus Agency (MOA) is a Los Angeles studio of designers, producers and engineers. We design, develop and produce custom product for festivals, enterprise teams and fashion labels. The MOA Shop is where smaller runs start, cut and sewn to our own patterns.",
       },
     ],
   },
   {
-    title: "Ordering & pricing",
+    title: "Ordering and pricing",
     items: [
       {
         q: "Is there a minimum order?",
-        a: "Each style has a minimum run (its MOQ), shown on the product page. Pricing is set on fixed quantity-based ladders: the more you order, the lower the per-unit price. There are no hidden fees and no RFQs; the price you see is the price you pay.",
+        a: "Each style has a minimum run (its MOQ), shown on the product page. Pricing is set on fixed quantity-based ladders: the more you order, the lower the per-unit price. There are no hidden fees. The price you see is the price you pay.",
       },
       {
         q: "How do I pay?",
@@ -36,25 +36,25 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "What artwork files can I upload?",
-        a: "High-resolution raster files (PNG or JPG) or vector files (SVG or PDF). The configurator runs an automatic resolution check at your chosen print size and warns you before you order if a file is too low-resolution to print sharply, so you never approve art that won't hold up.",
+        a: "High-resolution raster files (PNG or JPG) or vector files (SVG or PDF). The configurator runs an automatic resolution check at your chosen print size and warns you before you order if a file is too low-resolution to print sharply, before you approve anything.",
       },
     ],
   },
   {
-    title: "Proofs & changes",
+    title: "Proofs and changes",
     items: [
       {
         q: "Can I change the artwork or placement after I order?",
-        a: "Yes. Before you approve your proof you can request changes to the placement, garment color, ink colors, artwork file, and size run from your account. Our team updates the proof and sends it back for approval. Nothing is made until you approve.",
+        a: "Yes. Before you approve your proof you can request changes to the placement, garment colour, ink colours, artwork file, and size run from your account. Our team updates the proof and sends it back for approval. Nothing is made until you approve.",
       },
       {
         q: "What decoration methods are available?",
-        a: "Screen printing (plastisol), embroidery, and rubber appliqué, with Pantone ink color selection, plus woven labels sewn in as an add-on. Every order goes through artwork checks by the MOA team and a customer-approved proof before production.",
+        a: "Screen printing (plastisol), embroidery, and rubber appliqué, with Pantone ink colour selection, plus woven labels sewn in as an add-on. Every order goes through artwork checks by the MOA team and a customer-approved proof before production.",
       },
     ],
   },
   {
-    title: "Production & delivery",
+    title: "Production and delivery",
     items: [
       {
         q: "How long does it take?",
@@ -62,7 +62,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "How do I track my order?",
-        a: "You get live status from approval through production to delivery, and carrier tracking is emailed the moment your order ships.",
+        a: "Your account shows the status from approval to delivery. Carrier tracking is emailed when your order ships.",
       },
     ],
   },
