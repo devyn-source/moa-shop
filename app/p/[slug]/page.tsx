@@ -46,10 +46,10 @@ export default async function ProductPage({
   searchParams
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string; kit?: string }>;
+  searchParams: Promise<{ preview?: string; kit?: string; plates?: string }>;
 }) {
   const { slug } = await params;
-  const { preview, kit } = await searchParams;
+  const { preview, kit, plates } = await searchParams;
   const product = await getProductBySlug(slug);
 
   // Unpublished SKUs (e.g. the internal test SKU) render only with a valid
@@ -130,7 +130,7 @@ export default async function ProductPage({
         <span className="crumb-current">{product.skuCode}</span>
       </nav>
 
-      <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} plate={await getPlate(product.slug)} />
+      <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} plate={await getPlate(product.slug, { preview: plates === "preview" })} />
 
       {launchMode() ? null : (
         <>

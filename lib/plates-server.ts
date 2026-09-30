@@ -4,11 +4,11 @@ import type { PlateManifest } from "./plates";
 
 export type PlateRef = { base: string; manifest: PlateManifest };
 
-export async function getPlate(slug: string): Promise<PlateRef | null> {
+export async function getPlate(slug: string, opts: { preview?: boolean } = {}): Promise<PlateRef | null> {
   const override = (process.env.PLATE_OVERRIDE || "").split(",").map((s) => s.split("=")).find(([k]) => k === slug);
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "http://localhost:3217";
   const sb = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/$/, "");
-  const base = override ? override[1] : sb ? `${sb}/storage/v1/object/public/sku-plates/${slug}` : "";
+  const base = override ? override[1] : sb ? `${sb}/storage/v1/object/public/sku-plates/${opts.preview ? "_preview/" : ""}${slug}` : "";
   if (!base) return null;
   try {
     const url = base.startsWith("http") ? `${base}/manifest.json` : `${origin}${base}/manifest.json`;
