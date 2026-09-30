@@ -208,7 +208,7 @@ function EditBackdrop({ url, hex, view, bankedPlacements, activeBox, activeArt, 
     if (!presetReq || !model3d) return;
     const ipw = model3d.inchesPerWorld;
     const wW = presetReq.widthIn / ipw, hW = wW / aspect;
-    const cx = model3d.cfWorldX + presetReq.fromCenterScreenIn / ipw;
+    const cx = (view === "back" ? -model3d.cfWorldX : model3d.cfWorldX) + presetReq.fromCenterScreenIn / ipw;
     const cy = model3d.hpsWorldY - presetReq.belowHpsIn / ipw - hW / 2;
     cloned.rotation.y = rotY; cloned.updateMatrixWorld(true);
     const ray = new THREE.Raycaster();
@@ -220,7 +220,22 @@ function EditBackdrop({ url, hex, view, bankedPlacements, activeBox, activeArt, 
     const c = surf(cx, cy), l = surf(cx - wW / 2, cy), r = surf(cx + wW / 2, cy), t = surf(cx, cy + hW / 2), b = surf(cx, cy - hW / 2);
     if (!c || !l || !r || !t || !b) { onPresetPlaced?.(presetReq.key); return; }
     const [ccx, ccy] = toBox(c), [lx] = toBox(l), [rx] = toBox(r), [, ty] = toBox(t), [, by] = toBox(b);
-    const sx = Math.max(0.02, rx - lx), sy = Math.max(0.02, by - ty);
+    let sx = Math.max(0.02, rx - lx), sy = Math.max(0.02, by - ty);
+    // Measure the candidate exactly like the readout (camera rays at the art's
+    // left/right edges, surface chord) and rescale about the centre until it reads
+    // back at the preset width. Draped fabric makes the chord run over the flat guess.
+    const camHit = (fx: number, fy: number) => {
+      ray.setFromCamera(new THREE.Vector2((rect.x + (activeBox.x + activeBox.w * fx) * rect.w) * 2 - 1, -((rect.y + (activeBox.y + activeBox.h * fy) * rect.h) * 2 - 1)), camera);
+      return ray.intersectObject(cloned, true)[0]?.point ?? null;
+    };
+    for (let i = 0; i < 6; i++) {
+      const L = camHit(ccx - sx / 2, ccy), R = camHit(ccx + sx / 2, ccy);
+      if (!L || !R) break;
+      const measuredIn = L.distanceTo(R) * ipw;
+      if (Math.abs(measuredIn - presetReq.widthIn) < 0.05) break;
+      const f = presetReq.widthIn / measuredIn;
+      sx *= f; sy *= f;
+    }
     onArtChange({ ox: ccx - sx / 2, oy: ccy - sy / 2, sx, sy, r: 0 });
     onPresetPlaced?.(presetReq.key);
     // eslint-disable-next-line react-hooks/exhaustive-deps

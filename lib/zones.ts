@@ -211,7 +211,9 @@ export function model3dPlacement(cal: Model3DCalibration, hit: Model3DHit, view:
   const heightIn = quarter(hit.heightWorld * ipw);
   const topWorldY = hit.centerWorldY + hit.heightWorld / 2; // Y up → top edge
   const belowHpsIn = quarter(Math.max(0, (cal.hpsWorldY - topWorldY) * ipw));
-  const fromCenterIn = quarter((hit.centerWorldX - cal.cfWorldX) * ipw);
+  // The back view turns the model 180°, which mirrors an off-centre CF to -cfWorldX.
+  const datumX = view === "back" ? -cal.cfWorldX : cal.cfWorldX;
+  const fromCenterIn = quarter((hit.centerWorldX - datumX) * ipw);
   return { widthIn, heightIn, belowHpsIn, fromCenterIn, horizontal: horizontalLabel(fromCenterIn, view) };
 }
 
