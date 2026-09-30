@@ -41,9 +41,11 @@ export async function rateLimit(name: keyof typeof limiters, identifier: string)
   try {
     const { success } = await l.limit(identifier);
     return success;
-  } catch {
-    // Limiter outage: fail closed in production (abuse protection holds), open
-    // in dev so a missing local Upstash never blocks iteration.
-    return process.env.NODE_ENV !== "production";
+  } catch (err) {
+    // Limiter outage (e.g. the Upstash database was archived): fail OPEN and log
+    // loudly. Failing closed refused every upload and checkout on the live shop
+    // (9/30/2026) when the store's hostname stopped resolving.
+    console.error(`[rate-limit] ${name} limiter unreachable, allowing request`, err instanceof Error ? err.message : err);
+    return true;
   }
 }
