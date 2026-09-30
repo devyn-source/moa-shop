@@ -357,7 +357,8 @@ export function PdpConfigurator({
   const plateColour = exactPlate || !plate
     ? wantSlug
     : Object.entries(plate.manifest.colours).sort((a, b) => Math.abs(lumOf(a[1]) - lumOf(variant?.colorHex ?? "#808080")) - Math.abs(lumOf(b[1]) - lumOf(variant?.colorHex ?? "#808080")))[0][0];
-  const plateTint = exactPlate ? null : variant?.colorHex ?? null;
+  // Always correct to the colour's target value (even an exact plate's photo can sit off-target).
+  const plateTint = variant?.colorHex ?? null;
   const [plateView, setPlateView] = useState<PlateView>("front");
   const [spin, setSpin] = useState(false);
   const [plateP, setPlateP] = useState<PlatePlacement[]>([]);

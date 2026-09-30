@@ -123,7 +123,7 @@ function fabricLum(img: HTMLImageElement): number {
   for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 250) vals.push(0.2126 * lin(d[i]) + 0.7152 * lin(d[i + 1]) + 0.0722 * lin(d[i + 2]));
   if (!vals.length) return 0.2;
   vals.sort((a, b) => a - b);
-  return vals[Math.floor(vals.length * 0.6)]; // flat, lit fabric sits a little above the median
+  return vals[Math.floor(vals.length * 0.5)]; // median fabric brightness
 }
 
 const loadImage = (url: string) => new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => res(i); i.onerror = rej; i.src = url; });
