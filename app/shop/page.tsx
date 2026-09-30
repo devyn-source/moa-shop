@@ -6,14 +6,14 @@ import { bundleStartingPriceUsd } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Shop the Catalog — Production-Grade Custom Merch | MOA Catalog",
+  title: "Shop Custom Cut and Sew Merch | MOA Shop",
   description:
-    "Browse production-grade blanks — tees, hoodies, outerwear, headwear, totes and PR boxes. Configure color, fabric and decoration, see your price instantly, and order with no quotes and no sales calls.",
+    "Browse custom styles cut and sewn to our own patterns: tees, hoodies, outerwear, headwear, totes and PR boxes. Built for smaller orders. Configure color, fabric and decoration, see your price as you go, and order with no quotes and no sales calls.",
   alternates: { canonical: "/shop" },
   openGraph: {
-    title: "Shop the MOA Catalog — production-grade custom merch, made to order",
+    title: "Shop MOA: custom cut and sew merch for smaller orders",
     description:
-      "Configure a premium blank, upload your artwork, approve an instant proof. Transparent per-unit pricing, MOQ 50.",
+      "Pick a style cut and sewn to our own patterns, design it in 3D, and get your proof within 24 business hours. Transparent per-unit pricing, MOQ 50.",
   },
 };
 
@@ -34,12 +34,12 @@ export default async function HomePage() {
     <main className="page">
       <section className="catalog-intro">
         <div className="catalog-intro-text">
-          <p className="eyebrow">The MOA Catalog</p>
-          <h1 className="page-title">Production-grade merch, made to order.</h1>
+          <p className="eyebrow">The MOA Shop</p>
+          <h1 className="page-title">Fully custom merch, for smaller orders.</h1>
           <p className="lede">
-            Choose a premium blank, build your run by size, and upload your artwork. MOA manufactures it
-            to spec and ships it to you — no quotes, no sales calls, no minimums runaround. The self-serve
-            side of the studio brands trust for their best merch.
+            Every style is cut and sewn to our own patterns. Build your run by size, design it in 3D,
+            and your proof arrives within 24 business hours. We produce it to spec and ship it to you.
+            No quotes, no sales calls. The self-serve side of the studio brands trust for their best merch.
           </p>
         </div>
       </section>
@@ -50,17 +50,17 @@ export default async function HomePage() {
         <div className="value-card">
           <span className="value-num">01</span>
           <h3>No quotes, ever</h3>
-          <p>One transparent price ladder per style. What you see is what you pay — no RFQs, no sales calls, no back-and-forth.</p>
+          <p>One transparent price ladder per style. What you see is what you pay. No RFQs, no sales calls, one invoice.</p>
         </div>
         <div className="value-card">
           <span className="value-num">02</span>
-          <h3>Your proof, instantly</h3>
-          <p>Upload your art and see exactly how it prints. Adjust placement, color and size yourself until it&apos;s right — then approve. Nothing is made until you do.</p>
+          <h3>Proof in 24 business hours</h3>
+          <p>See your mockup as you design. Our team reviews it and your proof arrives within 24 business hours. Approve it in your account. Nothing is made until you do.</p>
         </div>
         <div className="value-card">
           <span className="value-num">03</span>
-          <h3>Production-grade blanks</h3>
-          <p>Every style is a garment we already make for top brands — curated and decoration-ready, not an endless generic catalog.</p>
+          <h3>Cut and sewn to our patterns</h3>
+          <p>Every style is cut and sewn to our own patterns, the same ones we produce for top brands. Curated, not an endless generic catalog.</p>
         </div>
         <div className="value-card">
           <span className="value-num">04</span>

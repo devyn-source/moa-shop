@@ -39,9 +39,9 @@ export async function POST(request: Request) {
     if (error) throw new Error(`sample request insert failed: ${error.message}`);
 
     await notifyOps(
-      `Sample kit request — ${d.companyName}`,
-      `<p><strong>${esc(d.contactName)}</strong> (${esc(d.roleTitle || "—")}) at <strong>${esc(d.companyName)}</strong> requested a sample kit.</p>
-       <p>Email: ${esc(d.contactEmail)}<br/>Interested in: ${esc(d.interestedSlugs.join(", ") || "—")}<br/>Est. quantity: ${esc(d.estQuantity || "—")} · Timeline: ${esc(d.timeline || "—")}</p>
+      `Sample kit request, ${d.companyName}`,
+      `<p><strong>${esc(d.contactName)}</strong> (${esc(d.roleTitle || "N/A")}) at <strong>${esc(d.companyName)}</strong> requested a sample kit.</p>
+       <p>Email: ${esc(d.contactEmail)}<br/>Interested in: ${esc(d.interestedSlugs.join(", ") || "N/A")}<br/>Est. quantity: ${esc(d.estQuantity || "N/A")} · Timeline: ${esc(d.timeline || "N/A")}</p>
        <p>Ship to: ${esc([d.shipTo.line1, d.shipTo.line2, d.shipTo.city, d.shipTo.state, d.shipTo.postalCode, d.shipTo.country].filter(Boolean).join(", "))}</p>
        ${d.notes ? `<p>Notes: ${esc(d.notes)}</p>` : ""}`
     );

@@ -88,13 +88,13 @@ export const USE_CASES: UseCase[] = [
     eyebrow: "Onboarding",
     headline: "New-hire kits they'll actually wear.",
     subcopy:
-      "Welcome every hire with a branded box — hoodie, tee, cap, packed and shipped to spec. No quotes, no sales calls, one price per box.",
+      "Welcome every hire with a branded box: hoodie, tee and cap, cut and sewn to our own patterns, packed and shipped to spec. No quotes, no sales calls, one price per box.",
     frame: "Every hire becomes a walking ad for your brand. That's the point.",
     kitId: "new-hire",
     featuredCategories: ["hoodie", "tee", "headwear"],
     proof: [
-      "One per-box price — instant, no RFQ",
-      "Premium blanks, made to order to spec",
+      "One per-box price, no RFQ",
+      "Cut and sewn to our own patterns",
       "Branded box, tissue + card included"
     ],
     ctaLabel: "Build your new-hire kit"
@@ -105,7 +105,7 @@ export const USE_CASES: UseCase[] = [
     eyebrow: "Events & booths",
     headline: "Booth merch people line up for.",
     subcopy:
-      "Conference giveaways and event kits that don't end up in the hotel trash — tees, totes, caps your audience keeps and wears.",
+      "Conference giveaways and event kits that don't end up in the hotel trash. Tees, totes and caps your audience keeps and wears.",
     frame: "The right giveaway gets worn home and photographed. That's reach you don't pay for twice.",
     kitId: "event",
     featuredCategories: ["tee", "bag", "headwear"],
@@ -122,7 +122,7 @@ export const USE_CASES: UseCase[] = [
     eyebrow: "Gifting",
     headline: "Gifts investors actually keep.",
     subcopy:
-      "Premium knitwear, totes and accessories, boxed and shipped — the kind of gift that says the round closed and the brand is real.",
+      "Premium knitwear, totes and accessories, boxed and shipped. The kind of gift that says the round closed and the brand is real.",
     frame: "A gift they keep on the desk is your brand in the room long after the meeting.",
     kitId: "investor",
     featuredCategories: ["knitwear", "bag", "outerwear"],
@@ -139,13 +139,13 @@ export const USE_CASES: UseCase[] = [
     eyebrow: "Launches & drops",
     headline: "Launch merch that looks like a brand, not swag.",
     subcopy:
-      "Hoodies, tees and caps for your launch, drop or capsule — production-grade blanks, decorated and packed to look the part.",
+      "Hoodies, tees and caps for your launch, drop or capsule, cut and sewn to our own patterns, decorated and packed to look the part.",
     frame: "Your merch is your most-worn ad. Make the first impression a good one.",
     kitId: "launch",
     featuredCategories: ["hoodie", "tee", "headwear"],
     proof: [
-      "Production-grade blanks, not promo junk",
-      "Instant price, made to order",
+      "Fully custom cut and sew, not promo junk",
+      "Price as you design, made to order",
       "Build it into a branded PR box"
     ],
     ctaLabel: "Build your launch kit"

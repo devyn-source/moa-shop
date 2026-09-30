@@ -23,6 +23,6 @@ export async function trackServer(
           distinct_id: distinctId || String(props.order_number ?? props.order_id ?? "server"),
         }),
       });
-    } catch { /* swallow — analytics must never break the order flow */ }
+    } catch { /* swallow, analytics must never break the order flow */ }
   }
 }

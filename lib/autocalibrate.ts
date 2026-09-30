@@ -90,7 +90,7 @@ export type AutoCalResult =
 
 export async function autoCalibrate(slug: string, origin: string): Promise<AutoCalResult> {
   const meas = normaliseMeasurements(await getProductMeasurements(slug));
-  if (!meas) return { ok: false, error: "No spec measurements stored for this SKU — load a grading spec first." };
+  if (!meas) return { ok: false, error: "No spec measurements stored for this SKU, load a grading spec first." };
   const sample = meas.sampleSize || "M";
   const find = (kws: string[]): number | null => {
     for (const r of meas.rows) {

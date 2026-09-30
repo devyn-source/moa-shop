@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   let expired = 0;
   try {
     for (const o of await getStalePaymentOrders()) {
-      await updateOrderStatus(o.id, "cancelled", "Checkout expired — payment was never completed. No charge was made.");
+      await updateOrderStatus(o.id, "cancelled", "Checkout expired, payment was never completed. No charge was made.");
       expired++;
     }
   } catch {

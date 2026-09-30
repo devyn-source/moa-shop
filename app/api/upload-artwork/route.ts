@@ -85,7 +85,7 @@ export async function POST(request: Request) {
         meta = { width: m.width, height: m.height, density: m.density, space: m.space };
       } catch {
         return NextResponse.json(
-          { error: "Couldn't read this image — it may be corrupt. Re-export and try again." },
+          { error: "Couldn't read this image. It may be corrupt. Re-export and try again." },
           { status: 422 }
         );
       }
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         );
       }
       if (meta.space === "cmyk") {
-        warning = "Heads up: this file is CMYK — colors can shift on screen and in print. RGB or a vector file is preferred.";
+        warning = "Heads up: this file is CMYK, so colors can shift on screen and in print. RGB or a vector file is preferred.";
       } else if (meta.density && meta.density < MIN_DENSITY) {
         warning = `Low DPI (${meta.density}). It'll work at smaller sizes, but a higher-resolution or vector file is safer for large prints.`;
       }

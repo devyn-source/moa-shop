@@ -14,9 +14,9 @@ import { getKit } from "@/lib/use-cases";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "MOA Catalog" };
+  if (!product) return { title: "MOA Shop" };
   const cheapest = product.priceTiers[product.priceTiers.length - 1] ?? product.priceTiers[0];
-  const title = `${product.displayName} · MOA Catalog`;
+  const title = `${product.displayName} · MOA Shop`;
   const description = `${product.headline} From ${currency(cheapest.perUnitUsd)}/unit · MOQ ${product.moq} · ${product.variants.length} colors.`;
   const image = product.greyFront ?? product.variants.find((v) => v.frontImage)?.frontImage;
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
@@ -73,7 +73,7 @@ export default async function ProductPage({
     return (
       <main className="page">
         <nav className="crumbs" aria-label="Breadcrumb">
-          <Link href="/shop">Catalog</Link>
+          <Link href="/shop">Shop</Link>
           <span aria-hidden>/</span>
           <span className="crumb-current">{product.displayName}</span>
         </nav>
@@ -121,7 +121,7 @@ export default async function ProductPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/shop">Catalog</Link>
+        <Link href="/shop">Shop</Link>
         <span aria-hidden>/</span>
         <span>{product.category}</span>
         <span aria-hidden>/</span>

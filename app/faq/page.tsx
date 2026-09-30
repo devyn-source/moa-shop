@@ -5,14 +5,14 @@ import { FAQ_GROUPS, FAQ_JSONLD } from "@/lib/faqs";
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
 export const metadata: Metadata = {
-  title: "FAQ · MOA Catalog",
+  title: "FAQ · MOA Shop",
   description:
-    "How the MOA Catalog works — made-to-order merch, minimums and pricing, proofs and changes, decoration methods, production and delivery. Answers from Magnum Opus Agency.",
+    "How the MOA Shop works: custom cut and sew merch for smaller orders, minimums and pricing, proofs and changes, decoration methods, production and delivery. Answers from Magnum Opus Agency.",
   alternates: { canonical: `${SITE}/faq` },
   openGraph: {
-    title: "FAQ · MOA Catalog",
+    title: "FAQ · MOA Shop",
     description:
-      "How the MOA Catalog works — ordering, pricing, proofs, decoration, production and delivery.",
+      "How the MOA Shop works: ordering, pricing, proofs, decoration, production and delivery.",
     url: `${SITE}/faq`,
   },
 };
@@ -23,10 +23,10 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
 
       <header className="faq-page-head">
-        <p className="eyebrow">MOA Catalog</p>
+        <p className="eyebrow">MOA Shop</p>
         <h1 className="page-title">Frequently asked questions</h1>
         <p className="lede">
-          Everything you need to know before you order — how made-to-order works, what it costs,
+          Everything you need to know before you order: how made-to-order works, what it costs,
           how proofs and changes are handled, and how your order reaches you.
         </p>
       </header>
@@ -54,11 +54,11 @@ export default function FaqPage() {
           <p className="eyebrow">Still have a question?</p>
           <h2>Talk to the studio</h2>
           <p className="faq-page-foot-copy">
-            Need something the catalog can&apos;t do, or have a question we haven&apos;t answered?
+            Need something the shop can&apos;t do, or have a question we haven&apos;t answered?
             Email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> and we&apos;ll help.
           </p>
         </div>
-        <Link className="button button--lg" href="/shop">Browse the catalog →</Link>
+        <Link className="button button--lg" href="/shop">Browse the shop →</Link>
       </section>
     </main>
   );

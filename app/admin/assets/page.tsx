@@ -42,8 +42,8 @@ export default async function AssetsIndexPage() {
                 <span className="assetmgr-table-sku">{p.skuCode}</span>
               </td>
               <td>{p.category}</td>
-              <td>{patterns > 0 ? `${patterns} file${patterns > 1 ? "s" : ""}` : <span className="assetmgr-muted">—</span>}</td>
-              <td>{hasModel ? <span className="assetmgr-yes">✓</span> : <span className="assetmgr-muted">—</span>}</td>
+              <td>{patterns > 0 ? `${patterns} file${patterns > 1 ? "s" : ""}` : <span className="assetmgr-muted">, </span>}</td>
+              <td>{hasModel ? <span className="assetmgr-yes">✓</span> : <span className="assetmgr-muted">, </span>}</td>
               <td><Link className="assetmgr-link" href={`/admin/assets/${p.slug}`}>Manage →</Link></td>
             </tr>
           ))}

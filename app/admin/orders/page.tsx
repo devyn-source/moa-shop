@@ -16,7 +16,7 @@ export default async function AdminOrdersPage() {
     <main className="page">
       <p className="eyebrow">Orders</p>
       <h1 className="page-title">Order Queue</h1>
-      <p className="lede">Live status for every active production run — artwork QA, production, and shipping.</p>
+      <p className="lede">Live status for every active production run, artwork QA, production, and shipping.</p>
 
       {rows.length ? (
         <section className="tracker-board">

@@ -13,8 +13,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const uc = getUseCase(slug);
-  if (!uc) return { title: "MOA Catalog" };
-  const title = `${uc.headline} · MOA Catalog`;
+  if (!uc) return { title: "MOA Shop" };
+  const title = `${uc.headline} · MOA Shop`;
   return {
     title,
     description: uc.subcopy,
@@ -43,7 +43,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
   return (
     <main className="page">
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/shop">Catalog</Link>
+        <Link href="/shop">Shop</Link>
         <span aria-hidden>/</span>
         <span className="crumb-current">{uc.navLabel}</span>
       </nav>
@@ -80,7 +80,7 @@ export default async function UseCasePage({ params }: { params: Promise<{ slug: 
       </section>
 
       <section className="uc-bottom">
-        <p className="uc-bottom-head">Build it in minutes — no quotes, no sales calls.</p>
+        <p className="uc-bottom-head">Build it in minutes, no quotes, no sales calls.</p>
         <Link href={builderHref} className="button button--lg">{uc.ctaLabel} →</Link>
       </section>
     </main>

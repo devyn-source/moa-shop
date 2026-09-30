@@ -56,7 +56,7 @@ function OrderReceiptCard({ order, product, showActions }: { order: ShopOrder; p
                     <span className="ord-swatch" style={{ background: variant.colorHex }} aria-hidden />
                     {variant.colorLabel}
                   </>
-                ) : "—"}
+                ) : "N/A"}
               </dd>
             </div>
             <div><dt>Decoration</dt><dd>{decorationLabel}</dd></div>
@@ -104,7 +104,7 @@ function OrderReceiptCard({ order, product, showActions }: { order: ShopOrder; p
           {showActions ? (
             <div className="ord-actions">
               {reorderItem ? <ReorderButton item={reorderItem} /> : null}
-              <Link className="secondary-button" href="/shop">Back to catalog</Link>
+              <Link className="secondary-button" href="/shop">Back to the shop</Link>
             </div>
           ) : null}
         </div>
@@ -160,7 +160,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
         <div className="ord-actions ord-box-actions">
           {reorderLines.length ? <ReorderBundleButton lines={reorderLines} label="Reorder box →" /> : null}
-          <Link className="secondary-button" href="/shop">Back to catalog</Link>
+          <Link className="secondary-button" href="/shop">Back to the shop</Link>
         </div>
       </main>
     );

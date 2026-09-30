@@ -7,7 +7,7 @@ import type { SignedPatternFile } from "@/lib/pattern-files";
 type Swatch = { label: string; hex: string };
 
 function fmtBytes(n: number): string {
-  if (!n) return "—";
+  if (!n) return "N/A";
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
@@ -150,7 +150,7 @@ export default function AssetManager({
             onDrop={(e) => { e.preventDefault(); setDragPattern(false); uploadPattern(e.dataTransfer.files?.[0]); }}
           >
             {patternBusy ? "Working…" : "Upload pattern file"}
-            <span className="assetmgr-drop-hint">DXF · AI · PLT — 50 MB max</span>
+            <span className="assetmgr-drop-hint">DXF · AI · PLT, 50 MB max</span>
           </button>
           {patternErr ? <p className="assetmgr-err">⚠ {patternErr}</p> : null}
 

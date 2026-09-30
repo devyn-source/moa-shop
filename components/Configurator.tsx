@@ -96,7 +96,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
       <div className="config-form">
         <div className="config-head">
           <nav className="crumbs" aria-label="Breadcrumb">
-            <Link href="/shop">Catalog</Link>
+            <Link href="/shop">Shop</Link>
             <span aria-hidden>/</span>
             <Link href={`/p/${product.slug}`}>{product.displayName}</Link>
             <span aria-hidden>/</span>
@@ -148,7 +148,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
           <header className="step-block-head">
             <span className="step-pill">02</span>
             <h2>Decoration method</h2>
-            <span className="step-hint">Select one or more — adders stack</span>
+            <span className="step-hint">Select one or more. Adders stack</span>
           </header>
           <div className="tile-grid tile-grid--wide">
             {product.decorations.map((item) => {
@@ -217,7 +217,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
             <p className="size-msg size-msg--warn">
               {total === 0
                 ? `Enter quantities by size. MOQ ${product.moq}.`
-                : `${product.moq - total} units below MOQ — add ${product.moq - total} more to qualify.`}
+                : `${product.moq - total} units below the minimum. Add ${product.moq - total} more to qualify.`}
             </p>
           ) : (
             <p className="size-msg size-msg--ok">MOQ met. Current tier: {currency(price.perUnitUsd)}/unit.</p>
@@ -230,7 +230,7 @@ export function Configurator({ product }: { product: CatalogProduct }) {
                 className={`tier-row${idx === activeTierIndex && !belowMoq ? " tier-row--active" : ""}`}
               >
                 <span>
-                  {tier.minQty}{tier.maxQty ? `–${tier.maxQty}` : "+"} units
+                  {tier.minQty}{tier.maxQty ? `-${tier.maxQty}` : "+"} units
                 </span>
                 <strong>{currency(tier.perUnitUsd)}/unit</strong>
               </div>

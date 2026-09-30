@@ -70,7 +70,7 @@ export default function CartPage() {
   return (
     <main className="page">
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/shop">Catalog</Link>
+        <Link href="/shop">Shop</Link>
         <span aria-hidden>/</span>
         <span className="crumb-current">Cart</span>
       </nav>
@@ -92,7 +92,7 @@ export default function CartPage() {
         <div className="empty-state">Loading cart…</div>
       ) : items.length === 0 ? (
         <div className="empty-state">
-          Your cart is empty. <Link href="/shop" className="link-button">Browse the catalog →</Link>
+          Your cart is empty. <Link href="/shop" className="link-button">Browse the shop →</Link>
         </div>
       ) : (
         <>
@@ -102,7 +102,7 @@ export default function CartPage() {
               <span className="cart-upsell-tag">{PR_BOX_PROMO.label}</span>
               <p>
                 {singles.length >= PR_BOX_PROMO.qualify.minComponents
-                  ? `You've got ${singles.length} items — bundle them with branded packaging into a PR Box and save ${Math.round(PR_BOX_PROMO.discount.value * 100)}%.`
+                  ? `You've got ${singles.length} items. Bundle them with branded packaging into a PR Box and save ${Math.round(PR_BOX_PROMO.discount.value * 100)}%.`
                   : `Seeding to press or influencers? Bundle ${PR_BOX_PROMO.qualify.minComponents}+ items with branded packaging into a PR Box and save ${Math.round(PR_BOX_PROMO.discount.value * 100)}%.`}
               </p>
             </div>

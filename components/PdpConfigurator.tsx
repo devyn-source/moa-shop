@@ -431,7 +431,7 @@ export function PdpConfigurator({
   };
 
   const stepValue = (s: Step): string => {
-    if (s === "color") return variant?.colorLabel ?? "—";
+    if (s === "color") return variant?.colorLabel ?? "Choose color";
     if (s === "decoration")
       return decoSelected.length ? decoSelected.map((d) => d.label).join(" · ") : "Choose method";
     if (s === "placement") {
@@ -617,10 +617,10 @@ export function PdpConfigurator({
       if (!data.id) throw new Error("no id");
       const url = `${location.origin}/c/${data.id}`;
       await navigator.clipboard.writeText(url).catch(() => {});
-      setShareMsg("Link copied — send it for sign-off");
+      setShareMsg("Link copied. Send it for sign-off.");
       analytics.track("config_shared", { slug: product.slug });
     } catch {
-      setShareMsg("Couldn't create a link — try again");
+      setShareMsg("Couldn't create a link. Try again.");
     }
   };
 
@@ -638,7 +638,7 @@ export function PdpConfigurator({
     });
     const primary = allPlacements[0];
     const placementNotes = allPlacements.map((p, i) => {
-      const head = `Placement ${i + 1} — ${p.zoneLabel}${p.view === "back" ? " (back)" : " (front)"}${i === 0 ? " · included" : ` · +${currency(EXTRA_PLACEMENT_ADDER)}/unit`}`;
+      const head = `Placement ${i + 1}: ${p.zoneLabel}${p.view === "back" ? " (back)" : " (front)"}${i === 0 ? " · included" : ` · +${currency(EXTRA_PLACEMENT_ADDER)}/unit`}`;
       const box = `  Box: x=${p.box.x.toFixed(3)} y=${p.box.y.toFixed(3)} w=${p.box.w.toFixed(3)} h=${p.box.h.toFixed(3)}${p.box.r ? ` r=${Math.round(p.box.r)}°` : ""}`;
       const art = `  Art-in-box: ox=${p.art.ox.toFixed(3)} oy=${p.art.oy.toFixed(3)} sx=${p.art.sx.toFixed(3)} sy=${p.art.sy.toFixed(3)}${p.art.r ? ` r=${Math.round(p.art.r)}°` : ""}`;
       const file = p.artworkFileUrl ? `  Art file: ${p.artworkFileName ?? "uploaded"} (${p.artworkFileUrl})` : "";
@@ -710,7 +710,7 @@ export function PdpConfigurator({
       artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
       artworkNotes:
         allPlacements
-          .map((p, i) => `Placement ${i + 1} — ${p.zoneLabel}${p.view === "back" ? " (back)" : " (front)"}${i === 0 ? " · included" : " · +placement"}`)
+          .map((p, i) => `Placement ${i + 1}: ${p.zoneLabel}${p.view === "back" ? " (back)" : " (front)"}${i === 0 ? " · included" : " · +placement"}`)
           .join("\n") + (wovenLabel ? "\nWoven label: yes" : ""),
       artworkPlacement: primary,
       artworkPlacements: allPlacements.length ? allPlacements : undefined,
@@ -759,13 +759,13 @@ export function PdpConfigurator({
       });
       if (!res.ok) {
         const d = await res.json().catch(() => null);
-        setUpdateError(d?.error || "Couldn't update — try again.");
+        setUpdateError(d?.error || "Couldn't update. Try again.");
         setSubmitting(false);
         return;
       }
       setDone(true);
     } catch {
-      setUpdateError("Couldn't update — try again.");
+      setUpdateError("Couldn't update. Try again.");
       setSubmitting(false);
     }
   };
@@ -777,7 +777,7 @@ export function PdpConfigurator({
           <p className="pdpx-eyebrow" style={{ color: "var(--color-terracotta)" }}>Updated</p>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.8rem", textTransform: "uppercase", letterSpacing: "0.5px", margin: "10px 0 12px" }}>Fresh proof on the way</h2>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--color-neutral)", maxWidth: 460, margin: "0 auto" }}>
-            We&apos;ve regenerated your proof with the changes and emailed it for approval. Nothing goes to production until you approve the new version.
+            We&apos;ve saved your changes. The MOA team reviews them and your updated proof arrives within 24 business hours. Nothing goes to production until you approve the new version.
           </p>
         </div>
       </section>
@@ -1074,7 +1074,7 @@ export function PdpConfigurator({
                             {pantones.length > 0 && (
                               <p style={{ fontSize: "0.72rem", color: "var(--color-neutral)", marginTop: 8, lineHeight: 1.4 }}>
                                 {pantones.map((p) => `${p.name} (${p.code})`).join(" · ")}
-                                {pantones.length === 1 ? " — your art prints in this ink." : " — your art's spot colors."}
+                                {pantones.length === 1 ? ". Your art prints in this ink." : ". Your art's spot colors."}
                               </p>
                             )}
                           </div>
@@ -1112,20 +1112,20 @@ export function PdpConfigurator({
                               ? `⚠ ${uploadWarning}`
                               : artworkUrl && !uploading
                               ? "Uploaded · high-resolution, print-ready ✓"
-                              : "PNG, JPG, SVG, WEBP, PDF — vector preferred"}
+                              : "PNG, JPG, SVG, WEBP, PDF · vector preferred"}
                           </span>
                         </button>
 
                         {use3dPlacement ? (
                           <p className="pdpx-place-hint">
-                            Place your artwork on the 3D garment — drag it to move, then use the size &amp; rotate sliders below the model. We capture the exact spot on the garment for production.
+                            Place your artwork on the 3D garment. Drag it to move, then use the size &amp; rotate sliders below the model. We capture the exact spot on the garment for production.
                           </p>
                         ) : (
                           <>
                         <p className="pdpx-place-label">Step 02 · Location</p>
                         {placements.length === 0 ? (
                           <p className="pdpx-place-hint">
-                            Placement options for this {view} are being finalised. We only show locations we can spec to the inch — more open up as each style is calibrated.
+                            Placement options for this {view} are being finalised. We only show locations we can spec to the inch. More open up as each style is calibrated.
                           </p>
                         ) : (
                           <div className="pdpx-locs">
@@ -1145,7 +1145,7 @@ export function PdpConfigurator({
                           <>
                             <p className="pdpx-place-hint">
                               Drag to reposition, corners to resize, top circle to rotate. The dashed outline is the
-                              maximum print area — MOA finalises the spec during artwork QA.
+                              maximum print area. MOA finalises the spec during artwork QA.
                             </p>
                             <div className="pdpx-place-actions">
                               {hasBack && view === "front" ? (
@@ -1243,7 +1243,7 @@ export function PdpConfigurator({
                         <div className="pdpx-matrix-foot">
                           <span>Total · MOQ {product.moq}</span>
                           <strong className={belowMoq ? "is-warn" : undefined}>
-                            {qty.toLocaleString()} units{belowMoq ? " — below MOQ" : ""}
+                            {qty.toLocaleString()} units{belowMoq ? " · below MOQ" : ""}
                           </strong>
                         </div>
                         <div className="pdpx-tiers">
@@ -1262,7 +1262,7 @@ export function PdpConfigurator({
                               >
                                 <span>
                                   {t.minQty}
-                                  {t.maxQty ? `–${t.maxQty}` : "+"} units
+                                  {t.maxQty ? `-${t.maxQty}` : "+"} units
                                 </span>
                                 <span className="pdpx-tier-price">
                                   <strong>{currency(t.perUnitUsd)}/unit</strong>
@@ -1297,7 +1297,7 @@ export function PdpConfigurator({
         <a className="pdpx-bespoke" href="https://magnumopus.agency/workwithus" target="_blank" rel="noreferrer">
           <span className="pdpx-bespoke-text">
             <span className="pdpx-bespoke-q">Need something more bespoke?</span>
-            <span className="pdpx-bespoke-sub">Different sizes, colors, or finishes — our studio builds custom.</span>
+            <span className="pdpx-bespoke-sub">Different sizes, colors, or finishes? Our studio builds it with you.</span>
           </span>
           <span className="pdpx-bespoke-link">Inquire now →</span>
         </a>
@@ -1317,7 +1317,7 @@ export function PdpConfigurator({
               </>
             ) : (
               <>
-                <span className="pdpx-woven-text"><strong>+ Add a woven label</strong> — your brand, sewn in</span>
+                <span className="pdpx-woven-text"><strong>+ Add a woven label</strong>: your brand, sewn in</span>
                 <span className="pdpx-woven-price">+{currency(WOVEN_LABEL_ADDER)}/unit</span>
               </>
             )}
@@ -1367,14 +1367,14 @@ export function PdpConfigurator({
             <strong className="pdpx-total">{currency(subtotal)}</strong>
           </div>
           <p className="pdpx-final-price-note">
-            This is your final price — decoration, placements and labels included. No quote,
+            This is your final price, with decoration, placements and labels included. No quote,
             no revised invoice later.
           </p>
           {printDpi != null && (lowRes || blockRes) ? (
             <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 600 }}>
               {blockRes
                 ? `Artwork is too low-resolution for this print size (~${printDpi} DPI). Make the print smaller, or upload a higher-res image or vector (SVG/PDF).`
-                : `Low resolution at this size (~${printDpi} DPI) — it may look soft. A higher-res image or vector prints sharper.`}
+                : `Low resolution at this size (~${printDpi} DPI). It may look soft. A higher-res image or vector prints sharper.`}
             </p>
           ) : null}
           <button
@@ -1417,7 +1417,7 @@ export function PdpConfigurator({
       </aside>
 
       {/* Persistent configurator bar pinned to the bottom of the viewport on
-          desktop — informational, no CTA. Hidden on mobile where the in-rail
+          desktop, informational, no CTA. Hidden on mobile where the in-rail
           sticky CTA covers the same role. */}
       <div className="pdpx-bottombar" aria-hidden={false}>
         <div className="pdpx-bottombar-inner">

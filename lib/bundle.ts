@@ -156,7 +156,7 @@ export function buildFullBundleCartLines(args: {
       totalUsd: round2(pl.totalUsd - share),
       artworkFileName: pl.branded ? art?.artworkFileName ?? "" : "",
       artworkFileUrl: pl.branded ? art?.artworkFileUrl : undefined,
-      artworkNotes: pl.branded ? art?.artworkNotes ?? "Branded — print customer artwork" : "Blank — no print",
+      artworkNotes: pl.branded ? art?.artworkNotes ?? "Branded, print customer artwork" : "Blank, no print",
       bundleId: args.bundleId,
       bundleLabel: args.bundleLabel,
       bundleRole: "packaging",

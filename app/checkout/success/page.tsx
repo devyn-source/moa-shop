@@ -107,7 +107,7 @@ export default async function CheckoutSuccessPage({
 
       <div className="action-row" style={{ marginTop: 28 }}>
         <Link href="/" className="button">
-          Back to catalog
+          Back to the shop
         </Link>
       </div>
     </main>

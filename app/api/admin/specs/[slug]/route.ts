@@ -18,7 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     // Lock only when set in stone — nothing assumed, no open questions.
     if (status === "approved" && !isPassportLocked({ ...body.spec, _status: "approved" })) {
       return NextResponse.json(
-        { error: "Can't lock yet — confirm every assumed field and resolve all open questions first." },
+        { error: "Can't lock yet, confirm every assumed field and resolve all open questions first." },
         { status: 400 }
       );
     }

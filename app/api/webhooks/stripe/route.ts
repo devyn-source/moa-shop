@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       const order = await getOrderById(id);
       // Idempotent + safe: only ever close orders still waiting on this payment.
       if (!order || order.paymentStatus === "paid" || order.status !== "awaiting_payment") continue;
-      await updateOrderStatus(id, "cancelled", `${reason} — no charge was made.`);
+      await updateOrderStatus(id, "cancelled", `${reason}. No charge was made.`);
       // One email per checkout (the bundle shares a contact), not per line.
       if (!nudged) {
         const result = await sendPaymentIncomplete(order, request);

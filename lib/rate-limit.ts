@@ -12,7 +12,7 @@ const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TO
 const redis = url && token ? new Redis({ url, token }) : null;
 if (!redis && process.env.NODE_ENV === "production") {
   // Loud, not silent: prod without Upstash means every limiter is a no-op.
-  console.warn("[rate-limit] no Upstash REST credentials (UPSTASH_REDIS_REST_* or KV_REST_API_*) — rate limiting is DISABLED in production.");
+  console.warn("[rate-limit] no Upstash REST credentials (UPSTASH_REDIS_REST_* or KV_REST_API_*), rate limiting is DISABLED in production.");
 }
 
 type Window = `${number} ${"s" | "m" | "h" | "d"}`;

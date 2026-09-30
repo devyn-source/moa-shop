@@ -137,7 +137,7 @@ export function WovenLabelModal({
           </button>
           <p className={`wl-hint${uploadMsg && uploadMsg !== "Uploaded ✓" ? " is-warn" : ""}`}>
             {uploadMsg ??
-              "Woven labels are ~2 × 1 in. Use a vector (SVG / AI / PDF) or a transparent PNG ≥ 1200px. Keep it simple — woven art is solid thread colors, not gradients."}
+              "Woven labels are ~2 × 1 in. Use a vector (SVG / AI / PDF) or a transparent PNG ≥ 1200px. Keep it simple: woven art is solid thread colors, not gradients."}
           </p>
         </div>
 

@@ -3,6 +3,7 @@ import path from "path";
 import { calculateOrderPrice, round2 } from "./pricing";
 import { getSupabase, orderLookupColumn } from "./supabase";
 import { seedProducts, seedVendors } from "./seed";
+import { inLaunchScope } from "./launch";
 import type {
   CatalogProduct,
   OrderInput,
@@ -47,7 +48,7 @@ export async function getProducts({ includeDrafts = false } = {}): Promise<Catal
     products = seedProducts; // never break the catalog
   }
   return products
-    .filter((product) => includeDrafts || product.isPublished)
+    .filter((product) => includeDrafts || (product.isPublished && inLaunchScope(product)))
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 

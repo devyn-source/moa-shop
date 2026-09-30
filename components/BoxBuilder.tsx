@@ -438,7 +438,7 @@ export function BoxBuilder({
                     </div>
                     <p className="bb-summary-meta">
                       {p.variants.length > 1 ? `${cfg.colorLabel} · ` : ""}
-                      {!printable ? "Plain — not printed" : branded ? "Branded · artwork ✓" : "Blank — no print"}
+                      {!printable ? "Plain · not printed" : branded ? "Branded · artwork ✓" : "Unprinted · no artwork"}
                       {finishLabel ? ` · ${finishLabel}` : ""}
                       {` · ${currency(unit)}/box`}
                     </p>
@@ -503,7 +503,7 @@ export function BoxBuilder({
           </div>
           <p className="bb-moq-note">
             {boxQty < promo.qualify.minBoxes
-              ? `Minimum ${promo.qualify.minBoxes} boxes — add ${promo.qualify.minBoxes - boxQty} more.`
+              ? `Minimum ${promo.qualify.minBoxes} boxes. Add ${promo.qualify.minBoxes - boxQty} more.`
               : `${boxQty.toLocaleString()} boxes · every item produced in this size run (caps & totes one-size).`}
           </p>
 

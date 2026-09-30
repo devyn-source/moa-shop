@@ -3,10 +3,11 @@ import { createOrder, getProductById } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
 import { expressCheckoutEnabled, pushExpressOrder } from "@/lib/express-bridge";
 import { generateProof } from "@/lib/proof";
-import { setOrderProof, setOrderFulfillment } from "@/lib/store";
+import { setOrderProof, setOrderFulfillment, updateOrderStatus } from "@/lib/store";
 import { calculateOrderPrice, getPriceTier, round2 } from "@/lib/pricing";
 import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
 import { apiError } from "@/lib/errors";
+import { inLaunchScope } from "@/lib/launch";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 
@@ -68,6 +69,17 @@ export async function POST(request: Request) {
     // configured before creating any orders (avoids orphans).
     const express = expressCheckoutEnabled();
     const stripe = express ? null : getStripe();
+
+    // Express launch scope: only the production-ready styles (plus packaging
+    // add-ons) can be ordered, whatever an old cart still holds.
+    if (express) {
+      for (const item of items) {
+        const product = await getProductById(item.productId);
+        if (!product || !inLaunchScope(product)) {
+          return NextResponse.json({ error: `${item.displayName || "One item"} is not available to order right now. Remove it from your cart to continue.` }, { status: 400 });
+        }
+      }
+    }
 
     // Split standalone SKUs from PR Box groups (lines sharing a bundleId).
     const singles: CartLine[] = [];
@@ -240,10 +252,18 @@ export async function POST(request: Request) {
       const pushed = await pushExpressOrder(created.map((c) => c.order), contact, contact.shipToName, contact.shipToAddress);
       if (!pushed.ok) {
         console.error("[express] push to MoaOS failed:", pushed.error);
+        // Close the half-made shop orders so they never sit in admin as live carts.
+        for (const c of created) await updateOrderStatus(c.order.id, "cancelled", "Express submit to MoaOS failed; customer asked to retry").catch(() => null);
         return NextResponse.json({ error: "We could not submit your order. Please try again in a minute." }, { status: 502 });
       }
       const pushedAt = new Date().toISOString();
-      for (const c of created) await setOrderFulfillment(c.order.id, { mode: "express", pushedAt, catalogOrderId: pushed.orderNumber });
+      for (const c of created) {
+        await setOrderFulfillment(c.order.id, { mode: "express", pushedAt, catalogOrderId: pushed.orderNumber });
+        // Payment happens on the MoaOS invoice, so the shop row must leave
+        // awaiting_payment: the fulfillment cron cancels those after 48h. Unpaid
+        // artwork_qa is ignored by every cron, reminder and Stripe path.
+        await updateOrderStatus(c.order.id, "artwork_qa", `Submitted to MOA as ${pushed.orderNumber}. Proof in progress.`);
+      }
       return NextResponse.json({ url: `${origin}/checkout/success?orders=${created.map(({ order }) => order.id).join(",")}&express=${encodeURIComponent(pushed.orderNumber)}` });
     }
 
@@ -257,7 +277,7 @@ export async function POST(request: Request) {
           currency: "usd",
           unit_amount: Math.round(order.totalUsd * 100),
           product_data: {
-            name: `${item.bundleLabel ? `${item.bundleLabel}: ` : ""}${item.displayName} — ${item.colorLabel ?? ""}`.trim(),
+            name: `${item.bundleLabel ? `${item.bundleLabel}: ` : ""}${item.displayName}${item.colorLabel ? `, ${item.colorLabel}` : ""}`,
             description: `${order.quantity} units · ${item.decorationLabel ?? "decoration"}`
           }
         }

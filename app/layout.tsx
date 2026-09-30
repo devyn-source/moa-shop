@@ -12,7 +12,7 @@ import { AccountNav } from "@/components/AccountNav";
 import { AnalyticsProviders } from "@/components/AnalyticsProviders";
 import { PromoBanner } from "@/components/PromoBanner";
 import { ToastProvider } from "@/components/ToastProvider";
-import { USE_CASES } from "@/lib/use-cases";
+import { launchMode } from "@/lib/launch";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -22,23 +22,23 @@ function MaybeClerk({ children }: { children: React.ReactNode }) {
 }
 
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
-const TITLE = "MOA Catalog · Production-grade merch, made to order";
-const DESC = "Premium merch made to your brand. Self-serve premium blanks, instant proofs, no quotes — produced to spec and shipped by Magnum Opus Agency.";
+const TITLE = "MOA Shop · Custom cut and sew for smaller orders";
+const DESC = "Fully custom apparel and accessories for smaller orders, cut and sewn to our own patterns. Design it in 3D, get your proof in 24 business hours, pay one invoice. From the Magnum Opus Agency studio.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: TITLE,
   description: DESC,
-  applicationName: "MOA Catalog",
+  applicationName: "MOA Shop",
   keywords: [
-    "custom merch", "branded merchandise", "made to order merch", "premium blanks",
-    "custom apparel", "screen printing", "embroidery", "custom hoodies", "custom t-shirts",
-    "custom hats", "merch manufacturing", "brand merch", "Magnum Opus Agency", "MOA",
+    "custom cut and sew", "custom apparel", "small batch apparel", "made to order merch",
+    "branded merchandise", "screen printing", "embroidery", "custom hoodies", "custom t-shirts",
+    "custom hats", "product design studio", "Magnum Opus Agency", "MOA",
   ],
   alternates: { canonical: SITE },
   openGraph: {
     type: "website",
-    siteName: "MOA Catalog",
+    siteName: "MOA Shop",
     title: TITLE,
     description: DESC,
     url: SITE,
@@ -59,6 +59,8 @@ const ORG_JSONLD = {
   email: "production@magnumopus.agency",
 };
 
+const MAIN = "https://magnumopus.agency";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -71,16 +73,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ProximityFX />
         <CartProvider>
         <ToastProvider>
-        <PromoBanner />
+        {launchMode() ? null : <PromoBanner />}
         <header className="site-header site-header--sticky">
           <nav className="site-nav site-nav--primary" aria-label="Primary navigation">
+            <a className="nav-link nav-link--main" href={`${MAIN}/catalog`}>Catalog</a>
+            <a className="nav-link nav-link--main" href={`${MAIN}/work`}>Case Studies</a>
+            <a className="nav-link nav-link--main" href={`${MAIN}/about`}>About</a>
             <NavLink href="/shop">Shop</NavLink>
             <NavLink href="/faq">FAQ</NavLink>
           </nav>
-          <Link className="brand-lockup" href="/" aria-label="MOA — Magnum Opus, made-to-order catalog">
+          <Link className="brand-lockup" href="/" aria-label="MOA Shop home">
             <Image className="brand-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" width={2104} height={766} sizes="110px" priority />
           </Link>
           <div className="site-actions">
+            <a className="nav-link nav-link--main" href={`${MAIN}/workwithus`}>Start a Project</a>
             <AccountNav />
             <CartButton />
           </div>
@@ -91,34 +97,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="ft-brand">
               <Image className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA · Magnum Opus" width={2104} height={766} sizes="232px" />
               <p className="ft-statement">
-                The MOA Catalog is bounded by design — fixed MOQs, fixed price ladders, fixed lead times.
-                Need something the catalog can&apos;t do?
+                The shop is built for smaller orders: six styles cut and sewn to our own patterns, fixed
+                price ladders and a proof in 24 business hours. Need a full program, new styles or larger runs?
               </p>
               <a className="ft-cta" href="https://magnumopus.agency/workwithus" target="_blank" rel="noreferrer">
-                <span className="ft-cta-headline">Start a bespoke program</span>
+                <span className="ft-cta-headline">Start a custom project</span>
                 <span className="ft-cta-action">
                   Inquire with the studio
-                  <span className="ft-cta-arrow" aria-hidden>→</span>
+                  <svg className="ft-cta-arrow" aria-hidden width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h11M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" /></svg>
                 </span>
               </a>
             </div>
             <nav className="ft-nav" aria-label="Footer">
               <div className="ft-col">
-                <p className="ft-h">Catalog</p>
-                <Link href="/shop">The Collection</Link>
-                <Link href="/samples">Sample Kit</Link>
-                <Link href="/faq">FAQ</Link>
+                <p className="ft-h">Shop</p>
+                <Link href="/shop">All styles</Link>
+                <Link href="/orders">Your orders</Link>
                 <Link href="/cart">Cart</Link>
-              </div>
-              <div className="ft-col">
-                <p className="ft-h">Programs</p>
-                {USE_CASES.map((uc) => (
-                  <Link key={uc.slug} href={`/for/${uc.slug}`}>{uc.navLabel}</Link>
-                ))}
+                <Link href="/faq">FAQ</Link>
               </div>
               <div className="ft-col">
                 <p className="ft-h">Studio</p>
-                <a href="https://magnumopus.agency" target="_blank" rel="noreferrer">magnumopus.agency</a>
+                <a href={`${MAIN}/catalog`}>Catalog</a>
+                <a href={`${MAIN}/work`}>Case Studies</a>
+                <a href={`${MAIN}/about`}>About</a>
+                <a href={`${MAIN}/workwithus`}>Start a Project</a>
                 <a href="https://instagram.com/magnumopus" target="_blank" rel="noreferrer">Instagram @magnumopus</a>
               </div>
             </nav>
@@ -129,7 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="ft-base">
             <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus Agency · LLC</span>
             <div className="ft-base-right">
-              <span className="ft-tagline">Made to order · Produced to spec · Tracked to your door</span>
+              <span className="ft-tagline">Custom cut and sew · Proof in 24 hours · One invoice</span>
               <span className="ft-legal">
                 <Link href="/terms">Terms</Link>
                 <Link href="/refund-policy">Refunds</Link>

@@ -91,7 +91,7 @@ export default function PatternCalibration({ slug, hasDxf }: { slug: string; has
       });
       const data = (await res.json()) as { ok?: boolean; appliedChestIn?: number; bodyLengthIn?: number; error?: string };
       if (!res.ok || !data.ok) throw new Error(data.error || "Apply failed");
-      setApplied(`Calibration saved — chest ${data.appliedChestIn}″, body ${data.bodyLengthIn}″. The tech-pack placement now reads from the pattern.`);
+      setApplied(`Calibration saved: chest ${data.appliedChestIn}″, body ${data.bodyLengthIn}″. The tech-pack placement now reads from the pattern.`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Apply failed");
     } finally {
@@ -108,7 +108,7 @@ export default function PatternCalibration({ slug, hasDxf }: { slug: string; has
         <span className="assetmgr-tag assetmgr-tag--gated">Drives tech-pack placement</span>
       </div>
       <p className="assetmgr-note">
-        Reads the true chest width + body length from the DXF and uses them as the placement ruler — replacing the photo-silhouette estimate. Confirm the numbers below, then apply.
+        Reads the true chest width + body length from the DXF and uses them as the placement ruler, replacing the photo-silhouette estimate. Confirm the numbers below, then apply.
       </p>
 
       {loading && !front ? <p className="assetmgr-empty">Reading pattern…</p> : null}
@@ -151,7 +151,7 @@ export default function PatternCalibration({ slug, hasDxf }: { slug: string; has
                   checked={Boolean(onFold)}
                   onChange={(e) => { setOnFold(e.target.checked); void preview({ onFold: e.target.checked }); }}
                 />
-                <span>Front is a half (cut on fold / paired) — double the width</span>
+                <span>Front is a half (cut on fold / paired), double the width</span>
               </label>
             ) : null}
 
@@ -165,7 +165,7 @@ export default function PatternCalibration({ slug, hasDxf }: { slug: string; has
           {front.notes.map((n, i) => (
             <li key={i}>{n}</li>
           ))}
-          {!hasMockup ? <li className="patcal-warn">⚠ No base-front.png mockup yet — add the product shot before applying.</li> : null}
+          {!hasMockup ? <li className="patcal-warn">⚠ No base-front.png mockup yet. Add the product shot before applying.</li> : null}
         </ul>
       ) : null}
 

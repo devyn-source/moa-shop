@@ -11,7 +11,7 @@ export default async function SpecsPage() {
       <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Admin</p>
       <h1 className="page-title">Garment passports</h1>
       <p className="lede" style={{ marginBottom: 18 }}>
-        Capture + lock the per-SKU garment spec. A SKU is releasable to a vendor only when its passport is <strong>locked</strong> — every
+        Capture + lock the per-SKU garment spec. A SKU is releasable to a vendor only when its passport is <strong>locked</strong>, every
         field a real, confirmed value.
       </p>
       <div className="ol-list">

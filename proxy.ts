@@ -5,6 +5,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { basicAuthValid, emailIsAdmin, clerkEmail } from "@/lib/admin-auth";
+import { CLOSED_PREFIXES, launchMode, isLaunchSlug } from "@/lib/launch";
 
 // ---- Admin gate ------------------------------------------------------------
 // Primary path = Clerk session whose email is allowlisted (branded sign-in, no
@@ -54,6 +55,17 @@ export default clerkMiddleware(async (auth, req) => {
     const signIn = new URL("/sign-in", req.url);
     signIn.searchParams.set("redirect_url", pathname + req.nextUrl.search);
     return NextResponse.redirect(signIn);
+  }
+
+  // 1b. Express launch scope: close pages outside the flow and product pages
+  // for styles that are not production ready yet.
+  if (launchMode()) {
+    const closed = CLOSED_PREFIXES.some((p) => (p.endsWith("/") ? pathname.startsWith(p) : pathname === p || pathname.startsWith(`${p}/`)));
+    const pdp = pathname.match(/^\/p\/([^/]+)/);
+    if (closed || (pdp && !isLaunchSlug(pdp[1]))) {
+      if (isBackgroundRequest(req)) return new NextResponse(null, { status: 404 });
+      return NextResponse.redirect(new URL("/shop", req.url));
+    }
   }
 
   // 2. Order gate — must have a Clerk account to reach checkout/orders.

@@ -68,6 +68,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return page(
     "Proof approved",
     "Into production",
-    `Thank you — order ${order.orderNumber} is approved and routed to production. You'll get tracking the moment it ships. Need a change? Just reply to your confirmation email.`
+    `Thank you, order ${order.orderNumber} is approved and routed to production. You'll get tracking the moment it ships. Need a change? Just reply to your confirmation email.`
   );
 }

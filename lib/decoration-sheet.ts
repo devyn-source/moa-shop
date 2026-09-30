@@ -109,10 +109,10 @@ export async function buildDecorationSheetData(order: ShopOrder, mockupUrl: stri
 
   const data = {
     styleNumber: product.skuCode,
-    sizeRange: sizes.length ? `${sizes[0]} – ${sizes[sizes.length - 1]}` : "—",
+    sizeRange: sizes.length ? `${sizes[0]}, ${sizes[sizes.length - 1]}` : "N/A",
     dateCreated: new Date().toISOString().slice(0, 10),
-    factory: "MOA Catalog",
-    sampleSize: sizes.length ? sizes[Math.floor(sizes.length / 2)] : "—",
+    factory: "MOA Shop",
+    sampleSize: sizes.length ? sizes[Math.floor(sizes.length / 2)] : "N/A",
     projectNumber: order.orderNumber,
     garmentName: noLig(product.displayName) ?? product.displayName,
     garmentColor: { name: variant?.colorLabel || "", tcx: variant?.colorTcx || "", hex: variant?.colorHex || "#1E1E1E" },

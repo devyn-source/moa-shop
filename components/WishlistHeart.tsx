@@ -102,7 +102,7 @@ export function WishlistHeart({ slug, productName }: { slug: string; productName
       className={`wish-heart${saved ? " is-saved" : ""}`}
       aria-pressed={saved}
       aria-label={saved ? `Remove ${productName} from wishlist` : `Save ${productName} to wishlist`}
-      title={saved ? "Saved — tap to remove" : "Save for later"}
+      title={saved ? "Saved. Tap to remove." : "Save for later"}
       onClick={(e) => {
         // The card itself is a Link to the PDP — the heart must not navigate.
         e.preventDefault();

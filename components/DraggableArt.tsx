@@ -175,7 +175,7 @@ export function DraggableArt({
       ref={wrapRef}
       tabIndex={0}
       role="button"
-      aria-label="Artwork — drag to move, corners to resize, top handle to rotate, arrow keys to nudge"
+      aria-label="Artwork: drag to move, corners to resize, top handle to rotate, arrow keys to nudge"
       className={`pdpx-art-handle${showHandles ? " is-on" : ""}${ghost ? " pdpx-art-handle--ghost" : ""}`}
       style={{
         left: `${transform.ox * 100}%`,

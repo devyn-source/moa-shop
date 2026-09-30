@@ -24,7 +24,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
     const existing = await getCatalogSpec(slug).catch(() => null);
     if (existing?._status === "approved") {
-      return NextResponse.json({ error: "passport already approved — won't overwrite a locked spec" }, { status: 409 });
+      return NextResponse.json({ error: "passport already approved, won't overwrite a locked spec" }, { status: 409 });
     }
 
     const now = new Date().toISOString();
@@ -73,7 +73,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       }
 
       const bom: BomRow[] = [
-        { component: "Shell fabric", spec: variant?.fabric ?? "—", composition: "", weightGsm: null, color: variant?.colorLabel ?? "", pantoneTcx: variant?.colorTcx ?? "", supplier: "", _assumed: true },
+        { component: "Shell fabric", spec: variant?.fabric ?? "N/A", composition: "", weightGsm: null, color: variant?.colorLabel ?? "", pantoneTcx: variant?.colorTcx ?? "", supplier: "", _assumed: true },
         { component: "Zipper / closure", spec: "Closure per style", composition: "", weightGsm: null, color: "Tonal", pantoneTcx: "", supplier: "", _assumed: true },
         { component: "Thread", spec: "Sewing thread", composition: "100% polyester", weightGsm: null, color: "Tonal", pantoneTcx: "", supplier: "", _assumed: true },
       ];
@@ -93,7 +93,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         flatsNeeded: ["Front", "Back"],
         openQuestions: [
           "Confirm shell fabric composition + weight (GSM).",
-          ...(gradingSource === "factory-grading" ? [] : ["Confirm the full graded size chart — only the base size is seeded; add all sizes."]),
+          ...(gradingSource === "factory-grading" ? [] : ["Confirm the full graded size chart, only the base size is seeded; add all sizes."]),
           "Confirm construction (stitch type, SPI, seam class).",
           "Confirm labels + packaging.",
         ],

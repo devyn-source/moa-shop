@@ -1,5 +1,5 @@
-// /llms.txt — the GEO artifact. A clean, declarative markdown summary of the
-// MOA Catalog for AI answer engines (ChatGPT, Perplexity, Google AI Overviews,
+// /llms.txt, the GEO artifact. A clean, declarative markdown summary of the
+// MOA Shop for AI answer engines (ChatGPT, Perplexity, Google AI Overviews,
 // Claude, Gemini) to read, understand, and cite accurately. Generated from the
 // live catalog so the facts are always current.
 import { getProducts } from "@/lib/store";
@@ -19,50 +19,49 @@ export async function GET() {
 
   const productLines = products
     .map((p) => {
-      const from = p.priceTiers.length ? usd(Math.min(...p.priceTiers.map((t) => t.perUnitUsd))) : "—";
-      return `- [${p.displayName}](${SITE}/p/${p.slug}) — ${p.headline || p.bestFor || p.category}. From ${from}/unit, minimum ${p.moq} units. Category: ${p.category}.`;
+      const from = p.priceTiers.length ? usd(Math.min(...p.priceTiers.map((t) => t.perUnitUsd))) : "on request";
+      return `- [${p.displayName}](${SITE}/p/${p.slug}): ${p.headline || p.bestFor || p.category} From ${from}/unit, minimum ${p.moq} units.`;
     })
     .join("\n");
 
-  const md = `# MOA Catalog — Magnum Opus Agency
+  const md = `# MOA Shop by Magnum Opus Agency
 
-> The MOA Catalog is the self-serve, made-to-order branded merchandise catalog from Magnum Opus Agency (MOA), a production studio that creates premium custom merch for leading brands. Businesses configure a production-grade garment, upload their artwork, approve a digital proof, and MOA manufactures and ships it — with no quotes, no sales calls, and no minimums runaround.
+> MOA Shop is the self-serve lane for smaller orders from Magnum Opus Agency (MOA), a Los Angeles product design studio. Every style is custom cut and sewn to MOA's own patterns. Customers design their piece in 3D, receive a proof from the MOA team within 24 business hours, and pay one invoice for the full order before production.
 
-## What the MOA Catalog is
-- Self-serve premium merchandise, made to order and decorated with your own artwork.
-- The same production-grade garments MOA makes for top brands: hoodies, t-shirts, knitwear, jackets, sweatpants, hats, totes, and more.
-- Fixed, transparent per-style pricing (no RFQs or quotes). Instant digital proofs you can adjust yourself until they're perfect. Live order tracking to your door.
-- Operated by Magnum Opus Agency — a custom merch and brand production studio (https://magnumopus.agency).
-- Best for: brands, companies, events, tours, creators, and teams ordering their own branded merch (B2B).
+## What MOA Shop is
+- Fully custom apparel and accessories for smaller orders, cut and sewn to MOA's own patterns.
+- Six styles at launch: heavyweight tee, pullover hoodie, fleece sweatpant, dad cap, rib knit beanie and canvas tote.
+- Fixed per-style price ladders by quantity. No quotes and no sales calls.
+- Operated by Magnum Opus Agency, a product design, development and production studio (https://magnumopus.agency).
+- Best for brands, companies, events, tours, creators and teams ordering their own branded product.
 
 ## How it works
-1. Choose a garment style and colorway.
-2. Build your size run above the style's minimum order.
-3. Upload your artwork, choose a decoration method (screen printing, embroidery, or rubber appliqué), and select Pantone ink colors.
-4. Place the print exactly where you want it and pay securely via Stripe.
-5. Receive an instant proof and a decoration spec sheet. Adjust placement, color, artwork, or sizes yourself and regenerate — nothing is produced until you approve.
-6. MOA manufactures your order to spec and ships it with carrier tracking.
+1. Choose a style, colour and fabric.
+2. Upload your artwork and place it on the 3D garment. Choose a decoration method and Pantone ink colours.
+3. Build your size run above the style's minimum and submit the order. Nothing is charged at this step.
+4. The MOA team prepares your proof within 24 business hours. Approve each piece or request a change in your account. Two proof rounds are included.
+5. Pay one invoice for the full order.
+6. MOA produces the order to spec with its partner factories, runs QC and ships it with tracking.
 
 ## Key facts
-- Decoration methods: screen printing (plastisol), embroidery, and rubber appliqué; woven labels available as an add-on.
-- Pricing: fixed quantity-based price ladders per style; business-to-business.
-- Lead time: typically from ${minLead ?? "about 30"} days, depending on the style and run.
-- Every order includes automated artwork quality checks and a customer-approved proof before production.
-- Made to order, produced to spec, tracked to your door.
+- Decoration: screen printing, embroidery and rubber appliqué, with woven labels as an add-on.
+- Pricing: fixed quantity-based price ladders per style.
+- Lead time: typically from ${minLead ?? "about 30"} days after proof approval and payment.
+- Nothing is produced until the customer approves the proof and pays the invoice.
 
 ## Products
-${productLines || "(Catalog loading.)"}
+${productLines || "(Styles loading.)"}
 
 ## Important pages
-- Catalog home: ${SITE}
-- Shop the catalog: ${SITE}/shop
+- Shop home: ${SITE}
+- All styles: ${SITE}/shop
 - FAQ: ${SITE}/faq
 - Terms of Service: ${SITE}/terms
 - Refund Policy: ${SITE}/refund-policy
 - Privacy Policy: ${SITE}/privacy
 
 ## About Magnum Opus Agency
-Magnum Opus Agency (MOA) is a production studio that designs and manufactures premium branded merchandise for brands, artists, and companies. The MOA Catalog is its self-serve channel for standardized, made-to-order merch. For fully bespoke programs, see https://magnumopus.agency.
+Magnum Opus Agency (MOA) is a product design studio that designs, develops and produces custom product for brands, artists and companies. MOA Shop is its self-serve lane for smaller orders. For full programs, new styles or larger runs, see https://magnumopus.agency/workwithus.
 
 ## Contact
 - Email: production@magnumopus.agency

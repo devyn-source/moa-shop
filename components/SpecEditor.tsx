@@ -42,7 +42,7 @@ export function SpecEditor({ slug, initial }: { slug: string; initial: GarmentPa
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Save failed");
-      setMsg(approve ? "Locked ✓ — set in stone." : "Saved.");
+      setMsg(approve ? "Locked ✓, set in stone." : "Saved.");
       router.refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Save failed");
@@ -128,11 +128,11 @@ export function SpecEditor({ slug, initial }: { slug: string; initial: GarmentPa
       <div className="spec-actions">
         <button type="button" className="secondary-button" disabled={busy} onClick={() => save(false)}>Save draft</button>
         <button type="button" className="button" disabled={busy || !canLock} onClick={() => save(true)}>
-          {canLock ? "Lock — set in stone →" : `Resolve ${assumed + questions} to lock`}
+          {canLock ? "Lock, set in stone →" : `Resolve ${assumed + questions} to lock`}
         </button>
         {msg && <span className="spec-msg">{msg}</span>}
       </div>
-      <p className="spec-note">Size chart comes straight from the stored factory grading (product_zones) — edit it in /admin/zones, not here.</p>
+      <p className="spec-note">Size chart comes straight from the stored factory grading (product_zones), edit it in /admin/zones, not here.</p>
     </div>
   );
 }

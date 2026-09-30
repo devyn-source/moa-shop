@@ -50,9 +50,9 @@ export async function POST(request: Request) {
     );
 
     await notifyOps(
-      `Invoice/PO request — ${d.companyName}`,
+      `Invoice/PO request, ${d.companyName}`,
       `<p><strong>${esc(d.companyName)}</strong> asked to pay by invoice/PO from checkout.</p>
-       <p>Work email: ${esc(d.workEmail)}<br/>PO number: ${esc(d.poNumber || "—")}<br/>Signed-in account: ${esc(customerEmail || "—")}</p>
+       <p>Work email: ${esc(d.workEmail)}<br/>PO number: ${esc(d.poNumber || "N/A")}<br/>Signed-in account: ${esc(customerEmail || "N/A")}</p>
        ${d.note ? `<p>Note: ${esc(d.note)}</p>` : ""}
        <p>They were told a real person will reply within one business day.</p>`,
       INVOICE_REQUEST_EMAIL

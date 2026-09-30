@@ -14,9 +14,9 @@ import { ALL_FAQS } from "@/lib/faqs";
 import type { CatalogProduct } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Custom Merch, Made to Order — No Quotes | MOA Catalog",
+  title: "Custom Cut and Sew Merch for Smaller Orders | MOA Shop",
   description:
-    "Production-grade custom merch for modern brands. Pick a premium blank, upload your art, approve an instant proof — MOA manufactures and ships it. No quotes, no sales calls, no minimums runaround.",
+    "Fully custom merch for smaller orders. Every style is cut and sewn to our own patterns. Design it yourself in 3D, get your proof within 24 business hours, pay one invoice. No quotes, no sales calls.",
 };
 
 const fromPrice = (p: CatalogProduct) => Math.min(...p.priceTiers.map((t) => t.perUnitUsd));
@@ -84,16 +84,16 @@ export default async function LandingPage() {
   const faqs = ALL_FAQS.slice(0, 6);
 
   const cred = [
-    { icon: I.badge, t: "Production-grade", d: "The same garments we make for top brands" },
-    { icon: I.tag, t: "No minimums runaround", d: "One clear price ladder, MOQ 50" },
-    { icon: I.needle, t: "Decoration-ready", d: "Screen print, embroidery, woven labels" },
-    { icon: I.truck, t: "Tracked to your door", d: "Live status from proof to delivery" },
+    { icon: I.badge, t: "Cut and sewn", d: "Every style made to our own patterns" },
+    { icon: I.tag, t: "Built for smaller orders", d: "One clear price ladder, MOQ 50" },
+    { icon: I.needle, t: "Decorated your way", d: "Screen print, embroidery, woven labels" },
+    { icon: I.truck, t: "One invoice", d: "Pay once, track it from proof to delivery" },
   ];
   const steps = [
-    { icon: I.shirt, t: "Pick a premium blank", d: "Choose from a curated range of production-grade styles — each one decoration-ready." },
-    { icon: I.upload, t: "Upload your artwork", d: "Drop in your art, place it on the garment, and pick colors. See exactly how it prints." },
-    { icon: I.check, t: "Approve your proof", d: "We generate an instant digital proof. Tweak it yourself until it's right, then approve." },
-    { icon: I.box, t: "We make & ship it", d: "MOA manufactures to spec with managed QC and ships it, with tracking emailed on dispatch." },
+    { icon: I.shirt, t: "Pick a style", d: "Choose from a curated range of styles, each one cut and sewn to our own patterns." },
+    { icon: I.upload, t: "Design it in 3D", d: "Drop in your art, place it on the 3D garment, and pick colors. See your mockup as you design." },
+    { icon: I.check, t: "Approve your proof", d: "Our team reviews your design and your proof arrives within 24 business hours. Approve it in your account." },
+    { icon: I.box, t: "Pay once, we produce it", d: "Pay one invoice for the full order. We produce it to spec with our partner factories, run QC, and ship it with tracking." },
   ];
   // Real clients (logos pulled from magnumopus.agency). Per-logo height is tuned
   // by aspect ratio so wide wordmarks and compact marks feel the same visual size.
@@ -113,25 +113,25 @@ export default async function LandingPage() {
       {/* ===== Hero ===== */}
       <section className="lp-hero">
         <div className="lp-hero-copy" data-reveal>
-          <p className="lp-eyebrow">The MOA Catalog</p>
+          <p className="lp-eyebrow">The MOA Shop</p>
           <h1 className="lp-h1">
-            Premium custom merch,
+            Fully custom merch,
             <br />
-            <span className="lp-h1-accent">made to order.</span>
+            <span className="lp-h1-accent">for smaller orders.</span>
           </h1>
           <p className="lp-sub">
-            Pick a production-grade blank, upload your artwork, and approve an instant
-            proof. MOA manufactures it to spec and ships it to your door — no quotes,
-            no sales calls, no minimums runaround.
+            Every style is cut and sewn to our own patterns. Design it yourself in 3D,
+            get your proof within 24 business hours, and pay one invoice for the full
+            order. No quotes, no sales calls.
           </p>
           <div className="lp-cta-row">
             <Link className="lp-btn lp-btn--primary" href="#shop">Build your merch →</Link>
-            <Link className="lp-btn lp-btn--ghost" href="/shop">Browse the catalog</Link>
+            <Link className="lp-btn lp-btn--ghost" href="/shop">Browse the shop</Link>
           </div>
           <ul className="lp-hero-trust">
-            <li>Transparent per-unit pricing</li>
-            <li>Instant self-serve proof</li>
-            <li>MOA-managed quality control</li>
+            <li>Cut and sewn to our own patterns</li>
+            <li>Proof within 24 business hours</li>
+            <li>One invoice for the full order</li>
           </ul>
         </div>
 
@@ -185,10 +185,10 @@ export default async function LandingPage() {
       {/* ===== How it works ===== */}
       <section className="lp-section" id="how">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">01 — Process</span>
+          <span className="lp-index">01 · Process</span>
           <h2 className="lp-h2">From idea to doorstep in four steps</h2>
           <p className="lp-section-lede">
-            The whole process is self-serve. No RFQs, no back-and-forth, no waiting on a
+            Design it yourself, and our team takes it from there. No RFQs, no waiting on a
             sales rep to email you a quote.
           </p>
         </div>
@@ -209,11 +209,11 @@ export default async function LandingPage() {
       {/* ===== Featured products ===== */}
       <section className="lp-section lp-shop" id="shop">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">02 — The range</span>
+          <span className="lp-index">02 · The range</span>
           <h2 className="lp-h2">Start with a best-seller</h2>
           <p className="lp-section-lede">
-            Every style is a garment we already produce for leading brands — curated, not an
-            endless generic catalog.
+            Every style is cut and sewn to our own patterns, the same ones we produce for
+            leading brands. Curated, not an endless generic catalog.
           </p>
         </div>
         <div className="lp-grid">
@@ -231,18 +231,18 @@ export default async function LandingPage() {
       {/* ===== Instant proof spotlight (dark, editorial) ===== */}
       <section className="lp-proof">
         <div className="lp-proof-copy" data-reveal>
-          <span className="lp-index lp-index--light">03 — The advantage</span>
+          <span className="lp-index lp-index--light">03 · The advantage</span>
           <h2 className="lp-h2">See it before you buy it.</h2>
           <p className="lp-section-lede">
-            Upload your art and watch it land on the garment — adjust placement, size, color
-            and decoration method yourself. The proof you approve is the spec we produce.
-            No mockup fees, no waiting days for a sales rep to send a PDF.
+            Upload your art and see your mockup as you design. Adjust placement, size, color
+            and decoration method on the 3D garment yourself. Our team reviews it and your
+            proof arrives within 24 business hours. The proof you approve is the spec we produce.
           </p>
           <ul className="lp-proof-list">
             <li>Drag, scale and rotate your art on a live garment</li>
             <li>Print-resolution check before you ever pay</li>
             <li>Add a woven brand label, sewn in</li>
-            <li>Share a link for sign-off before you order</li>
+            <li>No mockup fees, no waiting on a sales rep</li>
           </ul>
           <Link className="lp-btn lp-btn--primary" href="#shop">Try it on a product →</Link>
         </div>
@@ -265,7 +265,7 @@ export default async function LandingPage() {
       {/* ===== Comparison ===== */}
       <section className="lp-section">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">04 — Why teams switch</span>
+          <span className="lp-index">04 · Why teams switch</span>
           <h2 className="lp-h2">The old way vs the MOA way</h2>
         </div>
         <div className="lp-compare">
@@ -275,17 +275,17 @@ export default async function LandingPage() {
               <li>Email an RFQ, wait days for a quote</li>
               <li>Pay mockup fees, wait for PDF proofs</li>
               <li>Opaque pricing, surprise add-ons</li>
-              <li>Generic blank catalogs</li>
+              <li>Printed stock garments</li>
               <li>No visibility once you order</li>
             </ul>
           </div>
           <div className="lp-compare-col lp-compare-col--moa" data-reveal style={stagger(1)}>
-            <p className="lp-compare-title">MOA Catalog</p>
+            <p className="lp-compare-title">MOA Shop</p>
             <ul>
               <li>Self-serve, transparent per-unit pricing</li>
-              <li>Free instant proof you control</li>
-              <li>What you see is what you pay</li>
-              <li>Production-grade, decoration-ready styles</li>
+              <li>Design in 3D, proof within 24 business hours</li>
+              <li>One invoice for the full order</li>
+              <li>Cut and sewn to our own patterns</li>
               <li>Live tracking from proof to delivery</li>
             </ul>
           </div>
@@ -295,12 +295,12 @@ export default async function LandingPage() {
       {/* ===== Guarantee (charcoal band) ===== */}
       <section className="lp-guarantee">
         <div data-reveal>
-          <span className="lp-index lp-index--light">05 — Zero-risk by design</span>
+          <span className="lp-index lp-index--light">05 · Zero-risk by design</span>
           <h2 className="lp-h2">Nothing is made until you approve it.</h2>
           <p className="lp-section-lede">
-            Your approved proof <em>is</em> the quality bar. Every order runs through
-            MOA-managed quality control before it ships — the same standard behind the
-            studio top brands trust for their best merch.
+            Your approved proof <em>is</em> the quality bar. Production starts only after
+            you approve and pay, and every order runs through MOA quality control before it
+            ships. The same standard top brands trust us with.
           </p>
         </div>
       </section>
@@ -313,7 +313,7 @@ export default async function LandingPage() {
       {/* ===== FAQ ===== */}
       <section className="lp-section lp-faq" id="faq">
         <div className="lp-section-head" data-reveal>
-          <span className="lp-index">06 — Good to know</span>
+          <span className="lp-index">06 · Good to know</span>
           <h2 className="lp-h2">Questions, answered</h2>
         </div>
         <div className="lp-faq-list">
@@ -331,12 +331,12 @@ export default async function LandingPage() {
         <div data-reveal>
           <h2 className="lp-final-h">Make the merch your brand deserves.</h2>
           <p className="lp-final-sub">
-            Pick a blank, upload your art, approve your proof. From {currency(fromLow)}/unit,
+            Pick a style, design it in 3D, approve your proof. From {currency(fromLow)}/unit,
             delivered in {hero ? formatLeadTime(hero.leadTimeDays) : "weeks"}.
           </p>
           <div className="lp-cta-row lp-cta-row--center">
             <Link className="lp-btn lp-btn--primary lp-btn--lg" href="#shop">Build your merch →</Link>
-            <Link className="lp-btn lp-btn--ghost lp-btn--lg" href="/shop">Browse the catalog</Link>
+            <Link className="lp-btn lp-btn--ghost lp-btn--lg" href="/shop">Browse the shop</Link>
           </div>
         </div>
       </section>

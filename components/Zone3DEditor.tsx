@@ -33,7 +33,7 @@ function methodFit(widthIn: number): { label: string; over: boolean } {
   if (widthIn <= IMPRINT_MAX.embroidery) fits.push("emb");
   if (widthIn <= IMPRINT_MAX.dtf) fits.push("DTF");
   if (widthIn <= IMPRINT_MAX.screen) fits.push("screen");
-  return { label: fits.join(" · ") || "—", over: false };
+  return { label: fits.join(" · ") || "N/A", over: false };
 }
 
 type RectT = { x: number; y: number; w: number; h: number };
@@ -346,7 +346,7 @@ export default function Zone3DEditor({
             ))}
           </ul>
         </aside>
-        <div className="z3d-empty">No 3D model for this SKU yet — upload a GLB on its Assets page to author zones in 3D.</div>
+        <div className="z3d-empty">No 3D model for this SKU yet, upload a GLB on its Assets page to author zones in 3D.</div>
       </div>
     );
   }
@@ -373,8 +373,8 @@ export default function Zone3DEditor({
             <h2 className="z3d-title">{product.displayName}</h2>
             <p className="z3d-sub">
               {mode === "calibrate"
-                ? "Drag the HPS line to the shoulder + the hem line to the bottom (or Auto-fit), then Apply — this sets the real-inch ruler."
-                : `Drag the boxes onto the garment — real inches off the 3D surface · ${calForInches ? `${calForInches.confidence} calibration` : "not calibrated yet — do the Calibrate tab first"}.`}
+                ? "Drag the HPS line to the shoulder + the hem line to the bottom (or Auto-fit), then Apply, this sets the real-inch ruler."
+                : `Drag the boxes onto the garment, real inches off the 3D surface · ${calForInches ? `${calForInches.confidence} calibration` : "not calibrated yet, do the Calibrate tab first"}.`}
             </p>
           </div>
           <div className="z3d-tabset">
@@ -481,10 +481,10 @@ export default function Zone3DEditor({
               <div className="m3dcal-grid" style={{ marginTop: 16 }}>
                 <div className="m3dcal-stat"><span className="m3dcal-label">Inches / world</span><strong className="m3dcal-value">{Math.round(live.ipw * 100) / 100}</strong><span className="m3dcal-sub">the scale</span></div>
                 <div className="m3dcal-stat"><span className="m3dcal-label">Body length</span><strong className="m3dcal-value">{report?.bodyLengthIn}&Prime;</strong><span className="m3dcal-sub">HPS→hem · {report?.source}</span></div>
-                <div className="m3dcal-stat"><span className="m3dcal-label">Chest cross-check</span><strong className="m3dcal-value">{live.ratio ? `${Math.round(live.ratio * 100) / 100}×` : "—"}</strong><span className="m3dcal-sub">model {Math.round(live.impliedWidthIn * 100) / 100}″ vs spec {report?.chestWidthIn ?? "—"}″</span></div>
+                <div className="m3dcal-stat"><span className="m3dcal-label">Chest cross-check</span><strong className="m3dcal-value">{live.ratio ? `${Math.round(live.ratio * 100) / 100}×` : "N/A"}</strong><span className="m3dcal-sub">model {Math.round(live.impliedWidthIn * 100) / 100}″ vs spec {report?.chestWidthIn ?? "N/A"}″</span></div>
               </div>
             ) : (
-              <p className="z3d-hint" style={{ marginTop: 16 }}>{report === null ? "Loading calibration…" : "No body-length spec for this SKU — can't calibrate."}</p>
+              <p className="z3d-hint" style={{ marginTop: 16 }}>{report === null ? "Loading calibration…" : "No body-length spec for this SKU, can't calibrate."}</p>
             )}
             <div className="z3d-actions">
               <button type="button" className="z3d-add" onClick={autoFitHps} disabled={!report?.chestWidthIn} title="Snap HPS so chest matches spec (ratio → 1.0×)">Auto-fit HPS</button>

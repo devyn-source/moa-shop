@@ -20,7 +20,7 @@ export default async function AdminZonesPage() {
           <p className="eyebrow">Studio</p>
           <h1 className="page-title">Garment Studio</h1>
           <p className="lede">
-            Calibrate and place — on one 3D garment. <strong>1 · Calibrate</strong> sets the real-inch ruler
+            Calibrate and place, on one 3D garment. <strong>1 · Calibrate</strong> sets the real-inch ruler
             (drag the HPS/hem lines or Auto-fit), then <strong>2 · Zones</strong> places the print areas. Both
             read off the same surface and feed straight into the customer&apos;s configurator.
           </p>

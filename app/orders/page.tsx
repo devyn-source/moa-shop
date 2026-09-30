@@ -102,7 +102,7 @@ export default async function OrdersPage() {
       {orders.length === 0 ? (
         <div className="empty-state" style={{ marginTop: 28 }}>
           No orders under this email yet.{" "}
-          <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the catalog →</Link>
+          <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the shop →</Link>
         </div>
       ) : (
         <div className="ol-list">
@@ -160,8 +160,8 @@ export default async function OrdersPage() {
         <h2 className="sd-title">Saved designs</h2>
         {savedDesigns.length === 0 && wishlistProducts.length === 0 ? (
           <p className="sd-empty">
-            Nothing saved yet — designs you share and products you heart land here.{" "}
-            <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the catalog →</Link>
+            Nothing saved yet. Designs you share and products you heart land here.{" "}
+            <Link href="/shop" style={{ color: "var(--color-terracotta)" }}>Browse the shop →</Link>
           </p>
         ) : (
           <>

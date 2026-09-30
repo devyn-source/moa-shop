@@ -106,7 +106,7 @@ export function InvoiceRequestDialog({ prefillEmail }: { prefillEmail: string })
             </div>
 
             {done ? (
-              <p className="ir-done">Got it — a real person will reply within one business day.</p>
+              <p className="ir-done">Got it. A real person will reply within one business day.</p>
             ) : (
               <form onSubmit={submit}>
                 <label className="ir-field">
@@ -134,11 +134,11 @@ export function InvoiceRequestDialog({ prefillEmail }: { prefillEmail: string })
                 </label>
                 <label className="ir-field">
                   <span className="ir-label">Note (optional)</span>
-                  <textarea className="ir-input ir-textarea" value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={3} placeholder="Anything we should know — net terms, approval process, timing…" />
+                  <textarea className="ir-input ir-textarea" value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={3} placeholder="Anything we should know: net terms, approval process, timing…" />
                 </label>
                 {error ? <p className="ir-error">{error}</p> : null}
                 <div className="ir-foot">
-                  <span className="ir-hint">Your cart stays as-is — this just starts the conversation.</span>
+                  <span className="ir-hint">Your cart stays as-is. This just starts the conversation.</span>
                   <button type="submit" className="ir-send" disabled={submitting}>
                     {submitting ? "Sending…" : "Send request →"}
                   </button>

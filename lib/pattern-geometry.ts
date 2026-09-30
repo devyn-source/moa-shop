@@ -238,7 +238,7 @@ export function parsePatternFront(
   else notes.push(`Unit auto-resolved to ${unit} (body length ${bodyCm.toFixed(0)} cm).`);
   if (!paneled) notes.push(onFold ? "Single front treated as a half (CF fold / paired) → width doubled." : "Single full front piece.");
   else notes.push(`Paneled front: ${pieces.length} panels summed.`);
-  notes.push("Cut-line widths include seam allowance — confirm against the finished chest spec.");
+  notes.push("Cut-line widths include seam allowance, confirm against the finished chest spec.");
 
   return {
     unit,

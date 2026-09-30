@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Terms of Service · MOA Catalog" };
+export const metadata = { title: "Terms of Service · MOA Shop" };
 
 // First-draft Terms for the self-serve catalog. Review with counsel before launch.
 export default function TermsPage() {
@@ -8,12 +8,12 @@ export default function TermsPage() {
     <main className="page" style={{ maxWidth: 760 }}>
       <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
       <h1 className="page-title">Terms of Service</h1>
-      <p className="lede">Magnum Opus Agency — MOA Catalog. Last updated June 2026.</p>
+      <p className="lede">Magnum Opus Agency · MOA Shop. Last updated June 2026.</p>
 
       <div style={{ fontSize: "0.92rem", lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
           <h2 style={hStyle}>1. What we make</h2>
-          <p>MOA Catalog produces standardized, made-to-order merchandise decorated with artwork you supply. Every item is custom-produced to the specification you configure and approve, so orders are handled as personalized goods.</p>
+          <p>MOA Shop produces standardized, made-to-order merchandise decorated with artwork you supply. Every item is custom-produced to the specification you configure and approve, so orders are handled as personalized goods.</p>
         </section>
         <section>
           <h2 style={hStyle}>2. Your artwork &amp; rights</h2>

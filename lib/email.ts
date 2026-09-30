@@ -92,9 +92,9 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
   const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
   const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
   const colorHex = variant?.colorHex || C.charcoal;
-  const colorLabel = variant?.colorLabel || "—";
+  const colorLabel = variant?.colorLabel || "N/A";
   const fabric = variant?.fabric || "";
-  const methodLine = decos.length ? decos.map((d) => d.label).join("  +  ") : "Blank / no decoration";
+  const methodLine = decos.length ? decos.map((d) => d.label).join("  +  ") : "No decoration";
   const placement = Array.from(new Set(decos.flatMap((d) => d.placementZones))).join(", ");
   const perUnitAll = order.perUnitUsd + order.decorationAdderUsd;
   const leadDays = product?.leadTimeDays ?? null;
@@ -136,7 +136,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
 </head>
 <body style="margin:0;padding:0;background:${C.cream};">
   <!-- preheader (hidden) -->
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.cream};font-size:1px;line-height:1px;">Order ${esc(order.orderNumber)} confirmed — ${esc(productName)}, ${order.quantity.toLocaleString()} units. Into MOA artwork QA now.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.cream};font-size:1px;line-height:1px;">Order ${esc(order.orderNumber)} confirmed: ${esc(productName)}, ${order.quantity.toLocaleString()} units. Into MOA artwork QA now.</div>
 
   <!-- terracotta signature bar -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}">
@@ -157,7 +157,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
           ${label("Payment received", C.terracotta)}
           <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:38px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Order<br/>confirmed</h1>
           <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
-            ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong style="color:${C.charcoal};">${esc(order.orderNumber)}</strong> is paid and routed straight into MOA artwork QA. No back-and-forth — we take it from here and you'll have tracking the moment it ships.
+            ${greeting ? `${esc(greeting)}, your` : "Your"} order <strong style="color:${C.charcoal};">${esc(order.orderNumber)}</strong> is paid and routed straight into MOA artwork QA. No back-and-forth. We take it from here and you'll have tracking the moment it ships.
           </p>
         </td></tr>
 
@@ -195,15 +195,15 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
               <a href="${esc(trackerUrl)}" style="display:inline-block;padding:15px 30px;font-family:${DISPLAY};font-weight:800;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.cream};text-decoration:none;border-radius:10px;">Track your order &rarr;</a>
             </td>
           </tr></table>
-          <div style="margin:10px 0 0;font-family:${BODY};font-size:11px;color:${C.neutral};">Live status, anytime — ${esc(statusLabel(order.status))} now.</div>
+          <div style="margin:10px 0 0;font-family:${BODY};font-size:11px;color:${C.neutral};">Live status, anytime. ${esc(statusLabel(order.status))} now.</div>
         </td></tr>
 
         <!-- what happens next -->
         <tr><td class="px" style="padding:30px 40px 6px;">${label("What happens next", C.terracotta)}</td></tr>
         <tr><td class="px" style="padding:14px 40px 6px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            ${step(1, "Artwork QA", "1–3 business days. MOA reviews your art, builds the production mockup, and locks specs — no charge, no chasing.")}
-            ${step(2, "Production", `Your run goes to the floor with MOA-managed quality control${leadDays ? ` — about <strong style="color:${C.charcoal};">${leadDays} days</strong> for this style.` : "."}`)}
+            ${step(1, "Artwork QA", "1-3 business days. MOA reviews your art, builds the production mockup, and locks specs. No charge, no chasing.")}
+            ${step(2, "Production", `We produce your run with our partner factories under MOA quality control${leadDays ? `, about <strong style="color:${C.charcoal};">${leadDays} days</strong> for this style.` : "."}`)}
             ${step(3, "Ship", "DDP by default. Tracking lands in your inbox and the live tracker updates in real time.")}
           </table>
         </td></tr>
@@ -221,7 +221,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
             <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
             <p style="margin:10px 0 0;font-family:${BODY};font-size:12px;line-height:1.6;color:${C.neutral};">
-              Made-to-order merch, managed end to end — fixed MOQs, fixed price ladders, MOA-managed quality control, DDP shipping default.
+              Custom cut and sew merch for smaller orders, managed end to end: fixed MOQs, fixed price ladders, MOA-managed quality control, DDP shipping default.
             </p>
             <p style="margin:14px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">
               Questions on this order? Reply to this email.<br/>
@@ -244,9 +244,9 @@ function renderText(order: ShopOrder, product: CatalogProduct | null, origin: st
   const variant = product?.variants.find((v) => v.id === order.variantId) ?? null;
   const decos = (product?.decorations ?? []).filter((d) => order.decorationIds.includes(d.id));
   return [
-    `MOA CATALOG — ORDER CONFIRMED`,
+    `MOA CATALOG · ORDER CONFIRMED`,
     ``,
-    `${order.contactName ? order.contactName.split(" ")[0] + " — your" : "Your"} order ${order.orderNumber} is paid and routed into MOA artwork QA.`,
+    `${order.contactName ? order.contactName.split(" ")[0] + ", your" : "Your"} order ${order.orderNumber} is paid and routed into MOA artwork QA.`,
     ``,
     `${productName}`,
     variant ? `Colorway: ${variant.colorLabel}` : "",
@@ -257,9 +257,9 @@ function renderText(order: ShopOrder, product: CatalogProduct | null, origin: st
     `Track your order: ${trackerUrl}`,
     ``,
     `WHAT HAPPENS NEXT`,
-    `  1. Artwork QA (1–3 business days)`,
+    `  1. Artwork QA (1-3 business days)`,
     product?.leadTimeDays ? `  2. Production with MOA QC (~${product.leadTimeDays} days)` : `  2. Production with MOA quality control`,
-    `  3. Ship — DDP, tracking to your inbox`,
+    `  3. Ship: DDP, tracking to your inbox`,
     ``,
     `Magnum Opus Agency · shop.magnumopus.agency`
   ].filter((l) => l !== "").join("\n");
@@ -350,7 +350,7 @@ export async function sendPaymentIncomplete(
   const product = await getProductById(order.productId);
   const origin = originFrom(req);
   const cartUrl = `${origin}/cart`;
-  const productName = product?.displayName ?? "your MOA Catalog order";
+  const productName = product?.displayName ?? "your MOA Shop order";
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
   const subject = `Your order wasn't completed · MOA`;
   const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${esc(subject)}</title></head>
@@ -366,14 +366,14 @@ export async function sendPaymentIncomplete(
         ${label("Payment not completed", C.terracotta)}
         <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:34px;line-height:1.05;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Pick up where<br/>you left off</h1>
         <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
-          ${greeting ? `${esc(greeting)} — the` : "The"} payment for <strong>${esc(productName)}</strong> (${esc(order.orderNumber)}) didn't go through, so nothing was charged and nothing went to production. Your configuration is saved in your cart — checkout again whenever you're ready.
+          ${greeting ? `${esc(greeting)}, the` : "The"} payment for <strong>${esc(productName)}</strong> (${esc(order.orderNumber)}) didn't go through, so nothing was charged and nothing went to production. Your configuration is saved in your cart. Check out again whenever you're ready.
         </p>
       </td></tr>
       <tr><td align="center" style="padding:26px 40px 4px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${C.terracotta}" style="border-radius:10px;">
           <a href="${esc(cartUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Return to your cart &rarr;</a>
         </td></tr></table>
-        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Hit a snag or have a question? Just reply to this email — a real person reads it.</div>
+        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Hit a snag or have a question? Just reply to this email. A real person reads it.</div>
       </td></tr>
       <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
         <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
@@ -427,7 +427,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
         ${label(reminder ? "Friendly reminder · still awaiting your approval" : "Payment received · One quick step", C.terracotta)}
         <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:36px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">Approve<br/>your proof</h1>
         <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
-          ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is paid. Here's exactly how <strong>${esc(productName)}</strong> will be produced. Give it a look and approve — that's the only thing between you and production. Nothing goes to the factory until you do.
+          ${greeting ? `${esc(greeting)}, your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is paid. Here's exactly how <strong>${esc(productName)}</strong> will be produced. Give it a look and approve. That's the only thing between you and production. Nothing goes into production until you do.
         </p>
       </td></tr>
       <tr><td style="padding:22px 40px 0;">
@@ -442,11 +442,11 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
           <a href="${esc(approveUrl)}" style="display:inline-block;padding:16px 34px;font-family:${DISPLAY};font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${C.white};text-decoration:none;border-radius:10px;">Approve &amp; send to production &rarr;</a>
         </td></tr></table>
         ${sheetUrl ? `<div style="margin:16px 0 0;"><a href="${esc(sheetUrl)}" style="font-family:${DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${C.terracotta};text-decoration:none;">View full spec sheet (PDF) &rarr;</a><div style="font-family:${BODY};font-size:11px;color:${C.neutral};margin-top:4px;">Exact print size, placement (inches from HPS &amp; center), colors and method.</div></div>` : ""}
-        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? <a href="${esc(adjustUrl)}" style="color:${C.terracotta};font-weight:700;text-decoration:none;">Redo it yourself &rarr;</a> — change placement, color, ink, artwork or sizes and your proof updates instantly. As many times as you like, until it's perfect.</div>
+        <div style="margin:14px 0 0;font-family:${BODY};font-size:12px;line-height:1.5;color:${C.neutral};">Not quite right? <a href="${esc(adjustUrl)}" style="color:${C.terracotta};font-weight:700;text-decoration:none;">Request changes &rarr;</a> Change placement, color, ink, artwork or sizes, and we send you an updated proof to approve.</div>
       </td></tr>
       <tr><td style="padding:30px 40px 40px;"><table role="presentation" width="100%" style="border-top:1px solid ${C.creamDark};"><tr><td style="padding:22px 0 0;">
         <img src="${origin}/brand/logos/moa-logo.png" alt="MOA" height="22" style="display:block;border:0;height:22px;width:auto;" />
-        <p style="margin:10px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">Magnum Opus Agency · Order ${esc(order.orderNumber)} · Your approval is the final QA — we produce exactly what you approve.</p>
+        <p style="margin:10px 0 0;font-family:${BODY};font-size:11px;line-height:1.6;color:${C.neutral};">Magnum Opus Agency · Order ${esc(order.orderNumber)} · Your approval is the final QA. We produce exactly what you approve.</p>
       </td></tr></table></td></tr>
       <tr><td height="4" bgcolor="${C.creamDark}" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
     </table>
@@ -487,7 +487,7 @@ function renderShippingHtml(order: ShopOrder, origin: string, tracking: { carrie
         ${label("Shipped", C.terracotta)}
         <h1 style="margin:10px 0 0;font-family:${DISPLAY};font-weight:800;font-size:38px;line-height:1.02;letter-spacing:0.5px;text-transform:uppercase;color:${C.charcoal};">On its way</h1>
         <p style="margin:16px 0 0;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.charcoal};">
-          ${greeting ? `${esc(greeting)} — your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is on the way.
+          ${greeting ? `${esc(greeting)}, your` : "Your"} order <strong>${esc(order.orderNumber)}</strong> is on the way.
         </p>
       </td></tr>
       <tr><td style="padding:22px 40px 0;">

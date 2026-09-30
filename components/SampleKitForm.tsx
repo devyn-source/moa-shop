@@ -68,7 +68,7 @@ export function SampleKitForm({
       <div className="empty-state" style={{ maxWidth: 560 }}>
         <p style={{ fontWeight: 600, color: "var(--color-charcoal)" }}>Request received.</p>
         <p>
-          A real person reviews every kit — you&apos;ll hear from us at the email you provided,
+          A real person reviews every kit. You&apos;ll hear from us at the email you provided,
           usually within one business day.
         </p>
       </div>
@@ -129,9 +129,9 @@ export function SampleKitForm({
           <span className="label">Estimated quantity</span>
           <select name="estQuantity" defaultValue="">
             <option value="">Not sure yet</option>
-            <option>50–100 units</option>
-            <option>100–250 units</option>
-            <option>250–500 units</option>
+            <option>50-100 units</option>
+            <option>100-250 units</option>
+            <option>250-500 units</option>
             <option>500+ units</option>
           </select>
         </label>
@@ -140,7 +140,7 @@ export function SampleKitForm({
           <select name="timeline" defaultValue="">
             <option value="">Not sure yet</option>
             <option>ASAP</option>
-            <option>1–2 months</option>
+            <option>1-2 months</option>
             <option>This quarter</option>
             <option>Exploring</option>
           </select>
@@ -149,7 +149,7 @@ export function SampleKitForm({
 
       <div className="form-grid" style={{ marginTop: 18 }}>
         <label className="field full">
-          <span className="label">Shipping address — line 1 *</span>
+          <span className="label">Shipping address, line 1 *</span>
           <input name="line1" required maxLength={200} autoComplete="address-line1" />
         </label>
         <label className="field full">

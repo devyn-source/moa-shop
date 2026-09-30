@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { caseStudiesFor } from "@/lib/case-studies";
+import { launchMode, isLaunchSlug } from "@/lib/launch";
 
 // Completed-work showcase. On a PDP, pass the product's `slug` to show only the
 // case study for THAT exact product ("this style, in the wild"); on the landing,
@@ -20,8 +21,11 @@ export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string
         <h2>{heading}</h2>
       </div>
       <div className="cs-grid">
-        {items.map((c) => (
-          <Link href={`/p/${c.slugs[0]}`} className="cs-card" key={c.id}>
+        {items.map((c) => {
+          // Styles outside the shop link to the studio's case studies instead.
+          const orderable = !launchMode() || isLaunchSlug(c.slugs[0]);
+          return (
+          <Link href={orderable ? `/p/${c.slugs[0]}` : "https://magnumopus.agency/work"} className="cs-card" key={c.id}>
             <div className={`cs-shot${c.fit === "contain" ? " cs-shot--contain" : ""}`}>
               {/* /work shots are 1000×1250; .cs-shot img CSS drives the layout. */}
               <Image src={c.image} alt={c.product} width={1000} height={1250} sizes="(max-width: 700px) 92vw, 400px" />
@@ -30,10 +34,11 @@ export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string
               {c.logo ? <img className="cs-logo" src={`/brand/clients/${c.logo}.png`} alt="" loading="lazy" /> : null}
               <p className="cs-product">{c.product}</p>
               <p className="cs-line">{c.line}</p>
-              <span className="cs-cta">Make yours <span className="cs-cta-arrow" aria-hidden>→</span></span>
+              <span className="cs-cta">{orderable ? "Make yours" : "See the project"} <svg className="cs-cta-arrow" aria-hidden width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M1 7h11M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" /></svg></span>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

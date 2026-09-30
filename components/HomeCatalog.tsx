@@ -82,14 +82,14 @@ function CatIcon({ type }: { type: string }) {
 const MIN_ORDER_OPTIONS = [
   { value: "", label: "Any quantity" },
   { value: "lt150", label: "Under 150" },
-  { value: "150-250", label: "150 – 250" },
+  { value: "150-250", label: "150-250" },
   { value: "gt250", label: "250+" }
 ];
 
 const PRICE_OPTIONS = [
   { value: "", label: "Any price" },
   { value: "lt25", label: "Under $25/unit" },
-  { value: "25-75", label: "$25 – $75/unit" },
+  { value: "25-75", label: "$25-$75/unit" },
   { value: "gt75", label: "$75+/unit" }
 ];
 

@@ -67,7 +67,7 @@ function fromSpec(meas: ReturnType<typeof normaliseMeasurements>): { bodyLen: nu
 
 async function compute(slug: string, hpsFrac = 0, hemFrac = 1): Promise<Computed> {
   const modelUrl = await getModelUrl(slug);
-  if (!modelUrl) return { ok: false, error: "No 3D model (GLB) uploaded for this SKU — add the model first.", status: 404 };
+  if (!modelUrl) return { ok: false, error: "No 3D model (GLB) uploaded for this SKU. Add the model first.", status: 404 };
   const bbox = await fetchGlbBBox(modelUrl);
   if (!bbox) return { ok: false, error: "Couldn't read the GLB bounding box (no positioned geometry / unreadable file).", status: 422 };
 
@@ -79,7 +79,7 @@ async function compute(slug: string, hpsFrac = 0, hemFrac = 1): Promise<Computed
 
   const bodyLengthIn = front?.bodyLengthIn ?? spec.bodyLen;
   if (!bodyLengthIn || bodyLengthIn <= 0) {
-    return { ok: false, error: "No body-length to anchor scale — need a DXF front piece or a BODY LENGTH point of measure.", status: 422 };
+    return { ok: false, error: "No body-length to anchor scale, need a DXF front piece or a BODY LENGTH point of measure.", status: 422 };
   }
   // Chest: DXF flat front width is exact; spec chest is full circumference-ish,
   // so try the flat reading (c/2) that best matches the model's implied width.

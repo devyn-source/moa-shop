@@ -27,8 +27,10 @@ export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, sh
     const product = await getProductById(o.productId);
     const variant = product?.variants.find((v) => v.id === o.variantId);
     const placements = (o.artworkPlacements?.length ? o.artworkPlacements : o.artworkPlacement ? [o.artworkPlacement] : []).map((p) => ({
-      view: p.view,
-      zoneLabel: p.zoneLabel,
+      // Never let a partial placement block the whole order: the team confirms
+      // every placement on the proof anyway.
+      view: p.view || "front",
+      zoneLabel: p.zoneLabel || p.zoneId || "Placement",
       method: p.method,
       widthIn: p.spec3d?.widthIn ?? p.widthIn,
       heightIn: p.spec3d?.heightIn ?? p.heightIn,

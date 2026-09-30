@@ -233,7 +233,7 @@ export async function syncOrderFromMoaOS(order: ShopOrder): Promise<void> {
       if (data.trackingCarrier && data.trackingNumber) {
         await sendShippingNotification(fresh, { carrier: data.trackingCarrier, number: data.trackingNumber });
       }
-      await updateOrderStatus(order.id, "shipped", "Shipped — tracking sent to customer.", {
+      await updateOrderStatus(order.id, "shipped", "Shipped, tracking sent to customer.", {
         trackingCarrier: data.trackingCarrier,
         trackingNumber: data.trackingNumber,
       });

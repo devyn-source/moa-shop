@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 // Site-wide social card — the MOA wordmark on cream, 1200×630. Used for link
 // previews on social + chat. (Product pages set their own product-photo card.)
 export const runtime = "edge";
-export const alt = "MOA Catalog — Production-grade merch, made to order by Magnum Opus Agency";
+export const alt = "MOA Shop: custom cut and sew merch for smaller orders, by Magnum Opus Agency";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

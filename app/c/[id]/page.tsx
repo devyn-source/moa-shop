@@ -24,7 +24,7 @@ export default async function SharedConfigPage({ params }: { params: Promise<{ i
         <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Shared configuration</p>
         <h1 className="page-title">{product.displayName}</h1>
         <p className="lede">
-          Someone shared this configuration with you. Review it, make any changes, and add it to your order — nothing is produced until a proof is approved.
+          Someone shared this configuration with you. Review it, make any changes, and add it to your order. Nothing is produced until a proof is approved.
         </p>
       </div>
       <PdpConfigurator product={product} seed={seed} modelUrl={modelUrl} />

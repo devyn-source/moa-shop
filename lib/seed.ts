@@ -63,7 +63,7 @@ export const seedVendors: Vendor[] = [
   }
 ];
 
-// Canonical MOA Catalog colorway system — 9 colors (6 core neutrals + 3 accents).
+// Canonical MOA Shop colorway system — 9 colors (6 core neutrals + 3 accents).
 // One vocabulary across the whole catalog so a brand can match a hoodie + tee + hat.
 // Each SKU offers a category-appropriate, hero-ordered subset (see colorSet calls).
 // Hex = approved on-screen mockup target; TCX = the production textile spec.
@@ -109,7 +109,7 @@ const apparelProducts: CatalogProduct[] = [
     category: "tee",
     displayName: "Internal Test SKU",
     sizes: ["OS"],
-    fitNotes: "Internal pipeline test — not for sale.",
+    fitNotes: "Internal pipeline test. Not for sale.",
     greyFront: "/products/heavyweight-tee/base-front.png",
     headline: "Internal $1 end-to-end test product.",
     description: "Hidden SKU used to validate the live catalog order pipeline. Not for sale.",
@@ -138,7 +138,7 @@ const apparelProducts: CatalogProduct[] = [
       {
         id: "screen_print",
         label: "Screen print (test)",
-        description: "Test decoration — no upcharge.",
+        description: "Test decoration, no upcharge.",
         perUnitAdderUsd: 0,
         placementZones: ["left-chest", "center-chest", "full-front"],
         maxColors: 4,
@@ -637,9 +637,9 @@ const PACKAGING_COLORS: { id: string; label: string; hex: string }[] = [
 const boxFinishes: CatalogDecoration[] = [
   { id: "screen_print", label: "Screen print", description: "Solid spot-color ink on the printed wrap.", perUnitAdderUsd: 0, placementZones: ["front"], maxColors: 2, isAvailable: true },
   { id: "full_color", label: "Full-color print", description: "Offset CMYK for multicolor or photographic artwork.", perUnitAdderUsd: 0.75, placementZones: ["front"], isAvailable: true },
-  { id: "spot_uv", label: "Spot UV", description: "Glossy clear coat over a matte base — tone-on-tone shine.", perUnitAdderUsd: 1.25, placementZones: ["front"], maxColors: 1, isAvailable: true },
+  { id: "spot_uv", label: "Spot UV", description: "Glossy clear coat over a matte base for a tone-on-tone shine.", perUnitAdderUsd: 1.25, placementZones: ["front"], maxColors: 1, isAvailable: true },
   { id: "foil_stamp", label: "Foil stamp", description: "Metallic or pigment foil pressed into the surface.", perUnitAdderUsd: 2.5, placementZones: ["front"], maxColors: 1, isAvailable: true },
-  { id: "emboss", label: "Emboss / deboss", description: "Raised or recessed impression of your mark — tactile.", perUnitAdderUsd: 1.75, placementZones: ["front"], maxColors: 1, isAvailable: true }
+  { id: "emboss", label: "Emboss / deboss", description: "Raised or recessed impression of your mark. Tactile.", perUnitAdderUsd: 1.75, placementZones: ["front"], maxColors: 1, isAvailable: true }
 ];
 
 function packagingAsset(opts: {
@@ -688,7 +688,7 @@ function packagingAsset(opts: {
       ? PACKAGING_COLORS.map((c) => ({
           id: `pkg-${opts.slug}-${c.id}`,
           label: c.label,
-          fabric: "—",
+          fabric: "N/A",
           colorLabel: c.label,
           colorHex: c.hex,
           mockupTemplateUrl: "",
@@ -699,7 +699,7 @@ function packagingAsset(opts: {
           {
             id: `pkg-${opts.slug}-default`,
             label: opts.displayName,
-            fabric: "—",
+            fabric: "N/A",
             colorLabel: "Branded",
             colorHex: "#D6D1C0",
             mockupTemplateUrl: "",
@@ -721,7 +721,7 @@ export const packagingAssets: CatalogProduct[] = [
     displayName: "Rigid Magnetic Gift Box",
     headline: "Branded rigid magnetic-close presentation box.",
     description:
-      "The PR Box itself — a rigid magnetic-close gift box with a custom-printed wrap. The required foundation of every box.",
+      "The PR Box itself: a rigid magnetic-close gift box with a custom-printed wrap. The required foundation of every box.",
     vendorUnitCostUsd: 9.0,
     required: true,
     colorable: true, // the box offers the full 15-color palette (recolored live)
@@ -757,7 +757,7 @@ export const packagingAssets: CatalogProduct[] = [
     assetKind: "card",
     displayName: "Insert / Thank-You Card",
     headline: "Printed insert or thank-you card.",
-    description: "A printed card — welcome note, story, or call-to-action — tucked into the box.",
+    description: "A printed card, such as a welcome note, story, or call-to-action, tucked into the box.",
     vendorUnitCostUsd: 1.2,
     sortOrder: 902,
     printUpchargeUsd: 1.2,
@@ -852,9 +852,9 @@ const bundleBuilderProduct: CatalogProduct = {
   displayName: "PR Box",
   sizes: ["ONE"],
   greyFront: "/products/pr-box/base-front.png",
-  headline: "Build a branded PR box — items + packaging, one price.",
+  headline: "Build a branded PR box. Items and packaging, one price.",
   description:
-    "A buyer-built promotional box: choose catalog items, decorate each, and add branded packaging. Configure contents and quantity — pricing is itemized into one per-box price. Bundle 3+ items with packaging and save 10%.",
+    "A buyer-built promotional box: choose catalog items, decorate each, and add branded packaging. Configure contents and quantity, and pricing is itemized into one per-box price. Bundle 3+ items with packaging and save 10%.",
   bestFor: "Influencer seeding, press kits, launch gifting, VIP mailers",
   visual: "tote",
   defaultVendorId: "vendor-best-cover",
@@ -868,7 +868,7 @@ const bundleBuilderProduct: CatalogProduct = {
     {
       id: "pr-box-default",
       label: "PR Box",
-      fabric: "—",
+      fabric: "N/A",
       colorLabel: "Custom",
       colorHex: "#B04731",
       mockupTemplateUrl: "",

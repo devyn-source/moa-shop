@@ -371,7 +371,7 @@ export default function Garment3DDecorator({
           <span className="studio3dx-dim">{widthIn}&Prime; wide{spec3d ? ` · ${spec3d.belowHpsIn}″ below HPS` : ""}</span>
           {dpi != null ? (
             <span className={`studio3dx-dpi studio3dx-dpi--${dpiLevel}`}>
-              {dpiLevel === "ok" ? "Print-ready" : dpiLevel === "warn" ? "OK — softer at this size" : "Too low to print"} · {dpi} DPI
+              {dpiLevel === "ok" ? "Print-ready" : dpiLevel === "warn" ? "OK · softer at this size" : "Too low to print"} · {dpi} DPI
             </span>
           ) : null}
         </div>
