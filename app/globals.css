@@ -8925,7 +8925,6 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .pdpx-reuse-btn { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--color-terracotta); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; }
 .pdpx-download--icon { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid var(--color-cream-dark); background: #fff; color: var(--color-charcoal); cursor: pointer; }
 .pdpx-download--icon:hover { border-color: rgba(30, 30, 30, 0.3); }
-.pdpx-step-value { color: rgba(30, 30, 30, 0.55); }
 
 /* Decoration, readable: compact method rows + ink picker. */
 .pdpx-deco { display: grid !important; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; padding: 10px 12px !important; min-height: 76px; }
@@ -8933,7 +8932,7 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .pdpx-deco-shot img { width: 100%; height: 100%; object-fit: cover; }
 .pdpx-deco-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .pdpx-deco-text strong { font-size: 13px; letter-spacing: 0.04em; }
-.pdpx-deco-text em { font-style: normal; font-size: 11px; line-height: 1.4; color: rgba(30, 30, 30, 0.55); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pdpx-deco-text em { font-style: normal; font-size: 11px; line-height: 1.4; color: rgba(30, 30, 30, 0.55); }
 .pdpx-deco-adder { font-size: 12px; font-weight: 700; white-space: nowrap; }
 .pdpx-inks { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
 .pdpx-inks-count { margin-left: 6px; color: rgba(30, 30, 30, 0.55); }
@@ -8976,3 +8975,6 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .pdpx-step-head { display: grid !important; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 12px; }
 .pdpx-step-value { justify-self: end; max-width: 60vw !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; text-align: right; line-height: 1.3; }
 @media (min-width: 901px) { .pdpx-step-value { max-width: 220px !important; } }
+
+/* Every chosen value reads the same: ink, not grey. */
+.pdpx-step .pdpx-step-value { color: var(--color-charcoal) !important; }

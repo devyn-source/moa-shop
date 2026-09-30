@@ -199,7 +199,8 @@ export function PdpConfigurator({
         : STEPS
   )
     // Fabric step only when the SKU has fabric tiers to choose from.
-    .filter((s) => s.key !== "fabric" || Boolean(product.fabricOptions?.length))
+    // Fabric choice is off for now (one fabric per style, named in the description).
+    .filter((s) => s.key !== "fabric")
     .map((s) => (isPackaging && s.key === "decoration" ? { ...s, label: "Finish" } : s));
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");

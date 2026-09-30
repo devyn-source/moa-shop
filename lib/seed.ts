@@ -12,7 +12,7 @@ const coreDecorations: CatalogDecoration[] = [
   {
     id: "screen_print",
     label: "Screen print",
-    description: "Plastisol or water-based print for front, back, sleeve, or bag panel artwork.",
+    description: "Flat, durable ink for front, back and sleeve artwork. Up to 4 colours.",
     perUnitAdderUsd: 4,
     placementZones: ["front", "back", "sleeve"],
     maxColors: 4,
@@ -21,7 +21,7 @@ const coreDecorations: CatalogDecoration[] = [
   {
     id: "embroidery",
     label: "Embroidery",
-    description: "Flat embroidery for chest, cap front, pocket, side seam, or patch placement.",
+    description: "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
     perUnitAdderUsd: 7.5,
     placementZones: ["chest", "cap front", "pocket", "side seam"],
     maxColors: 12,
@@ -30,7 +30,7 @@ const coreDecorations: CatalogDecoration[] = [
   {
     id: "rubber_applique",
     label: "Rubber appliqué",
-    description: "Raised silicone/rubber appliqué badge with a soft, tactile finish.",
+    description: "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
     perUnitAdderUsd: 6.5,
     placementZones: ["front", "chest", "sleeve"],
     maxColors: 3,
