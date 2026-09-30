@@ -27,7 +27,7 @@ in vec2 vSt; out vec4 outColor;
 uniform sampler2D uBeauty, uShading, uArt0, uArt1, uArt2, uArt3;
 uniform highp usampler2D uUv; uniform highp usampler2D uPieces;
 uniform vec2 uSize; uniform int uCount;
-uniform vec3 uBaseLin; uniform vec3 uTargetLin; uniform float uTint;
+uniform float uBaseLum; uniform vec3 uTargetLin; uniform float uTint;
 uniform vec4 uRect[${MAX}];   // u0, vTop, w, h (mm)
 uniform vec4 uMeta[${MAX}];   // piece, method, rotation (rad), unused
 
@@ -44,7 +44,7 @@ void main() {
     // keep the plate's folds and knit (its light relative to its own fabric colour),
     // move the fabric onto the target colour. Work in linear light.
     vec3 lin = pow(max(base.rgb, 0.0), vec3(2.2));
-    float rel = dot(lin, vec3(0.2126, 0.7152, 0.0722)) / max(1e-4, dot(uBaseLin, vec3(0.2126, 0.7152, 0.0722)));
+    float rel = dot(lin, vec3(0.2126, 0.7152, 0.0722)) / max(1e-4, uBaseLum);
     vec3 outLin = uTargetLin * rel;
     base.rgb = pow(clamp(outLin, 0.0, 1.0), vec3(1.0 / 2.2));
   }
@@ -104,13 +104,28 @@ void main() {
   outColor = vec4(col * base.a, base.a);
 }`;
 
-type Loaded = { gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number] };
+type Loaded = { gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number]; baseLum: number };
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string) {
   const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s);
   if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) || "shader");
   return s;
 }
+// The plate fabric's real average brightness (linear), measured from the photo:
+// recolouring relative to this keeps the target colour true even when the photo
+// is darker or lighter than its nominal hex.
+function fabricLum(img: HTMLImageElement): number {
+  const w = 96, h = 120, cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+  const c = cv.getContext("2d", { willReadFrequently: true }); if (!c) return 0.2;
+  c.drawImage(img, 0, 0, w, h);
+  const d = c.getImageData(0, 0, w, h).data, vals: number[] = [];
+  const lin = (v: number) => Math.pow(v / 255, 2.2);
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 250) vals.push(0.2126 * lin(d[i]) + 0.7152 * lin(d[i + 1]) + 0.0722 * lin(d[i + 2]));
+  if (!vals.length) return 0.2;
+  vals.sort((a, b) => a - b);
+  return vals[Math.floor(vals.length * 0.6)]; // flat, lit fabric sits a little above the median
+}
+
 const loadImage = (url: string) => new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => res(i); i.onerror = rej; i.src = url; });
 
 function imageTexture(gl: WebGL2RenderingContext, img: TexImageSource, filter: number = gl.LINEAR) {
@@ -172,7 +187,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
       const loc = gl.getAttribLocation(prog, "aPos"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-      ctx.current = { gl, prog, uv, pieces, size: [uv.width, uv.height], tex: {
+      ctx.current = { gl, prog, uv, pieces, size: [uv.width, uv.height], baseLum: fabricLum(beauty), tex: {
         beauty: imageTexture(gl, beauty), shading: imageTexture(gl, shading), uv: dataTexture(gl, uv, false), pieces: dataTexture(gl, pieces, true),
       } };
       arts.current.clear();
@@ -266,10 +281,9 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     for (let i = list.length; i < MAX; i++) bind(`uArt${i}`, tex.shading, 4 + i);
     gl.uniform2f(gl.getUniformLocation(prog, "uSize"), size[0], size[1]);
     const lin = (hex: string) => [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));
-    const baseHex = manifest.colours[colour] ?? "#808080";
     gl.uniform1f(gl.getUniformLocation(prog, "uTint"), tint ? 1 : 0);
-    gl.uniform3fv(gl.getUniformLocation(prog, "uBaseLin"), lin(baseHex));
-    gl.uniform3fv(gl.getUniformLocation(prog, "uTargetLin"), lin(tint ?? baseHex));
+    gl.uniform1f(gl.getUniformLocation(prog, "uBaseLum"), c.baseLum);
+    gl.uniform3fv(gl.getUniformLocation(prog, "uTargetLin"), lin(tint ?? manifest.colours[colour] ?? "#808080"));
     gl.uniform1i(gl.getUniformLocation(prog, "uCount"), list.length);
     gl.uniform4fv(gl.getUniformLocation(prog, "uRect"), rect);
     gl.uniform4fv(gl.getUniformLocation(prog, "uMeta"), meta);
