@@ -928,9 +928,6 @@ export function PdpConfigurator({
                   {v === "front" ? "Front" : "Back"}
                 </button>
               ))}
-              {modelUrl ? (
-                <button type="button" role="tab" aria-selected={spin} className={`pdpx-pill${spin ? " is-on" : ""}`} onClick={() => setSpin(true)}>Spin</button>
-              ) : null}
             </div>
           ) : is3d ? (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">Drag to rotate</span>
