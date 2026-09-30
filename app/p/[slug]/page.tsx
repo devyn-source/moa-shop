@@ -138,7 +138,11 @@ export default async function ProductPage({
         const m = plateIndex[product.slug];
         return m && m.views?.front ? <link rel="preload" as="image" href={`/plates/${product.slug}/front.webp${m.v ? `?v=${m.v}` : ""}`} fetchPriority="high" /> : null;
       })()}
-      <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} plate={await getPlate(product.slug, { preview: plates === "preview" })} />
+      {await (async () => {
+        // Plate styles never need the 3D model: skip that storage lookup entirely.
+        const plate = await getPlate(product.slug, { preview: plates === "preview" });
+        return <PdpConfigurator product={product} modelUrl={plate ? null : await getModelUrl(product.slug)} plate={plate} />;
+      })()}
 
       {launchMode() ? null : (
         <>
