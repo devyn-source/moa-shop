@@ -10,10 +10,13 @@ import {
 import { isAdminRequest } from "@/lib/admin-auth";
 import { apiError } from "@/lib/errors";
 import { zonesSaveSchema } from "@/lib/validation";
+import { MODEL_STANDIN } from "@/lib/launch";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const { slug } = await params;
+    const { slug: asked } = await params;
+    // A style without its own zones reads its stand-in's (see MODEL_STANDIN).
+    const slug = MODEL_STANDIN[asked] && !(await getProductZones(asked)) ? MODEL_STANDIN[asked] : asked;
     const [zones, calibration, measurements] = await Promise.all([
       getProductZones(slug),
       getProductCalibration(slug),

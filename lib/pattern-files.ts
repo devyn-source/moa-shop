@@ -3,6 +3,7 @@
 //   • CAD pattern files (DXF/AI/PLT) → PRIVATE `sku-patterns/<slug>/<file>`.
 //     MOA + vendor only; surfaced to vendors as signed URLs in the PO email.
 //   • 3D model (GLB) → PUBLIC `sku-models/<slug>.glb`. Rendered on the PDP.
+import { MODEL_STANDIN } from "./launch";
 import { getSupabase } from "./supabase";
 
 export const PATTERN_BUCKET = "sku-patterns";
@@ -103,6 +104,11 @@ export async function listModelThumbs(): Promise<Record<string, string>> {
 }
 
 export async function getModelUrl(slug: string): Promise<string | null> {
+  const own = await getModelUrlExact(slug);
+  return own ?? (MODEL_STANDIN[slug] ? getModelUrlExact(MODEL_STANDIN[slug]) : null);
+}
+
+async function getModelUrlExact(slug: string): Promise<string | null> {
   const sb = getSupabase();
   const target = `${slug}.glb`;
   const { data, error } = await sb.storage.from(MODEL_BUCKET).list("", { limit: 1000, search: target });

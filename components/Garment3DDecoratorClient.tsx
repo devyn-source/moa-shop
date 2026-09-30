@@ -21,6 +21,8 @@ export default function Garment3DDecoratorClient(props: {
   model3d?: Model3DCalibration | null;
   method?: string;
   initialPlacements?: Placement[];
+  preset?: { key: string; view: "front" | "back"; zoneId: string; widthIn: number; belowHpsIn: number; fromCfIn: number } | null;
+  hideZoneChips?: boolean;
   onChange?: (c: StudioCapture[]) => void;
 }) {
   return <Garment3DDecorator {...props} />;

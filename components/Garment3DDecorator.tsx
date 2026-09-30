@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, useGLTF, useTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -125,12 +125,16 @@ function useArtAspect(tex: THREE.Texture): number {
 // projected rect (for the handle overlay) + the active art's real-surface hit
 // (for the exact inches), and renders every visible placement as a conforming
 // decal so the buyer sees the true wrapped result while editing.
-function EditBackdrop({ url, hex, view, bankedPlacements, activeBox, activeArt, activeMethod, model3d, artUrl, onRect, onHit, onArtChange, onArtCommit }: {
+export type PresetRequest = { key: string; widthIn: number; belowHpsIn: number; fromCenterScreenIn: number };
+
+function EditBackdrop({ url, hex, view, bankedPlacements, activeBox, activeArt, activeMethod, model3d, artUrl, presetReq, onPresetPlaced, onRect, onHit, onArtChange, onArtCommit }: {
   url: string; hex: string; view: View;
   bankedPlacements: Placement[]; // saved placements on this view (static decals)
   activeBox: Box; activeArt: ArtTransform; activeMethod?: string;
   model3d?: Model3DCalibration | null;
   artUrl: string;
+  presetReq?: PresetRequest | null; // place the art from real inches (needs model3d)
+  onPresetPlaced?: (key: string) => void;
   onRect: (r: Box) => void;
   onHit: (h: Model3DHit | null) => void;
   onArtChange: (t: ArtTransform) => void; // direct on-mesh move
@@ -195,6 +199,32 @@ function EditBackdrop({ url, hex, view, bankedPlacements, activeBox, activeArt, 
     return { decal: d ? { geo: d.geo, key: "active", method: activeMethod } : null, hit };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cloned, camera, rect, aspect, model3d, activeMethod, activeBox.x, activeBox.y, activeBox.w, activeBox.h, activeArt.ox, activeArt.oy, activeArt.sx, activeArt.sy, activeArt.r]);
+
+  // Inches -> surface. Cast straight at the garment (camera side is +Z) at the
+  // calibrated world position, then project the hits back into the zone box. The
+  // width is measured the same way the readout measures it (surface chord), so the
+  // preset reads back at its own inches.
+  useEffect(() => {
+    if (!presetReq || !model3d) return;
+    const ipw = model3d.inchesPerWorld;
+    const wW = presetReq.widthIn / ipw, hW = wW / aspect;
+    const cx = model3d.cfWorldX + presetReq.fromCenterScreenIn / ipw;
+    const cy = model3d.hpsWorldY - presetReq.belowHpsIn / ipw - hW / 2;
+    cloned.rotation.y = rotY; cloned.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster();
+    const surf = (x: number, y: number) => { ray.set(new THREE.Vector3(x, y, 5), new THREE.Vector3(0, 0, -1)); return ray.intersectObject(cloned, true)[0]?.point ?? null; };
+    const toBox = (p: THREE.Vector3) => {
+      const n = p.clone().project(camera);
+      return [(((n.x + 1) / 2 - rect.x) / rect.w - activeBox.x) / activeBox.w, (((1 - n.y) / 2 - rect.y) / rect.h - activeBox.y) / activeBox.h] as const;
+    };
+    const c = surf(cx, cy), l = surf(cx - wW / 2, cy), r = surf(cx + wW / 2, cy), t = surf(cx, cy + hW / 2), b = surf(cx, cy - hW / 2);
+    if (!c || !l || !r || !t || !b) { onPresetPlaced?.(presetReq.key); return; }
+    const [ccx, ccy] = toBox(c), [lx] = toBox(l), [rx] = toBox(r), [, ty] = toBox(t), [, by] = toBox(b);
+    const sx = Math.max(0.02, rx - lx), sy = Math.max(0.02, by - ty);
+    onArtChange({ ox: ccx - sx / 2, oy: ccy - sy / 2, sx, sy, r: 0 });
+    onPresetPlaced?.(presetReq.key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetReq?.key, rect, aspect]);
 
   useEffect(() => { onRect(rect); }, [rect, onRect]);
   useEffect(() => { onHit(active.hit); }, [active.hit, onHit]);
@@ -277,7 +307,7 @@ export function PreviewBackdrop({ url, hex, artUrl, placements }: {
 }
 
 export default function Garment3DDecorator({
-  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, model3d, method, initialPlacements, onChange,
+  url, artUrl, hex = "#C9C4B8", zones, backZones = [], artPxWidth, garmentRefWidthIn = 26, model3d, method, initialPlacements, preset, hideZoneChips, onChange,
 }: {
   url: string; artUrl: string; hex?: string;
   zones: Zone[];
@@ -286,6 +316,10 @@ export default function Garment3DDecorator({
   model3d?: Model3DCalibration | null;
   method?: string; // current decoration method → decal finish
   initialPlacements?: Placement[];
+  // A standard placement in real inches (fromCfIn positive = wearer's left). A new
+  // `key` re-applies it. Without a 3D calibration only the zone is selected.
+  preset?: { key: string; view: View; zoneId: string; widthIn: number; belowHpsIn: number; fromCfIn: number } | null;
+  hideZoneChips?: boolean;
   onChange?: (c: StudioCapture[]) => void;
 }) {
   const guard = useCanvasGuard();
@@ -301,13 +335,30 @@ export default function Garment3DDecorator({
   const [rect, setRect] = useState<Box>({ x: 0.18, y: 0.12, w: 0.64, h: 0.76 });
   const [hit, setHit] = useState<Model3DHit | null>(null);
   const [preview, setPreview] = useState(false);
+  const [presetReq, setPresetReq] = useState<PresetRequest | null>(null);
+
+  // Apply a preset: switch view + zone, then let the backdrop place it in inches.
+  useEffect(() => {
+    if (!preset) return;
+    const list = preset.view === "front" ? frontList : backList;
+    setPreview(false);
+    setView(preset.view);
+    setZoneId(list.find((z) => z.id === preset.zoneId)?.id ?? list[0].id);
+    if (model3d) {
+      setPresetReq({ key: preset.key, widthIn: preset.widthIn, belowHpsIn: preset.belowHpsIn, fromCenterScreenIn: preset.view === "back" ? -preset.fromCfIn : preset.fromCfIn });
+    } else {
+      setArt(clampDef);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset?.key]);
 
   const activeZones = view === "front" ? frontList : backList;
   const zone = activeZones.find((z) => z.id === zoneId) ?? activeZones[0];
 
-  const spec3d = model3d && hit && hit.widthWorld > 0 ? model3dPlacement(model3d, hit, view) : undefined;
-  const current: Placement = { id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art, method, spec3d };
-  const all = useMemo(() => [...saved, current], [saved, view, zoneId, art, spec3d]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Stable identities: the parent stores every change, so a fresh object per render loops.
+  const spec3d = useMemo(() => (model3d && hit && hit.widthWorld > 0 ? model3dPlacement(model3d, hit, view) : undefined), [model3d, hit, view]);
+  const current: Placement = useMemo(() => ({ id: "current", view, zoneId: zone.id, zoneLabel: zone.label, box: zone.box, art, method, spec3d }), [view, zone, art, method, spec3d]);
+  const all = useMemo(() => [...saved, current], [saved, current]);
 
   const savedOnView = useMemo(() => saved.filter((p) => p.view === view), [saved, view]);
 
@@ -316,10 +367,15 @@ export default function Garment3DDecorator({
   const dpi = artPxWidth && widthIn > 0 ? Math.round(artPxWidth / widthIn) : null;
   const dpiLevel = dpi == null ? "na" : dpi >= 150 ? "ok" : dpi >= 100 ? "warn" : "bad";
 
+  const lastSent = useRef("");
   useEffect(() => {
-    onChange?.(all.map((p) => ({ ...p, widthIn: p.id === "current" ? widthIn : p.spec3d?.widthIn ?? null, dpi: p.id === "current" ? dpi : null })));
+    const out = all.map((p) => ({ ...p, widthIn: p.id === "current" ? widthIn : p.spec3d?.widthIn ?? null, dpi: p.id === "current" ? dpi : null }));
+    const sig = JSON.stringify(out.map((p) => [p.id, p.view, p.zoneId, p.art, p.spec3d, p.widthIn, p.dpi, p.method]));
+    if (sig === lastSent.current) return;
+    lastSent.current = sig;
+    onChange?.(out);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all]);
+  }, [all, widthIn, dpi]);
 
   const resetArt = (t: ArtTransform = clampDef) => { setArt(t); };
   const setViewTo = (v: View) => { setView(v); const zs = v === "front" ? frontList : backList; setZoneId(zs[0].id); resetArt(); };
@@ -348,7 +404,7 @@ export default function Garment3DDecorator({
             {preview ? (
               <PreviewBackdrop url={url} hex={hex} artUrl={artUrl} placements={all} />
             ) : (
-              <EditBackdrop url={url} hex={hex} view={view} bankedPlacements={savedOnView} activeBox={zone.box} activeArt={art} activeMethod={method} model3d={model3d} artUrl={artUrl} onRect={setRect} onHit={setHit} onArtChange={setArt} onArtCommit={() => {}} />
+              <EditBackdrop url={url} hex={hex} view={view} bankedPlacements={savedOnView} activeBox={zone.box} activeArt={art} activeMethod={method} model3d={model3d} artUrl={artUrl} presetReq={presetReq} onPresetPlaced={(k) => setPresetReq((r) => (r?.key === k ? null : r))} onRect={setRect} onHit={setHit} onArtChange={setArt} onArtCommit={() => {}} />
             )}
             <ContactShadows position={[0, -0.8, 0]} opacity={0.28} scale={4} blur={2.6} far={2.5} />
           </Suspense>
@@ -385,11 +441,11 @@ export default function Garment3DDecorator({
 
       {!preview ? (
         <>
-          <div className="g3d-zones" role="group" aria-label="Placement zone">
+          {hideZoneChips ? null : <div className="g3d-zones" role="group" aria-label="Placement zone">
             {activeZones.map((z) => (
               <button key={z.id} type="button" className={`g3d-zone-chip${z.id === zoneId ? " is-on" : ""}`} onClick={() => pickZone(z.id)}>{z.label}</button>
             ))}
-          </div>
+          </div>}
           <div className="studio3dx-multi">
             {saved.length ? (
               <ul className="studio3dx-saved-list">

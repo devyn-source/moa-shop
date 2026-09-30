@@ -17,6 +17,8 @@ import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibr
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
+import { presetsFor, presetSpec, type PlacementPreset } from "@/lib/presets";
+import { readArtColours, nearestPms } from "@/lib/art-colours";
 import { WovenLabelModal, type WovenLabel } from "./WovenLabelModal";
 
 // Upsell rates mirror the server's pricing source (lib/pricing.ts) so the live
@@ -43,6 +45,19 @@ type ExtraPlacement = {
 type Step = "color" | "fabric" | "decoration" | "placement" | "size";
 
 // Spreads a MOQ across every available size as evenly as possible.
+// The size curve most orders follow (M and L heavy). Used for the default run.
+function typicalSplit(sizes: string[], total: number): Record<string, number> {
+  if (sizes.length <= 1) return sizes.length ? { [sizes[0]]: total } : {};
+  const W: Record<string, number> = { XS: 0.05, S: 0.15, M: 0.3, L: 0.3, XL: 0.15, XXL: 0.05, "2XL": 0.05, "3XL": 0.03 };
+  const w = sizes.map((s) => W[s] ?? 1 / sizes.length);
+  const sum = w.reduce((a, b) => a + b, 0);
+  const out: Record<string, number> = {};
+  sizes.forEach((s, i) => (out[s] = Math.round((total * w[i]) / sum)));
+  const mid = sizes.includes("M") ? "M" : sizes[Math.floor(sizes.length / 2)];
+  out[mid] = Math.max(0, out[mid] + total - Object.values(out).reduce((a, b) => a + b, 0));
+  return out;
+}
+
 function distributeAcross(sizes: string[], total: number): Record<string, number> {
   if (!sizes.length) return {};
   const base = Math.floor(total / sizes.length);
@@ -54,9 +69,9 @@ function distributeAcross(sizes: string[], total: number): Record<string, number
 }
 
 const STEPS: { key: Step; label: string }[] = [
+  { key: "placement", label: "Artwork" },
   { key: "color", label: "Colour" },
   { key: "fabric", label: "Fabric" },
-  { key: "placement", label: "Artwork placement" },
   { key: "decoration", label: "Decoration" },
   { key: "size", label: "Size & quantity" }
 ];
@@ -189,7 +204,7 @@ export function PdpConfigurator({
   const [variantId, setVariantId] = useState(seed0?.variantId ?? defaultVariant?.id ?? "");
   const [view, setView] = useState<"front" | "back">(seed0?.view ?? "front");
   const [step, setStep] = useState<Step>(
-    isPackaging ? (product.variants.length > 1 ? "color" : "placement") : seed0 ? "placement" : "color"
+    isPackaging ? (product.variants.length > 1 ? "color" : "placement") : "placement"
   );
   const [decorationIds, setDecorationIds] = useState<string[]>(seed0?.decorationIds ?? []);
   const [pantones, setPantones] = useState<PmsColor[]>(seed0?.pantones ?? []);
@@ -212,7 +227,7 @@ export function PdpConfigurator({
     setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
   }, [placementId, view]);
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() =>
-    seed0?.sizeQty ?? distributeAcross(product.sizes, bundle ? Math.max(product.moq, bundle.boxQty) : product.moq)
+    seed0?.sizeQty ?? (bundle ? distributeAcross(product.sizes, Math.max(product.moq, bundle.boxQty)) : typicalSplit(product.sizes, product.moq))
   );
   const [submitting, setSubmitting] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -240,12 +255,21 @@ export function PdpConfigurator({
       : []
   );
   const is3d = has3d && stageMode === "3d";
+  // MOA standard placements in real inches (3D styles). The first one is applied
+  // as soon as artwork lands, so the logo is on the garment immediately.
+  const presets = useMemo(() => (use3dPlacement ? presetsFor(product.slug, product.category) : []), [use3dPlacement, product.slug, product.category]);
+  const [preset, setPreset] = useState<(PlacementPreset & { key: string }) | null>(null);
+  const applyPreset3d = (p: PlacementPreset) => setPreset({ ...p, key: `${p.id}-${Date.now()}` });
   // The decal editor takes over the stage during the placement step; 3D is the
   // hero on every other step. (No user-facing 2D/3D toggle for model SKUs.)
   const placing3d = use3dPlacement && step === "placement";
   useEffect(() => {
     if (has3d) setStageMode("3d");
   }, [has3d]);
+  useEffect(() => {
+    if (artworkUrl && presets.length && !preset && !place3d.some((p) => p.id !== "current")) applyPreset3d(presets[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artworkUrl, presets.length]);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
   const fabricOption = product.fabricOptions?.find((o) => o.id === fabricOptionId);
@@ -418,8 +442,10 @@ export function PdpConfigurator({
     if (!d.widthIn || d.widthIn <= 0) return null;
     return Math.round(artMeta.width / d.widthIn);
   }, [artMeta, placement, calibration, view, artTransform]);
-  const lowRes = printDpi != null && printDpi < 150;
-  const blockRes = printDpi != null && printDpi < 100;
+  const dpi3d = use3dPlacement ? place3d.reduce<number | null>((m, p) => (p.dpi == null ? m : m == null ? p.dpi : Math.min(m, p.dpi)), null) : null;
+  const effDpi = use3dPlacement ? dpi3d : printDpi;
+  const lowRes = effDpi != null && effDpi < 150;
+  const blockRes = effDpi != null && effDpi < 100;
 
   const stepDone = (s: Step): boolean => {
     if (s === "color") return Boolean(variant);
@@ -490,13 +516,35 @@ export function PdpConfigurator({
     setArtTransform({ ox: 0, oy: 0, sx: 1, sy: 1 });
   };
 
+  // Suggest a method + Pantone inks from the artwork itself (only if the buyer
+  // hasn't chosen yet). Few flat colours -> screen print; more -> embroidery;
+  // photographic art -> left for our team to advise in the proof.
+  const [artNote, setArtNote] = useState<string | null>(null);
+  const suggestFromArt = async (url: string) => {
+    const read = await readArtColours(url);
+    if (!read) { setArtNote(null); return; }
+    if (read.photo) { setArtNote("This artwork has photographic detail. Our team confirms the best method in your proof."); return; }
+    if (decorationIds.length) return;
+    const has = (id: string) => product.decorations.some((d) => d.id === id && d.isAvailable !== false);
+    const method = read.colours.length <= 4 && has("screen_print") ? "screen_print" : has("embroidery") ? "embroidery" : null;
+    if (!method) return;
+    const cap = product.decorations.find((d) => d.id === method)?.maxColors ?? 8;
+    const inks = [...new Map(read.colours.map((h) => nearestPms(h)).map((p) => [p.code, p])).values()].slice(0, cap);
+    setDecorationIds([method]);
+    setPantones(inks);
+    const label = product.decorations.find((d) => d.id === method)?.label ?? method;
+    setArtNote(`We found ${inks.length} ${inks.length === 1 ? "colour" : "colours"} in your artwork, matched to Pantone. ${label} is selected. Change either under Decoration.`);
+  };
+
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
+    setArtNote(null);
     setUploadError(null);
     setUploadWarning(null);
     // Show a local preview immediately while the upload runs.
     const localPreview = URL.createObjectURL(file);
     setArtworkUrl(localPreview);
+    if (/^image\/(png|jpe?g|webp|svg\+xml)$/.test(file.type)) void suggestFromArt(localPreview);
     setArtworkName(file.name);
     if (!placementId) {
       setPlacementId(placements[0]?.id ?? null);
@@ -755,9 +803,13 @@ export function PdpConfigurator({
     );
   }
 
+  // New orders go through a review first: the spec in plain words is what we produce.
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const onCta = bundle ? handleAddToBox : editOrder ? handleUpdate : () => setReviewOpen(true);
+
   // One CTA definition, rendered in the rail and in the pinned bottom bar.
   const ctaButton = (className: string) => (
-    <button type="button" className={className} onClick={bundle ? handleAddToBox : editOrder ? handleUpdate : handleAddToCart} disabled={belowMoq || submitting || blockRes}>
+    <button type="button" className={className} onClick={onCta} disabled={belowMoq || submitting || blockRes}>
 
             {blockRes
               ? "Resolution too low for this size"
@@ -824,7 +876,7 @@ export function PdpConfigurator({
         >
           {placing3d && artworkUrl && modelUrl ? (
             <div className="pdpx-canvas-3d">
-              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} model3d={calibration?.model3d} method={decoSelected.map((d) => d.label).join(" + ") || undefined} initialPlacements={place3d} onChange={setPlace3d} />
+              <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} model3d={calibration?.model3d} method={decoSelected.map((d) => d.label).join(" + ") || undefined} initialPlacements={place3d} preset={preset} hideZoneChips={presets.length > 0} onChange={setPlace3d} />
             </div>
           ) : is3d && modelUrl ? (
             <div className="pdpx-canvas-3d">
@@ -1094,15 +1146,15 @@ export function PdpConfigurator({
                           onDragLeave={() => setDragOver(false)}
                           onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
                         >
-                          <span className="pdpx-drop-eyebrow">Step 01</span>
+                          <span className="pdpx-drop-eyebrow">Your artwork</span>
                           <span className="pdpx-drop-cta">
                             {uploading ? "Uploading…" : artworkName ? artworkName : "Upload artwork"}
                           </span>
                           <span className={`pdpx-drop-hint${uploadError ? " is-error" : uploadWarning && artworkUrl && !uploading ? " is-warn" : artworkUrl && !uploading ? " is-ok" : ""}`}>
                             {uploadError
-                              ? `⚠ ${uploadError}`
+                              ? uploadError
                               : uploadWarning && artworkUrl && !uploading
-                              ? `⚠ ${uploadWarning}`
+                              ? uploadWarning
                               : artworkUrl && !uploading
                               ? "Uploaded · high-resolution, print-ready"
                               : "PNG, JPG, SVG, WEBP, PDF, vector preferred"}
@@ -1110,9 +1162,25 @@ export function PdpConfigurator({
                         </button>
 
                         {use3dPlacement ? (
-                          <p className="pdpx-place-hint">
-                            Place your artwork on the 3D garment. Drag it to move, then use the size &amp; rotate sliders below the model. We capture the exact spot on the garment for production.
-                          </p>
+                          artworkUrl && presets.length ? (
+                            <div className="pdpx-presets">
+                              <p className="pdpx-place-label">Placement</p>
+                              <div className="pdpx-preset-list" role="group" aria-label="Placement">
+                                {presets.map((p) => (
+                                  <button key={p.id} type="button" className={`pdpx-preset${preset?.id === p.id ? " is-on" : ""}`} onClick={() => applyPreset3d(p)}>
+                                    <span className="pdpx-preset-name">{p.label}</span>
+                                    <span className="pdpx-preset-spec">{presetSpec(p)}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="pdpx-place-hint">Drag the artwork on the garment to fine tune it. Save a placement to add another one.</p>
+                              {artNote ? <p className="pdpx-art-note">{artNote}</p> : null}
+                            </div>
+                          ) : (
+                            <p className="pdpx-place-hint">
+                              {artworkUrl ? "Drag the artwork on the garment to place it." : "Upload your artwork and it goes straight onto the garment at our standard placement."}
+                            </p>
+                          )
                         ) : (
                           <>
                         <p className="pdpx-place-label">Step 02, Location</p>
@@ -1208,7 +1276,7 @@ export function PdpConfigurator({
                         {product.sizes.length > 1 ? (
                           <div className="pdpx-size-presets">
                             <span className="pdpx-size-presets-label">Quick fill to {product.moq}</span>
-                            <button type="button" onClick={() => applyPreset("curve")}>Standard curve</button>
+                            <button type="button" onClick={() => applyPreset("curve")}>Typical split</button>
                             <button type="button" onClick={() => applyPreset("even")}>Even split</button>
                             <button type="button" onClick={() => applyPreset("clear")}>Clear</button>
                           </div>
@@ -1355,11 +1423,11 @@ export function PdpConfigurator({
             This is your final price, with decoration, placements and labels included. No quote,
             no revised invoice later.
           </p>
-          {printDpi != null && (lowRes || blockRes) ? (
+          {effDpi != null && (lowRes || blockRes) ? (
             <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 700 }}>
               {blockRes
-                ? `Artwork is too low-resolution for this print size (~${printDpi} DPI). Make the print smaller, or upload a higher-res image or vector (SVG/PDF).`
-                : `Low resolution at this size (~${printDpi} DPI). It may look soft. A higher-res image or vector prints sharper.`}
+                ? `Artwork is too low-resolution for this print size (~${effDpi} DPI). Make the print smaller, or upload a higher-res image or vector (SVG/PDF).`
+                : `Low resolution at this size (~${effDpi} DPI). It may look soft. A higher-res image or vector prints sharper.`}
             </p>
           ) : null}
           {ctaButton("pdpx-cta")}
@@ -1384,10 +1452,10 @@ export function PdpConfigurator({
               {variant?.colorLabel}
             </strong>
           </div>
-          {placement ? (
+          {(use3dPlacement ? place3d.length > 0 && artworkUrl : placement) ? (
             <div className="pdpx-bb-cell pdpx-bb-cell--hide-sm">
               <span>Placement</span>
-              <strong>{placement.label}</strong>
+              <strong>{use3dPlacement ? [...new Set(place3d.map((p) => p.zoneLabel))].join(" + ") : placement?.label}</strong>
             </div>
           ) : null}
           {decoSelected.length ? (
@@ -1404,6 +1472,49 @@ export function PdpConfigurator({
         </div>
       </div>
 
+
+      {reviewOpen ? (
+        <div className="pdpx-review" role="dialog" aria-modal="true" aria-label="Review your order" onClick={() => setReviewOpen(false)}>
+          <div className="pdpx-review-card" onClick={(e) => e.stopPropagation()}>
+            <div className="pdpx-review-stage">
+              {modelUrl && artworkUrl && place3d.length ? (
+                <Garment3DPreviewClient url={modelUrl} hex={variant?.colorHex || "#C9C4B8"} artUrl={artworkUrl} placements={place3d} />
+              ) : (
+                <ProductShot product={product} variant={variant} view={view} />
+              )}
+            </div>
+            <div className="pdpx-review-spec">
+              <p className="pdpx-eyebrow">Review your order</p>
+              <h2 className="pdpx-review-title">{product.displayName}</h2>
+              <dl className="pdpx-review-list">
+                <div><dt>Colour</dt><dd>{variant?.colorLabel}{variant?.colorTcx ? `, ${variant.colorTcx}` : ""}</dd></div>
+                {fabricOption ? <div><dt>Fabric</dt><dd>{fabricOption.label}</dd></div> : null}
+                {allPlacements.map((pl, i) => (
+                  <div key={i}>
+                    <dt>{allPlacements.length > 1 ? `Placement ${i + 1}` : "Placement"}</dt>
+                    <dd>
+                      {pl.zoneLabel}
+                      {pl.spec3d ? `: ${pl.spec3d.widthIn} in wide, ${pl.spec3d.belowHpsIn} in below HPS, ${pl.spec3d.horizontal.replace(/"/g, " in")}` : ""}
+                    </dd>
+                  </div>
+                ))}
+                <div><dt>Decoration</dt><dd>{decoSelected.map((d) => d.label).join(" and ") || "Our team advises in your proof"}</dd></div>
+                {pantones.length ? <div><dt>Inks</dt><dd>{pantones.map((p) => `${p.name} (${p.code})`).join(", ")}</dd></div> : null}
+                {wovenLabel ? <div><dt>Woven label</dt><dd>{wovenLabel.text}</dd></div> : null}
+                <div><dt>Sizes</dt><dd>{product.sizes.filter((z) => (sizeQty[z] ?? 0) > 0).map((z) => `${z} ${sizeQty[z]}`).join(", ")} ({qty.toLocaleString()} units)</dd></div>
+                <div><dt>Per unit</dt><dd>{currency(perUnit)}</dd></div>
+                <div><dt>Delivered by</dt><dd>{formatDeliveredBy(product.leadTimeDays)}</dd></div>
+              </dl>
+              <div className="pdpx-review-total"><span>Subtotal</span><strong>{currency(subtotal)}</strong></div>
+              <p className="pdpx-foot-note">This is the spec we produce. Our team checks it and your proof arrives within 24 business hours. Nothing is made until you approve it.</p>
+              <div className="pdpx-review-actions">
+                <button type="button" className="pdpx-review-back" onClick={() => setReviewOpen(false)}>Edit</button>
+                <button type="button" className="pdpx-cta" onClick={() => { setReviewOpen(false); handleAddToCart(); }} disabled={submitting}>Add to order</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <WovenLabelModal
         open={wovenOpen}
         initial={wovenLabel}

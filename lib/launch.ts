@@ -37,3 +37,10 @@ export function isVisible(p: Pick<CatalogProduct, "slug" | "category" | "isPubli
   if (launchMode()) return isLaunchSlug(p.slug) || (p.category === "packaging" && p.isPublished);
   return p.isPublished;
 }
+
+// Styles waiting on their own 3D model borrow a close block's model, zones and
+// calibration so the configurator works end to end. Remove an entry once the
+// style has its own GLB + product_zones row.
+export const MODEL_STANDIN: Record<string, string> = {
+  "vintage-cut-tee": "heavyweight-tee",
+};

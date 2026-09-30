@@ -30,7 +30,6 @@ function sniffType(buf: Buffer): string | null {
 // Print-readiness thresholds. Long-edge pixels is a robust proxy for "enough
 // resolution for a typical decoration" without yet knowing the exact print size.
 const MIN_LONG_EDGE = 1200;
-const MIN_DENSITY = 150;
 
 // Strips traversal + control chars, keeps name short and url-safe.
 function safeName(raw: string): string {
@@ -101,9 +100,11 @@ export async function POST(request: Request) {
         );
       }
       if (meta.space === "cmyk") {
-        warning = "Heads up: this file is CMYK, so colors can shift on screen and in print. RGB or a vector file is preferred.";
-      } else if (meta.density && meta.density < MIN_DENSITY) {
-        warning = `Low DPI (${meta.density}). It'll work at smaller sizes, but a higher-resolution or vector file is safer for large prints.`;
+        warning = "Heads up: this file is CMYK, so colours can shift on screen and in print. RGB or a vector file is preferred.";
+      } else if (meta.width && meta.width < 1200) {
+        // The DPI tag in a file means nothing for print; pixels per printed inch do.
+        // The configurator checks that live at the chosen size. Only flag small files.
+        warning = `This file is ${meta.width}px wide. Fine for a left chest, but it may print soft at larger sizes. A bigger file or a vector is safer.`;
       }
     }
 

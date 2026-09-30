@@ -8881,3 +8881,40 @@ body { text-transform: uppercase; font-weight: 400; letter-spacing: 0.01em; }
 button, a, label, summary, option { text-transform: uppercase; }
 input, textarea, select, [contenteditable], code, kbd { text-transform: none; }
 input::placeholder, textarea::placeholder { text-transform: uppercase; }
+
+/* Placement presets: MOA standard placements, each with its real-inch spec. */
+.pdpx-presets { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.pdpx-preset-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pdpx-preset {
+  display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 10px 12px; text-align: left;
+  background: #fff; border: 1px solid var(--color-cream-dark); border-radius: 10px; cursor: pointer;
+  font-family: var(--font-display); color: var(--color-charcoal);
+}
+.pdpx-preset:hover { border-color: rgba(30, 30, 30, 0.3); }
+.pdpx-preset.is-on { border-color: var(--color-terracotta); box-shadow: inset 0 0 0 1px var(--color-terracotta); }
+.pdpx-preset-name { font-weight: 700; font-size: 12px; letter-spacing: 0.04em; }
+.pdpx-preset-spec { font-size: 11px; letter-spacing: 0.01em; line-height: 1.35; color: rgba(30, 30, 30, 0.55); }
+.pdpx-art-note { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--color-cream-dark); font-size: 12px; line-height: 1.45; color: var(--color-charcoal); }
+
+/* Review before adding to the order: the garment + the spec we produce. */
+.pdpx-review { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(30, 30, 30, 0.55); }
+.pdpx-review-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); width: min(1080px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--color-cream); border-radius: 14px; }
+.pdpx-review-stage { position: relative; min-height: 420px; background: var(--frame-bg); }
+.pdpx-review-stage > * { position: absolute; inset: 0; }
+.pdpx-review-spec { display: flex; flex-direction: column; gap: 14px; padding: 28px; }
+.pdpx-review-title { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 1.05; }
+.pdpx-review-list { margin: 0; display: flex; flex-direction: column; }
+.pdpx-review-list > div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(30, 30, 30, 0.08); }
+.pdpx-review-list dt { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); }
+.pdpx-review-list dd { margin: 0; font-size: 13px; line-height: 1.45; color: var(--color-charcoal); }
+.pdpx-review-total { display: flex; justify-content: space-between; align-items: baseline; }
+.pdpx-review-total span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); }
+.pdpx-review-total strong { font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+.pdpx-review-actions { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+.pdpx-review-back { padding: 14px 20px; border-radius: 12px; border: 1px solid var(--color-cream-dark); background: #fff; font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; cursor: pointer; }
+@media (max-width: 760px) {
+  .pdpx-review { padding: 0; place-items: end stretch; }
+  .pdpx-review-card { grid-template-columns: 1fr; max-height: 100vh; border-radius: 14px 14px 0 0; }
+  .pdpx-review-stage { min-height: 300px; }
+  .pdpx-review-spec { padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+}
