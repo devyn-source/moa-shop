@@ -75,6 +75,30 @@ export default async function OrdersPage() {
         </div>
       </div>
 
+      {(() => {
+        // MOA Express orders: proofs, approvals, the invoice and status live on
+        // one page per order number.
+        const express = new Map<string, { units: number; total: number; lines: number; created: string }>();
+        for (const o of orders) {
+          const n = o.fulfillment?.mode === "express" ? o.fulfillment.catalogOrderId : undefined;
+          if (!n) continue;
+          const cur = express.get(n) || { units: 0, total: 0, lines: 0, created: o.createdAt };
+          express.set(n, { units: cur.units + o.quantity, total: cur.total + (o.totalUsd ?? 0), lines: cur.lines + 1, created: cur.created });
+        }
+        if (!express.size) return null;
+        return (
+          <section style={{ marginTop: 28, display: "grid", gap: 10 }}>
+            <p className="eyebrow">Proofs and invoices</p>
+            {[...express.entries()].map(([n, x]) => (
+              <Link key={n} href={`/orders/express/${n}`} className="ol-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textDecoration: "none", color: "inherit" }}>
+                <span><strong>Order {n}</strong> · {x.lines} {x.lines === 1 ? "piece" : "pieces"} · {x.units.toLocaleString()} units</span>
+                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Review</span>
+              </Link>
+            ))}
+          </section>
+        );
+      })()}
+
       {orders.length === 0 ? (
         <div className="empty-state" style={{ marginTop: 28 }}>
           No orders under this email yet.{" "}

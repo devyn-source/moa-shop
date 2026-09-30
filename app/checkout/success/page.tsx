@@ -37,6 +37,11 @@ export default async function CheckoutSuccessPage({
             QA. You&apos;ll get tracking the moment they ship.
           </p>
         )}
+        {expressNumber ? (
+          <p className="success-summary">
+            <Link href={`/orders/express/${encodeURIComponent(expressNumber)}`}><strong>Follow your order, proof and invoice in your account</strong></Link>
+          </p>
+        ) : null}
         {orders.length ? (
           <p className="success-summary">
             {orders.length} {orders.length === 1 ? "SKU" : "SKUs"} · {units.toLocaleString()} total units ·{" "}
