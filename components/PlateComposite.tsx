@@ -284,7 +284,10 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     const lin = (hex: string) => [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));
     gl.uniform1f(gl.getUniformLocation(prog, "uTint"), tint ? 1 : 0);
     gl.uniform1f(gl.getUniformLocation(prog, "uBaseLum"), c.baseLum);
-    gl.uniform1f(gl.getUniformLocation(prog, "uContrast"), c.baseLum < 0.05 ? 0.55 : 1.0);
+    // Fold contrast: a dark photo exaggerates texture (tame it); on dark target colours
+    // the same folds read weaker to the eye (strengthen them), as real dark cotton does.
+    const tl = (() => { const t = lin(tint ?? manifest.colours[colour] ?? "#808080"); return 0.2126 * t[0] + 0.7152 * t[1] + 0.0722 * t[2]; })();
+    gl.uniform1f(gl.getUniformLocation(prog, "uContrast"), c.baseLum < 0.05 ? 0.55 : tl < 0.1 ? 1.6 : tl < 0.3 ? 1.25 : 1.0);
     gl.uniform3fv(gl.getUniformLocation(prog, "uTargetLin"), lin(tint ?? manifest.colours[colour] ?? "#808080"));
     gl.uniform1i(gl.getUniformLocation(prog, "uCount"), list.length);
     gl.uniform4fv(gl.getUniformLocation(prog, "uRect"), rect);

@@ -1135,22 +1135,15 @@ export function PdpConfigurator({
                           <button
                             key={v.id}
                             type="button"
-                            className={`pdpx-swatch${variantId === v.id ? " is-on" : ""}`}
-                            style={{ background: v.colorHex }}
-                            data-label={v.colorLabel}
+                            className={`pdpx-colourcard${variantId === v.id ? " is-on" : ""}`}
                             aria-label={v.colorLabel}
+                            aria-pressed={variantId === v.id}
                             onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); }}
-                          />
+                          >
+                            <span className="pdpx-colourcard-chip" style={{ background: v.colorHex }} />
+                            <span className="pdpx-colourcard-name">{v.colorLabel}</span>
+                          </button>
                         ))}
-                        {(() => {
-                          const sv = product.variants.find((v) => v.id === variantId);
-                          return sv ? (
-                            <p style={{ width: "100%", fontSize: 12, color: "var(--color-neutral)", marginTop: 10 }}>
-                              {sv.colorLabel}
-                              {sv.colorTcx ? ` · Pantone ${sv.colorTcx}` : ""}
-                            </p>
-                          ) : null;
-                        })()}
                       </div>
                     ) : null}
 
@@ -1632,7 +1625,7 @@ export function PdpConfigurator({
               <p className="pdpx-eyebrow">Review your order</p>
               <h2 className="pdpx-review-title">{product.displayName}</h2>
               <dl className="pdpx-review-list">
-                <div><dt>Colour</dt><dd>{variant?.colorLabel}{variant?.colorTcx ? `, ${variant.colorTcx}` : ""}</dd></div>
+                <div><dt>Colour</dt><dd>{variant?.colorLabel}</dd></div>
                 {fabricOption ? <div><dt>Fabric</dt><dd>{fabricOption.label}</dd></div> : null}
                 {allPlacements.map((pl, i) => (
                   <div key={i}>

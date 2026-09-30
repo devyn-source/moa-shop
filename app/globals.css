@@ -9006,3 +9006,16 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .pdpx-width em { font-style: normal; min-width: 52px; text-align: right; }
 .pdpx-printable { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: #3D7A4A; }
 .pdpx-printable.is-bad { color: var(--color-terracotta); }
+
+/* Colour cards: the swatch-book colour and its name, nothing else. */
+.pdpx-colors { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; }
+.pdpx-colourcard { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; font-family: var(--font-display); }
+.pdpx-colourcard-chip { display: block; width: 100%; aspect-ratio: 1; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(30, 30, 30, 0.12); transition: box-shadow 150ms ease; }
+.pdpx-colourcard:hover .pdpx-colourcard-chip { box-shadow: inset 0 0 0 1px rgba(30, 30, 30, 0.3); }
+.pdpx-colourcard.is-on .pdpx-colourcard-chip { box-shadow: 0 0 0 2px var(--color-cream), 0 0 0 4px var(--color-charcoal); }
+.pdpx-colourcard-name { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.25; color: rgba(30, 30, 30, 0.6); }
+.pdpx-colourcard.is-on .pdpx-colourcard-name { color: var(--color-charcoal); }
+
+/* The plate stage fits the whole garment, centred, never cropped. */
+.pdpx-canvas-plate { display: flex; justify-content: center; }
+.pdpx-canvas-plate .platex { width: min(100%, calc((100vh - 240px) * 0.8)); }
