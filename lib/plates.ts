@@ -80,3 +80,95 @@ export function inchesFromCentreMm(uc: number, vTop: number, view: PlateView, m:
 
 export const plateUrl = (base: string, colour: string, view: PlateView, file: "beauty" | "shading" | "uvmap" | "pieces") =>
   `${base}/${colour}/${view}/${file}.png`;
+
+// ---------- Printable areas (seam aware) ----------
+// Rasterise where each pattern piece is VISIBLE on the plate into a millimetre
+// grid, then keep only cells at least `clearanceMm` from the piece's edge (side
+// seams, collar, hem, armholes). Art must sit fully inside that area and must not
+// cross onto another piece. The same grid maps millimetres back to plate pixels
+// for the landmark guides.
+export type Coverage = {
+  piece: number; cell: number; u0: number; v0: number; cols: number; rows: number;
+  inside: Uint8Array; // 1 = printable cell
+  px: Float32Array; // per cell: mean plate x, y (NaN when unseen)
+};
+
+export function buildCoverage(uv: DecodedMap, pieces: DecodedMap, piece: number, clearanceMm = 19, cell = 2): Coverage {
+  let umin = Infinity, umax = -Infinity, vmin = Infinity, vmax = -Infinity;
+  const W = uv.width, H = uv.height, step = 2;
+  for (let y = 0; y < H; y += step) for (let x = 0; x < W; x += step) {
+    if (pieces.data[(y * W + x) * pieces.channels] !== piece) continue;
+    const i = (y * W + x) * uv.channels, u = decodeMm(uv.data[i], uv.data[i + 1]), v = decodeMm(uv.data[i + 2], uv.data[i + 3]);
+    if (u < umin) umin = u; if (u > umax) umax = u; if (v < vmin) vmin = v; if (v > vmax) vmax = v;
+  }
+  if (!isFinite(umin)) return { piece, cell, u0: 0, v0: 0, cols: 0, rows: 0, inside: new Uint8Array(), px: new Float32Array() };
+  const cols = Math.ceil((umax - umin) / cell) + 1, rows = Math.ceil((vmax - vmin) / cell) + 1;
+  const seen = new Uint8Array(cols * rows), sx = new Float32Array(cols * rows), sy = new Float32Array(cols * rows), n = new Uint16Array(cols * rows);
+  for (let y = 0; y < H; y += step) for (let x = 0; x < W; x += step) {
+    if (pieces.data[(y * W + x) * pieces.channels] !== piece) continue;
+    const i = (y * W + x) * uv.channels, u = decodeMm(uv.data[i], uv.data[i + 1]), v = decodeMm(uv.data[i + 2], uv.data[i + 3]);
+    const c = Math.floor((u - umin) / cell), r = Math.floor((vmax - v) / cell), k = r * cols + c;
+    seen[k] = 1; sx[k] += x; sy[k] += y; n[k]++;
+  }
+  // close pinholes (a cell with seen neighbours on both sides is visible fabric)
+  const filled = seen.slice();
+  for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) {
+    const k = r * cols + c; if (seen[k]) continue;
+    if ((seen[k - 1] && seen[k + 1]) || (seen[k - cols] && seen[k + cols])) filled[k] = 1;
+  }
+  // distance from the edge in cells (two-pass chamfer), then threshold
+  const INF = 1e6, dist = new Float32Array(cols * rows);
+  for (let k = 0; k < dist.length; k++) dist[k] = filled[k] ? INF : 0;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const k = r * cols + c; if (!dist[k]) continue;
+    const up = r ? dist[k - cols] : 0, lf = c ? dist[k - 1] : 0;
+    dist[k] = Math.min(dist[k], up + 1, lf + 1);
+  }
+  for (let r = rows - 1; r >= 0; r--) for (let c = cols - 1; c >= 0; c--) {
+    const k = r * cols + c; if (!dist[k]) continue;
+    const dn = r < rows - 1 ? dist[k + cols] : 0, rt = c < cols - 1 ? dist[k + 1] : 0;
+    dist[k] = Math.min(dist[k], dn + 1, rt + 1);
+  }
+  const need = clearanceMm / cell, inside = new Uint8Array(cols * rows), px = new Float32Array(cols * rows * 2).fill(NaN);
+  for (let k = 0; k < inside.length; k++) {
+    inside[k] = dist[k] >= need ? 1 : 0;
+    if (n[k]) { px[k * 2] = sx[k] / n[k]; px[k * 2 + 1] = sy[k] / n[k]; }
+  }
+  return { piece, cell, u0: umin, v0: vmax, cols, rows, inside, px };
+}
+
+const cellOf = (cv: Coverage, u: number, v: number) => {
+  const c = Math.floor((u - cv.u0) / cv.cell), r = Math.floor((cv.v0 - v) / cv.cell);
+  return c < 0 || r < 0 || c >= cv.cols || r >= cv.rows ? -1 : r * cv.cols + c;
+};
+
+// Plate pixel for a pattern position (nearest seen cell), for drawing guides.
+export function mmToPx(cv: Coverage, u: number, v: number): [number, number] | null {
+  const k0 = cellOf(cv, u, v);
+  if (k0 >= 0 && !isNaN(cv.px[k0 * 2])) return [cv.px[k0 * 2], cv.px[k0 * 2 + 1]];
+  for (let rad = 1; rad < 12; rad++) for (let dr = -rad; dr <= rad; dr++) for (let dc = -rad; dc <= rad; dc++) {
+    const k = cellOf(cv, u + dc * cv.cell, v - dr * cv.cell);
+    if (k >= 0 && !isNaN(cv.px[k * 2])) return [cv.px[k * 2], cv.px[k * 2 + 1]];
+  }
+  return null;
+}
+
+export type PrintCheck = { ok: boolean; reason?: string };
+
+// Is the whole art rectangle inside the printable area? If not, say which way and how far.
+export function checkPrintable(cv: Coverage, r: { u0: number; vTop: number; w: number; h: number }, clearanceIn: number): PrintCheck {
+  if (!cv.cols) return { ok: true };
+  let bad = 0, worst = { dl: 0, dr: 0, dt: 0, db: 0 };
+  const N = 24;
+  for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+    const u = r.u0 + (r.w * i) / N, v = r.vTop - (r.h * j) / N, k = cellOf(cv, u, v);
+    if (k >= 0 && cv.inside[k]) continue;
+    bad++;
+    if (i === 0) worst.dl++; if (i === N) worst.dr++; if (j === 0) worst.dt++; if (j === N) worst.db++;
+  }
+  if (!bad) return { ok: true };
+  const clr = `${clearanceIn} in`;
+  if (worst.dt >= Math.max(worst.dl, worst.dr, worst.db)) return { ok: false, reason: `Too close to the collar or shoulder seam. Keep ${clr} clear.` };
+  if (worst.db >= Math.max(worst.dl, worst.dr)) return { ok: false, reason: `Too close to the hem or pocket. Keep ${clr} clear.` };
+  return { ok: false, reason: `Too close to the side seam. Keep ${clr} clear of seams.` };
+}

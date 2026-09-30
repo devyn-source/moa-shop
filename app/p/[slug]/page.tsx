@@ -7,6 +7,7 @@ import { BoxBuilder } from "@/components/BoxBuilder";
 import { currency } from "@/lib/pricing";
 import { getProductBySlug, getProducts } from "@/lib/store";
 import { getModelUrl } from "@/lib/pattern-files";
+import { getPlate } from "@/lib/plates-server";
 import { isBundleEligible } from "@/lib/seed";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 import { getKit } from "@/lib/use-cases";
@@ -129,7 +130,7 @@ export default async function ProductPage({
         <span className="crumb-current">{product.skuCode}</span>
       </nav>
 
-      <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} />
+      <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} plate={await getPlate(product.slug)} />
 
       {launchMode() ? null : (
         <>

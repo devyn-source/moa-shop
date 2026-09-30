@@ -13,12 +13,15 @@ import Garment3DPreviewClient from "./Garment3DPreviewClient";
 import type { StudioCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, formatDeliveredBy, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
-import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, type ProductZones, type ProductCalibration } from "@/lib/zones";
+import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, horizontalLabel, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
 import { presetsFor, presetSpec, type PlacementPreset } from "@/lib/presets";
 import { readArtColours, nearestPms } from "@/lib/art-colours";
+import PlateComposite from "./PlateComposite";
+import { colourSlug, type PlateRef } from "@/lib/plates-server";
+import type { PlatePlacement, PlateView, PrintCheck, DecorationMethod } from "@/lib/plates";
 import { WovenLabelModal, type WovenLabel } from "./WovenLabelModal";
 
 // Upsell rates mirror the server's pricing source (lib/pricing.ts) so the live
@@ -139,7 +142,8 @@ export function PdpConfigurator({
   editOrder,
   seed,
   bundle,
-  modelUrl
+  modelUrl,
+  plate
 }: {
   product: CatalogProduct;
   editOrder?: EditSeed;
@@ -147,6 +151,9 @@ export function PdpConfigurator({
   bundle?: BundleMode;
   // Public GLB URL for this SKU (sku-models bucket) — enables the 3D viewer.
   modelUrl?: string | null;
+  // Photoreal plates for this style (sku-plates bucket). When the chosen colour has
+  // a plate, the composite is the main stage and placements are held in inches.
+  plate?: PlateRef | null;
 }) {
   // editOrder = editing an existing order (CTA updates it). seed = a shared config
   // pre-fill (CTA adds to cart normally). Both seed the same initial state.
@@ -258,7 +265,7 @@ export function PdpConfigurator({
   const is3d = has3d && stageMode === "3d";
   // MOA standard placements in real inches (3D styles). The first one is applied
   // as soon as artwork lands, so the logo is on the garment immediately.
-  const presets = useMemo(() => (use3dPlacement ? presetsFor(product.slug, product.category) : []), [use3dPlacement, product.slug, product.category]);
+  const presets = useMemo(() => (use3dPlacement || plate ? presetsFor(product.slug, product.category) : []), [use3dPlacement, plate, product.slug, product.category]);
   const [preset, setPreset] = useState<(PlacementPreset & { key: string }) | null>(null);
   const applyPreset3d = (p: PlacementPreset) => setPreset({ ...p, key: `${p.id}-${Date.now()}` });
 
@@ -296,6 +303,7 @@ export function PdpConfigurator({
     if (has3d) setStageMode("3d");
   }, [has3d]);
   useEffect(() => {
+    if (plate && artworkUrl && presets.length && !plateP.length) addPlatePreset(presets[0]);
     if (artworkUrl && presets.length && !preset && !place3d.some((p) => p.id !== "current")) applyPreset3d(presets[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artworkUrl, presets.length]);
@@ -339,6 +347,27 @@ export function PdpConfigurator({
   }, [product.priceTiers, qty]);
 
   const decoSelected = product.decorations.filter((d) => decorationIds.includes(d.id));
+
+  // ---- Plate mode: the photoreal composite is the stage; placements in inches ----
+  const plateColour = colourSlug(variant?.colorLabel);
+  const plateOn = Boolean(plate && !bundle && plate.manifest.colours?.[plateColour]);
+  const [plateView, setPlateView] = useState<PlateView>("front");
+  const [spin, setSpin] = useState(false);
+  const [plateP, setPlateP] = useState<PlatePlacement[]>([]);
+  const [plateActive, setPlateActive] = useState<string | null>(null);
+  const [plateChecks, setPlateChecks] = useState<Record<string, PrintCheck>>({});
+  const plateMethod = (decorationIds[0] as DecorationMethod | undefined) ?? "screen_print";
+  const artAspect = artMeta ? artMeta.width / artMeta.height : 1;
+  const addPlatePreset = (pr: PlacementPreset) => {
+    if (!artworkUrl) return;
+    setPlateP((list) => (list.some((q) => q.id === pr.id) ? list : [...list, { id: pr.id, artUrl: artworkUrl, piece: pr.view === "front" ? 1 : 2, widthIn: pr.widthIn, belowHpsIn: pr.belowHpsIn, fromCfIn: pr.fromCfIn }]));
+    setPlateActive(pr.id);
+    setPlateView(pr.view);
+    setSpin(false);
+  };
+  const plateList = plateP.map((q) => ({ ...q, artUrl: artworkUrl ?? q.artUrl, method: plateMethod }));
+  const plateBlocked = plateOn && plateP.some((q) => plateChecks[q.id] && !plateChecks[q.id].ok);
+  const activeP = plateP.find((q) => q.id === plateActive) ?? plateP[plateP.length - 1];
   const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
   // Ink-color cap = the most restrictive selected method's max (default 8 for
   // methods without a max, e.g. embroidery thread colors). Clamp the pick to it.
@@ -363,7 +392,9 @@ export function PdpConfigurator({
   // First placement is included in the decoration price; each additional one
   // (saved below, or the editor on top of saved ones) adds the flat fee.
   const editorComplete = Boolean(artworkUrl && placement);
-  const placementCount = use3dPlacement
+  const placementCount = plateOn
+    ? artworkUrl ? plateP.length : 0
+    : use3dPlacement
     ? artworkUrl && place3d.length ? place3d.length : 0
     : savedPlacements.length + (editorComplete ? 1 : 0);
   const extraPlacementCount = Math.max(0, placementCount - 1);
@@ -417,6 +448,21 @@ export function PdpConfigurator({
     // 3D Studio: emits a STANDARD placement (zone box + art transform), so the
     // existing derivePlacement → real-inch dims / DPI / proof / tech-pack all
     // work natively — the 3D garment is just the editing surface.
+    if (plateOn) {
+      if (!plateP.length || !artworkUrl) return [];
+      return plateP.map((q) => {
+        const view: "front" | "back" = q.piece === 1 ? "front" : "back";
+        const heightIn = Math.round((q.widthIn / artAspect) * 4) / 4;
+        const fromCenterIn = view === "front" ? q.fromCfIn : -q.fromCfIn; // spec convention: + = screen right
+        return {
+          view, zoneId: q.id, zoneLabel: presets.find((pr) => pr.id === q.id)?.label ?? q.id,
+          box: { x: 0.3, y: 0.3, w: 0.4, h: 0.4, r: 0 }, art: { ox: 0, oy: 0, sx: 1, sy: 1, r: q.rotDeg ?? 0 },
+          method, colors, pantones: pms, maxColors, widthIn: q.widthIn, heightIn,
+          artworkFileUrl: artworkUrl ?? undefined, artworkFileName: artworkName ?? undefined,
+          spec3d: { widthIn: q.widthIn, heightIn, belowHpsIn: q.belowHpsIn, fromCenterIn, horizontal: horizontalLabel(fromCenterIn, view) },
+        };
+      });
+    }
     if (use3dPlacement) {
       if (!place3d.length || !artworkUrl) return [];
       return place3d.map((p) => ({
@@ -465,7 +511,7 @@ export function PdpConfigurator({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements, use3dPlacement, place3d, zones]);
+  }, [editorComplete, placement, view, artTransform, decoSelected, pantones, artworkUrl, artworkName, savedPlacements, use3dPlacement, place3d, zones, plateOn, plateP, artAspect, presets]);
 
   // Print-resolution QA: native art pixels spread across the REAL printed width
   // (derived from this SKU's calibration). Vectors skip it (scalable). <150 DPI
@@ -479,7 +525,8 @@ export function PdpConfigurator({
     return Math.round(artMeta.width / d.widthIn);
   }, [artMeta, placement, calibration, view, artTransform]);
   const dpi3d = use3dPlacement ? place3d.reduce<number | null>((m, p) => (p.dpi == null ? m : m == null ? p.dpi : Math.min(m, p.dpi)), null) : null;
-  const effDpi = use3dPlacement ? dpi3d : printDpi;
+  const dpiPlate = plateOn && artMeta ? plateP.reduce<number | null>((m, q) => { const d = Math.round(artMeta.width / q.widthIn); return m == null ? d : Math.min(m, d); }, null) : null;
+  const effDpi = plateOn ? dpiPlate : use3dPlacement ? dpi3d : printDpi;
   const lowRes = effDpi != null && effDpi < 150;
   const blockRes = effDpi != null && effDpi < 100;
 
@@ -498,7 +545,7 @@ export function PdpConfigurator({
     if (s === "decoration") return decoSelected.map((d) => d.label).join(", ");
     if (s === "placement") {
       if (!artworkUrl) return "";
-      const labels = use3dPlacement ? [...new Set(place3d.map((p) => p.zoneLabel))] : [placement?.label, ...savedPlacements.map((p) => p.zoneLabel)].filter(Boolean);
+      const labels = plateOn ? plateP.map((q) => presets.find((pr) => pr.id === q.id)?.label ?? q.id) : use3dPlacement ? [...new Set(place3d.map((p) => p.zoneLabel))] : [placement?.label, ...savedPlacements.map((p) => p.zoneLabel)].filter(Boolean);
       return labels.join(", ");
     }
     if (s === "size") return `${qty.toLocaleString()} units`;
@@ -847,9 +894,11 @@ export function PdpConfigurator({
 
   // One CTA definition, rendered in the rail and in the pinned bottom bar.
   const ctaButton = (className: string) => (
-    <button type="button" className={className} onClick={onCta} disabled={belowMoq || submitting || blockRes}>
+    <button type="button" className={className} onClick={onCta} disabled={belowMoq || submitting || blockRes || plateBlocked}>
 
-            {blockRes
+            {plateBlocked
+              ? "Move the artwork inside the print area"
+              : blockRes
               ? "Resolution too low for this size"
               : belowMoq
               ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
@@ -872,7 +921,18 @@ export function PdpConfigurator({
       <div className="pdpx-stage">
         <div className="pdpx-stage-toolbar">
           <span className="pdpx-eyebrow">{product.category}</span>
-          {is3d ? (
+          {plateOn ? (
+            <div className="pdpx-view-pills" role="tablist" aria-label="Garment view">
+              {(["front", "back"] as const).filter((v) => plate!.manifest.hpsUv[v]).map((v) => (
+                <button key={v} type="button" role="tab" aria-selected={!spin && plateView === v} className={`pdpx-pill${!spin && plateView === v ? " is-on" : ""}`} onClick={() => { setSpin(false); setPlateView(v); }}>
+                  {v === "front" ? "Front" : "Back"}
+                </button>
+              ))}
+              {modelUrl ? (
+                <button type="button" role="tab" aria-selected={spin} className={`pdpx-pill${spin ? " is-on" : ""}`} onClick={() => setSpin(true)}>Spin</button>
+              ) : null}
+            </div>
+          ) : is3d ? (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">Drag to rotate</span>
           ) : hasBack ? (
             <div className="pdpx-view-pills" role="tablist" aria-label="Garment view">
@@ -912,7 +972,17 @@ export function PdpConfigurator({
           onPointerMove={is3d ? undefined : onStagePointerMove}
           onPointerLeave={is3d ? undefined : onStagePointerLeave}
         >
-          {placing3d && artworkUrl && modelUrl ? (
+          {plateOn && !spin ? (
+            <div className="pdpx-canvas-plate">
+              <PlateComposite
+                base={plate!.base} colour={plateColour} view={plateView} manifest={plate!.manifest}
+                placements={plateList.filter((q) => (q.piece === 1) === (plateView === "front"))}
+                onChange={(next) => setPlateP((all) => all.map((q) => next.find((n) => n.id === q.id) ?? q))}
+                onCheck={(c) => setPlateChecks((prev) => ({ ...prev, ...c }))}
+                guides={step === "placement"}
+              />
+            </div>
+          ) : placing3d && artworkUrl && modelUrl && !plateOn ? (
             <div className="pdpx-canvas-3d">
               <Garment3DDecoratorClient url={modelUrl} artUrl={artworkUrl} hex={variant?.colorHex || "#C9C4B8"} zones={zones.front} backZones={zones.back} artPxWidth={artMeta?.width} model3d={calibration?.model3d} method={decoSelected.map((d) => d.label).join(" + ") || undefined} initialPlacements={place3d} preset={preset} hideZoneChips={presets.length > 0} onChange={setPlace3d} />
             </div>
@@ -1200,19 +1270,35 @@ export function PdpConfigurator({
                           </span>
                         </button>
 
-                        {use3dPlacement ? (
+                        {use3dPlacement || plateOn ? (
                           artworkUrl && presets.length ? (
                             <div className="pdpx-presets">
                               <p className="pdpx-place-label">Placement</p>
                               <div className="pdpx-preset-list" role="group" aria-label="Placement">
                                 {presets.map((p) => (
-                                  <button key={p.id} type="button" className={`pdpx-preset${preset?.id === p.id ? " is-on" : ""}`} onClick={() => applyPreset3d(p)}>
+                                  <button key={p.id} type="button" className={`pdpx-preset${(plateOn ? plateP.some((q) => q.id === p.id) : preset?.id === p.id) ? " is-on" : ""}${plateOn && activeP?.id === p.id ? " is-active" : ""}`} onClick={() => (plateOn ? addPlatePreset(p) : applyPreset3d(p))}>
                                     <span className="pdpx-preset-name">{p.label}</span>
                                     <span className="pdpx-preset-spec">{presetSpec(p)}</span>
                                   </button>
                                 ))}
                               </div>
-                              <p className="pdpx-place-hint">Drag the artwork on the garment to fine tune it. Save a placement to add another one.</p>
+                              {plateOn && activeP ? (
+                                <div className="pdpx-active">
+                                  <div className="pdpx-active-head">
+                                    <strong>{presets.find((pr) => pr.id === activeP.id)?.label ?? "Placement"}</strong>
+                                    <button type="button" className="pdpx-active-remove" onClick={() => { setPlateP((l) => l.filter((q) => q.id !== activeP.id)); setPlateChecks(({ [activeP.id]: _drop, ...rest }) => rest); setPlateActive(null); }}>Remove</button>
+                                  </div>
+                                  <label className="pdpx-width">
+                                    <span>Width</span>
+                                    <input type="range" min={1} max={14} step={0.25} value={activeP.widthIn} onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, widthIn: +e.target.value } : q)))} />
+                                    <em>{activeP.widthIn} in</em>
+                                  </label>
+                                  <p className={`pdpx-printable${plateChecks[activeP.id] && !plateChecks[activeP.id].ok ? " is-bad" : ""}`}>
+                                    {plateChecks[activeP.id] && !plateChecks[activeP.id].ok ? plateChecks[activeP.id].reason : `Printable. ${activeP.widthIn} in wide, ${activeP.belowHpsIn} in below HPS, ${activeP.fromCfIn === 0 ? "centred" : `${Math.abs(activeP.fromCfIn)} in wearer's ${activeP.fromCfIn > 0 ? "left" : "right"}`}.`}
+                                  </p>
+                                </div>
+                              ) : null}
+                              <p className="pdpx-place-hint">{plateOn ? "Drag the artwork on the photo to move it. Tap another placement to add it." : "Drag the artwork on the garment to fine tune it. Save a placement to add another one."}</p>
                               {artNote ? <p className="pdpx-art-note">{artNote}</p> : null}
                             </div>
                           ) : (
@@ -1509,7 +1595,13 @@ export function PdpConfigurator({
         <div className="pdpx-review" role="dialog" aria-modal="true" aria-label="Review your order" onClick={() => setReviewOpen(false)}>
           <div className="pdpx-review-card" onClick={(e) => e.stopPropagation()}>
             <div className="pdpx-review-stage">
-              {modelUrl && artworkUrl && place3d.length ? (
+              {plateOn ? (
+                <div className={`pdpx-review-plates${plateP.some((q) => q.piece === 2) && plateP.some((q) => q.piece === 1) ? " is-two" : ""}`}>
+                  {(["front", "back"] as const).filter((v) => plateP.some((q) => (q.piece === 1) === (v === "front")) || (v === "front" && !plateP.length)).map((v) => (
+                    <PlateComposite key={v} base={plate!.base} colour={plateColour} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
+                  ))}
+                </div>
+              ) : modelUrl && artworkUrl && place3d.length ? (
                 <Garment3DPreviewClient url={modelUrl} hex={variant?.colorHex || "#C9C4B8"} artUrl={artworkUrl} placements={place3d} />
               ) : (
                 <ProductShot product={product} variant={variant} view={view} />

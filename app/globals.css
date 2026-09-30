@@ -8985,3 +8985,24 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .platex-canvas:active { cursor: grabbing; }
 .platex-readout { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: var(--color-charcoal); color: var(--color-cream); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
 .platex-loading { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); }
+.platex-overlay { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 4 / 5; pointer-events: none; }
+.platex-frame { fill: none; stroke: #3D7A4A; stroke-width: 3; stroke-dasharray: 10 8; vector-effect: non-scaling-stroke; }
+.platex-frame.is-bad { stroke: var(--color-terracotta); stroke-dasharray: none; }
+.platex-cf { fill: none; stroke: rgba(30, 30, 30, 0.35); stroke-width: 1.5; stroke-dasharray: 6 6; vector-effect: non-scaling-stroke; }
+.platex-hps line, .platex-dim line { stroke: var(--color-charcoal); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.platex-hps text, .platex-dim text { font-family: var(--font-display); font-weight: 700; font-size: 34px; letter-spacing: 0.04em; fill: var(--color-charcoal); }
+.platex-reason { margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; background: rgba(176, 71, 49, 0.08); color: var(--color-terracotta); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+.pdpx-canvas-plate { position: relative; width: 100%; }
+.pdpx-review-plates { position: static !important; display: grid; grid-template-columns: 1fr; align-content: center; gap: 8px; padding: 16px; }
+.pdpx-review-plates.is-two { grid-template-columns: 1fr 1fr; }
+.pdpx-review-stage:has(.pdpx-review-plates) > * { position: static; }
+.pdpx-preset.is-active { background: var(--color-charcoal); color: var(--color-cream); }
+.pdpx-preset.is-active .pdpx-preset-spec { color: rgba(238, 234, 227, 0.7); }
+.pdpx-active { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #fff; border: 1px solid var(--color-cream-dark); border-radius: 10px; }
+.pdpx-active-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; letter-spacing: 0.04em; }
+.pdpx-active-remove { border: 0; background: none; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--color-terracotta); cursor: pointer; }
+.pdpx-width { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+.pdpx-width input { accent-color: var(--color-terracotta); }
+.pdpx-width em { font-style: normal; min-width: 52px; text-align: right; }
+.pdpx-printable { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: #3D7A4A; }
+.pdpx-printable.is-bad { color: var(--color-terracotta); }

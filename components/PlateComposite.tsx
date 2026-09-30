@@ -8,8 +8,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   loadDataPng, sampleAt, artRectMm, inchesFromCentreMm, plateUrl, WEARER_LEFT_SIGN, MM,
-  type DecodedMap, type PlateManifest, type PlatePlacement, type PlateView,
+  buildCoverage, checkPrintable, mmToPx,
+  type Coverage, type DecodedMap, type PlateManifest, type PlatePlacement, type PlateView, type PrintCheck,
 } from "@/lib/plates";
+
+const CLEARANCE_IN = 0.75;
 
 const MAX = 4;
 const METHOD_ID: Record<string, number> = { screen_print: 0, embroidery: 1, rubber_applique: 2 };
@@ -120,19 +123,27 @@ function dataTexture(gl: WebGL2RenderingContext, m: DecodedMap, single: boolean)
   return t;
 }
 
-export default function PlateComposite({ base, colour, view, manifest, placements, onChange, className }: {
+export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, className }: {
   base: string; // e.g. "/lab/plates/fixture-tee"
   colour: string; view: PlateView; manifest: PlateManifest;
   placements: PlatePlacement[];
   onChange?: (next: PlatePlacement[]) => void;
+  onCheck?: (checks: Record<string, PrintCheck>) => void; // printable or not, per placement
+  guides?: boolean;
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctx = useRef<Loaded | null>(null);
   const arts = useRef<Map<string, { tex: WebGLTexture; aspect: number }>>(new Map());
   const [ready, setReady] = useState(false);
+  // Parents pass a fresh array every render; redraw only when the content changes.
+  const placementsKey = JSON.stringify(placements.map((p) => [p.id, p.artUrl, p.piece, p.widthIn, p.belowHpsIn, p.fromCfIn, p.rotDeg ?? 0, p.method ?? ""]));
   const [readout, setReadout] = useState<string | null>(null);
   const drag = useRef<{ id: string; du: number; dv: number } | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const coverage = useRef<Map<number, Coverage>>(new Map());
+  const lastChecks = useRef("");
+  const [overlay, setOverlay] = useState<{ size: [number, number]; frames: { id: string; pts: string; ok: boolean }[]; cf: string | null; hps: [number, number] | null; dims: { x1: number; y1: number; x2: number; y2: number; label: string }[]; reason: string | null }>({ size: [1, 1], frames: [], cf: null, hps: null, dims: [], reason: null });
 
   // Load the plate for this colour + view.
   useEffect(() => {
@@ -155,6 +166,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
         beauty: imageTexture(gl, beauty), shading: imageTexture(gl, shading), uv: dataTexture(gl, uv, false), pieces: dataTexture(gl, pieces, true),
       } };
       arts.current.clear();
+      coverage.current.clear();
       setReady(true);
     })().catch((e) => console.error("plate load failed", e));
     return () => { dead = true; setReady(false); };
@@ -171,11 +183,56 @@ export default function PlateComposite({ base, colour, view, manifest, placement
         const img = await loadImage(p.artUrl);
         arts.current.set(p.artUrl, { tex: imageTexture(gl, img), aspect: img.naturalWidth / img.naturalHeight || 1 });
       }
-      if (!dead) draw();
+      if (!dead) { draw(); measure(); }
     })();
     return () => { dead = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, placements]);
+  }, [ready, placementsKey, dragging]);
+
+  function cov(piece: number) {
+    const c = ctx.current!;
+    if (!coverage.current.has(piece)) coverage.current.set(piece, buildCoverage(c.uv, c.pieces, piece, CLEARANCE_IN * MM));
+    return coverage.current.get(piece)!;
+  }
+
+  function measure() {
+    const c = ctx.current; if (!c) return;
+    const hps = manifest.hpsUv[view] ?? { u: 0, v: 0 }, cf = manifest.cfU[view] ?? hps.u;
+    const frames: { id: string; pts: string; ok: boolean }[] = [], checks: Record<string, PrintCheck> = {};
+    const dims: { x1: number; y1: number; x2: number; y2: number; label: string }[] = [];
+    let reason: string | null = null, cfLine: string | null = null, hpsPt: [number, number] | null = null;
+    const focus = dragging ?? placements[placements.length - 1]?.id;
+    for (const p of placements) {
+      const a = arts.current.get(p.artUrl); if (!a) continue;
+      const cv = cov(p.piece), r = artRectMm(p, view, manifest, a.aspect);
+      // frame follows the fabric: sample each edge
+      const edge: [number, number][] = [];
+      const S = 10;
+      for (let i = 0; i <= S; i++) edge.push([r.u0 + (r.w * i) / S, r.vTop]);
+      for (let i = 1; i <= S; i++) edge.push([r.u0 + r.w, r.vTop - (r.h * i) / S]);
+      for (let i = 1; i <= S; i++) edge.push([r.u0 + r.w - (r.w * i) / S, r.vTop - r.h]);
+      for (let i = 1; i < S; i++) edge.push([r.u0, r.vTop - r.h + (r.h * i) / S]);
+      const pts = edge.map(([u, v]) => mmToPx(cv, u, v)).filter(Boolean) as [number, number][];
+      const chk = checkPrintable(cv, r, CLEARANCE_IN);
+      checks[p.id] = chk;
+      frames.push({ id: p.id, pts: pts.map((q) => q.join(",")).join(" "), ok: chk.ok });
+      if (!chk.ok && p.id === focus) reason = chk.reason ?? null;
+      if (p.id === focus && guides) {
+        const uc = r.u0 + r.w / 2, mid = r.vTop - r.h / 2;
+        const cfPts = [] as [number, number][];
+        for (let v = hps.v - 40; v > hps.v - 700; v -= 20) { const q = mmToPx(cv, cf, v); if (q) cfPts.push(q); }
+        cfLine = cfPts.map((q) => q.join(",")).join(" ");
+        hpsPt = mmToPx(cv, cf, hps.v - 8);
+        const top = mmToPx(cv, uc, hps.v - 8), artTop = mmToPx(cv, uc, r.vTop);
+        if (top && artTop) dims.push({ x1: top[0], y1: top[1], x2: artTop[0], y2: artTop[1], label: `${p.belowHpsIn} in` });
+        const cfMid = mmToPx(cv, cf, mid), artMid = mmToPx(cv, uc, mid);
+        if (cfMid && artMid && Math.abs(p.fromCfIn) >= 0.25) dims.push({ x1: cfMid[0], y1: cfMid[1], x2: artMid[0], y2: artMid[1], label: `${Math.abs(p.fromCfIn)} in ${p.fromCfIn > 0 ? "L" : "R"}` });
+      }
+    }
+    setOverlay({ size: c.size, frames, cf: cfLine, hps: hpsPt, dims, reason });
+    const sig = JSON.stringify(checks);
+    if (sig !== lastChecks.current) { lastChecks.current = sig; onCheck?.(checks); }
+  }
 
   function draw() {
     const c = ctx.current, cv = canvasRef.current; if (!c || !cv) return;
@@ -222,6 +279,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       const r = artRectMm(p, view, manifest, a.aspect);
       if (s.u >= r.u0 && s.u <= r.u0 + r.w && s.v <= r.vTop && s.v >= r.vTop - r.h) {
         drag.current = { id: p.id, du: s.u - (r.u0 + r.w / 2), dv: s.v - r.vTop };
+        setDragging(p.id);
         (e.target as HTMLElement).setPointerCapture(e.pointerId);
         return;
       }
@@ -240,12 +298,31 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     });
     onChange(next);
   };
-  const onUp = () => { drag.current = null; setReadout(null); };
+  const onUp = () => { drag.current = null; setDragging(null); setReadout(null); };
 
   void WEARER_LEFT_SIGN; void MM;
   return (
     <div className={`platex ${className ?? ""}`}>
       <canvas ref={canvasRef} className="platex-canvas" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} />
+      {ready ? (
+        <svg className="platex-overlay" viewBox={`0 0 ${overlay.size[0]} ${overlay.size[1]}`} preserveAspectRatio="none" aria-hidden>
+          {overlay.cf ? <polyline className="platex-cf" points={overlay.cf} /> : null}
+          {overlay.hps ? (
+            <g className="platex-hps">
+              <line x1={overlay.hps[0] - 60} y1={overlay.hps[1]} x2={overlay.hps[0] + 60} y2={overlay.hps[1]} />
+              <text x={overlay.hps[0] + 70} y={overlay.hps[1] + 8}>HPS</text>
+            </g>
+          ) : null}
+          {overlay.frames.filter((f) => guides || !f.ok).map((f) => <polygon key={f.id} className={`platex-frame${f.ok ? "" : " is-bad"}`} points={f.pts} />)}
+          {overlay.dims.map((d, i) => (
+            <g key={i} className="platex-dim">
+              <line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} />
+              <text x={(d.x1 + d.x2) / 2 + 14} y={(d.y1 + d.y2) / 2 + 8}>{d.label}</text>
+            </g>
+          ))}
+        </svg>
+      ) : null}
+      {overlay.reason ? <p className="platex-reason">{overlay.reason}</p> : null}
       {readout ? <span className="platex-readout">{readout}</span> : null}
       {!ready ? <span className="platex-loading">Loading</span> : null}
     </div>
