@@ -8978,3 +8978,10 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 
 /* Every chosen value reads the same: ink, not grey. */
 .pdpx-step .pdpx-step-value { color: var(--color-charcoal) !important; }
+
+/* Photoreal plate compositor */
+.platex { position: relative; width: 100%; }
+.platex-canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; touch-action: none; cursor: grab; }
+.platex-canvas:active { cursor: grabbing; }
+.platex-readout { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: var(--color-charcoal); color: var(--color-cream); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+.platex-loading { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); }

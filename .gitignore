@@ -10,3 +10,4 @@ scripts/.venv/
 tsconfig.tsbuildinfo
 supabase/.temp/
 .env*.local
+public/lab/
