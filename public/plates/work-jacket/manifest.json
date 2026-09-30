@@ -1,0 +1,25 @@
+{
+ "kind": "2d",
+ "style": "work-jacket",
+ "views": {
+  "front": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 639.1,
+   "cfX": 1196.0,
+   "pxPerIn": 65.646
+  },
+  "back": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 627.1,
+   "cfX": 1197.5,
+   "pxPerIn": 66.53
+  }
+ },
+ "base": "light",
+ "v": "3c45ecb6d7",
+ "colours": {
+  "light": "#C8C8C8"
+ }
+}

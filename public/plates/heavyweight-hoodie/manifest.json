@@ -1,0 +1,25 @@
+{
+ "kind": "2d",
+ "style": "heavyweight-hoodie",
+ "views": {
+  "front": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 944.0,
+   "cfX": 1199.5,
+   "pxPerIn": 55.704
+  },
+  "back": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 841.0,
+   "cfX": 1199.5,
+   "pxPerIn": 59.556
+  }
+ },
+ "base": "light",
+ "v": "5342495a4c",
+ "colours": {
+  "light": "#C8C8C8"
+ }
+}

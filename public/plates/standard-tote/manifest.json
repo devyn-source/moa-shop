@@ -1,0 +1,25 @@
+{
+ "kind": "2d",
+ "style": "standard-tote",
+ "views": {
+  "front": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 1290.0,
+   "cfX": 1201.5,
+   "pxPerIn": 83.455
+  },
+  "back": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 1279.0,
+   "cfX": 1202.5,
+   "pxPerIn": 84.121
+  }
+ },
+ "base": "light",
+ "v": "184b3403e3",
+ "colours": {
+  "light": "#C8C8C8"
+ }
+}

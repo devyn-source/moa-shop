@@ -8,6 +8,9 @@ import { currency } from "@/lib/pricing";
 import { getProductBySlug, getProducts } from "@/lib/store";
 import { getModelUrl } from "@/lib/pattern-files";
 import { getPlate } from "@/lib/plates-server";
+import plateIndexJson from "@/lib/plates.generated.json";
+import type { PlateManifest } from "@/lib/plates";
+const plateIndex = plateIndexJson as Record<string, PlateManifest>;
 import { isBundleEligible } from "@/lib/seed";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 import { getKit } from "@/lib/use-cases";
@@ -130,6 +133,11 @@ export default async function ProductPage({
         <span className="crumb-current">{product.skuCode}</span>
       </nav>
 
+      {(() => {
+        // Start the mockup download with the HTML, before any script runs.
+        const m = plateIndex[product.slug];
+        return m && m.views?.front ? <link rel="preload" as="image" href={`/plates/${product.slug}/front.webp${m.v ? `?v=${m.v}` : ""}`} fetchPriority="high" /> : null;
+      })()}
       <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} plate={await getPlate(product.slug, { preview: plates === "preview" })} />
 
       {launchMode() ? null : (

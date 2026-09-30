@@ -10,12 +10,18 @@
 import { decode } from "fast-png";
 
 export type PlateView = "front" | "back";
+// kind "2d": one photo per view (<base>/<view>.webp) + an affine calibration. The
+// pattern position of a pixel is arithmetic: u = (x - cfX) / pxPerMm, v = (hpsY - y) / pxPerMm.
+export type Plate2DView = { w: number; h: number; hpsY: number; cfX: number; pxPerIn: number };
 export type PlateManifest = {
+  kind?: "2d";
+  v?: string; // content hash: cache-busting for long-lived CDN caching
+  views?: Partial<Record<PlateView, Plate2DView>>;
   style: string;
-  hpsUv: Partial<Record<PlateView, { u: number; v: number }>>;
-  cfU: Partial<Record<PlateView, number>>;
-  pieces: Record<string, string>;
-  pxSize: [number, number];
+  hpsUv?: Partial<Record<PlateView, { u: number; v: number }>>;
+  cfU?: Partial<Record<PlateView, number>>;
+  pieces?: Record<string, string>;
+  pxSize?: [number, number];
   colours: Record<string, string>;
 };
 
@@ -63,8 +69,8 @@ export function sampleAt(uv: DecodedMap, pieces: DecodedMap, x: number, y: numbe
 
 // Placement (inches) -> the art rectangle in pattern millimetres.
 export function artRectMm(p: PlatePlacement, view: PlateView, m: PlateManifest, aspect: number) {
-  const hps = m.hpsUv[view] ?? { u: 0, v: 0 };
-  const cf = m.cfU[view] ?? hps.u;
+  const hps = m.hpsUv?.[view] ?? { u: 0, v: 0 };
+  const cf = m.cfU?.[view] ?? hps.u;
   const w = p.widthIn * MM, h = w / aspect;
   const uc = cf + WEARER_LEFT_SIGN[view] * p.fromCfIn * MM;
   const vTop = hps.v - p.belowHpsIn * MM;
@@ -73,8 +79,8 @@ export function artRectMm(p: PlatePlacement, view: PlateView, m: PlateManifest, 
 
 // The inverse, for dragging: an art centre in mm -> inches from CF and below HPS.
 export function inchesFromCentreMm(uc: number, vTop: number, view: PlateView, m: PlateManifest) {
-  const hps = m.hpsUv[view] ?? { u: 0, v: 0 };
-  const cf = m.cfU[view] ?? hps.u;
+  const hps = m.hpsUv?.[view] ?? { u: 0, v: 0 };
+  const cf = m.cfU?.[view] ?? hps.u;
   return { fromCfIn: ((uc - cf) * WEARER_LEFT_SIGN[view]) / MM, belowHpsIn: (hps.v - vTop) / MM };
 }
 
@@ -95,7 +101,7 @@ export type Coverage = {
 
 export function buildCoverage(uv: DecodedMap, pieces: DecodedMap, piece: number, clearanceMm = 19, cell = 2): Coverage {
   let umin = Infinity, umax = -Infinity, vmin = Infinity, vmax = -Infinity;
-  const W = uv.width, H = uv.height, step = 2;
+  const W = uv.width, H = uv.height, step = W < 1200 ? 1 : 2; // small helper maps: sample every pixel
   for (let y = 0; y < H; y += step) for (let x = 0; x < W; x += step) {
     if (pieces.data[(y * W + x) * pieces.channels] !== piece) continue;
     const i = (y * W + x) * uv.channels, u = decodeMm(uv.data[i], uv.data[i + 1]), v = decodeMm(uv.data[i + 2], uv.data[i + 3]);
@@ -168,7 +174,23 @@ export function checkPrintable(cv: Coverage, r: { u0: number; vTop: number; w: n
   }
   if (!bad) return { ok: true };
   const clr = `${clearanceIn} in`;
-  if (worst.dt >= Math.max(worst.dl, worst.dr, worst.db)) return { ok: false, reason: `Too close to the collar or shoulder seam. Keep ${clr} clear.` };
-  if (worst.db >= Math.max(worst.dl, worst.dr)) return { ok: false, reason: `Too close to the hem or pocket. Keep ${clr} clear.` };
-  return { ok: false, reason: `Too close to the side seam. Keep ${clr} clear of seams.` };
+  if (worst.dt >= Math.max(worst.dl, worst.dr, worst.db)) return { ok: false, reason: `Too close to the top edge or seam. Keep ${clr} clear.` };
+  if (worst.db >= Math.max(worst.dl, worst.dr)) return { ok: false, reason: `Too close to the bottom edge, hem or pocket. Keep ${clr} clear.` };
+  return { ok: false, reason: `Too close to the side edge or seam. Keep ${clr} clear.` };
+}
+
+// For a 2D plate: build small helper maps (uv + piece) from the photo's alpha and the
+// affine calibration, so dragging, guides and seam checks work without any data files.
+export function helperMaps2D(alpha: Uint8ClampedArray, w: number, h: number, scale: number, cal: Plate2DView, view: PlateView): { uv: DecodedMap; pieces: DecodedMap } {
+  const uv = new Uint8Array(w * h * 4), pieces = new Uint8Array(w * h);
+  const ppmm = (cal.pxPerIn / MM) * scale, cf = cal.cfX * scale, hps = cal.hpsY * scale;
+  const enc = (mm: number) => Math.max(0, Math.min(65535, Math.round((mm + 1000) * 32)));
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const k = y * w + x;
+    if (alpha[k * 4 + 3] < 128) continue;
+    pieces[k] = view === "front" ? 1 : 2;
+    const U = enc((x - cf) / ppmm), V = enc((hps - y) / ppmm);
+    uv[k * 4] = U >> 8; uv[k * 4 + 1] = U & 255; uv[k * 4 + 2] = V >> 8; uv[k * 4 + 3] = V & 255;
+  }
+  return { uv: { width: w, height: h, data: uv, channels: 4 }, pieces: { width: w, height: h, data: pieces, channels: 1 } };
 }

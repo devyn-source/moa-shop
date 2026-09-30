@@ -1,0 +1,18 @@
+{
+ "kind": "2d",
+ "style": "dad-hat",
+ "views": {
+  "front": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 531.0,
+   "cfX": 1192.0,
+   "pxPerIn": 297.846
+  }
+ },
+ "base": "light",
+ "v": "95835cbdd8",
+ "colours": {
+  "light": "#C8C8C8"
+ }
+}

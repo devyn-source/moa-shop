@@ -37,7 +37,23 @@ const JACKET: PlacementPreset[] = [
   { id: "full-back", label: "Full back", view: "back", zoneId: "center-back", widthIn: 11, belowHpsIn: 7, fromCfIn: 0 },
 ];
 
+// Accessories: "HPS" is the top of the item (crown, top of the beanie, top of the bag body).
+const CAP: PlacementPreset[] = [
+  { id: "front-centre", label: "Front centre", view: "front", zoneId: "front-panel", widthIn: 3.5, belowHpsIn: 1.75, fromCfIn: 0 },
+  { id: "front-small", label: "Front, small", view: "front", zoneId: "front-panel", widthIn: 2.25, belowHpsIn: 2.0, fromCfIn: 0 },
+];
+const BEANIE: PlacementPreset[] = [
+  { id: "cuff", label: "Cuff", view: "front", zoneId: "cuff", widthIn: 2.5, belowHpsIn: 6.75, fromCfIn: 0 },
+];
+const TOTE: PlacementPreset[] = [
+  { id: "front-centre", label: "Front centre", view: "front", zoneId: "panel-lower", widthIn: 10, belowHpsIn: 3, fromCfIn: 0 },
+  { id: "back-centre", label: "Back centre", view: "back", zoneId: "panel-center-back", widthIn: 10, belowHpsIn: 3, fromCfIn: 0 },
+];
+
 const BY_SLUG: Record<string, PlacementPreset[]> = {
+  "dad-hat": CAP,
+  "rib-knit-beanie": BEANIE,
+  "standard-tote": TOTE,
   "heavyweight-tee": TOP,
   "vintage-cut-tee": TOP,
   "heavyweight-hoodie": HOODIE,

@@ -1,10 +1,14 @@
 // Finds a style's photoreal plates (public bucket `sku-plates/<slug>/...`).
 // PLATE_OVERRIDE="slug=/local/base,slug2=/other" points styles at local plates in dev.
 import type { PlateManifest } from "./plates";
+import generated from "./plates.generated.json";
 
 export type PlateRef = { base: string; manifest: PlateManifest };
 
 export async function getPlate(slug: string, opts: { preview?: boolean } = {}): Promise<PlateRef | null> {
+  // Published 2D plates ship with the site (public/plates, served from the CDN).
+  const local = (generated as Record<string, PlateManifest>)[slug];
+  if (local && !opts.preview) return { base: `/plates/${slug}`, manifest: local };
   const override = (process.env.PLATE_OVERRIDE || "").split(",").map((s) => s.split("=")).find(([k]) => k === slug);
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || "http://localhost:3217";
   const sb = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/$/, "");

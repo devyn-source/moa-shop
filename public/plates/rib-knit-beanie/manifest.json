@@ -1,0 +1,18 @@
+{
+ "kind": "2d",
+ "style": "rib-knit-beanie",
+ "views": {
+  "front": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 531.0,
+   "cfX": 1200.0,
+   "pxPerIn": 215.222
+  }
+ },
+ "base": "light",
+ "v": "4d883c3460",
+ "colours": {
+  "light": "#C8C8C8"
+ }
+}

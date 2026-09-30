@@ -1,0 +1,25 @@
+{
+ "kind": "2d",
+ "style": "heavyweight-tee",
+ "views": {
+  "front": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 615.0,
+   "cfX": 1209.0,
+   "pxPerIn": 61.0
+  },
+  "back": {
+   "w": 2400,
+   "h": 3000,
+   "hpsY": 637.0,
+   "cfX": 1195.0,
+   "pxPerIn": 59.483
+  }
+ },
+ "base": "light",
+ "v": "3a84de966c",
+ "colours": {
+  "light": "#C8C8C8"
+ }
+}

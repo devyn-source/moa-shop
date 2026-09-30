@@ -1,0 +1,163 @@
+{
+ "dad-hat": {
+  "kind": "2d",
+  "style": "dad-hat",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 531.0,
+    "cfX": 1192.0,
+    "pxPerIn": 297.846
+   }
+  },
+  "base": "light",
+  "v": "95835cbdd8",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ },
+ "heavyweight-hoodie": {
+  "kind": "2d",
+  "style": "heavyweight-hoodie",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 944.0,
+    "cfX": 1199.5,
+    "pxPerIn": 55.704
+   },
+   "back": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 841.0,
+    "cfX": 1199.5,
+    "pxPerIn": 59.556
+   }
+  },
+  "base": "light",
+  "v": "5342495a4c",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ },
+ "heavyweight-tee": {
+  "kind": "2d",
+  "style": "heavyweight-tee",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 615.0,
+    "cfX": 1209.0,
+    "pxPerIn": 61.0
+   },
+   "back": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 637.0,
+    "cfX": 1195.0,
+    "pxPerIn": 59.483
+   }
+  },
+  "base": "light",
+  "v": "3a84de966c",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ },
+ "rib-knit-beanie": {
+  "kind": "2d",
+  "style": "rib-knit-beanie",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 531.0,
+    "cfX": 1200.0,
+    "pxPerIn": 215.222
+   }
+  },
+  "base": "light",
+  "v": "4d883c3460",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ },
+ "standard-tote": {
+  "kind": "2d",
+  "style": "standard-tote",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 1290.0,
+    "cfX": 1201.5,
+    "pxPerIn": 83.455
+   },
+   "back": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 1279.0,
+    "cfX": 1202.5,
+    "pxPerIn": 84.121
+   }
+  },
+  "base": "light",
+  "v": "184b3403e3",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ },
+ "vintage-cut-tee": {
+  "kind": "2d",
+  "style": "vintage-cut-tee",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 615.0,
+    "cfX": 1209.0,
+    "pxPerIn": 66.131
+   },
+   "back": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 637.0,
+    "cfX": 1195.0,
+    "pxPerIn": 64.486
+   }
+  },
+  "base": "light",
+  "v": "3a84de966c",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ },
+ "work-jacket": {
+  "kind": "2d",
+  "style": "work-jacket",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 639.1,
+    "cfX": 1196.0,
+    "pxPerIn": 65.646
+   },
+   "back": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 627.1,
+    "cfX": 1197.5,
+    "pxPerIn": 66.53
+   }
+  },
+  "base": "light",
+  "v": "3c45ecb6d7",
+  "colours": {
+   "light": "#C8C8C8"
+  }
+ }
+}

@@ -8,11 +8,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   loadDataPng, sampleAt, artRectMm, inchesFromCentreMm, plateUrl, WEARER_LEFT_SIGN, MM,
-  buildCoverage, checkPrintable, mmToPx,
+  buildCoverage, checkPrintable, mmToPx, helperMaps2D,
   type Coverage, type DecodedMap, type PlateManifest, type PlatePlacement, type PlateView, type PrintCheck,
 } from "@/lib/plates";
 
-const CLEARANCE_IN = 0.75;
+const DEFAULT_CLEARANCE_IN = 0.75;
 
 const MAX = 4;
 const METHOD_ID: Record<string, number> = { screen_print: 0, embroidery: 1, rubber_applique: 2 };
@@ -28,6 +28,7 @@ uniform sampler2D uBeauty, uShading, uArt0, uArt1, uArt2, uArt3;
 uniform highp usampler2D uUv; uniform highp usampler2D uPieces;
 uniform vec2 uSize; uniform int uCount;
 uniform float uBaseLum; uniform vec3 uTargetLin; uniform float uTint; uniform float uContrast;
+uniform float u2d; uniform vec2 uImg; uniform vec3 uAff; // 2D plates: cfX, hpsY, px per mm (in photo pixels)
 uniform vec4 uRect[${MAX}];   // u0, vTop, w, h (mm)
 uniform vec4 uMeta[${MAX}];   // piece, method, rotation (rad), unused
 
@@ -49,14 +50,26 @@ void main() {
     vec3 outLin = uTargetLin * rel;
     base.rgb = pow(clamp(outLin, 0.0, 1.0), vec3(1.0 / 2.2));
   }
-  ivec2 px = ivec2(clamp(vSt * uSize, vec2(0.0), uSize - 1.0));
-  uvec4 e = texelFetch(uUv, px, 0);
-  float piece = float(texelFetch(uPieces, px, 0).r);
+  float u, v, piece, shade; bool fabric;
+  if (u2d > 0.5) {
+    // 2D plate: pattern position is arithmetic from the calibration; shading from the photo
+    vec2 p = vSt * uImg;
+    u = (p.x - uAff.x) / uAff.z; v = (uAff.y - p.y) / uAff.z;
+    fabric = base.a > 0.5;
+    piece = fabric ? uMeta[0].w : 0.0;
+    shade = clamp(pow(dot(base.rgb, vec3(0.2126, 0.7152, 0.0722)), 2.2) / max(1e-4, uBaseLum), 0.0, 1.6);
+    shade = pow(shade, 1.0 / 2.2);
+  } else {
+    ivec2 px = ivec2(clamp(vSt * uSize, vec2(0.0), uSize - 1.0));
+    uvec4 e = texelFetch(uUv, px, 0);
+    piece = float(texelFetch(uPieces, px, 0).r);
+    fabric = e.r + e.g + e.b + e.a > 0u;
+    u = float(e.r * 256u + e.g) / 32.0 - 1000.0;
+    v = float(e.b * 256u + e.a) / 32.0 - 1000.0;
+    shade = texture(uShading, vSt).r * (255.0 / 235.0);
+  }
   vec3 col = base.rgb;
-  if (e.r + e.g + e.b + e.a > 0u && base.a > 0.0) {
-    float u = float(e.r * 256u + e.g) / 32.0 - 1000.0;
-    float v = float(e.b * 256u + e.a) / 32.0 - 1000.0;
-    float shade = texture(uShading, vSt).r * (255.0 / 235.0);
+  if (fabric && base.a > 0.0) {
     float lum = dot(base.rgb, vec3(0.2126, 0.7152, 0.0722));
     for (int i = 0; i < ${MAX}; i++) {
       if (i >= uCount) break;
@@ -105,7 +118,7 @@ void main() {
   outColor = vec4(col * base.a, base.a);
 }`;
 
-type Loaded = { gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number]; baseLum: number };
+type Loaded = { gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number]; baseLum: number; img: [number, number]; cal2d?: import("@/lib/plates").Plate2DView };
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string) {
   const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s);
@@ -148,9 +161,10 @@ function dataTexture(gl: WebGL2RenderingContext, m: DecodedMap, single: boolean)
   return t;
 }
 
-export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, className }: {
+export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, clearanceIn = DEFAULT_CLEARANCE_IN, className }: {
   base: string; // e.g. "/lab/plates/fixture-tee"
   colour: string; view: PlateView; manifest: PlateManifest;
+  clearanceIn?: number; // keep art this far from seams and edges (garments 0.75, accessories 0.4)
   tint?: string | null; // target hex when this colour has no plate of its own (recoloured from `colour`)
   placements: PlatePlacement[];
   onChange?: (next: PlatePlacement[]) => void;
@@ -178,17 +192,29 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       const cv = canvasRef.current; if (!cv) return;
       const gl = cv.getContext("webgl2", { premultipliedAlpha: true, antialias: true, preserveDrawingBuffer: true });
       if (!gl) return;
-      const [beauty, shading, uv, pieces] = await Promise.all([
-        loadImage(plateUrl(base, colour, view, "beauty")), loadImage(plateUrl(base, colour, view, "shading")),
-        loadDataPng(plateUrl(base, colour, view, "uvmap")), loadDataPng(plateUrl(base, colour, view, "pieces")),
-      ]);
+      const cal2d = manifest.kind === "2d" ? manifest.views?.[view] : undefined;
+      let beauty: HTMLImageElement, shading: HTMLImageElement, uv: DecodedMap, pieces: DecodedMap;
+      if (cal2d) {
+        // One photo; helper maps at quarter resolution for dragging, guides and seam checks.
+        beauty = await loadImage(`${base}/${view}.webp${manifest.v ? `?v=${manifest.v}` : ""}`);
+        shading = beauty;
+        const q = 0.25, w = Math.round(beauty.naturalWidth * q), h = Math.round(beauty.naturalHeight * q);
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        const c2 = cv.getContext("2d", { willReadFrequently: true })!; c2.drawImage(beauty, 0, 0, w, h);
+        ({ uv, pieces } = helperMaps2D(c2.getImageData(0, 0, w, h).data, w, h, q, cal2d, view));
+      } else {
+        [beauty, shading, uv, pieces] = await Promise.all([
+          loadImage(plateUrl(base, colour, view, "beauty")), loadImage(plateUrl(base, colour, view, "shading")),
+          loadDataPng(plateUrl(base, colour, view, "uvmap")), loadDataPng(plateUrl(base, colour, view, "pieces")),
+        ]);
+      }
       if (dead) return;
       const prog = gl.createProgram()!;
       gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VS)); gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
       const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
       const loc = gl.getAttribLocation(prog, "aPos"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-      ctx.current = { gl, prog, uv, pieces, size: [uv.width, uv.height], baseLum: fabricLum(beauty), tex: {
+      ctx.current = { gl, prog, uv, pieces, size: [uv.width, uv.height], baseLum: fabricLum(beauty), img: [beauty.naturalWidth, beauty.naturalHeight], cal2d, tex: {
         beauty: imageTexture(gl, beauty), shading: imageTexture(gl, shading), uv: dataTexture(gl, uv, false), pieces: dataTexture(gl, pieces, true),
       } };
       arts.current.clear();
@@ -217,13 +243,13 @@ export default function PlateComposite({ base, colour, view, manifest, placement
 
   function cov(piece: number) {
     const c = ctx.current!;
-    if (!coverage.current.has(piece)) coverage.current.set(piece, buildCoverage(c.uv, c.pieces, piece, CLEARANCE_IN * MM));
+    if (!coverage.current.has(piece)) coverage.current.set(piece, buildCoverage(c.uv, c.pieces, piece, clearanceIn * MM));
     return coverage.current.get(piece)!;
   }
 
   function measure() {
     const c = ctx.current; if (!c) return;
-    const hps = manifest.hpsUv[view] ?? { u: 0, v: 0 }, cf = manifest.cfU[view] ?? hps.u;
+    const hps = manifest.hpsUv?.[view] ?? { u: 0, v: 0 }, cf = manifest.cfU?.[view] ?? hps.u;
     const frames: { id: string; pts: string; ok: boolean }[] = [], checks: Record<string, PrintCheck> = {};
     const dims: { x1: number; y1: number; x2: number; y2: number; label: string }[] = [];
     let reason: string | null = null, cfLine: string | null = null, hpsPt: [number, number] | null = null;
@@ -239,7 +265,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       for (let i = 1; i <= S; i++) edge.push([r.u0 + r.w - (r.w * i) / S, r.vTop - r.h]);
       for (let i = 1; i < S; i++) edge.push([r.u0, r.vTop - r.h + (r.h * i) / S]);
       const pts = edge.map(([u, v]) => mmToPx(cv, u, v)).filter(Boolean) as [number, number][];
-      const chk = checkPrintable(cv, r, CLEARANCE_IN);
+      const chk = checkPrintable(cv, r, clearanceIn);
       checks[p.id] = chk;
       frames.push({ id: p.id, pts: pts.map((q) => q.join(",")).join(" "), ok: chk.ok });
       if (!chk.ok && p.id === focus) reason = chk.reason ?? null;
@@ -276,11 +302,14 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       const a = arts.current.get(p.artUrl)!;
       const r = artRectMm(p, view, manifest, a.aspect);
       rect.set([r.u0, r.vTop, r.w, r.h], i * 4);
-      meta.set([p.piece, METHOD_ID[p.method ?? "screen_print"] ?? 0, ((p.rotDeg ?? 0) * Math.PI) / 180, 0], i * 4);
+      meta.set([p.piece, METHOD_ID[p.method ?? "screen_print"] ?? 0, ((p.rotDeg ?? 0) * Math.PI) / 180, view === "front" ? 1 : 2], i * 4);
       bind(`uArt${i}`, a.tex, 4 + i);
     });
     for (let i = list.length; i < MAX; i++) bind(`uArt${i}`, tex.shading, 4 + i);
     gl.uniform2f(gl.getUniformLocation(prog, "uSize"), size[0], size[1]);
+    gl.uniform1f(gl.getUniformLocation(prog, "u2d"), c.cal2d ? 1 : 0);
+    gl.uniform2f(gl.getUniformLocation(prog, "uImg"), c.img[0], c.img[1]);
+    if (c.cal2d) gl.uniform3f(gl.getUniformLocation(prog, "uAff"), c.cal2d.cfX, c.cal2d.hpsY, c.cal2d.pxPerIn / 25.4);
     const lin = (hex: string) => [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));
     gl.uniform1f(gl.getUniformLocation(prog, "uTint"), tint ? 1 : 0);
     gl.uniform1f(gl.getUniformLocation(prog, "uBaseLum"), c.baseLum);

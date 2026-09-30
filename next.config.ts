@@ -42,7 +42,9 @@ const nextConfig: NextConfig = {
       // Private surfaces must never be indexed.
       { source: "/orders/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       { source: "/adjust/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
-      { source: "/admin/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }
+      { source: "/admin/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      // Mockup plates are versioned (?v=<content hash>): cache for a year at the edge and in browsers.
+      { source: "/plates/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }
     ];
   }
 };
