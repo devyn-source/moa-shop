@@ -10,6 +10,7 @@ import { getModelUrl } from "@/lib/pattern-files";
 import { isBundleEligible } from "@/lib/seed";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 import { getKit } from "@/lib/use-cases";
+import { isVisible } from "@/lib/launch";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -55,7 +56,7 @@ export default async function ProductPage({
   // for QA at /p/<slug>?preview=<CATALOG_PREVIEW_TOKEN>.
   const previewOk = Boolean(process.env.CATALOG_PREVIEW_TOKEN) && preview === process.env.CATALOG_PREVIEW_TOKEN;
 
-  if (!product || (!product.isPublished && !previewOk)) {
+  if (!product || (!isVisible(product) && !previewOk)) {
     notFound();
   }
 

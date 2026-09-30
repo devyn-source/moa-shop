@@ -244,6 +244,38 @@ const apparelProducts: CatalogProduct[] = [
     ]
   },
   {
+    id: "prod-vintage-cut-tee",
+    slug: "vintage-cut-tee",
+    skuCode: "TEE102",
+    category: "tee",
+    displayName: "Vintage Cut Tee",
+    sizes: ["S", "M", "L", "XL", "XXL", "3XL"],
+    fitNotes: "Cropped boxy cut · wide body · drop shoulder · 1in rib collar",
+    greyFront: "/products/heavyweight-tee/base-front.png",
+    greyBack: "/products/heavyweight-tee/base-back.png",
+    headline: "A cropped, wide vintage cut, cut and sewn to our own pattern.",
+    description:
+      "A shorter, wider tee with a dropped shoulder and a clean 1in rib collar. The vintage proportion, cut and sewn to our own graded pattern.",
+    bestFor: "Launch merch, events, uniforms, artist drops",
+    visual: "tee",
+    defaultVendorId: "vendor-best-cover",
+    vendorUnitCostUsd: 14,
+    moq: 50,
+    leadTimeDays: 42,
+    isPublished: false,
+    sortOrder: 21,
+    variants: colorways("vintage-cut-tee", "Vintage cut tee", "260gsm compact cotton jersey", ["bone", "jetBlack", "heatherGray", "navy", "forest", "oxblood"]),
+    decorations: coreDecorations.filter((item) =>
+      ["screen_print", "embroidery", "rubber_applique"].includes(item.id)
+    ),
+    priceTiers: [
+      { minQty: 50, maxQty: 149, perUnitUsd: 44 },
+      { minQty: 150, maxQty: 299, perUnitUsd: 39 },
+      { minQty: 300, maxQty: 599, perUnitUsd: 37 },
+      { minQty: 600, maxQty: null, perUnitUsd: 35 }
+    ]
+  },
+  {
     id: "prod-wide-leg-sweatpant",
     slug: "wide-leg-sweatpant",
     skuCode: "SWP101",
@@ -907,7 +939,11 @@ const FABRIC_OPTIONS: Record<string, FabricOption[]> = {
   ],
   "heavyweight-tee": [
     { id: "tee-econ", tier: "econ", label: "Heavyweight cotton", composition: "100% cotton", weight: "heavyweight", upchargeUsd: 0 },
-    { id: "tee-prem", tier: "premium", label: "Premium heavy (CODM)", composition: "100% cotton", weight: "premium heavyweight", upchargeUsd: 4 }
+    { id: "tee-prem", tier: "premium", label: "Premium heavyweight", composition: "100% cotton", weight: "premium heavyweight", upchargeUsd: 4 }
+  ],
+  "vintage-cut-tee": [
+    { id: "vct-econ", tier: "econ", label: "Heavyweight cotton", composition: "100% cotton", weight: "heavyweight", upchargeUsd: 0 },
+    { id: "vct-prem", tier: "premium", label: "Premium heavyweight", composition: "100% cotton", weight: "premium heavyweight", upchargeUsd: 4 }
   ],
   "rib-knit-beanie": [
     { id: "bn-econ", tier: "econ", label: "Cotton", composition: "100% cotton", upchargeUsd: 0 },
@@ -919,7 +955,7 @@ const FABRIC_OPTIONS: Record<string, FabricOption[]> = {
   ],
   "heavyweight-hoodie": [
     { id: "hd-econ", tier: "econ", label: "480gsm cotton fleece", composition: "100% cotton", weight: "480gsm", upchargeUsd: 0 },
-    { id: "hd-prem", tier: "premium", label: "480gsm cotton fleece (Coachella)", composition: "100% cotton", weight: "480gsm", upchargeUsd: 10 }
+    { id: "hd-prem", tier: "premium", label: "480gsm cotton fleece, premium", composition: "100% cotton", weight: "480gsm", upchargeUsd: 10 }
   ],
   "track-jacket": [
     { id: "tj-econ", tier: "econ", label: "Nylon Taslan self (4-ply)", composition: "100% nylon Taslan, 4-ply", liner: "Poly mesh liner", upchargeUsd: 0 },

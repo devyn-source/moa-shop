@@ -16,7 +16,7 @@
       },
       {
         "component": "Neck rib",
-        "spec": "1×1 rib, self or matching",
+        "spec": "1\u00d71 rib, self or matching",
         "composition": "compact cotton jersey",
         "weightGsm": null,
         "color": "",
@@ -240,7 +240,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -276,7 +276,7 @@
       },
       {
         "component": "Rib",
-        "spec": "2×2 rib, cuffs + hem",
+        "spec": "2\u00d72 rib, cuffs + hem",
         "composition": "cotton/poly fleece",
         "weightGsm": null,
         "color": "",
@@ -296,7 +296,7 @@
       },
       {
         "component": "Eyelets",
-        "spec": "Metal, matte, 2× at hood",
+        "spec": "Metal, matte, 2\u00d7 at hood",
         "composition": "Metal",
         "weightGsm": null,
         "color": "",
@@ -655,7 +655,7 @@
       },
       {
         "area": "Cuffs + hem",
-        "detail": "2×2 rib set",
+        "detail": "2\u00d72 rib set",
         "stitch": "Overlock + coverstitch",
         "spi": 12,
         "seamClass": "EFb",
@@ -664,7 +664,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -703,7 +703,7 @@
       },
       {
         "component": "Rib trims",
-        "spec": "2×1 rib — collar, cuffs, hem",
+        "spec": "2\u00d71 rib \u2014 collar, cuffs, hem",
         "composition": "100% cotton knit",
         "weightGsm": null,
         "color": "",
@@ -915,7 +915,7 @@
         "detail": "12gg (confirm)",
         "stitch": "Flat-knit",
         "spi": null,
-        "seamClass": "—",
+        "seamClass": "\u2014",
         "_assumed": true
       },
       {
@@ -928,10 +928,10 @@
       },
       {
         "area": "Collar",
-        "detail": "Crew, 2×1 rib, set + linked",
+        "detail": "Crew, 2\u00d71 rib, set + linked",
         "stitch": "Linking",
         "spi": null,
-        "seamClass": "—",
+        "seamClass": "\u2014",
         "_assumed": true
       },
       {
@@ -945,7 +945,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -960,7 +960,7 @@
       "Confirm shell mill + exact weight/yield",
       "Confirm thread brand + ticket",
       "Supply + approve technical flats (front/back)",
-      "CONFIRM knit gauge (gg) + yarn count — not derivable from a photo",
+      "CONFIRM knit gauge (gg) + yarn count \u2014 not derivable from a photo",
       "Fully-fashioned vs cut-and-sew?"
     ],
     "_generatedAt": "2026-06-09",
@@ -1455,7 +1455,7 @@
         "detail": "Bartacked at pocket + placket",
         "stitch": "Bartack",
         "spi": null,
-        "seamClass": "—",
+        "seamClass": "\u2014",
         "_assumed": true
       },
       {
@@ -1469,7 +1469,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -1873,7 +1873,7 @@
         "detail": "Bartacked at pocket + placket",
         "stitch": "Bartack",
         "spi": null,
-        "seamClass": "—",
+        "seamClass": "\u2014",
         "_assumed": true
       },
       {
@@ -1887,7 +1887,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -2317,7 +2317,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -2365,7 +2365,7 @@
       },
       {
         "component": "Cuff/hem",
-        "spec": "2×2 rib or open hem",
+        "spec": "2\u00d72 rib or open hem",
         "composition": "brushed fleece",
         "weightGsm": null,
         "color": "",
@@ -2604,7 +2604,7 @@
       },
       {
         "area": "Hem",
-        "detail": "2×2 rib cuff or 1.5\" open hem",
+        "detail": "2\u00d72 rib cuff or 1.5\" open hem",
         "stitch": "Coverstitch 406",
         "spi": 12,
         "seamClass": "EFb",
@@ -2621,7 +2621,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -2927,7 +2927,7 @@
         "detail": "Channel quilt, even fill distribution",
         "stitch": "Lockstitch 301",
         "spi": 12,
-        "seamClass": "—",
+        "seamClass": "\u2014",
         "_assumed": true
       },
       {
@@ -2949,7 +2949,7 @@
     ],
     "labelsPackaging": {
       "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
-      "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
       "sizeLabel": "Woven size tab, center-back neck below main label",
       "hangTag": "MOA hangtag, looped at neck (per order)",
       "fold": "Standard flat fold",
@@ -2965,10 +2965,271 @@
       "Confirm shell mill + exact weight/yield",
       "Confirm thread brand + ticket",
       "Supply + approve technical flats (front/back)",
-      "CONFIRM fill: down fill-power + grams per panel, OR synthetic weight — production-critical, not derivable",
+      "CONFIRM fill: down fill-power + grams per panel, OR synthetic weight \u2014 production-critical, not derivable",
       "Baffle construction: box vs sewn-through?"
     ],
     "_generatedAt": "2026-06-09",
+    "_status": "draft"
+  },
+  "vintage-cut-tee": {
+    "styleNumber": "TEE102",
+    "styleName": "Vintage Cut Tee",
+    "category": "tee",
+    "bom": [
+      {
+        "component": "Shell fabric",
+        "spec": "260gsm single jersey, compact cotton jersey",
+        "composition": "compact cotton jersey",
+        "weightGsm": 260,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Neck rib",
+        "spec": "1\u00d71 rib, self or matching",
+        "composition": "compact cotton jersey",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Neck tape",
+        "spec": "3/8\" twill tape, back-neck",
+        "composition": "",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      },
+      {
+        "component": "Thread",
+        "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+        "composition": "100% polyester",
+        "weightGsm": null,
+        "color": "",
+        "pantoneTcx": "",
+        "supplier": "Confirm w/ factory",
+        "_assumed": true
+      }
+    ],
+    "sizeChart": {
+      "baseSize": "M",
+      "poms": [
+        {
+          "code": "A",
+          "name": "BODY LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 26.0,
+            "M": 26.75,
+            "L": 27.5,
+            "XL": 28.375,
+            "XXL": 29.125,
+            "3XL": 29.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "B",
+          "name": "CHEST-1\" FM ARMHOLE",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 24.0,
+            "M": 25.0,
+            "L": 26.0,
+            "XL": 27.0,
+            "XXL": 28.0,
+            "3XL": 28.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "C",
+          "name": "SWEEP",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 23.625,
+            "M": 24.625,
+            "L": 25.625,
+            "XL": 26.625,
+            "XXL": 27.5,
+            "3XL": 28.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "D",
+          "name": "SHOULDER WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 19.5,
+            "M": 20.125,
+            "L": 20.625,
+            "XL": 21.25,
+            "XXL": 21.875,
+            "3XL": 22.5
+          },
+          "_assumed": false
+        },
+        {
+          "code": "E",
+          "name": "ARMHOLE DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "S": 10.25,
+            "M": 10.375,
+            "L": 10.625,
+            "XL": 10.875,
+            "XXL": 11.125,
+            "3XL": 11.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "F",
+          "name": "BICEP",
+          "tolerance": 0.25,
+          "bySize": {
+            "S": 9.625,
+            "M": 9.875,
+            "L": 10.125,
+            "XL": 10.375,
+            "XXL": 10.5,
+            "3XL": 10.75
+          },
+          "_assumed": false
+        },
+        {
+          "code": "G",
+          "name": "SLEEVE OPENING",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 8.25,
+            "M": 8.5,
+            "L": 8.75,
+            "XL": 8.875,
+            "XXL": 9.125,
+            "3XL": 9.375
+          },
+          "_assumed": false
+        },
+        {
+          "code": "H",
+          "name": "SLEEVE LENGTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 7.875,
+            "M": 8.25,
+            "L": 8.625,
+            "XL": 9.0,
+            "XXL": 9.5,
+            "3XL": 9.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "I",
+          "name": "NECK WIDTH",
+          "tolerance": 0.5,
+          "bySize": {
+            "S": 7.625,
+            "M": 8.125,
+            "L": 8.25,
+            "XL": 8.5,
+            "XXL": 8.625,
+            "3XL": 8.875
+          },
+          "_assumed": false
+        },
+        {
+          "code": "J",
+          "name": "FRONT NECK DROP",
+          "tolerance": 0.25,
+          "bySize": {
+            "S": 4.0,
+            "M": 4.125,
+            "L": 4.25,
+            "XL": 4.375,
+            "XXL": 4.5,
+            "3XL": 4.625
+          },
+          "_assumed": false
+        },
+        {
+          "code": "K",
+          "name": "COLLAR HEIGHT",
+          "tolerance": 0.25,
+          "bySize": {
+            "S": 1.0,
+            "M": 1.0,
+            "L": 1.0,
+            "XL": 1.0,
+            "XXL": 1.0,
+            "3XL": 1.0
+          },
+          "_assumed": false
+        }
+      ]
+    },
+    "construction": [
+      {
+        "area": "Sleeves",
+        "detail": "Set-in",
+        "stitch": "Overlock 504",
+        "spi": 12,
+        "seamClass": "EFc",
+        "_assumed": true
+      },
+      {
+        "area": "Bottom + sleeve hem",
+        "detail": "1\" turn, double-needle coverstitch",
+        "stitch": "Coverstitch 406",
+        "spi": 12,
+        "seamClass": "EFb",
+        "_assumed": true
+      },
+      {
+        "area": "Collar",
+        "detail": "3/4\" rib, single-needle set + back-neck tape",
+        "stitch": "Lockstitch 301",
+        "spi": 12,
+        "seamClass": "LSa",
+        "_assumed": true
+      },
+      {
+        "area": "Side seams",
+        "detail": "Side-seamed",
+        "stitch": "Overlock 504",
+        "spi": 12,
+        "seamClass": "SSa",
+        "_assumed": true
+      }
+    ],
+    "labelsPackaging": {
+      "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+      "careLabel": "Printed satin care label, sewn into left side seam \u2014 fiber content + care symbols + RN",
+      "sizeLabel": "Woven size tab, center-back neck below main label",
+      "hangTag": "MOA hangtag, looped at neck (per order)",
+      "fold": "Standard flat fold",
+      "polybag": "Individual recyclable polybag with suffocation warning",
+      "_assumed": true
+    },
+    "flatsNeeded": [
+      "front",
+      "back"
+    ],
+    "openQuestions": [
+      "Pattern: Devyn sourcing (graded spec on file, S to 3XL)",
+      "Confirm shell mill + exact weight/yield",
+      "Confirm thread brand + ticket",
+      "Supply + approve technical flats (front/back)"
+    ],
+    "_generatedAt": "2026-09-30",
     "_status": "draft"
   }
 }

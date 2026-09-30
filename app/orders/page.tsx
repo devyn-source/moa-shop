@@ -11,6 +11,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { reorderFrom } from "@/lib/reorder";
 import type { ShopOrder } from "@/lib/types";
 import type { CartItem } from "@/components/CartProvider";
+import { isVisible } from "@/lib/launch";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function OrdersPage() {
   // Wishlist cards link to PDPs — only published products get a card.
   const wishlistProducts = wishlistSlugs
     .map((slug) => productBySlug.get(slug))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p && p.isPublished));
+    .filter((p): p is NonNullable<typeof p> => Boolean(p && isVisible(p)));
 
   return (
     <main className="page">
