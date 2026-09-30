@@ -349,8 +349,15 @@ export function PdpConfigurator({
   const decoSelected = product.decorations.filter((d) => decorationIds.includes(d.id));
 
   // ---- Plate mode: the photoreal composite is the stage; placements in inches ----
-  const plateColour = colourSlug(variant?.colorLabel);
-  const plateOn = Boolean(plate && !bundle && plate.manifest.colours?.[plateColour]);
+  const wantSlug = colourSlug(variant?.colorLabel);
+  const plateOn = Boolean(plate && !bundle && Object.keys(plate.manifest.colours ?? {}).length);
+  const lumOf = (hex: string) => { const c = [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const exactPlate = Boolean(plate?.manifest.colours?.[wantSlug]);
+  // Nearest base by lightness: light colours from the light plate, dark from the dark one.
+  const plateColour = exactPlate || !plate
+    ? wantSlug
+    : Object.entries(plate.manifest.colours).sort((a, b) => Math.abs(lumOf(a[1]) - lumOf(variant?.colorHex ?? "#808080")) - Math.abs(lumOf(b[1]) - lumOf(variant?.colorHex ?? "#808080")))[0][0];
+  const plateTint = exactPlate ? null : variant?.colorHex ?? null;
   const [plateView, setPlateView] = useState<PlateView>("front");
   const [spin, setSpin] = useState(false);
   const [plateP, setPlateP] = useState<PlatePlacement[]>([]);
@@ -983,7 +990,7 @@ export function PdpConfigurator({
           {plateOn && !spin ? (
             <div className="pdpx-canvas-plate">
               <PlateComposite
-                base={plate!.base} colour={plateColour} view={plateView} manifest={plate!.manifest}
+                base={plate!.base} colour={plateColour} tint={plateTint} view={plateView} manifest={plate!.manifest}
                 placements={plateList.filter((q) => (q.piece === 1) === (plateView === "front"))}
                 onChange={(next) => setPlateP((all) => all.map((q) => next.find((n) => n.id === q.id) ?? q))}
                 onCheck={(c) => setPlateChecks((prev) => ({ ...prev, ...c }))}
@@ -1126,7 +1133,7 @@ export function PdpConfigurator({
                             style={{ background: v.colorHex }}
                             data-label={v.colorLabel}
                             aria-label={v.colorLabel}
-                            onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); if (!artworkUrl) setTimeout(() => setStep("placement"), 350); }}
+                            onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); }}
                           />
                         ))}
                         {(() => {
@@ -1606,7 +1613,7 @@ export function PdpConfigurator({
               {plateOn ? (
                 <div className={`pdpx-review-plates${plateP.some((q) => q.piece === 2) && plateP.some((q) => q.piece === 1) ? " is-two" : ""}`}>
                   {(["front", "back"] as const).filter((v) => plateP.some((q) => (q.piece === 1) === (v === "front")) || (v === "front" && !plateP.length)).map((v) => (
-                    <PlateComposite key={v} base={plate!.base} colour={plateColour} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
+                    <PlateComposite key={v} base={plate!.base} colour={plateColour} tint={plateTint} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
                   ))}
                 </div>
               ) : modelUrl && artworkUrl && place3d.length ? (

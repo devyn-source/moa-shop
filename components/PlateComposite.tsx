@@ -27,6 +27,7 @@ in vec2 vSt; out vec4 outColor;
 uniform sampler2D uBeauty, uShading, uArt0, uArt1, uArt2, uArt3;
 uniform highp usampler2D uUv; uniform highp usampler2D uPieces;
 uniform vec2 uSize; uniform int uCount;
+uniform vec3 uBaseLin; uniform vec3 uTargetLin; uniform float uTint;
 uniform vec4 uRect[${MAX}];   // u0, vTop, w, h (mm)
 uniform vec4 uMeta[${MAX}];   // piece, method, rotation (rad), unused
 
@@ -39,6 +40,14 @@ vec4 art(int i, vec2 st) {
 
 void main() {
   vec4 base = texture(uBeauty, vSt);
+  if (uTint > 0.5 && base.a > 0.0) {
+    // keep the plate's folds and knit (its light relative to its own fabric colour),
+    // move the fabric onto the target colour. Work in linear light.
+    vec3 lin = pow(max(base.rgb, 0.0), vec3(2.2));
+    float rel = dot(lin, vec3(0.2126, 0.7152, 0.0722)) / max(1e-4, dot(uBaseLin, vec3(0.2126, 0.7152, 0.0722)));
+    vec3 outLin = uTargetLin * rel;
+    base.rgb = pow(clamp(outLin, 0.0, 1.0), vec3(1.0 / 2.2));
+  }
   ivec2 px = ivec2(clamp(vSt * uSize, vec2(0.0), uSize - 1.0));
   uvec4 e = texelFetch(uUv, px, 0);
   float piece = float(texelFetch(uPieces, px, 0).r);
@@ -123,9 +132,10 @@ function dataTexture(gl: WebGL2RenderingContext, m: DecodedMap, single: boolean)
   return t;
 }
 
-export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, className }: {
+export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, className }: {
   base: string; // e.g. "/lab/plates/fixture-tee"
   colour: string; view: PlateView; manifest: PlateManifest;
+  tint?: string | null; // target hex when this colour has no plate of its own (recoloured from `colour`)
   placements: PlatePlacement[];
   onChange?: (next: PlatePlacement[]) => void;
   onCheck?: (checks: Record<string, PrintCheck>) => void; // printable or not, per placement
@@ -187,7 +197,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     })();
     return () => { dead = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, placementsKey, dragging]);
+  }, [ready, placementsKey, dragging, tint]);
 
   function cov(piece: number) {
     const c = ctx.current!;
@@ -255,6 +265,11 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     });
     for (let i = list.length; i < MAX; i++) bind(`uArt${i}`, tex.shading, 4 + i);
     gl.uniform2f(gl.getUniformLocation(prog, "uSize"), size[0], size[1]);
+    const lin = (hex: string) => [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));
+    const baseHex = manifest.colours[colour] ?? "#808080";
+    gl.uniform1f(gl.getUniformLocation(prog, "uTint"), tint ? 1 : 0);
+    gl.uniform3fv(gl.getUniformLocation(prog, "uBaseLin"), lin(baseHex));
+    gl.uniform3fv(gl.getUniformLocation(prog, "uTargetLin"), lin(tint ?? baseHex));
     gl.uniform1i(gl.getUniformLocation(prog, "uCount"), list.length);
     gl.uniform4fv(gl.getUniformLocation(prog, "uRect"), rect);
     gl.uniform4fv(gl.getUniformLocation(prog, "uMeta"), meta);
