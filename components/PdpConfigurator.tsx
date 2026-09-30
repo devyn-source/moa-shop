@@ -603,6 +603,7 @@ export function PdpConfigurator({
   // hasn't chosen yet). Few flat colours -> screen print; more -> embroidery;
   // photographic art -> left for our team to advise in the proof.
   const [artNote, setArtNote] = useState<string | null>(null);
+  const suggestedFromArt = useRef(false); // the method/inks came from the file, not the buyer
   const suggestFromArt = async (url: string) => {
     const read = await readArtColours(url);
     if (!read) { setArtNote(null); return; }
@@ -615,6 +616,7 @@ export function PdpConfigurator({
     const inks = [...new Map(read.colours.map((h) => nearestPms(h)).map((p) => [p.code, p])).values()].slice(0, cap);
     setDecorationIds([method]);
     setPantones(inks);
+    suggestedFromArt.current = true;
     const label = product.decorations.find((d) => d.id === method)?.label ?? method;
     setArtNote(`We found ${inks.length} ${inks.length === 1 ? "colour" : "colours"} in your artwork, matched to Pantone. ${label} is selected. Change either under Decoration.`);
   };
@@ -662,6 +664,7 @@ export function PdpConfigurator({
       setPlateActive(null);
       setPlace3d([]);
       setPreset(null);
+      if (suggestedFromArt.current) { setDecorationIds([]); setPantones([]); suggestedFromArt.current = false; }
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
