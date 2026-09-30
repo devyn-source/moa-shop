@@ -215,7 +215,6 @@ export function PdpConfigurator({
     seed0?.sizeQty ?? distributeAcross(product.sizes, bundle ? Math.max(product.moq, bundle.boxQty) : product.moq)
   );
   const [submitting, setSubmitting] = useState(false);
-  const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   // 2D recolor mock vs the rotatable 3D model. Policy: where a SKU has a GLB,
   // 3D REPLACES 2D as the default hero — the 2D flat is kept only as a fallback
@@ -596,34 +595,6 @@ export function PdpConfigurator({
     }
   };
 
-  // Shareable config link — persist the current configuration, copy a /c/<id>
-  // URL a buyer can send to a teammate/approver for sign-off.
-  const handleShare = async () => {
-    setShareMsg("Creating link…");
-    try {
-      const config = {
-        variantId, decorationIds, pantones, view,
-        zoneId: placementId ?? undefined, art: artTransform,
-        artworkFileUrl: artworkUrl ?? undefined, artworkFileName: artworkName ?? undefined, sizeQty,
-        extraPlacements: savedPlacements.length ? savedPlacements : undefined,
-        // The actual placement list (3D Studio OR 2D) — restores exactly on open.
-        placements: allPlacements.length ? allPlacements : undefined,
-      };
-      const res = await fetch("/api/config/share", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slug: product.slug, config }),
-      });
-      const data = (await res.json()) as { id?: string };
-      if (!data.id) throw new Error("no id");
-      const url = `${location.origin}/c/${data.id}`;
-      await navigator.clipboard.writeText(url).catch(() => {});
-      setShareMsg("Link copied. Send it for sign-off.");
-      analytics.track("config_shared", { slug: product.slug });
-    } catch {
-      setShareMsg("Couldn't create a link. Try again.");
-    }
-  };
-
   const handleAddToCart = () => {
     if (belowMoq || !variant || submitting || blockRes) return;
     const decorationLabel = (decoSelected.length
@@ -783,6 +754,28 @@ export function PdpConfigurator({
       </section>
     );
   }
+
+  // One CTA definition, rendered in the rail and in the pinned bottom bar.
+  const ctaButton = (className: string) => (
+    <button type="button" className={className} onClick={bundle ? handleAddToBox : editOrder ? handleUpdate : handleAddToCart} disabled={belowMoq || submitting || blockRes}>
+
+            {blockRes
+              ? "Resolution too low for this size"
+              : belowMoq
+              ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
+              : bundle
+              ? bundle.editing
+                ? "Save changes"
+                : "Add to box"
+              : editOrder
+              ? submitting
+                ? "Updating proof…"
+                : "Update proof"
+              : submitting
+              ? "Adding to order…"
+              : "Add to order"}
+    </button>
+  );
 
   return (
     <section className="pdpx">
@@ -1369,48 +1362,15 @@ export function PdpConfigurator({
                 : `Low resolution at this size (~${printDpi} DPI). It may look soft. A higher-res image or vector prints sharper.`}
             </p>
           ) : null}
-          <button
-            type="button"
-            className="pdpx-cta"
-            onClick={bundle ? handleAddToBox : editOrder ? handleUpdate : handleAddToCart}
-            disabled={belowMoq || submitting || blockRes}
-          >
-            {blockRes
-              ? "Resolution too low for this size"
-              : belowMoq
-              ? `Add ${(product.moq - qty).toLocaleString()} more to reach MOQ`
-              : bundle
-              ? bundle.editing
-                ? "Save changes"
-                : "Add to box"
-              : editOrder
-              ? submitting
-                ? "Updating proof…"
-                : "Update proof"
-              : submitting
-              ? "Adding to order…"
-              : "Add to order"}
-          </button>
+          {ctaButton("pdpx-cta")}
           {updateError ? <p className="pdpx-foot-note" style={{ color: "var(--color-terracotta)" }}>{updateError}</p> : null}
           <p className="pdpx-foot-note">
-            MOA-managed quality control, Artwork finalised in QA
+            Every order passes MOA quality control before it ships.
           </p>
-          {!editOrder && !bundle ? (
-            <button type="button" className="pdpx-share-link" onClick={handleShare}>
-              {shareMsg ?? "Share this configuration ↗"}
-            </button>
-          ) : null}
-          {!editOrder && !bundle && !isPackaging ? (
-            <a className="pdpx-sample-link" href={`/samples?sku=${product.slug}`}>
-              Not sure yet? Order a sample first
-            </a>
-          ) : null}
         </div>
       </aside>
 
-      {/* Persistent configurator bar pinned to the bottom of the viewport on
-          desktop, informational, no CTA. Hidden on mobile where the in-rail
-          sticky CTA covers the same role. */}
+      {/* The one pinned bar on every screen size: what you picked, price, and the CTA. */}
       <div className="pdpx-bottombar" aria-hidden={false}>
         <div className="pdpx-bottombar-inner">
           <div className="pdpx-bb-cell">
@@ -1440,6 +1400,7 @@ export function PdpConfigurator({
             <span>{qty.toLocaleString()} units</span>
             <strong className="pdpx-bb-price">{currency(subtotal)}</strong>
           </div>
+          {ctaButton("pdpx-bb-cta")}
         </div>
       </div>
 

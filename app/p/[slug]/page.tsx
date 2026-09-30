@@ -10,7 +10,7 @@ import { getModelUrl } from "@/lib/pattern-files";
 import { isBundleEligible } from "@/lib/seed";
 import { PR_BOX_PROMO, isPromoWithinWindow } from "@/lib/promo";
 import { getKit } from "@/lib/use-cases";
-import { isVisible } from "@/lib/launch";
+import { isVisible, launchMode } from "@/lib/launch";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -131,6 +131,8 @@ export default async function ProductPage({
 
       <PdpConfigurator product={product} modelUrl={await getModelUrl(product.slug)} />
 
+      {launchMode() ? null : (
+        <>
       {isPromoWithinWindow(PR_BOX_PROMO) ? (
         <Link href="/p/pr-box" className="pdp-prbox-nudge">
           <span className="pdp-prbox-nudge-text">Seeding {product.displayName} to press or influencers?</span>
@@ -162,6 +164,9 @@ export default async function ProductPage({
           ))}
         </div>
       </section>
+
+        </>
+      )}
 
       <CaseStudies slug={product.slug} />
     </main>

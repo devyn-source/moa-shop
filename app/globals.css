@@ -196,10 +196,8 @@ button {
   gap: 18px;
   min-height: 78px;
   padding: 0 clamp(20px, 4vw, 48px);
-  background: rgba(238, 234, 227, 0.78);
+  background: var(--color-cream);
   border-bottom: 1px solid rgba(30, 30, 30, 0.06);
-  backdrop-filter: saturate(150%) blur(20px);
-  -webkit-backdrop-filter: saturate(150%) blur(20px);
 }
 
 /* hairline terracotta accent across the very top */
@@ -5104,7 +5102,7 @@ a.stat-card:hover {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(32px, 4vw, 56px);
+  font-size: clamp(28px, 2.6vw, 44px);
   line-height: 1;
   letter-spacing: 0.01em;
   text-transform: uppercase;
@@ -6085,15 +6083,6 @@ a.stat-card:hover {
   .pdpx-rail {
     padding: 4px 2px 96px; /* leave room for sticky CTA */
   }
-  .pdpx-foot {
-    position: sticky;
-    bottom: 0;
-    z-index: 8;
-    background: linear-gradient(180deg, rgba(238, 234, 227, 0.0) 0%, var(--color-cream) 24%);
-    padding-bottom: 14px;
-    padding-top: 22px;
-    border-top: 0;
-  }
   .pdpx-step-head {
     padding: 16px 4px;
   }
@@ -6798,9 +6787,7 @@ body.is-scrolled .site-header {
   left: 0;
   right: 0;
   z-index: 18;
-  background: rgba(30, 30, 30, 0.94);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: var(--color-charcoal);
   color: var(--color-cream);
   border-top: 1px solid rgba(238, 234, 227, 0.06);
 }
@@ -6872,15 +6859,32 @@ body.is-scrolled .site-header {
   }
 }
 
-/* Hide bottom bar on mobile — the in-rail sticky CTA covers the same role. */
+/* Phones: the bar keeps units, price and the CTA; the detail cells hide. */
 @media (max-width: 900px) {
-  .pdpx-bottombar {
-    display: none;
-  }
-  .pdpx-bb-cell--hide-sm {
-    display: none;
-  }
+  .pdpx-bb-cell--hide-sm { display: none; }
+  .pdpx-bottombar-inner { gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+  .pdpx-bottombar-inner > .pdpx-bb-cell:not(.pdpx-bb-cell--right) { display: none; }
+  .pdpx-bb-cell--right { margin-left: 0; margin-right: auto; text-align: left; align-items: flex-start; }
+  body:has(.pdpx-bottombar) { padding-bottom: 76px; }
 }
+.pdpx-bb-cta {
+  flex: none;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-terracotta);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.pdpx-bb-cta:hover { background: #8a3826; }
+.pdpx-bb-cta:disabled { background: rgba(238, 234, 227, 0.16); color: rgba(238, 234, 227, 0.6); cursor: not-allowed; }
+/* Step values wrap instead of cutting off. */
+.pdpx-step-value { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: 48% !important; text-align: right; }
 
 /* ===================================================================
    PR Box — builder, bundle card, bundle cart group
