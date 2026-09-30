@@ -365,7 +365,7 @@ export function PdpConfigurator({
     setPlateView(pr.view);
     setSpin(false);
   };
-  const plateList = plateP.map((q) => ({ ...q, artUrl: artworkUrl ?? q.artUrl, method: plateMethod }));
+  const plateList = artworkUrl ? plateP.map((q) => ({ ...q, artUrl: artworkUrl, method: plateMethod })) : [];
   const plateBlocked = plateOn && plateP.some((q) => plateChecks[q.id] && !plateChecks[q.id].ok);
   const activeP = plateP.find((q) => q.id === plateActive) ?? plateP[plateP.length - 1];
   const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
@@ -654,6 +654,14 @@ export function PdpConfigurator({
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(null);
       setArtworkName(null);
+      setArtMeta(null);
+      setArtNote(null);
+      // A rejected file must not stay on the garment: drop placements made from its preview.
+      setPlateP([]);
+      setPlateChecks({});
+      setPlateActive(null);
+      setPlace3d([]);
+      setPreset(null);
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);

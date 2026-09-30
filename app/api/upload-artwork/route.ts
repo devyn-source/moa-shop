@@ -29,7 +29,7 @@ function sniffType(buf: Buffer): string | null {
 
 // Print-readiness thresholds. Long-edge pixels is a robust proxy for "enough
 // resolution for a typical decoration" without yet knowing the exact print size.
-const MIN_LONG_EDGE = 1200;
+const MIN_LONG_EDGE = 500; // hard floor only; the configurator judges DPI at the chosen print size
 
 // Strips traversal + control chars, keeps name short and url-safe.
 function safeName(raw: string): string {
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       if (longEdge < MIN_LONG_EDGE) {
         return NextResponse.json(
           {
-            error: `This image is too low-resolution for print (${w}×${h}px). Upload at least ${MIN_LONG_EDGE}px on the longest side, or a vector file (SVG/PDF) for crisp results at any size.`,
+            error: `This image is too small to print (${w}×${h}px). Upload at least ${MIN_LONG_EDGE}px on the longest side, or a vector file (SVG or PDF).`,
           },
           { status: 422 }
         );
