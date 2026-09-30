@@ -8918,3 +8918,8 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
   .pdpx-review-stage { min-height: 300px; }
   .pdpx-review-spec { padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
 }
+.pdpx-reuse { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 10px; background: #fff; border: 1px solid var(--color-cream-dark); border-radius: 10px; }
+.pdpx-reuse-thumb { width: 48px; height: 48px; object-fit: contain; background: var(--color-cream); border-radius: 6px; }
+.pdpx-reuse-text { display: flex; flex-direction: column; gap: 2px; font-size: 11px; line-height: 1.35; color: rgba(30, 30, 30, 0.55); }
+.pdpx-reuse-text strong { font-size: 12px; letter-spacing: 0.04em; color: var(--color-charcoal); }
+.pdpx-reuse-btn { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--color-terracotta); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; }

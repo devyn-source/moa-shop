@@ -260,6 +260,34 @@ export function PdpConfigurator({
   const presets = useMemo(() => (use3dPlacement ? presetsFor(product.slug, product.category) : []), [use3dPlacement, product.slug, product.category]);
   const [preset, setPreset] = useState<(PlacementPreset & { key: string }) | null>(null);
   const applyPreset3d = (p: PlacementPreset) => setPreset({ ...p, key: `${p.id}-${Date.now()}` });
+
+  // Same artwork on another style: the last upload (and its method, inks and
+  // placement) is remembered in this browser for a week and offered on the next PDP.
+  type SavedArt = { url: string; name: string; meta: { width: number; height: number } | null; decorationIds?: string[]; pantones?: PmsColor[]; presetId?: string; ts: number };
+  const ART_KEY = "moa:last-artwork";
+  const rememberArt = (a: Omit<SavedArt, "ts">) => {
+    try { localStorage.setItem(ART_KEY, JSON.stringify({ ...a, ts: Date.now() })); } catch { /* storage unavailable */ }
+  };
+  const [lastArt, setLastArt] = useState<SavedArt | null>(null);
+  const applyLastArt = (a: SavedArt) => {
+    const match = presets.find((p) => p.id === a.presetId) ?? presets[0];
+    if (match) applyPreset3d(match);
+    const ok = (a.decorationIds ?? []).filter((id) => product.decorations.some((d) => d.id === id));
+    if (ok.length && !decorationIds.length) { setDecorationIds(ok); setPantones(a.pantones ?? []); }
+    setArtworkName(a.name);
+    setArtMeta(a.meta);
+    setArtworkUrl(a.url);
+    setLastArt(null);
+    analytics.track("artwork_reused", { slug: product.slug });
+  };
+  useEffect(() => {
+    if (seed0 || bundle) return;
+    try {
+      const a = JSON.parse(localStorage.getItem(ART_KEY) || "null") as SavedArt | null;
+      if (a?.url && Date.now() - a.ts < 7 * 864e5) setLastArt(a);
+    } catch { /* storage unavailable */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // The decal editor takes over the stage during the placement step; 3D is the
   // hero on every other step. (No user-facing 2D/3D toggle for model SKUs.)
   const placing3d = use3dPlacement && step === "placement";
@@ -270,6 +298,13 @@ export function PdpConfigurator({
     if (artworkUrl && presets.length && !preset && !place3d.some((p) => p.id !== "current")) applyPreset3d(presets[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artworkUrl, presets.length]);
+  useEffect(() => {
+    if (!artworkUrl || artworkUrl.startsWith("blob:")) return;
+    try {
+      const a = JSON.parse(localStorage.getItem("moa:last-artwork") || "null");
+      if (a?.url === artworkUrl) localStorage.setItem("moa:last-artwork", JSON.stringify({ ...a, decorationIds, pantones, presetId: preset?.id ?? a.presetId }));
+    } catch { /* storage unavailable */ }
+  }, [artworkUrl, decorationIds, pantones, preset?.id]);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
   const fabricOption = product.fabricOptions?.find((o) => o.id === fabricOptionId);
@@ -563,7 +598,9 @@ export function PdpConfigurator({
       URL.revokeObjectURL(localPreview);
       setArtworkUrl(data.url);
       setUploadWarning(data.warning ?? null);
-      setArtMeta(data.kind === "raster" && data.meta?.width && data.meta?.height ? { width: data.meta.width, height: data.meta.height } : null);
+      const meta = data.kind === "raster" && data.meta?.width && data.meta?.height ? { width: data.meta.width, height: data.meta.height } : null;
+      setArtMeta(meta);
+      rememberArt({ url: data.url, name: file.name, meta });
       analytics.artworkUploaded({ slug: product.slug, file: file.name, kind: data.kind ?? "unknown", low_res: Boolean(data.warning) });
     } catch (err) {
       URL.revokeObjectURL(localPreview);
@@ -1136,6 +1173,17 @@ export function PdpConfigurator({
                           className="pdpx-file"
                           onChange={(e) => handleFile(e.target.files?.[0])}
                         />
+                        {lastArt && !artworkUrl ? (
+                          <div className="pdpx-reuse">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img className="pdpx-reuse-thumb" src={lastArt.url} alt="" />
+                            <span className="pdpx-reuse-text">
+                              <strong>Use the same artwork</strong>
+                              <span>{lastArt.name}, with the same method, inks and placement.</span>
+                            </span>
+                            <button type="button" className="pdpx-reuse-btn" onClick={() => applyLastArt(lastArt)}>Use it</button>
+                          </div>
+                        ) : null}
                         <button
                           type="button"
                           className={`pdpx-drop${dragOver ? " is-dragover" : ""}`}
