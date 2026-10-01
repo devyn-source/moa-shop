@@ -54,6 +54,7 @@ vec4 art(int i, vec2 st) {
 
 void main() {
   vec4 base = texture(uBeauty, vSt);
+  vec3 photo = base.rgb; // the untinted plate: folds and light for the ink
   if (uTint > 0.5 && base.a > 0.0) {
     // keep the plate's folds and knit (its light relative to its own fabric colour),
     // move the fabric onto the target colour. Work in linear light.
@@ -71,7 +72,7 @@ void main() {
     u = (p.x - uAff.x) / uAff.z; v = (uAff.y - p.y) / uAff.z;
     fabric = base.a > 0.5;
     piece = fabric ? uMeta[0].w : 0.0;
-    shade = clamp(pow(dot(base.rgb, vec3(0.2126, 0.7152, 0.0722)), 2.2) / max(1e-4, uBaseLum), 0.0, 1.6);
+    shade = clamp(pow(dot(photo, vec3(0.2126, 0.7152, 0.0722)), 2.2) / max(1e-4, uBaseLum), 0.0, 1.6);
     shade = pow(shade, 1.0 / 2.2);
   } else {
     ivec2 px = ivec2(clamp(vSt * uSize, vec2(0.0), uSize - 1.0));
