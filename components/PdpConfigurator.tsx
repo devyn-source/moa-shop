@@ -14,7 +14,7 @@ import type { StudioCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
 import { currency, formatLeadTime, formatDeliveredBy, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, horizontalLabel, type ProductZones, type ProductCalibration } from "@/lib/zones";
-import { PMS_PALETTE, type PmsColor } from "@/lib/pantones";
+import type { PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
 import { presetsFor, presetSpec, type PlacementPreset } from "@/lib/presets";
@@ -389,7 +389,7 @@ export function PdpConfigurator({
     setPlateView(pr.view);
     setSpin(false);
   };
-  const plateList = artworkUrl ? plateP.map((q) => ({ ...q, artUrl: artworkUrl, method: plateMethod, inkHex: pantones[0]?.hex })) : [];
+  const plateList = artworkUrl ? plateP.map((q) => ({ ...q, artUrl: artworkUrl, method: plateMethod })) : [];
   const plateBlocked = plateOn && plateP.some((q) => plateChecks[q.id] && !plateChecks[q.id].ok);
   const activeP = plateP.find((q) => q.id === plateActive) ?? plateP[plateP.length - 1];
   const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
@@ -639,9 +639,10 @@ export function PdpConfigurator({
     const cap = product.decorations.find((d) => d.id === method)?.maxColors ?? 8;
     const inks = [...new Map(read.colours.map((h) => nearestPms(h)).map((p) => [p.code, p])).values()].slice(0, cap);
     setDecorationIds([method]);
+    setPantones(inks); // recorded on the order for production; the client doesn't pick inks
     suggestedFromArt.current = true;
     const label = product.decorations.find((d) => d.id === method)?.label ?? method;
-    setArtNote(`${inks.length === 1 ? "One colour" : `${inks.length} colours`} found in your artwork (${inks.map((x) => x.name).join(", ")}). ${label} is selected. ${inks.length === 1 ? "Pick a print colour under Decoration to recolour it." : "We match the inks to your file in the proof."}`);
+    setArtNote(`Printed in your artwork's colours. ${label} is selected; change it under Decoration.`);
   };
 
   const handleFile = async (file: File | undefined | null) => {
@@ -1212,23 +1213,6 @@ export function PdpConfigurator({
                             </button>
                           );
                         })}
-                        {decorationIds.length > 0 ? (
-                          <div className="pdpx-inks">
-                            <p className="pdpx-place-label">Print colour</p>
-                            <div className="pdpx-inks-grid">
-                              <button type="button" className={`pdpx-ink pdpx-ink--asart${!pantones.length ? " is-on" : ""}`} aria-pressed={!pantones.length} title="As artwork" aria-label="As artwork" onClick={() => setPantones([])} />
-                              {PMS_PALETTE.map((c) => {
-                                const on = pantones[0]?.code === c.code;
-                                return (
-                                  <button key={c.code} type="button" className={`pdpx-ink${on ? " is-on" : ""}`} title={`${c.name}, ${c.code}`} aria-label={`${c.name}, ${c.code}`} aria-pressed={on} style={{ background: c.hex }} onClick={() => setPantones(on ? [] : [c])} />
-                                );
-                              })}
-                            </div>
-                            <p className="pdpx-place-hint">
-                              {pantones.length ? `Printed in ${pantones[0].name}${pantones[0].code !== pantones[0].name ? ` (${pantones[0].code.replace(/^PANTONE /, "")})` : ""}.` : "As artwork: printed in your file's own colours, matched to ink in the proof."}
-                            </p>
-                          </div>
-                        ) : null}
                       </div>
                     ) : null}
 
@@ -1691,7 +1675,7 @@ export function PdpConfigurator({
                   </div>
                 ))}
                 <div><dt>Decoration</dt><dd>{decoSelected.map((d) => d.label).join(" and ") || "Our team advises in your proof"}</dd></div>
-                {pantones.length ? <div><dt>Inks</dt><dd>{pantones.map((p) => `${p.name} (${p.code})`).join(", ")}</dd></div> : null}
+                {pantones.length ? <div><dt>Artwork colours</dt><dd>{pantones.map((p) => `${p.name} (${p.code})`).join(", ")}</dd></div> : null}
                 {wovenLabel ? <div><dt>Woven label</dt><dd>{wovenLabel.text}</dd></div> : null}
                 <div><dt>Sizes</dt><dd>{product.sizes.filter((z) => (sizeQty[z] ?? 0) > 0).map((z) => `${z} ${sizeQty[z]}`).join(", ")} ({qty.toLocaleString()} units)</dd></div>
                 <div><dt>Per unit</dt><dd>{currency(perUnit)}</dd></div>
