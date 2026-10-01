@@ -32,17 +32,20 @@ export default async function HomePage() {
 
   return (
     <main className="page">
-      <section className="catalog-intro">
-        <div className="catalog-intro-text">
+      <section className="shop-hero">
+        <div className="shop-hero-text">
           <p className="eyebrow">The MOA Shop</p>
-          <h1 className="page-title">Custom cut and sew, in smaller runs.</h1>
-          <p className="lede">
-            Every style is cut and sewn to our own patterns. Build your run by size, design it on the garment and your proof arrives within 24 business hours. We make it to spec and ship it to you.
-          </p>
+          <h1 className="shop-hero-title">Custom cut and sew, in smaller runs.</h1>
+          <p className="shop-hero-lede">Every style is cut and sewn to our own patterns. Design it on the garment, get a proof within 24 hours and pay one invoice.</p>
         </div>
+        <ul className="shop-hero-facts">
+          <li><strong>50</strong><span>Piece minimum</span></li>
+          <li><strong>24 hr</strong><span>Proof turnaround</span></li>
+          <li><strong>{products.length}</strong><span>Styles, our own patterns</span></li>
+        </ul>
       </section>
 
-      <HomeCatalog products={products} bundleStartFromUsd={bundleStartFromUsd} modelThumbs={modelThumbs} />
+      <HomeCatalog products={products} bundleStartFromUsd={bundleStartFromUsd} modelThumbs={modelThumbs} filters={false} />
 
       <section className="value-strip" aria-label="How it works">
         <div className="value-card">

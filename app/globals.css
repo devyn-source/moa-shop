@@ -9139,3 +9139,18 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
   .pdpx-stage .pdpx-canvas { width: min(100%, calc((100vh - 190px) * 0.8)); margin: 0 auto; }
   .pdpx-canvas-plate .platex { width: 100% !important; }
 }
+
+/* Shop header: headline left, three facts right, straight into the styles. */
+.shop-hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: end; gap: 48px; padding: 40px 0 36px; margin-bottom: 28px; border-bottom: 1px solid rgba(30, 30, 30, 0.1); }
+.shop-hero-title { margin: 10px 0 14px; font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 3.4vw, 48px); line-height: 1.02; letter-spacing: -0.01em; }
+.shop-hero-lede { margin: 0; max-width: 520px; font-size: 13px; line-height: 1.6; color: rgba(30, 30, 30, 0.7); }
+.shop-hero-facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.shop-hero-facts li { display: flex; flex-direction: column; gap: 6px; padding: 0 18px; border-left: 1px solid rgba(30, 30, 30, 0.12); }
+.shop-hero-facts strong { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1; }
+.shop-hero-facts span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); line-height: 1.35; }
+@media (max-width: 860px) {
+  .shop-hero { grid-template-columns: 1fr; gap: 24px; padding: 24px 0; }
+  .shop-hero-facts li:first-child { padding-left: 0; border-left: 0; }
+}
+.shop-hero-facts strong { white-space: nowrap; }
+@media (max-width: 860px) { .shop-hero-facts strong { font-size: 22px; } .shop-hero-facts li { padding: 0 12px; } }

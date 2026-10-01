@@ -96,11 +96,13 @@ const PRICE_OPTIONS = [
 export function HomeCatalog({
   products,
   bundleStartFromUsd,
-  modelThumbs
+  modelThumbs,
+  filters = true
 }: {
   products: CatalogProduct[];
   bundleStartFromUsd?: number;
   modelThumbs?: Record<string, string>;
+  filters?: boolean; // off while the range is small (code kept for when it grows)
 }) {
   const [category, setCategory] = useState<string | null>(null);
   const [method, setMethod] = useState("");
@@ -163,7 +165,7 @@ export function HomeCatalog({
 
   return (
     <>
-      <section className="filter-bar" aria-label="Catalog filters">
+      {filters ? <section className="filter-bar" aria-label="Catalog filters">
         <div className="filter-bar-head">
           <p className="eyebrow">Filter catalog</p>
           {anyActive ? (
@@ -220,16 +222,16 @@ export function HomeCatalog({
             />
           </div>
         </div>
-      </section>
+      </section> : null}
 
       <section id="catalog">
-        <div className="section-head">
+        {filters ? <div className="section-head">
           <div>
             <p className="eyebrow">Catalog</p>
             <h2>{category ? CATEGORY_LABELS[category] ?? category : "All SKUs"}</h2>
           </div>
           <span className="label">{filtered.length} {filtered.length === 1 ? "product" : "products"}</span>
-        </div>
+        </div> : null}
 
         {filtered.length === 0 ? (
           <div className="empty-state">
