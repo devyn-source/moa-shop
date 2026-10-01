@@ -1300,7 +1300,7 @@ export function PdpConfigurator({
                               <p className="pdpx-place-label">{plateOn ? "Where it prints" : "Placement"}</p>
                               {plateOn ? (
                                 <div className="pdpx-areas">
-                                  {[...new Set(presets.map(areaOf))].map((area) => {
+                                  {["front", "back", "neck"].filter((ar) => presets.some((p) => areaOf(p) === ar)).map((area) => {
                                     const opts = presets.filter((p) => areaOf(p) === area);
                                     const chosen = plateP.find((q) => opts.some((o) => o.id === q.id));
                                     const thumb = (p: PlacementPreset) => {
