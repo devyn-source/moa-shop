@@ -1470,8 +1470,30 @@ export function PdpConfigurator({
                           <p className="pdpx-nudge">Add {(next.minQty - qty).toLocaleString()} more for {currency(next.perUnitUsd)} per unit.</p>
                         ) : null}
 
+                        {product.sizes.length > 1 ? (
+                          <div className="pdpx-sizerow-wrap">
+                            <div className="pdpx-sizerow-head">
+                              <span className="pdpx-place-label">Sizes</span>
+                              <span className="pdpx-split-links">
+                                <button type="button" onClick={() => applyPreset("curve")}>Typical split</button>
+                                <button type="button" onClick={() => applyPreset("even")}>Even split</button>
+                              </span>
+                            </div>
+                            <div className="pdpx-sizerow" style={{ gridTemplateColumns: `repeat(${product.sizes.length}, minmax(0, 1fr))` }}>
+                              {product.sizes.map((size) => (
+                                <label key={size} className="pdpx-sizebox">
+                                  <span>{size}</span>
+                                  <input type="number" inputMode="numeric" min={0} step={1} value={sizeQty[size] ?? 0} onFocus={(e) => e.currentTarget.select()} onChange={(e) => setSize(size, parseInt(e.target.value || "0", 10) || 0)} aria-label={`${size} units`} />
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
                         <div className="pdpx-total-row">
-                          <span className="pdpx-place-label">Total</span>
+                          <span className="pdpx-total-label">
+                            <strong>{qty.toLocaleString()} units</strong>
+                            <em className={belowMoq ? "is-warn" : undefined}>{belowMoq ? `${(product.moq - qty).toLocaleString()} more to reach the ${product.moq} minimum` : `${product.moq} piece minimum met`}</em>
+                          </span>
                           <div className="pdpx-stepper pdpx-stepper--lg">
                             <button type="button" aria-label="Fewer" onClick={() => bump(-10)} disabled={qty <= product.moq}>
                               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8" stroke="currentColor" strokeWidth="1.8" /></svg>
@@ -1482,37 +1504,6 @@ export function PdpConfigurator({
                             </button>
                           </div>
                         </div>
-
-                        {product.sizes.length > 1 ? (
-                          <>
-                            <div className="pdpx-split">
-                              <span className="pdpx-place-label">Sizes</span>
-                              <span className="pdpx-split-btns">
-                                <button type="button" onClick={() => applyPreset("curve")}>Typical split</button>
-                                <button type="button" onClick={() => applyPreset("even")}>Even split</button>
-                              </span>
-                            </div>
-                            <div className="pdpx-sizegrid">
-                              {product.sizes.map((size) => (
-                                <div key={size} className="pdpx-sizecell">
-                                  <span className="pdpx-sizecell-name">{size}</span>
-                                  <div className="pdpx-stepper">
-                                    <button type="button" aria-label={`Fewer ${size}`} onClick={() => setSize(size, (sizeQty[size] ?? 0) - 1)}>
-                                      <svg width="10" height="10" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8" stroke="currentColor" strokeWidth="2" /></svg>
-                                    </button>
-                                    <input type="number" min={0} step={1} value={sizeQty[size] ?? 0} onChange={(e) => setSize(size, parseInt(e.target.value || "0", 10) || 0)} aria-label={`${size} units`} />
-                                    <button type="button" aria-label={`More ${size}`} onClick={() => setSize(size, (sizeQty[size] ?? 0) + 1)}>
-                                      <svg width="10" height="10" viewBox="0 0 14 14" aria-hidden><path d="M3 7h8M7 3v8" stroke="currentColor" strokeWidth="2" /></svg>
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </>
-                        ) : null}
-                        <p className={`pdpx-min${belowMoq ? " is-warn" : ""}`}>
-                          {belowMoq ? `${(product.moq - qty).toLocaleString()} more to reach the ${product.moq} piece minimum.` : `${product.moq} piece minimum met.`}
-                        </p>
                       </div>
                       );
                     })() : null}
