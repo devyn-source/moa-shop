@@ -695,6 +695,8 @@ export function PdpConfigurator({
     }
   };
 
+  const [sizeMix, setSizeMix] = useState<"curve" | "even" | "custom">(seed0?.sizeQty ? "custom" : "curve");
+
   // Quick size-run presets — fill the matrix to MOQ instead of typing each size.
   const applyPreset = (kind: "even" | "curve" | "clear") => {
     const sizes = product.sizes;
@@ -1451,8 +1453,12 @@ export function PdpConfigurator({
                     {s.key === "size" ? (() => {
                       const tiers = [...product.priceTiers].sort((x, y) => x.minQty - y.minQty);
                       const next = tiers.find((t) => t.minQty > qty);
-                      const bump = (n: number) => fillToTotal(Math.max(product.moq, qty + n));
-                      const setSize = (size: string, n: number) => setSizeQty((prev) => ({ ...prev, [size]: Math.max(0, n) }));
+                      const bump = (n: number) => {
+                        const t = Math.max(product.moq, qty + n);
+                        if (sizeMix === "even") setSizeQty(distributeAcross(product.sizes, t));
+                        else { fillToTotal(t); if (sizeMix === "custom") setSizeMix("curve"); }
+                      };
+                      const setSize = (size: string, n: number) => { setSizeMix("custom"); setSizeQty((prev) => ({ ...prev, [size]: Math.max(0, n) })); };
                       return (
                       <div className="pdpx-size pdpx-size2">
                         <div className="pdpx-ladder" role="group" aria-label="Price per unit by quantity">
@@ -1473,12 +1479,14 @@ export function PdpConfigurator({
                         {product.sizes.length > 1 ? (
                           <div className="pdpx-sizerow-wrap">
                             <div className="pdpx-sizerow-head">
-                              <span className="pdpx-place-label">Sizes</span>
-                              <span className="pdpx-split-links">
-                                <button type="button" onClick={() => applyPreset("curve")}>Typical split</button>
-                                <button type="button" onClick={() => applyPreset("even")}>Even split</button>
+                              <span className="pdpx-place-label">Size mix</span>
+                              <span className="pdpx-mix" role="radiogroup" aria-label="Size mix">
+                                {([["curve", "Popular"], ["even", "Equal"], ["custom", "Custom"]] as const).map(([k, label]) => (
+                                  <button key={k} type="button" role="radio" aria-checked={sizeMix === k} className={sizeMix === k ? "is-on" : undefined} onClick={() => { if (k !== "custom") applyPreset(k); setSizeMix(k); }}>{label}</button>
+                                ))}
                               </span>
                             </div>
+                            <p className="pdpx-mix-note">{sizeMix === "curve" ? "Weighted to M and L, the way most orders sell." : sizeMix === "even" ? "The same number in every size." : "Your own numbers. Type any size below."}</p>
                             <div className="pdpx-sizerow" style={{ gridTemplateColumns: `repeat(${product.sizes.length}, minmax(0, 1fr))` }}>
                               {product.sizes.map((size) => (
                                 <label key={size} className="pdpx-sizebox">
