@@ -1,3 +1,4 @@
+import plateIndex from "./plates.generated.json";
 // Per-SKU production assets stored in Supabase Storage (no DB table — the bucket
 // folder IS the record). Two kinds:
 //   • CAD pattern files (DXF/AI/PLT) → PRIVATE `sku-patterns/<slug>/<file>`.
@@ -89,6 +90,13 @@ export async function loadPatternDxfText(slug: string): Promise<{ filename: stri
 // Pre-rendered 3D still per SKU (sku-models/thumbs/<slug>.png) used as the
 // product photo across grids. Returns slug → public URL for every thumb present.
 export async function listModelThumbs(): Promise<Record<string, string>> {
+  // Styles with mockup plates use their mockup card (lead colour) instead of the 3D render.
+  const cards: Record<string, string> = {};
+  for (const [slug, m] of Object.entries(plateIndex as Record<string, { card?: string }>)) if (m.card) cards[slug] = `/plates/${slug}/${m.card}`;
+  return { ...(await listModelThumbsFromStorage()), ...cards };
+}
+
+async function listModelThumbsFromStorage(): Promise<Record<string, string>> {
   const sb = getSupabase();
   const { data, error } = await sb.storage.from(MODEL_BUCKET).list("thumbs", { limit: 1000 });
   if (error || !data) return {};

@@ -11,11 +11,11 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: "What is the MOA Shop?",
-        a: "The MOA Shop is the self-serve side of Magnum Opus Agency, built for smaller orders. Every style is fully custom, cut and sewn to our own patterns. You design it yourself in 3D, our team sends your proof within 24 business hours, you approve it and pay one invoice, and we make it with our factory partners and ship it.",
+        a: "The MOA Shop is the self-serve side of Magnum Opus Agency, built for smaller orders. Every style is fully custom, cut and sewn to our own patterns. You design it yourself on the garment, our team sends your proof within 24 business hours, you approve it and pay one invoice, and we make it with our factory partners and ship it.",
       },
       {
         q: "How does made-to-order merch work?",
-        a: "Choose a style and colour, build your size run, upload your artwork, pick a decoration method and ink colours, and place the print on the 3D garment. You see your mockup as you design. After you submit, the MOA team reviews it and your proof arrives within 24 business hours. You approve it in your account and pay one invoice for the full order, then production starts. We produce it to spec and ship it with tracking.",
+        a: "Choose a style and colour, build your size run, upload your artwork, pick a decoration method, and place the print on the garment. You see your mockup as you design. After you submit, the MOA team reviews it and your proof arrives within 24 business hours. You approve it in your account and pay one invoice for the full order, then production starts. We produce it to spec and ship it with tracking.",
       },
       {
         q: "Who is Magnum Opus Agency?",

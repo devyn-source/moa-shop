@@ -15,7 +15,8 @@
   "v": "95835cbdd8",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-5b1c97b4ce.webp"
  },
  "heavyweight-hoodie": {
   "kind": "2d",
@@ -40,7 +41,8 @@
   "v": "c51bbed569",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-6a91f882f0.webp"
  },
  "heavyweight-tee": {
   "kind": "2d",
@@ -65,7 +67,8 @@
   "v": "66b9eeb022",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-70c8cee119.webp"
  },
  "rib-knit-beanie": {
   "kind": "2d",
@@ -83,7 +86,8 @@
   "v": "4d883c3460",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-bc7987e0f5.webp"
  },
  "standard-tote": {
   "kind": "2d",
@@ -108,7 +112,8 @@
   "v": "91fec651d3",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-ef13ea405b.webp"
  },
  "vintage-cut-tee": {
   "kind": "2d",
@@ -133,7 +138,8 @@
   "v": "66b9eeb022",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-20f62c5f74.webp"
  },
  "work-jacket": {
   "kind": "2d",
@@ -158,6 +164,7 @@
   "v": "bf04a6826b",
   "colours": {
    "light": "#C8C8C8"
-  }
+  },
+  "card": "card-b0648baafd.webp"
  }
 }

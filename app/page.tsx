@@ -16,7 +16,7 @@ import type { CatalogProduct } from "@/lib/types";
 export const metadata: Metadata = {
   title: "Custom Cut and Sew Merch for Smaller Orders | MOA Shop",
   description:
-    "Custom cut and sew in smaller runs. Every style is made to our own patterns. Design it in 3D, a proof within 24 business hours and one invoice.",
+    "Custom cut and sew in smaller runs. Every style is made to our own patterns. Design it on the garment, a proof within 24 business hours and one invoice.",
 };
 
 const fromPrice = (p: CatalogProduct) => Math.min(...p.priceTiers.map((t) => t.perUnitUsd));
@@ -91,7 +91,7 @@ export default async function LandingPage() {
   ];
   const steps = [
     { icon: I.shirt, t: "Pick a style", d: "Every style is cut and sewn to our own patterns." },
-    { icon: I.upload, t: "Design it in 3D", d: "Place your artwork on the garment and choose your colours. The mockup updates as you design." },
+    { icon: I.upload, t: "Design it", d: "Place your artwork on the garment and choose your colours. The mockup updates as you design." },
     { icon: I.check, t: "Approve your proof", d: "Our team reviews every design. Your proof arrives within 24 business hours." },
     { icon: I.box, t: "We make it", d: "One invoice for the full order. Produced with our factory partners, checked by our quality control and shipped with tracking." },
   ];
@@ -120,7 +120,7 @@ export default async function LandingPage() {
             <span className="lp-h1-accent">in smaller runs.</span>
           </h1>
           <p className="lp-sub">
-            Every style is cut and sewn to our own patterns, never a printed blank. Design it in 3D, get a proof within 24 business hours and pay one invoice.
+            Every style is cut and sewn to our own patterns, never a printed blank. Design it on the garment, get a proof within 24 business hours and pay one invoice.
           </p>
           <div className="lp-cta-row">
             <Link className="lp-btn lp-btn--primary" href="#shop">Start designing</Link>
@@ -227,10 +227,10 @@ export default async function LandingPage() {
       {/* ===== Instant proof spotlight (dark, editorial) ===== */}
       <section className="lp-proof">
         <div className="lp-proof-copy" data-reveal>
-          <span className="lp-index lp-index--light">03 · 3D design</span>
+          <span className="lp-index lp-index--light">03 · Design</span>
           <h2 className="lp-h2">See it before it is made.</h2>
           <p className="lp-section-lede">
-            Place your artwork on the 3D garment and set size, placement, colour and decoration. Our team reviews it and your proof arrives within 24 business hours. The proof you approve is the spec we produce.
+            Place your artwork on the garment and set size, placement, colour and decoration. Our team reviews it and your proof arrives within 24 business hours. The proof you approve is the spec we produce.
           </p>
           <ul className="lp-proof-list">
             <li>Move, scale and rotate your artwork on the garment</li>
@@ -246,7 +246,7 @@ export default async function LandingPage() {
                 garment with the live inch + print-QA readout. Not a mockup. */}
             <Image
               src="/landing/studio-live.webp"
-              alt="The MOA configurator: artwork placed on a 3D garment, reading 4 inches wide, 3.5 inches below HPS, print-ready at 526 DPI"
+              alt="The MOA configurator: artwork placed on the garment, reading 4 inches wide, 3.5 inches below HPS, print-ready at 526 DPI"
               width={858}
               height={1072}
               sizes="(max-width: 900px) 92vw, 480px"
@@ -277,7 +277,7 @@ export default async function LandingPage() {
             <p className="lp-compare-title">MOA Shop</p>
             <ul>
               <li>Prices shown per unit</li>
-              <li>Designed in 3D, proofed within 24 business hours</li>
+              <li>Designed on the garment, proofed within 24 business hours</li>
               <li>One invoice for the full order</li>
               <li>Cut and sewn to our own patterns</li>
               <li>Tracked from proof to delivery</li>
@@ -323,7 +323,7 @@ export default async function LandingPage() {
         <div data-reveal>
           <h2 className="lp-final-h">Start with a style.</h2>
           <p className="lp-final-sub">
-            Pick a style, design it in 3D and approve your proof. From {currency(fromLow)}/unit,
+            Pick a style, design it on the garment and approve your proof. From {currency(fromLow)}/unit,
             delivered in {hero ? formatLeadTime(hero.leadTimeDays) : "weeks"}.
           </p>
           <div className="lp-cta-row lp-cta-row--center">

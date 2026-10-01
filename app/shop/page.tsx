@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MOA Shop: custom cut and sew in smaller runs",
     description:
-      "Pick a style cut and sewn to our own patterns, design it in 3D and get a proof within 24 business hours. Prices per unit, 50 piece minimum.",
+      "Pick a style cut and sewn to our own patterns, design it on the garment and get a proof within 24 business hours. Prices per unit, 50 piece minimum.",
   },
 };
 
@@ -37,7 +37,7 @@ export default async function HomePage() {
           <p className="eyebrow">The MOA Shop</p>
           <h1 className="page-title">Custom cut and sew, in smaller runs.</h1>
           <p className="lede">
-            Every style is cut and sewn to our own patterns. Build your run by size, design it in 3D and your proof arrives within 24 business hours. We make it to spec and ship it to you.
+            Every style is cut and sewn to our own patterns. Build your run by size, design it on the garment and your proof arrives within 24 business hours. We make it to spec and ship it to you.
           </p>
         </div>
       </section>
