@@ -1239,7 +1239,7 @@ export function PdpConfigurator({
                             {pantones.length ? (
                               <ul className="pdpx-ink-list">
                                 {pantones.map((p) => (
-                                  <li key={p.code}><span style={{ background: p.hex }} aria-hidden />{p.name}<em>{p.code}</em></li>
+                                  <li key={p.code}><span style={{ background: p.hex }} aria-hidden />{p.name}{p.code !== p.name ? <em>{p.code.replace(/^PANTONE /, "")}</em> : null}</li>
                                 ))}
                               </ul>
                             ) : (
@@ -1309,7 +1309,6 @@ export function PdpConfigurator({
                                     // Back row choices: each print on its own, plus back neck with a back print.
                                     const choices: { key: string; label: string; ids: string[] }[] = [
                                       ...opts.map((o) => ({ key: o.id, label: o.label, ids: [o.id] })),
-                                      ...(nape ? body.map((o) => ({ key: `nape+${o.id}`, label: `Neck + ${o.label.toLowerCase()}`, ids: ["nape", o.id] })) : []),
                                     ];
                                     const isOn = (ids: string[]) => ids.length === chosenIds.length && ids.every((i) => chosenIds.includes(i));
                                     const choose = (ids: string[]) => {
