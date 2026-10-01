@@ -1196,9 +1196,8 @@ export function PdpConfigurator({
                               className={`pdpx-deco${on ? " is-on" : ""}`}
                               onClick={() => {
                                 if (!on) analytics.decorationSelected({ slug: product.slug, method: d.label });
-                                setDecorationIds((prev) =>
-                                  on ? prev.filter((x) => x !== d.id) : [...prev, d.id]
-                                );
+                                // One decoration method per order line: picking one replaces the other.
+                                setDecorationIds(on ? [] : [d.id]);
                               }}
                             >
                               {METHOD_MEDIA[d.id] ? (
