@@ -384,24 +384,11 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       <canvas ref={canvasRef} className="platex-canvas" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} />
       {ready ? (
         <svg className="platex-overlay" viewBox={`0 0 ${overlay.size[0]} ${overlay.size[1]}`} preserveAspectRatio="none" aria-hidden>
-          {overlay.cf ? <polyline className="platex-cf" points={overlay.cf} /> : null}
-          {overlay.hps ? (
-            <g className="platex-hps">
-              <line x1={overlay.hps[0] - 60} y1={overlay.hps[1]} x2={overlay.hps[0] + 60} y2={overlay.hps[1]} />
-              <text x={overlay.hps[0] + 70} y={overlay.hps[1] + 8}>HPS</text>
-            </g>
-          ) : null}
-          {overlay.frames.filter((f) => guides || !f.ok).map((f) => <polygon key={f.id} className={`platex-frame${f.ok ? "" : " is-bad"}`} points={f.pts} />)}
-          {overlay.dims.map((d, i) => (
-            <g key={i} className="platex-dim">
-              <line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} />
-              <text x={(d.x1 + d.x2) / 2 + 14} y={(d.y1 + d.y2) / 2 + 8}>{d.label}</text>
-            </g>
-          ))}
+          {overlay.frames.filter((f) => !f.ok || (guides && dragging === f.id)).map((f) => <polygon key={f.id} className={`platex-frame${f.ok ? "" : " is-bad"}`} points={f.pts} />)}
         </svg>
       ) : null}
       {overlay.reason ? <p className="platex-reason">{overlay.reason}</p> : null}
-      {readout ? <span className="platex-readout">{readout}</span> : null}
+      
       {!ready ? <span className="platex-loading">Loading</span> : null}
     </div>
   );
