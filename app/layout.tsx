@@ -23,7 +23,7 @@ function MaybeClerk({ children }: { children: React.ReactNode }) {
 
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 const TITLE = "MOA Shop, Custom cut and sew for smaller orders";
-const DESC = "Fully custom apparel and accessories for smaller orders, cut and sewn to our own patterns. Design it in 3D, get your proof in 24 business hours, pay one invoice. From the Magnum Opus Agency studio.";
+const DESC = "Fully custom apparel and accessories for smaller orders, cut and sewn to our own patterns. Design it on the garment, get your proof in 24 business hours, pay one invoice. From the Magnum Opus Agency studio.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
