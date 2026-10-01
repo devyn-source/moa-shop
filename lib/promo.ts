@@ -75,6 +75,8 @@ function clampPercent(v: number): number {
 // Active flag + date window. Expired promos auto-disable with no deploy.
 export function isPromoWithinWindow(promo: PrBoxPromo, now: Date = new Date()): boolean {
   if (!promo.active) return false;
+  // PR Box is a later upsell: off the storefront while the Express shop launches (code kept).
+  if (process.env.EXPRESS_CHECKOUT === "1" || process.env.NEXT_PUBLIC_EXPRESS === "1") return false;
   const t = now.getTime();
   if (promo.startsAt && t < new Date(promo.startsAt).getTime()) return false;
   if (promo.endsAt && t > new Date(promo.endsAt).getTime()) return false;

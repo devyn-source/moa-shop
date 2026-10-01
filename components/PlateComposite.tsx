@@ -307,6 +307,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     const c = ctx.current, cv = canvasRef.current; if (!c || !cv) return;
     const { gl, prog, tex, size } = c;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
+    // Big canvases (close-up) cap at the plate's own resolution: no wasted pixels.
     const w = Math.round(cv.clientWidth * dpr), h = Math.round((cv.clientWidth * dpr * size[1]) / size[0]);
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
@@ -344,9 +345,11 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
+  // Redraw at the new size whenever the element resizes (window, layout, close-up zoom).
   useEffect(() => {
-    const on = () => draw();
-    window.addEventListener("resize", on); return () => window.removeEventListener("resize", on);
+    const cv = canvasRef.current; if (!cv || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => draw());
+    ro.observe(cv); return () => ro.disconnect();
   });
 
   // Pointer -> plate pixel -> pattern mm.

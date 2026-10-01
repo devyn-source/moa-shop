@@ -26,6 +26,8 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // Launch mode is known to browser code too (cart, promo banners).
+  env: { NEXT_PUBLIC_EXPRESS: process.env.EXPRESS_CHECKOUT ?? "" },
   productionBrowserSourceMaps: false, // don't ship source maps to the browser
   images: {
     remotePatterns: [

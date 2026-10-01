@@ -65,7 +65,7 @@ export function CartButton() {
             {items.length === 0 ? (
               <div className="cart-pop-empty">
                 <span>Your cart is empty.</span>
-                <Link href="/p/pr-box" className="link-button">Build a PR Box</Link>
+                <Link href="/shop" className="link-button">Browse the shop</Link>
               </div>
             ) : (
               <>

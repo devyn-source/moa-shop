@@ -927,6 +927,7 @@ export function PdpConfigurator({
 
   // New orders go through a review first: the spec in plain words is what we produce.
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewZoom, setReviewZoom] = useState(false);
   const onCta = bundle ? handleAddToBox : editOrder ? handleUpdate : () => setReviewOpen(true);
 
   // One CTA definition, rendered in the rail and in the pinned bottom bar.
@@ -1642,54 +1643,97 @@ export function PdpConfigurator({
       </div>
 
 
-      {reviewOpen ? (
-        <div className="pdpx-review" role="dialog" aria-modal="true" aria-label="Review your order" onClick={() => setReviewOpen(false)}>
-          <div className="pdpx-review-card" onClick={(e) => e.stopPropagation()}>
-            <div className="pdpx-review-stage">
-              {plateOn ? (
-                <div className={`pdpx-review-plates${plateP.some((q) => q.piece === 2) && plateP.some((q) => q.piece === 1) ? " is-two" : ""}`}>
-                  {(["front", "back"] as const).filter((v) => plateP.some((q) => (q.piece === 1) === (v === "front")) || (v === "front" && !plateP.length)).map((v) => (
-                    <PlateComposite key={v} base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
+      {reviewOpen ? (() => {
+        const views = (["front", "back"] as const).filter((v) => plateP.some((q) => (q.piece === 1) === (v === "front")));
+        const shown: ("front" | "back")[] = views.length ? [...views] : ["front"];
+        const methodLabel = decoSelected[0]?.label ?? "Our team advises in the proof";
+        // Zoom origin for the close-up: centre of the first print on that view.
+        // Close-up: render the plate larger (sharp, real pixels) and centre the print.
+        const ZOOM = 2.6;
+        const zoomStyle = (v: "front" | "back"): React.CSSProperties => {
+          if (!reviewZoom) return { width: "100%", left: 0, top: 0 };
+          const q = plateP.find((x) => (x.piece === 1) === (v === "front"));
+          const cal = plate?.manifest.views?.[v];
+          if (!q || !cal) return { width: "100%", left: 0, top: 0 };
+          const ppi = cal.pxPerIn;
+          const fx = (cal.cfX + (v === "front" ? 1 : -1) * q.fromCfIn * ppi) / cal.w;
+          const fy = (cal.hpsY + (q.belowHpsIn + q.widthIn / artAspect / 2) * ppi) / cal.h;
+          const clamp = (f: number) => Math.min(Math.max(f, 0.5 / ZOOM), 1 - 0.5 / ZOOM);
+          return { width: `${ZOOM * 100}%`, left: `${50 - clamp(fx) * ZOOM * 100}%`, top: `${50 - clamp(fy) * ZOOM * 100}%` };
+        };
+        const sideWords = (q: { fromCfIn: number; piece: number }) => (Math.abs(q.fromCfIn) < 0.25 ? "centred" : `${q.fromCfIn > 0 ? "left" : "right"} side`);
+        return (
+        <div className="rv" role="dialog" aria-modal="true" aria-label="Review your order" onClick={() => setReviewOpen(false)}>
+          <div className="rv-card" onClick={(e) => e.stopPropagation()}>
+            <div className={`rv-stage${shown.length > 1 ? " is-two" : ""}${reviewZoom ? " is-zoom" : ""}`}>
+              {plateOn ? shown.map((v) => (
+                <figure key={v} className="rv-view">
+                  <div className="rv-zoom" style={zoomStyle(v)}>
+                    <PlateComposite base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
+                  </div>
+                  <figcaption>{v === "front" ? "Front" : "Back"}</figcaption>
+                </figure>
+              )) : (
+                <figure className="rv-view">{modelUrl && artworkUrl && place3d.length ? <Garment3DPreviewClient url={modelUrl} hex={variant?.colorHex || "#C9C4B8"} artUrl={artworkUrl} placements={place3d} /> : <ProductShot product={product} variant={variant} view={view} />}</figure>
+              )}
+              {plateOn && plateP.length ? (
+                <div className="rv-stage-tools" role="tablist" aria-label="View">
+                  <button type="button" role="tab" aria-selected={!reviewZoom} className={!reviewZoom ? "is-on" : undefined} onClick={() => setReviewZoom(false)}>Full</button>
+                  <button type="button" role="tab" aria-selected={reviewZoom} className={reviewZoom ? "is-on" : undefined} onClick={() => setReviewZoom(true)}>Close-up</button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="rv-side">
+              <div className="rv-head">
+                <p className="rv-eyebrow">Your order</p>
+                <h2 className="rv-title">{product.displayName}</h2>
+                <p className="rv-colour"><span style={{ background: variant?.colorHex }} aria-hidden />{variant?.colorLabel}</p>
+              </div>
+
+              <section className="rv-block">
+                <p className="rv-label">Print</p>
+                {plateOn && plateP.length ? plateP.map((q) => (
+                  <div key={q.id} className="rv-print">
+                    <strong>{presets.find((p) => p.id === q.id)?.label ?? q.id}</strong>
+                    <span>{q.widthIn} in wide, {sideWords(q)}, {methodLabel.toLowerCase()}</span>
+                  </div>
+                )) : allPlacements.length ? allPlacements.map((pl, i) => (
+                  <div key={i} className="rv-print"><strong>{pl.zoneLabel}</strong><span>{pl.spec3d ? `${pl.spec3d.widthIn} in wide, ` : ""}{methodLabel.toLowerCase()}</span></div>
+                )) : <div className="rv-print"><strong>No artwork yet</strong><span>Add artwork before ordering.</span></div>}
+                {wovenLabel ? <div className="rv-print"><strong>Woven label</strong><span>{wovenLabel.text ? `${wovenLabel.text}, ` : ""}sewn in at the neck</span></div> : null}
+              </section>
+
+              <section className="rv-block">
+                <p className="rv-label">Sizes</p>
+                <div className="rv-sizes">
+                  {product.sizes.filter((z) => (sizeQty[z] ?? 0) > 0).map((z) => (
+                    <span key={z}><em>{z}</em><b>{sizeQty[z]}</b></span>
                   ))}
                 </div>
-              ) : modelUrl && artworkUrl && place3d.length ? (
-                <Garment3DPreviewClient url={modelUrl} hex={variant?.colorHex || "#C9C4B8"} artUrl={artworkUrl} placements={place3d} />
-              ) : (
-                <ProductShot product={product} variant={variant} view={view} />
-              )}
-            </div>
-            <div className="pdpx-review-spec">
-              <p className="pdpx-eyebrow">Review your order</p>
-              <h2 className="pdpx-review-title">{product.displayName}</h2>
-              <dl className="pdpx-review-list">
-                <div><dt>Colour</dt><dd>{variant?.colorLabel}</dd></div>
-                {fabricOption ? <div><dt>Fabric</dt><dd>{fabricOption.label}</dd></div> : null}
-                {allPlacements.map((pl, i) => (
-                  <div key={i}>
-                    <dt>{allPlacements.length > 1 ? `Placement ${i + 1}` : "Placement"}</dt>
-                    <dd>
-                      {pl.zoneLabel}
-                      {pl.spec3d ? `: ${pl.spec3d.widthIn} in wide, ${pl.spec3d.belowHpsIn} in below HPS, ${pl.spec3d.horizontal.replace(/"/g, " in")}` : ""}
-                    </dd>
-                  </div>
-                ))}
-                <div><dt>Decoration</dt><dd>{decoSelected.map((d) => d.label).join(" and ") || "Our team advises in your proof"}</dd></div>
-                {pantones.length ? <div><dt>Artwork colours</dt><dd>{pantones.map((p) => `${p.name} (${p.code})`).join(", ")}</dd></div> : null}
-                {wovenLabel ? <div><dt>Woven label</dt><dd>{wovenLabel.text}</dd></div> : null}
-                <div><dt>Sizes</dt><dd>{product.sizes.filter((z) => (sizeQty[z] ?? 0) > 0).map((z) => `${z} ${sizeQty[z]}`).join(", ")} ({qty.toLocaleString()} units)</dd></div>
-                <div><dt>Per unit</dt><dd>{currency(perUnit)}</dd></div>
-                <div><dt>Delivered by</dt><dd>{formatDeliveredBy(product.leadTimeDays)}</dd></div>
-              </dl>
-              <div className="pdpx-review-total"><span>Subtotal</span><strong>{currency(subtotal)}</strong></div>
-              <p className="pdpx-foot-note">This is the spec we produce. Our team checks it and your proof arrives within 24 business hours. Nothing is made until you approve it.</p>
-              <div className="pdpx-review-actions">
-                <button type="button" className="pdpx-review-back" onClick={() => setReviewOpen(false)}>Edit</button>
-                <button type="button" className="pdpx-cta" onClick={() => { setReviewOpen(false); handleAddToCart(); }} disabled={submitting}>Add to order</button>
-              </div>
+              </section>
+
+              <section className="rv-price">
+                <div><span>{qty.toLocaleString()} units at {currency(perUnit)}</span><strong>{currency(subtotal)}</strong></div>
+              </section>
+
+              <ol className="rv-steps">
+                <li className="is-now"><b>1</b><span>Add to order</span></li>
+                <li><b>2</b><span>Proof in 24 hours</span></li>
+                <li><b>3</b><span>Approve and pay</span></li>
+                <li><b>4</b><span>Delivered {formatDeliveredBy(product.leadTimeDays)}</span></li>
+              </ol>
+
+              <button type="button" className="rv-cta" onClick={() => { setReviewOpen(false); handleAddToCart(); }} disabled={submitting}>
+                <span>Add to order</span><span>{currency(subtotal)}</span>
+              </button>
+              <button type="button" className="rv-back" onClick={() => setReviewOpen(false)}>Back to editing</button>
             </div>
           </div>
         </div>
-      ) : null}
+        );
+      })() : null}
+
       <WovenLabelModal
         open={wovenOpen}
         initial={wovenLabel}

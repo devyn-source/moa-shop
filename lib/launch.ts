@@ -15,7 +15,7 @@ export const LAUNCH_STYLES = [
 ] as const;
 
 // Routes outside the Express flow. Requests redirect to /shop.
-export const CLOSED_PREFIXES = ["/samples", "/for/", "/adjust", "/studio-3d", "/studio-decal", "/render-model"];
+export const CLOSED_PREFIXES = ["/p/pr-box", "/samples", "/for/", "/adjust", "/studio-3d", "/studio-decal", "/render-model"];
 
 export function launchMode(): boolean {
   return process.env.EXPRESS_CHECKOUT === "1";
@@ -34,7 +34,7 @@ export function inLaunchScope(p: Pick<CatalogProduct, "slug" | "category">): boo
 // Storefront visibility. Launch styles can stay unpublished in the shared
 // products table (so the live shop never lists them) and still show in Express.
 export function isVisible(p: Pick<CatalogProduct, "slug" | "category" | "isPublished">): boolean {
-  if (launchMode()) return isLaunchSlug(p.slug) || (p.category === "packaging" && p.isPublished);
+  if (launchMode()) return isLaunchSlug(p.slug); // packaging + PR Box return with the PR Box upsell
   return p.isPublished;
 }
 
