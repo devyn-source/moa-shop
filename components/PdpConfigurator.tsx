@@ -1315,6 +1315,11 @@ export function PdpConfigurator({
                                     const choose = (ids: string[]) => {
                                       setPlateP((l) => l.filter((q) => !opts.some((o) => o.id === q.id)));
                                       ids.forEach((id) => { const pr = opts.find((o) => o.id === id); if (pr) addPlatePreset(pr); });
+                                      if (nape && ids.includes("nape") && ids.length > 1) {
+                                        // Back print starts 2 in below the neck print so the two never touch.
+                                        const clear = Math.ceil((nape.belowHpsIn + nape.widthIn / artAspect + 2) * 4) / 4;
+                                        setPlateP((l) => l.map((q) => (q.id !== "nape" && opts.some((o) => o.id === q.id) && q.belowHpsIn < clear ? { ...q, belowHpsIn: clear } : q)));
+                                      }
                                       setPlateView(area);
                                       if (ids.length) setPlateActive(ids[ids.length - 1]);
                                     };
