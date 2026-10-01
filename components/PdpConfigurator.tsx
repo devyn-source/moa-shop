@@ -996,7 +996,7 @@ export function PdpConfigurator({
           {plateOn && !spin ? (
             <div className="pdpx-canvas-plate">
               <PlateComposite
-                base={plate!.base} colour={plateColour} tint={plateTint} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={plateView} manifest={plate!.manifest}
+                base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={plateView} manifest={plate!.manifest}
                 placements={plateList.filter((q) => (q.piece === 1) === (plateView === "front"))}
                 onChange={(next) => setPlateP((all) => all.map((q) => next.find((n) => n.id === q.id) ?? q))}
                 onCheck={(c) => setPlateChecks((prev) => ({ ...prev, ...c }))}
@@ -1140,7 +1140,7 @@ export function PdpConfigurator({
                             aria-pressed={variantId === v.id}
                             onClick={() => { setVariantId(v.id); analytics.variantSelected({ slug: product.slug, color: v.colorLabel }); }}
                           >
-                            <span className="pdpx-colourcard-chip" style={{ background: v.colorHex }} />
+                            <span className={`pdpx-colourcard-chip${/heather/i.test(v.colorLabel) ? " is-heather" : ""}`} style={{ backgroundColor: v.colorHex }} />
                             <span className="pdpx-colourcard-name">{v.colorLabel}</span>
                           </button>
                         ))}
@@ -1612,7 +1612,7 @@ export function PdpConfigurator({
               {plateOn ? (
                 <div className={`pdpx-review-plates${plateP.some((q) => q.piece === 2) && plateP.some((q) => q.piece === 1) ? " is-two" : ""}`}>
                   {(["front", "back"] as const).filter((v) => plateP.some((q) => (q.piece === 1) === (v === "front")) || (v === "front" && !plateP.length)).map((v) => (
-                    <PlateComposite key={v} base={plate!.base} colour={plateColour} tint={plateTint} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
+                    <PlateComposite key={v} base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
                   ))}
                 </div>
               ) : modelUrl && artworkUrl && place3d.length ? (

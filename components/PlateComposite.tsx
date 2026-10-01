@@ -28,7 +28,19 @@ uniform sampler2D uBeauty, uShading, uArt0, uArt1, uArt2, uArt3;
 uniform highp usampler2D uUv; uniform highp usampler2D uPieces;
 uniform vec2 uSize; uniform int uCount;
 uniform float uBaseLum; uniform vec3 uTargetLin; uniform float uTint; uniform float uContrast;
-uniform float u2d; uniform vec2 uImg; uniform vec3 uAff; // 2D plates: cfX, hpsY, px per mm (in photo pixels)
+uniform float u2d; uniform vec2 uImg; uniform vec3 uAff;
+uniform float uHeather; // heathered fabric: a melange of light and dark fibres
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+// Fibre speckle tied to the photo's pixels, so it stays put on the garment:
+// short horizontal fibres plus a softer mottle, the look of a cotton heather.
+float heather(vec2 px) {
+  float f1 = hash(floor(vec2(px.x / 3.0, px.y / 1.2)));
+  float f2 = hash(floor(vec2(px.x / 7.0 + 13.0, px.y / 2.0)));
+  vec2 c = floor(px / 18.0); vec2 t = fract(px / 18.0); t = t * t * (3.0 - 2.0 * t);
+  float m = mix(mix(hash(c), hash(c + vec2(1, 0)), t.x), mix(hash(c + vec2(0, 1)), hash(c + vec2(1, 1)), t.x), t.y);
+  return 0.55 * f1 + 0.25 * f2 + 0.2 * m - 0.5;
+} // 2D plates: cfX, hpsY, px per mm (in photo pixels)
 uniform vec4 uRect[${MAX}];   // u0, vTop, w, h (mm)
 uniform vec4 uMeta[${MAX}];   // piece, method, rotation (rad), unused
 
@@ -48,6 +60,7 @@ void main() {
     float rel = dot(lin, vec3(0.2126, 0.7152, 0.0722)) / max(1e-4, uBaseLum);
     rel = pow(max(rel, 0.0), uContrast); // a dark photo exaggerates texture; tame it
     vec3 outLin = uTargetLin * rel;
+    if (uHeather > 0.0) outLin *= 1.0 + uHeather * heather(vSt * uImg);
     base.rgb = pow(clamp(outLin, 0.0, 1.0), vec3(1.0 / 2.2));
   }
   float u, v, piece, shade; bool fabric;
@@ -161,9 +174,10 @@ function dataTexture(gl: WebGL2RenderingContext, m: DecodedMap, single: boolean)
   return t;
 }
 
-export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, clearanceIn = DEFAULT_CLEARANCE_IN, className }: {
+export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, heather = false, clearanceIn = DEFAULT_CLEARANCE_IN, className }: {
   base: string; // e.g. "/lab/plates/fixture-tee"
   colour: string; view: PlateView; manifest: PlateManifest;
+  heather?: boolean; // render the fabric as a heather (fibre melange)
   clearanceIn?: number; // keep art this far from seams and edges (garments 0.75, accessories 0.4)
   tint?: string | null; // target hex when this colour has no plate of its own (recoloured from `colour`)
   placements: PlatePlacement[];
@@ -239,7 +253,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     })();
     return () => { dead = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, placementsKey, dragging, tint]);
+  }, [ready, placementsKey, dragging, tint, heather]);
 
   function cov(piece: number) {
     const c = ctx.current!;
@@ -308,6 +322,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     for (let i = list.length; i < MAX; i++) bind(`uArt${i}`, tex.shading, 4 + i);
     gl.uniform2f(gl.getUniformLocation(prog, "uSize"), size[0], size[1]);
     gl.uniform1f(gl.getUniformLocation(prog, "u2d"), c.cal2d ? 1 : 0);
+    gl.uniform1f(gl.getUniformLocation(prog, "uHeather"), heather ? 0.7 : 0);
     gl.uniform2f(gl.getUniformLocation(prog, "uImg"), c.img[0], c.img[1]);
     if (c.cal2d) gl.uniform3f(gl.getUniformLocation(prog, "uAff"), c.cal2d.cfX, c.cal2d.hpsY, c.cal2d.pxPerIn / 25.4);
     const lin = (hex: string) => [1, 3, 5].map((i) => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));

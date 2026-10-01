@@ -73,7 +73,7 @@ const PALETTE = {
   natural:     { label: "Natural",      hex: "#CBC3B4", tcx: "13-0401 TCX" },
   heatherGray: { label: "Heather Gray", hex: "#C5C6C7", tcx: "14-4102 TCX" },
   ink:         { label: "Ink",          hex: "#3C3F4A", tcx: "19-4019 TCX" },
-  navy:        { label: "Navy",         hex: "#2B2E43", tcx: "19-3920 TCX" },
+  navy:        { label: "Navy",         hex: "#263556", tcx: "19-3920 TCX" },
   forest:      { label: "Forest",       hex: "#264E36", tcx: "19-6050 TCX" },
   oxblood:     { label: "Oxblood",      hex: "#70393F", tcx: "19-1524 TCX" },
   walnut:      { label: "Walnut",       hex: "#776A5F", tcx: "18-1112 TCX" }
