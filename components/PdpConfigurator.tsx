@@ -269,8 +269,9 @@ export function PdpConfigurator({
   const [preset, setPreset] = useState<(PlacementPreset & { key: string }) | null>(null);
   const applyPreset3d = (p: PlacementPreset) => setPreset({ ...p, key: `${p.id}-${Date.now()}` });
   // One print per area: the front, the back, and the back neck (which sits above a back print).
+  // The back neck stacks with a back print, so on the back the "area" for replacing is the body print.
   const areaOf = (p: Pick<PlacementPreset, "id" | "view">) => (p.id === "nape" ? "neck" : p.view);
-  const AREA_LABEL: Record<string, string> = { front: "Front", back: "Back", neck: "Back neck" };
+  const AREA_LABEL: Record<string, string> = { front: "Front", back: "Back" };
 
   // Same artwork on another style: the last upload (and its method, inks and
   // placement) is remembered in this browser for a week and offered on the next PDP.
@@ -1300,34 +1301,46 @@ export function PdpConfigurator({
                               <p className="pdpx-place-label">{plateOn ? "Where it prints" : "Placement"}</p>
                               {plateOn ? (
                                 <div className="pdpx-areas">
-                                  {["front", "back", "neck"].filter((ar) => presets.some((p) => areaOf(p) === ar)).map((area) => {
-                                    const opts = presets.filter((p) => areaOf(p) === area);
-                                    const chosen = plateP.find((q) => opts.some((o) => o.id === q.id));
-                                    const thumb = (p: PlacementPreset) => {
-                                      const cal = plate!.manifest.views?.[p.view];
-                                      if (!cal) return null;
-                                      const ppi = cal.pxPerIn, w = p.widthIn * ppi, h = w / artAspect;
-                                      const cx = cal.cfX + (p.view === "front" ? 1 : -1) * p.fromCfIn * ppi;
-                                      const top = cal.hpsY + p.belowHpsIn * ppi;
-                                      return (
-                                        <span className="pdpx-area-thumb" style={{ backgroundImage: `url(${plate!.base}/${p.view}.webp${plate!.manifest.v ? `?v=${plate!.manifest.v}` : ""})` }}>
-                                          <i style={{ left: `${((cx - w / 2) / cal.w) * 100}%`, top: `${(top / cal.h) * 100}%`, width: `${(w / cal.w) * 100}%`, height: `${(h / cal.h) * 100}%` }} />
-                                        </span>
-                                      );
+                                  {(["front", "back"] as const).filter((ar) => presets.some((p) => p.view === ar)).map((area) => {
+                                    const opts = presets.filter((p) => p.view === area);
+                                    const chosenIds = plateP.filter((q) => opts.some((o) => o.id === q.id)).map((q) => q.id);
+                                    const nape = opts.find((o) => o.id === "nape");
+                                    const body = opts.filter((o) => o.id !== "nape");
+                                    // Back row choices: each print on its own, plus back neck with a back print.
+                                    const choices: { key: string; label: string; ids: string[] }[] = [
+                                      ...opts.map((o) => ({ key: o.id, label: o.label, ids: [o.id] })),
+                                      ...(nape ? body.map((o) => ({ key: `nape+${o.id}`, label: `Neck + ${o.label.toLowerCase()}`, ids: ["nape", o.id] })) : []),
+                                    ];
+                                    const isOn = (ids: string[]) => ids.length === chosenIds.length && ids.every((i) => chosenIds.includes(i));
+                                    const choose = (ids: string[]) => {
+                                      setPlateP((l) => l.filter((q) => !opts.some((o) => o.id === q.id)));
+                                      ids.forEach((id) => { const pr = opts.find((o) => o.id === id); if (pr) addPlatePreset(pr); });
+                                      setPlateView(area);
+                                      if (ids.length) setPlateActive(ids[ids.length - 1]);
                                     };
+                                    const cal = plate!.manifest.views?.[area];
+                                    const thumb = (ids: string[]) => (
+                                      <span className="pdpx-area-thumb" style={cal ? { backgroundImage: `url(${plate!.base}/${area}.webp${plate!.manifest.v ? `?v=${plate!.manifest.v}` : ""})` } : undefined}>
+                                        {cal ? ids.map((id) => {
+                                          const p = opts.find((o) => o.id === id)!;
+                                          const ppi = cal.pxPerIn, w = p.widthIn * ppi, h = w / artAspect;
+                                          const cx = cal.cfX + (area === "front" ? 1 : -1) * p.fromCfIn * ppi, top = cal.hpsY + p.belowHpsIn * ppi;
+                                          return <i key={id} style={{ left: `${((cx - w / 2) / cal.w) * 100}%`, top: `${(top / cal.h) * 100}%`, width: `${(w / cal.w) * 100}%`, height: `${(h / cal.h) * 100}%` }} />;
+                                        }) : null}
+                                      </span>
+                                    );
                                     return (
                                       <div key={area} className="pdpx-area" role="radiogroup" aria-label={AREA_LABEL[area]}>
                                         <p className="pdpx-area-name">{AREA_LABEL[area]}</p>
                                         <div className="pdpx-area-opts">
-                                          <button type="button" role="radio" aria-checked={!chosen} className={`pdpx-area-opt${!chosen ? " is-on" : ""}`} onClick={() => { if (chosen) { setPlateP((l) => l.filter((q) => q.id !== chosen.id)); if (activeP?.id === chosen.id) setPlateActive(null); } }}>
+                                          <button type="button" role="radio" aria-checked={!chosenIds.length} className={`pdpx-area-opt${!chosenIds.length ? " is-on" : ""}`} onClick={() => choose([])}>
                                             <span className="pdpx-area-thumb pdpx-area-thumb--none" />
                                             <span className="pdpx-area-label">None</span>
                                           </button>
-                                          {opts.map((p) => (
-                                            <button key={p.id} type="button" role="radio" aria-checked={chosen?.id === p.id} className={`pdpx-area-opt${chosen?.id === p.id ? " is-on" : ""}`} onClick={() => { addPlatePreset(p); setPlateActive(p.id); setPlateView(p.view); }}>
-                                              {thumb(p)}
-                                              <span className="pdpx-area-label">{p.label}</span>
-                                              <span className="pdpx-area-size">{chosen?.id === p.id ? `${chosen.widthIn}` : `${p.widthIn}`} in</span>
+                                          {choices.map((c) => (
+                                            <button key={c.key} type="button" role="radio" aria-checked={isOn(c.ids)} className={`pdpx-area-opt${isOn(c.ids) ? " is-on" : ""}`} onClick={() => choose(c.ids)}>
+                                              {thumb(c.ids)}
+                                              <span className="pdpx-area-label">{c.label}</span>
                                             </button>
                                           ))}
                                         </div>
