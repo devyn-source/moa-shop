@@ -1524,27 +1524,32 @@ export function PdpConfigurator({
           })}
         </div>
 
-        <p className="pdpx-delivered">
-          Delivered by {formatDeliveredBy(product.leadTimeDays)}
-          <span className="pdpx-delivered-est"> · {formatLeadTime(product.leadTimeDays)} from today, est.</span>
-        </p>
+        <div className="pdpx-extras">
+          <div className="pdpx-eta">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><rect x="1.5" y="3" width="13" height="11.5" rx="2" stroke="currentColor" strokeWidth="1.4" /><path d="M1.5 6.5h13M5 1.5v3M11 1.5v3" stroke="currentColor" strokeWidth="1.4" /></svg>
+            <span><strong>Delivered by {formatDeliveredBy(product.leadTimeDays)}</strong><em>{formatLeadTime(product.leadTimeDays)} from today</em></span>
+          </div>
 
-        {/* Woven-label upsell — garments only (boxes/packaging don't take labels) */}
-        {!isPackaging ? (
-          <button type="button" className={`pdpx-woven${wovenLabel ? " is-on" : ""}`} onClick={() => setWovenOpen(true)}>
-            {wovenLabel ? (
-              <>
-                <span className="pdpx-woven-text"><strong>Woven label added</strong>{wovenLabel.text ? `: ${wovenLabel.text}` : ""}</span>
-                <span className="pdpx-woven-edit">Edit</span>
-              </>
-            ) : (
-              <>
-                <span className="pdpx-woven-text"><strong>+ Add a woven label</strong>: your brand, sewn in</span>
-                <span className="pdpx-woven-price">+{currency(WOVEN_LABEL_ADDER)}/unit</span>
-              </>
-            )}
-          </button>
-        ) : null}
+          {/* Woven-label add-on: garments only (boxes/packaging don't take labels) */}
+          {!isPackaging ? (
+            <div className={`pdpx-addon${wovenLabel ? " is-on" : ""}`}>
+              <span className="pdpx-addon-swatch" style={{ background: wovenLabel?.labelColor ?? "#1E1E1E" }} aria-hidden>
+                {wovenLabel?.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={wovenLabel.logoUrl} alt="" />
+                ) : (
+                  <i style={{ color: wovenLabel?.thread ?? "#EEEAE3" }}>{(wovenLabel?.text || "MOA").slice(0, 10)}</i>
+                )}
+              </span>
+              <span className="pdpx-addon-text">
+                <strong>Woven label</strong>
+                <em>{wovenLabel ? (wovenLabel.text ? `Added: ${wovenLabel.text}` : "Added with your logo") : "Your brand, sewn in at the neck"}</em>
+              </span>
+              <span className="pdpx-addon-price">+{currency(WOVEN_LABEL_ADDER)}</span>
+              <button type="button" className="pdpx-addon-btn" onClick={() => setWovenOpen(true)}>{wovenLabel ? "Edit" : "Add"}</button>
+            </div>
+          ) : null}
+        </div>
 
         <div className="pdpx-foot">
           <div className="pdpx-breakdown">
