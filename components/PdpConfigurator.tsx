@@ -373,7 +373,14 @@ export function PdpConfigurator({
   const artAspect = artMeta ? artMeta.width / artMeta.height : 1;
   const addPlatePreset = (pr: PlacementPreset) => {
     if (!artworkUrl) return;
-    setPlateP((list) => (list.some((q) => q.id === pr.id) ? list : [...list, { id: pr.id, artUrl: artworkUrl, piece: pr.view === "front" ? 1 : 2, widthIn: pr.widthIn, belowHpsIn: pr.belowHpsIn, fromCfIn: pr.fromCfIn }]));
+    // Placements that occupy the same area replace each other (left chest, centre chest
+    // and full front are one choice; so are the large back prints). Back neck stacks.
+    const group = (id: string) => (["left-chest", "center-chest", "full-front"].includes(id) ? "front-body" : ["full-back", "upper-back", "yoke"].includes(id) ? "back-body" : id);
+    setPlateP((list) => {
+      if (list.some((q) => q.id === pr.id)) return list;
+      const kept = list.filter((q) => group(q.id) !== group(pr.id));
+      return [...kept, { id: pr.id, artUrl: artworkUrl, piece: pr.view === "front" ? 1 : 2, widthIn: pr.widthIn, belowHpsIn: pr.belowHpsIn, fromCfIn: pr.fromCfIn }];
+    });
     setPlateActive(pr.id);
     setPlateView(pr.view);
     setSpin(false);
@@ -1312,7 +1319,7 @@ export function PdpConfigurator({
                                   </p>
                                 </div>
                               ) : null}
-                              <p className="pdpx-place-hint">{plateOn ? "Drag the artwork on the photo to move it. Tap another placement to add it." : "Drag the artwork on the garment to fine tune it. Save a placement to add another one."}</p>
+                              <p className="pdpx-place-hint">{plateOn ? "Choosing a front placement replaces the current one. Add a back print with Back neck or Full back. Drag the artwork on the photo to fine tune it." : "Drag the artwork on the garment to fine tune it. Save a placement to add another one."}</p>
                               {artNote ? <p className="pdpx-art-note">{artNote}</p> : null}
                             </div>
                           ) : (
