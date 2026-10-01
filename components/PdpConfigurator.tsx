@@ -268,6 +268,9 @@ export function PdpConfigurator({
   const presets = useMemo(() => (use3dPlacement || plate ? presetsFor(product.slug, product.category) : []), [use3dPlacement, plate, product.slug, product.category]);
   const [preset, setPreset] = useState<(PlacementPreset & { key: string }) | null>(null);
   const applyPreset3d = (p: PlacementPreset) => setPreset({ ...p, key: `${p.id}-${Date.now()}` });
+  // One print per area: the front, the back, and the back neck (which sits above a back print).
+  const areaOf = (p: Pick<PlacementPreset, "id" | "view">) => (p.id === "nape" ? "neck" : p.view);
+  const AREA_LABEL: Record<string, string> = { front: "Front", back: "Back", neck: "Back neck" };
 
   // Same artwork on another style: the last upload (and its method, inks and
   // placement) is remembered in this browser for a week and offered on the next PDP.
@@ -375,7 +378,7 @@ export function PdpConfigurator({
     if (!artworkUrl) return;
     // Placements that occupy the same area replace each other (left chest, centre chest
     // and full front are one choice; so are the large back prints). Back neck stacks.
-    const group = (id: string) => (["left-chest", "center-chest", "full-front"].includes(id) ? "front-body" : ["full-back", "upper-back", "yoke"].includes(id) ? "back-body" : id);
+    const group = (id: string) => areaOf(presets.find((x) => x.id === id) ?? pr);
     setPlateP((list) => {
       if (list.some((q) => q.id === pr.id)) return list;
       const kept = list.filter((q) => group(q.id) !== group(pr.id));
@@ -1294,15 +1297,54 @@ export function PdpConfigurator({
                         {use3dPlacement || plateOn ? (
                           artworkUrl && presets.length ? (
                             <div className="pdpx-presets">
-                              <p className="pdpx-place-label">Placement</p>
+                              <p className="pdpx-place-label">{plateOn ? "Where it prints" : "Placement"}</p>
+                              {plateOn ? (
+                                <div className="pdpx-areas">
+                                  {[...new Set(presets.map(areaOf))].map((area) => {
+                                    const opts = presets.filter((p) => areaOf(p) === area);
+                                    const chosen = plateP.find((q) => opts.some((o) => o.id === q.id));
+                                    const thumb = (p: PlacementPreset) => {
+                                      const cal = plate!.manifest.views?.[p.view];
+                                      if (!cal) return null;
+                                      const ppi = cal.pxPerIn, w = p.widthIn * ppi, h = w / artAspect;
+                                      const cx = cal.cfX + (p.view === "front" ? 1 : -1) * p.fromCfIn * ppi;
+                                      const top = cal.hpsY + p.belowHpsIn * ppi;
+                                      return (
+                                        <span className="pdpx-area-thumb" style={{ backgroundImage: `url(${plate!.base}/${p.view}.webp${plate!.manifest.v ? `?v=${plate!.manifest.v}` : ""})` }}>
+                                          <i style={{ left: `${((cx - w / 2) / cal.w) * 100}%`, top: `${(top / cal.h) * 100}%`, width: `${(w / cal.w) * 100}%`, height: `${(h / cal.h) * 100}%` }} />
+                                        </span>
+                                      );
+                                    };
+                                    return (
+                                      <div key={area} className="pdpx-area" role="radiogroup" aria-label={AREA_LABEL[area]}>
+                                        <p className="pdpx-area-name">{AREA_LABEL[area]}</p>
+                                        <div className="pdpx-area-opts">
+                                          <button type="button" role="radio" aria-checked={!chosen} className={`pdpx-area-opt${!chosen ? " is-on" : ""}`} onClick={() => { if (chosen) { setPlateP((l) => l.filter((q) => q.id !== chosen.id)); if (activeP?.id === chosen.id) setPlateActive(null); } }}>
+                                            <span className="pdpx-area-thumb pdpx-area-thumb--none" />
+                                            <span className="pdpx-area-label">None</span>
+                                          </button>
+                                          {opts.map((p) => (
+                                            <button key={p.id} type="button" role="radio" aria-checked={chosen?.id === p.id} className={`pdpx-area-opt${chosen?.id === p.id ? " is-on" : ""}`} onClick={() => { addPlatePreset(p); setPlateActive(p.id); setPlateView(p.view); }}>
+                                              {thumb(p)}
+                                              <span className="pdpx-area-label">{p.label}</span>
+                                              <span className="pdpx-area-size">{chosen?.id === p.id ? `${chosen.widthIn}` : `${p.widthIn}`} in</span>
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
                               <div className="pdpx-preset-list" role="group" aria-label="Placement">
                                 {presets.map((p) => (
-                                  <button key={p.id} type="button" className={`pdpx-preset${(plateOn ? plateP.some((q) => q.id === p.id) : preset?.id === p.id) ? " is-on" : ""}${plateOn && activeP?.id === p.id ? " is-active" : ""}`} onClick={() => (plateOn ? addPlatePreset(p) : applyPreset3d(p))}>
+                                  <button key={p.id} type="button" className={`pdpx-preset${preset?.id === p.id ? " is-on" : ""}`} onClick={() => applyPreset3d(p)}>
                                     <span className="pdpx-preset-name">{p.label}</span>
                                     <span className="pdpx-preset-spec">{presetSpec(p)}</span>
                                   </button>
                                 ))}
                               </div>
+                              )}
                               {plateOn && activeP ? (
                                 <div className="pdpx-active">
                                   <div className="pdpx-active-head">
@@ -1314,12 +1356,18 @@ export function PdpConfigurator({
                                     <input type="range" min={1} max={14} step={0.25} value={activeP.widthIn} onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, widthIn: +e.target.value } : q)))} />
                                     <em>{activeP.widthIn} in</em>
                                   </label>
+                                  <label className="pdpx-width">
+                                    <span>Height</span>
+                                    <input type="range" min={0.5} max={20} step={0.25} value={activeP.belowHpsIn} aria-label="Distance below the shoulder" onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, belowHpsIn: +e.target.value } : q)))} />
+                                    <em>{activeP.belowHpsIn} in</em>
+                                  </label>
+                                  <p className="pdpx-slider-hint">Height is measured down from the top of the shoulder (HPS).</p>
                                   <p className={`pdpx-printable${plateChecks[activeP.id] && !plateChecks[activeP.id].ok ? " is-bad" : ""}`}>
                                     {plateChecks[activeP.id] && !plateChecks[activeP.id].ok ? plateChecks[activeP.id].reason : `Printable. ${activeP.widthIn} in wide, ${activeP.belowHpsIn} in below HPS, ${activeP.fromCfIn === 0 ? "centred" : `${Math.abs(activeP.fromCfIn)} in wearer's ${activeP.fromCfIn > 0 ? "left" : "right"}`}.`}
                                   </p>
                                 </div>
                               ) : null}
-                              <p className="pdpx-place-hint">{plateOn ? "Choosing a front placement replaces the current one. Add a back print with Back neck or Full back. Drag the artwork on the photo to fine tune it." : "Drag the artwork on the garment to fine tune it. Save a placement to add another one."}</p>
+                              <p className="pdpx-place-hint">{plateOn ? "One print per area. Drag the artwork on the photo to fine tune it." : "Drag the artwork on the garment to fine tune it. Save a placement to add another one."}</p>
                               {artNote ? <p className="pdpx-art-note">{artNote}</p> : null}
                             </div>
                           ) : (

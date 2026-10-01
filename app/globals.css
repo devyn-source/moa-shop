@@ -9033,3 +9033,18 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
   background-size: 120px 120px;
   background-blend-mode: normal;
 }
+
+/* Placement picker: one row per area, each option shows the real garment with its print zone. */
+.pdpx-areas { display: flex; flex-direction: column; gap: 14px; }
+.pdpx-area-name { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(30, 30, 30, 0.55); }
+.pdpx-area-opts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.pdpx-area-opt { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 6px 6px 8px; background: #fff; border: 1px solid var(--color-cream-dark); border-radius: 10px; cursor: pointer; font-family: var(--font-display); text-align: left; }
+.pdpx-area-opt:hover { border-color: rgba(30, 30, 30, 0.3); }
+.pdpx-area-opt.is-on { border-color: var(--color-charcoal); box-shadow: inset 0 0 0 1px var(--color-charcoal); }
+.pdpx-area-thumb { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; border-radius: 6px; background: var(--color-cream) center / contain no-repeat; }
+.pdpx-area-thumb i { position: absolute; background: rgba(176, 71, 49, 0.85); border-radius: 1px; }
+.pdpx-area-thumb--none { background: var(--color-cream); }
+.pdpx-area-thumb--none::after { content: ""; position: absolute; left: 30%; right: 30%; top: 50%; height: 1px; background: rgba(30, 30, 30, 0.25); }
+.pdpx-area-label { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.2; color: var(--color-charcoal); }
+.pdpx-area-size { font-size: 10px; color: rgba(30, 30, 30, 0.55); }
+.pdpx-slider-hint { margin: -4px 0 0; font-size: 10px; color: rgba(30, 30, 30, 0.55); letter-spacing: 0.02em; }

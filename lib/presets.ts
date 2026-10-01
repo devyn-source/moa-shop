@@ -20,7 +20,7 @@ const TOP: PlacementPreset[] = [
   { id: "left-chest", label: "Left chest", view: "front", zoneId: "left-chest", widthIn: 3.5, belowHpsIn: 7, fromCfIn: 4 },
   { id: "center-chest", label: "Centre chest", view: "front", zoneId: "center-chest", widthIn: 10, belowHpsIn: 7.5, fromCfIn: 0 },
   { id: "full-front", label: "Full front", view: "front", zoneId: "full-front", widthIn: 12, belowHpsIn: 7.5, fromCfIn: 0 },
-  { id: "nape", label: "Back neck", view: "back", zoneId: "yoke", widthIn: 3, belowHpsIn: 2, fromCfIn: 0 },
+  { id: "nape", label: "Back neck", view: "back", zoneId: "yoke", widthIn: 3, belowHpsIn: 3.75, fromCfIn: 0 }, // starts below the back neck seam and rib
   { id: "full-back", label: "Full back", view: "back", zoneId: "center-back", widthIn: 12, belowHpsIn: 4, fromCfIn: 0 },
 ];
 
