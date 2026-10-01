@@ -1534,7 +1534,7 @@ export function PdpConfigurator({
           <button type="button" className={`pdpx-woven${wovenLabel ? " is-on" : ""}`} onClick={() => setWovenOpen(true)}>
             {wovenLabel ? (
               <>
-                <span className="pdpx-woven-text"><strong>Woven label</strong> · “{wovenLabel.text}”</span>
+                <span className="pdpx-woven-text"><strong>Woven label added</strong>{wovenLabel.text ? `: ${wovenLabel.text}` : ""}</span>
                 <span className="pdpx-woven-edit">Edit</span>
               </>
             ) : (
@@ -1588,10 +1588,7 @@ export function PdpConfigurator({
             <span className="pdpx-from">Subtotal</span>
             <strong className="pdpx-total">{currency(subtotal)}</strong>
           </div>
-          <p className="pdpx-final-price-note">
-            This is your final price, with decoration, placements and labels included. No quote,
-            no revised invoice later.
-          </p>
+
           {effDpi != null && (lowRes || blockRes) ? (
             <p className="pdpx-foot-note" style={{ color: blockRes ? "var(--color-terracotta)" : "var(--color-warning)", fontWeight: 700 }}>
               {blockRes
@@ -1601,9 +1598,7 @@ export function PdpConfigurator({
           ) : null}
           {bundle || editOrder ? ctaButton("pdpx-cta") : null}
           {updateError ? <p className="pdpx-foot-note" style={{ color: "var(--color-terracotta)" }}>{updateError}</p> : null}
-          <p className="pdpx-foot-note">
-            Every order passes MOA quality control before it ships.
-          </p>
+
         </div>
       </aside>
 
