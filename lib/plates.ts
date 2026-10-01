@@ -37,6 +37,7 @@ export type PlatePlacement = {
   fromCfIn: number; // art centre from CF/CB, positive = wearer's left
   rotDeg?: number;
   method?: DecorationMethod;
+  inkHex?: string; // print the artwork in this one ink (one-colour print); absent = as artwork
 };
 
 // Pattern u runs toward the wearer's left on the front body and toward the

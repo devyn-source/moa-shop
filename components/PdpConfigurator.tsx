@@ -389,7 +389,7 @@ export function PdpConfigurator({
     setPlateView(pr.view);
     setSpin(false);
   };
-  const plateList = artworkUrl ? plateP.map((q) => ({ ...q, artUrl: artworkUrl, method: plateMethod })) : [];
+  const plateList = artworkUrl ? plateP.map((q) => ({ ...q, artUrl: artworkUrl, method: plateMethod, inkHex: pantones[0]?.hex })) : [];
   const plateBlocked = plateOn && plateP.some((q) => plateChecks[q.id] && !plateChecks[q.id].ok);
   const activeP = plateP.find((q) => q.id === plateActive) ?? plateP[plateP.length - 1];
   const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
@@ -639,10 +639,9 @@ export function PdpConfigurator({
     const cap = product.decorations.find((d) => d.id === method)?.maxColors ?? 8;
     const inks = [...new Map(read.colours.map((h) => nearestPms(h)).map((p) => [p.code, p])).values()].slice(0, cap);
     setDecorationIds([method]);
-    setPantones(inks);
     suggestedFromArt.current = true;
     const label = product.decorations.find((d) => d.id === method)?.label ?? method;
-    setArtNote(`We found ${inks.length} ${inks.length === 1 ? "colour" : "colours"} in your artwork, matched to Pantone. ${label} is selected. Change either under Decoration.`);
+    setArtNote(`${inks.length === 1 ? "One colour" : `${inks.length} colours`} found in your artwork (${inks.map((x) => x.name).join(", ")}). ${label} is selected. ${inks.length === 1 ? "Pick a print colour under Decoration to recolour it." : "We match the inks to your file in the proof."}`);
   };
 
   const handleFile = async (file: File | undefined | null) => {
@@ -1215,35 +1214,19 @@ export function PdpConfigurator({
                         })}
                         {decorationIds.length > 0 ? (
                           <div className="pdpx-inks">
-                            <p className="pdpx-place-label">Ink colours <span className="pdpx-inks-count">{pantones.length} of {colorCap}</span></p>
+                            <p className="pdpx-place-label">Print colour</p>
                             <div className="pdpx-inks-grid">
+                              <button type="button" className={`pdpx-ink pdpx-ink--asart${!pantones.length ? " is-on" : ""}`} aria-pressed={!pantones.length} title="As artwork" aria-label="As artwork" onClick={() => setPantones([])} />
                               {PMS_PALETTE.map((c) => {
-                                const on = pantones.some((p) => p.code === c.code);
-                                const full = pantones.length >= colorCap;
+                                const on = pantones[0]?.code === c.code;
                                 return (
-                                  <button
-                                    key={c.code}
-                                    type="button"
-                                    className={`pdpx-ink${on ? " is-on" : ""}`}
-                                    title={`${c.name}, ${c.code}`}
-                                    aria-label={`${c.name}, ${c.code}`}
-                                    aria-pressed={on}
-                                    disabled={!on && full}
-                                    style={{ background: c.hex }}
-                                    onClick={() => setPantones((prev) => (on ? prev.filter((p) => p.code !== c.code) : prev.length < colorCap ? [...prev, c] : prev))}
-                                  />
+                                  <button key={c.code} type="button" className={`pdpx-ink${on ? " is-on" : ""}`} title={`${c.name}, ${c.code}`} aria-label={`${c.name}, ${c.code}`} aria-pressed={on} style={{ background: c.hex }} onClick={() => setPantones(on ? [] : [c])} />
                                 );
                               })}
                             </div>
-                            {pantones.length ? (
-                              <ul className="pdpx-ink-list">
-                                {pantones.map((p) => (
-                                  <li key={p.code}><span style={{ background: p.hex }} aria-hidden />{p.name}{p.code !== p.name ? <em>{p.code.replace(/^PANTONE /, "")}</em> : null}</li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p className="pdpx-place-hint">Pick the ink colours in your artwork.</p>
-                            )}
+                            <p className="pdpx-place-hint">
+                              {pantones.length ? `Printed in ${pantones[0].name}${pantones[0].code !== pantones[0].name ? ` (${pantones[0].code.replace(/^PANTONE /, "")})` : ""}.` : "As artwork: printed in your file's own colours, matched to ink in the proof."}
+                            </p>
                           </div>
                         ) : null}
                       </div>

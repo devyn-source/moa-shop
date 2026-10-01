@@ -42,7 +42,8 @@ float heather(vec2 px) {
   return 0.55 * f1 + 0.25 * f2 + 0.2 * m - 0.5;
 } // 2D plates: cfX, hpsY, px per mm (in photo pixels)
 uniform vec4 uRect[${MAX}];   // u0, vTop, w, h (mm)
-uniform vec4 uMeta[${MAX}];   // piece, method, rotation (rad), unused
+uniform vec4 uMeta[${MAX}];
+uniform vec4 uInk[${MAX}];    // rgb ink, a = 1 when the art prints in one ink   // piece, method, rotation (rad), unused
 
 vec4 art(int i, vec2 st) {
   if (i == 0) return texture(uArt0, st);
@@ -103,6 +104,7 @@ void main() {
       if (any(lessThan(st, vec2(0.0))) || any(greaterThan(st, vec2(1.0)))) continue;
       vec4 a = art(i, st);
       if (a.a < 0.003) continue;
+      if (uInk[i].a > 0.5) a.rgb = uInk[i].rgb;
       vec3 ink;
       if (method == 1) {
         // embroidery: satin stitch rows at 45 degrees, thread sheen, bevelled edge
@@ -191,7 +193,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
   const arts = useRef<Map<string, { tex: WebGLTexture; aspect: number }>>(new Map());
   const [ready, setReady] = useState(false);
   // Parents pass a fresh array every render; redraw only when the content changes.
-  const placementsKey = JSON.stringify(placements.map((p) => [p.id, p.artUrl, p.piece, p.widthIn, p.belowHpsIn, p.fromCfIn, p.rotDeg ?? 0, p.method ?? ""]));
+  const placementsKey = JSON.stringify(placements.map((p) => [p.id, p.artUrl, p.piece, p.widthIn, p.belowHpsIn, p.fromCfIn, p.rotDeg ?? 0, p.method ?? "", p.inkHex ?? ""]));
   const [readout, setReadout] = useState<string | null>(null);
   const drag = useRef<{ id: string; du: number; dv: number } | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -311,13 +313,14 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     const bind = (name: string, t: WebGLTexture, unit: number) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(gl.getUniformLocation(prog, name), unit); };
     bind("uBeauty", tex.beauty, 0); bind("uShading", tex.shading, 1); bind("uUv", tex.uv, 2); bind("uPieces", tex.pieces, 3);
     const list = placements.filter((p) => arts.current.has(p.artUrl)).slice(0, MAX);
-    const rect = new Float32Array(MAX * 4), meta = new Float32Array(MAX * 4);
+    const rect = new Float32Array(MAX * 4), meta = new Float32Array(MAX * 4), ink = new Float32Array(MAX * 4);
     list.forEach((p, i) => {
       const a = arts.current.get(p.artUrl)!;
       const r = artRectMm(p, view, manifest, a.aspect);
       rect.set([r.u0, r.vTop, r.w, r.h], i * 4);
       meta.set([p.piece, METHOD_ID[p.method ?? "screen_print"] ?? 0, ((p.rotDeg ?? 0) * Math.PI) / 180, view === "front" ? 1 : 2], i * 4);
       bind(`uArt${i}`, a.tex, 4 + i);
+      if (p.inkHex) ink.set([1, 3, 5].map((k) => parseInt(p.inkHex!.slice(k, k + 2), 16) / 255).concat(1), i * 4);
     });
     for (let i = list.length; i < MAX; i++) bind(`uArt${i}`, tex.shading, 4 + i);
     gl.uniform2f(gl.getUniformLocation(prog, "uSize"), size[0], size[1]);
@@ -336,6 +339,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     gl.uniform1i(gl.getUniformLocation(prog, "uCount"), list.length);
     gl.uniform4fv(gl.getUniformLocation(prog, "uRect"), rect);
     gl.uniform4fv(gl.getUniformLocation(prog, "uMeta"), meta);
+    gl.uniform4fv(gl.getUniformLocation(prog, "uInk"), ink);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
