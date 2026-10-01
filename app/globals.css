@@ -125,7 +125,7 @@ body {
   letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-y: none;
   text-rendering: geometricPrecision;
   touch-action: manipulation;
@@ -9131,4 +9131,11 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
   .rv-stage { padding: 14px; }
   .rv-side { padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); overflow: visible; }
   .rv-title { font-size: 24px; }
+}
+
+/* The photo panel always fits the screen, so it stays in view (sticky) while the steps scroll. */
+@media (min-width: 901px) {
+  .pdpx-stage { top: 96px; max-height: calc(100vh - 112px); }
+  .pdpx-stage .pdpx-canvas { width: min(100%, calc((100vh - 190px) * 0.8)); margin: 0 auto; }
+  .pdpx-canvas-plate .platex { width: 100% !important; }
 }

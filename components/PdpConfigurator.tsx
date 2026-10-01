@@ -1122,7 +1122,18 @@ export function PdpConfigurator({
                   className="pdpx-step-head"
                   aria-expanded={open}
                   aria-controls={`pdpx-panel-${s.key}`}
-                  onClick={() => setStep(s.key)}
+                  onClick={(e) => {
+                    // Keep the tapped header where it is while the step above collapses.
+                    const el = e.currentTarget, before = el.getBoundingClientRect().top;
+                    setStep(s.key);
+                    const until = performance.now() + 700; // follow the collapse animation
+                    const settle = () => {
+                      const drift = el.getBoundingClientRect().top - before;
+                      if (Math.abs(drift) > 1) window.scrollBy({ top: drift, behavior: "instant" as ScrollBehavior });
+                      if (performance.now() < until) requestAnimationFrame(settle);
+                    };
+                    requestAnimationFrame(settle);
+                  }}
                 >
                   <span className="pdpx-step-num">{String(i + 1).padStart(2, "0")}</span>
                   <span className="pdpx-step-label">{s.label}</span>
