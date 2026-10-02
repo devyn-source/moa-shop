@@ -23,6 +23,7 @@ export type PlateManifest = {
   pieces?: Record<string, string>;
   pxSize?: [number, number];
   colours: Record<string, string>;
+  trim?: Partial<Record<"front" | "back", string>>; // second-fabric mask per view (e.g. a corduroy collar)
 };
 
 export type DecorationMethod = "screen_print" | "embroidery" | "rubber_applique";

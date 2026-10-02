@@ -191,6 +191,10 @@
   "colours": {
    "light": "#C8C8C8"
   },
-  "card": "card-b0648baafd.webp"
+  "card": "card-54cecbad80.webp",
+  "trim": {
+   "front": "trim-front-1b19b1e2b7.webp",
+   "back": "trim-back-2ae0c919ac.webp"
+  }
  }
 }

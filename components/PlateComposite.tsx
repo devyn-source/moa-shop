@@ -30,6 +30,7 @@ uniform vec2 uSize; uniform int uCount;
 uniform float uBaseLum; uniform vec3 uTargetLin; uniform float uTint; uniform float uContrast;
 uniform float u2d; uniform vec2 uImg; uniform vec3 uAff;
 uniform float uHeather; // heathered fabric: a melange of light and dark fibres
+uniform sampler2D uTrim; uniform float uHasTrim; uniform vec3 uTrimLin; uniform float uWale; // second fabric (corduroy collar)
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 // Fibre speckle tied to the photo's pixels, so it stays put on the garment:
@@ -61,7 +62,15 @@ void main() {
     vec3 lin = pow(max(base.rgb, 0.0), vec3(2.2));
     float rel = dot(lin, vec3(0.2126, 0.7152, 0.0722)) / max(1e-4, uBaseLum);
     rel = pow(max(rel, 0.0), uContrast); // a dark photo exaggerates texture; tame it
-    vec3 outLin = uTargetLin * rel;
+    float tm = uHasTrim > 0.5 ? texture(uTrim, vSt).r : 0.0;
+    vec3 outLin = mix(uTargetLin, uTrimLin, tm) * rel;
+    if (tm > 0.0) {
+      // corduroy: rounded wales with dark grooves, faded out when a wale is under ~2 screen px
+      float ph = vSt.x * uImg.x / uWale;
+      float ridge = pow(abs(sin(3.14159265 * ph)), 0.55);
+      float fade = clamp(1.0 - (fwidth(ph) - 0.3) / 0.25, 0.0, 1.0);
+      outLin *= mix(1.0, mix(0.93, mix(0.74, 1.08, ridge), fade), tm);
+    }
     if (uHeather > 0.0) outLin *= 1.0 + uHeather * heather(vSt * uImg);
     base.rgb = pow(clamp(outLin, 0.0, 1.0), vec3(1.0 / 2.2));
   }
@@ -133,6 +142,19 @@ void main() {
   }
   outColor = vec4(col * base.a, base.a);
 }`;
+
+// The collar fabric: a slight contrast with the body. Darker on light and mid colours,
+// a touch lighter on near-black, same hue.
+export function trimShade(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  const h = d === 0 ? 0 : mx === r ? (((g - b) / d) % 6 + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  const L = l < 0.2 ? l + 0.06 : l < 0.45 ? l - 0.06 : l - 0.12;
+  const C = (1 - Math.abs(2 * L - 1)) * sat * 0.92, X = C * (1 - Math.abs((h % 2) - 1)), m0 = L - C / 2;
+  const [a, bb, cc] = h < 1 ? [C, X, 0] : h < 2 ? [X, C, 0] : h < 3 ? [0, C, X] : h < 4 ? [0, X, C] : h < 5 ? [X, 0, C] : [C, 0, X];
+  return "#" + [a, bb, cc].map((v) => Math.round(Math.min(1, Math.max(0, v + m0)) * 255).toString(16).padStart(2, "0")).join("");
+}
 
 type Loaded = { gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number]; baseLum: number; img: [number, number]; cal2d?: import("@/lib/plates").Plate2DView };
 
@@ -225,6 +247,8 @@ export default function PlateComposite({ base, colour, view, manifest, placement
           loadDataPng(plateUrl(base, colour, view, "uvmap")), loadDataPng(plateUrl(base, colour, view, "pieces")),
         ]);
       }
+      const trimFile = manifest.trim?.[view];
+      const trimImg = cal2d && trimFile ? await loadImage(`${base}/${trimFile}`).catch(() => null) : null;
       if (dead) return;
       const prog = gl.createProgram()!;
       gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VS)); gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
@@ -232,6 +256,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
       const loc = gl.getAttribLocation(prog, "aPos"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       ctx.current = { gl, prog, uv, pieces, size: [uv.width, uv.height], baseLum: fabricLum(beauty), img: [beauty.naturalWidth, beauty.naturalHeight], cal2d, tex: {
+        ...(trimImg ? { trim: imageTexture(gl, trimImg) } : {}),
         beauty: imageTexture(gl, beauty), shading: imageTexture(gl, shading), uv: dataTexture(gl, uv, false), pieces: dataTexture(gl, pieces, true),
       } };
       arts.current.clear();
@@ -338,6 +363,10 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     const tl = (() => { const t = lin(tint ?? manifest.colours[colour] ?? "#808080"); return 0.2126 * t[0] + 0.7152 * t[1] + 0.0722 * t[2]; })();
     gl.uniform1f(gl.getUniformLocation(prog, "uContrast"), c.baseLum < 0.05 ? 0.55 : tl < 0.1 ? 1.6 : tl < 0.3 ? 1.25 : 1.0);
     gl.uniform3fv(gl.getUniformLocation(prog, "uTargetLin"), lin(tint ?? manifest.colours[colour] ?? "#808080"));
+    bind("uTrim", tex.trim ?? tex.shading, 8);
+    gl.uniform1f(gl.getUniformLocation(prog, "uHasTrim"), tex.trim ? 1 : 0);
+    gl.uniform3fv(gl.getUniformLocation(prog, "uTrimLin"), lin(trimShade(tint ?? manifest.colours[colour] ?? "#808080")));
+    gl.uniform1f(gl.getUniformLocation(prog, "uWale"), c.cal2d ? c.cal2d.pxPerIn / 8 : 10); // 8-wale corduroy
     gl.uniform1i(gl.getUniformLocation(prog, "uCount"), list.length);
     gl.uniform4fv(gl.getUniformLocation(prog, "uRect"), rect);
     gl.uniform4fv(gl.getUniformLocation(prog, "uMeta"), meta);
