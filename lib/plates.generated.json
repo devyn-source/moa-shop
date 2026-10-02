@@ -115,6 +115,32 @@
   },
   "card": "card-ef13ea405b.webp"
  },
+ "track-jacket": {
+  "kind": "2d",
+  "style": "track-jacket",
+  "views": {
+   "front": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 556.5,
+    "cfX": 1198.0,
+    "pxPerIn": 81.172
+   },
+   "back": {
+    "w": 2400,
+    "h": 3000,
+    "hpsY": 556.5,
+    "cfX": 1199.5,
+    "pxPerIn": 81.172
+   }
+  },
+  "base": "light",
+  "v": "329baff6c1",
+  "colours": {
+   "light": "#C8C8C8"
+  },
+  "card": "card-24b0e4ad10.webp"
+ },
  "vintage-cut-tee": {
   "kind": "2d",
   "style": "vintage-cut-tee",

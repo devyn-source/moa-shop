@@ -37,6 +37,13 @@ const JACKET: PlacementPreset[] = [
   { id: "full-back", label: "Full back", view: "back", zoneId: "center-back", widthIn: 11, belowHpsIn: 7, fromCfIn: 0 },
 ];
 
+// Track jacket: centre-front zip, so chest prints sit off the zip; stand collar above HPS.
+const TRACK: PlacementPreset[] = [
+  { id: "left-chest", label: "Left chest", view: "front", zoneId: "left-chest", widthIn: 3.5, belowHpsIn: 7.5, fromCfIn: 4.5 },
+  { id: "upper-back", label: "Upper back", view: "back", zoneId: "upper-back", widthIn: 10, belowHpsIn: 5, fromCfIn: 0 },
+  { id: "full-back", label: "Full back", view: "back", zoneId: "center-back", widthIn: 11, belowHpsIn: 6, fromCfIn: 0 },
+];
+
 // Accessories: "HPS" is the top of the item (crown, top of the beanie, top of the bag body).
 const CAP: PlacementPreset[] = [
   { id: "front-centre", label: "Front centre", view: "front", zoneId: "front-panel", widthIn: 3.5, belowHpsIn: 1.75, fromCfIn: 0 },
@@ -58,6 +65,7 @@ const BY_SLUG: Record<string, PlacementPreset[]> = {
   "vintage-cut-tee": TOP,
   "heavyweight-hoodie": HOODIE,
   "work-jacket": JACKET,
+  "track-jacket": TRACK,
 };
 
 export function presetsFor(slug: string, category: ProductCategory): PlacementPreset[] {
