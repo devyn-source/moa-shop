@@ -9316,3 +9316,7 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
   .hx-pagehero, .hx-qa, .hx-legal, .signin-frame { grid-template-columns: 1fr; }
   .hx-legal > div { grid-column: 1; }
 }
+/* Toolbar and note share the photo frame's width, so everything lines up on any screen height. */
+@media (min-width: 901px) {
+  .pdpx-stage > .pdpx-stage-toolbar, .pdpx-stage > .pdpx-shotnote { width: min(100%, calc((100vh - 190px) * 0.8)); margin-left: auto; margin-right: auto; }
+}

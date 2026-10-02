@@ -958,7 +958,7 @@ export function PdpConfigurator({
     <section className="pdpx">
       <div className="pdpx-stage">
         <div className="pdpx-stage-toolbar">
-          <span className="pdpx-eyebrow">{product.category}</span>
+          <span aria-hidden />
           {plateOn ? (
             <div className="pdpx-view-pills" role="tablist" aria-label="Garment view">
               {(["front", "back"] as const).filter((v) => (plate!.manifest.kind === "2d" ? plate!.manifest.views?.[v] : plate!.manifest.hpsUv?.[v])).map((v) => (
