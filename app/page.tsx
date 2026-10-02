@@ -7,6 +7,8 @@ import { listModelThumbs } from "@/lib/pattern-files";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { StickyCta } from "@/components/landing/StickyCta";
 import { FaqItem } from "@/components/FaqItem";
+import { StyleTiles } from "@/components/hx/StyleTiles";
+import { HowRows } from "@/components/hx/HowRows";
 import { currency, formatLeadTime } from "@/lib/pricing";
 import { ALL_FAQS } from "@/lib/faqs";
 import type { CatalogProduct } from "@/lib/types";
@@ -38,12 +40,6 @@ export default async function LandingPage() {
     ["tepn", "TEPN", 22], ["paly", "Paly", 32],
   ];
 
-  const steps = [
-    { t: "Pick a style", d: "Tees, hoodies, a work jacket, caps, beanies and totes, each cut and sewn to our own patterns.", cta: "See the styles", href: "#styles" },
-    { t: "Design it on the garment", d: "Choose the colour, upload your artwork and place it. Sizes, placements and the price update as you go.", cta: "Start designing", href: "#styles" },
-    { t: "Approve your proof", d: "Our team checks every order. Your proof arrives within 24 business hours and nothing is made until you approve it.", cta: "How proofs work", href: "#faq" },
-    { t: "We make it and ship it", d: "One invoice for the full order. Produced with our factory partners, checked by our quality control and tracked to your door.", cta: "Questions", href: "#faq" },
-  ];
   const work = [
     { img: "/landing/work-a.webp", tag: "Entertainment", name: "Coachella" },
     { img: "/landing/work-b.webp", tag: "Enterprise", name: "Google I/O" },
@@ -102,40 +98,10 @@ export default async function LandingPage() {
             <Link className="hx-btn hx-btn--dark" href="/shop">Browse all styles</Link>
           </div>
         </div>
-        <div className="hx-tiles">
-          {styles.map((p, i) => (
-            <Link key={p.id} href={`/p/${p.slug}`} className="hx-tile" data-reveal style={stagger(i % 4)}>
-              <span className="hx-tile-img">
-                {thumbs[p.slug] ? <Image src={thumbs[p.slug]} alt={p.displayName} width={800} height={1000} sizes="(max-width: 700px) 45vw, 22vw" /> : null}
-              </span>
-              <span className="hx-tile-name">{p.displayName}</span>
-              <span className="hx-tile-meta">
-                <span>From {currency(fromPrice(p))}/unit</span>
-                <span className="hx-tile-dots" aria-label={`${p.variants.length} colours`}>
-                  {p.variants.slice(0, 6).map((v) => <i key={v.colorLabel} style={{ background: v.colorHex }} />)}
-                </span>
-              </span>
-            </Link>
-          ))}
-        </div>
+        <StyleTiles products={styles} thumbs={thumbs} />
       </section>
 
-      {/* ===== How it works (the studio's "What we do" rows) ===== */}
-      <section className="hx-row hx-how" id="how">
-        <h2 className="hx-h2" data-reveal>How it works</h2>
-        <ol className="hx-rows">
-          {steps.map((s, i) => (
-            <li key={s.t} data-reveal style={stagger(i)}>
-              <span className="hx-rows-n">{String(i + 1).padStart(2, "0")}</span>
-              <div>
-                <h3>{s.t}</h3>
-                <p>{s.d}</p>
-              </div>
-              <Link href={s.href} className="hx-rows-link">{s.cta}</Link>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <HowRows stylesHref="#styles" />
 
       {/* ===== See it before it is made ===== */}
       <section className="hx-dark">

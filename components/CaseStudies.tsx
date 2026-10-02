@@ -7,7 +7,7 @@ import { launchMode, isLaunchSlug } from "@/lib/launch";
 // case study for THAT exact product ("this style, in the wild"); on the landing,
 // omit it for the full diverse grid. Each card links into the configurator for
 // that style ("Make yours →").
-export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string }) {
+export function CaseStudies({ slug }: { slug?: string; eyebrow?: string }) {
   const { items: allItems, styleSpecific } = caseStudiesFor(slug);
   // Landing shows the full grid in a 3-up layout: trim to a full row so the
   // last row never strands a single orphan card next to a viewport of blank.
@@ -17,8 +17,7 @@ export function CaseStudies({ slug, eyebrow }: { slug?: string; eyebrow?: string
   return (
     <section className="cs" aria-label="Selected work">
       <div className="cs-head">
-        <p className="eyebrow">{eyebrow ?? "Selected work"}</p>
-        <h2>{heading}</h2>
+        <h2 className="hx-h2">{heading}</h2>
       </div>
       <div className="cs-grid">
         {items.filter((c) => !launchMode() || isLaunchSlug(c.slugs[0])).map((c) => {

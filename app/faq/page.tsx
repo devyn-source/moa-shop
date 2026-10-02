@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FAQ_GROUPS, FAQ_JSONLD } from "@/lib/faqs";
+import { PageHero } from "@/components/hx/PageHero";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 
@@ -19,46 +20,36 @@ export const metadata: Metadata = {
 
 export default function FaqPage() {
   return (
-    <main className="page faq-page">
+    <main className="hx">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
 
-      <header className="faq-page-head">
-        <p className="eyebrow">MOA Shop</p>
-        <h1 className="page-title">Frequently asked questions</h1>
-        <p className="lede">
-          Everything you need to know before you order: how made-to-order works, what it costs,
-          how proofs and changes are handled, and how your order reaches you.
-        </p>
-      </header>
+      <PageHero title="Questions">
+        <p className="hx-body">How made-to-order works, what it costs, how proofs and changes are handled, and how your order reaches you.</p>
+      </PageHero>
 
-      <div className="faq-page-body">
-        {FAQ_GROUPS.map((group) => (
-          <section className="faq-page-group" key={group.title}>
-            <div className="faq-page-group-label">
-              <h2>{group.title}</h2>
-            </div>
-            <div className="faq-page-items">
-              {group.items.map((f) => (
-                <div className="faq-page-item" key={f.q}>
-                  <h3>{f.q}</h3>
-                  <p>{f.a}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      {FAQ_GROUPS.map((group) => (
+        <section className="hx-row hx-qa" key={group.title}>
+          <h2 className="hx-qa-group">{group.title}</h2>
+          <div className="hx-qa-list">
+            {group.items.map((f) => (
+              <div className="hx-qa-item" key={f.q}>
+                <h3>{f.q}</h3>
+                <p>{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
 
-      <section className="faq-page-foot">
-        <div>
-          <p className="eyebrow">Still have a question?</p>
-          <h2>Talk to the studio</h2>
-          <p className="faq-page-foot-copy">
-            Need something the shop can&apos;t do, or have a question we haven&apos;t answered?
-            Email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> and we&apos;ll help.
-          </p>
+      <section className="hx-row hx-final">
+        <h2 className="hx-h2 hx-final-h">Still have a question?</h2>
+        <div className="hx-split-side">
+          <p className="hx-body">Email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> and the studio will help.</p>
+          <div className="hx-hero-ctas">
+            <Link className="hx-btn hx-btn--primary" href="/shop">Start designing</Link>
+            <a className="hx-btn hx-btn--dark" href="mailto:production@magnumopus.agency">Email the studio</a>
+          </div>
         </div>
-        <Link className="button button--lg" href="/shop">Browse the shop</Link>
       </section>
     </main>
   );

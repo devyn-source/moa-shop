@@ -9278,3 +9278,41 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
   .hx-table-head, .hx-table-row { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; font-size: 11px; }
 }
 .hx-facts--light dd { white-space: nowrap; }
+
+/* ===== Site-wide studio treatment (page headers, tiles, rows) ===== */
+:root { --hx-pad: clamp(16px, 3.4vw, 48px); }
+.hx-pagehero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(20px, 4vw, 64px); align-items: end; padding-top: clamp(40px, 6vw, 88px); padding-bottom: clamp(22px, 3vw, 36px); border-bottom: 1px solid rgba(30, 30, 30, 0.12); }
+.hx-pagehero-title { font-size: clamp(34px, 5.4vw, 80px); }
+.hx-pagehero .hx-facts { border-top: 0; padding-top: 4px; }
+.hx-row--tight { padding-top: clamp(24px, 3vw, 40px); }
+.hx-endpad { padding-bottom: clamp(56px, 8vw, 120px); }
+.hx-body a { color: var(--color-terracotta); text-underline-offset: 3px; }
+.hx-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding: 8px 0; }
+
+/* FAQ page */
+.hx-qa { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: clamp(20px, 4vw, 64px); padding-top: clamp(32px, 4vw, 56px); }
+.hx-qa-group { margin: 0; padding-top: 16px; font-family: var(--font-display); font-stretch: 125%; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-terracotta); }
+.hx-qa-list { border-top: 1px solid rgba(30, 30, 30, 0.14); }
+.hx-qa-item { padding: 16px 0 18px; border-bottom: 1px solid rgba(30, 30, 30, 0.14); }
+.hx-qa-item h3 { margin: 0 0 8px; font-family: var(--font-display); font-stretch: 125%; font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.hx-qa-item p { margin: 0; max-width: 680px; font-size: 12px; line-height: 1.6; letter-spacing: 0.03em; text-transform: uppercase; color: rgba(30, 30, 30, 0.68); }
+
+/* Legal pages: content in the right column, studio rows */
+.hx-legal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: clamp(20px, 4vw, 64px); padding-bottom: clamp(56px, 8vw, 120px); }
+.hx-legal > div { grid-column: 2; margin-top: 0 !important; font-size: 13px !important; }
+.hx-legal section { padding: 4px 0 18px; border-bottom: 1px solid rgba(30, 30, 30, 0.12); }
+.hx-legal h2 { font-family: var(--font-display) !important; font-stretch: 125%; font-size: 13px !important; letter-spacing: 0.05em !important; text-transform: uppercase; }
+
+/* Sign in / sign up: studio split */
+.signin-stage { min-height: auto !important; padding: clamp(40px, 6vw, 88px) var(--hx-pad) clamp(56px, 8vw, 120px) !important; background: none !important; }
+.signin-frame { width: min(1500px, 100%) !important; max-width: none !important; margin: 0 auto; display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(20px, 4vw, 64px); align-items: start; }
+.signin-brand { text-align: left !important; align-items: flex-start !important; display: flex; flex-direction: column; gap: 14px; }
+.signin-brand .hx-h2 { font-size: clamp(34px, 5.4vw, 80px); }
+
+/* PDP case-study heading and cards follow the left-title layout */
+.cs-head { text-align: left !important; margin-left: 0 !important; }
+
+@media (max-width: 900px) {
+  .hx-pagehero, .hx-qa, .hx-legal, .signin-frame { grid-template-columns: 1fr; }
+  .hx-legal > div { grid-column: 1; }
+}

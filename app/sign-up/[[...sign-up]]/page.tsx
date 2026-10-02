@@ -20,14 +20,8 @@ export default function SignUpPage() {
     <main className="signin-stage">
       <div className="signin-frame">
         <div className="signin-brand">
-          <span className="signin-wordmark">MOA</span>
-          <span className="signin-rule" aria-hidden />
-          <p className="signin-eyebrow">MOA Shop, Your account</p>
-          <h1 className="signin-headline">Create your account</h1>
-          <p className="signin-sub">
-            One account for your whole program: save designs, approve proofs, and track every
-            order to your door.
-          </p>
+          <h1 className="hx-h2">Create your account</h1>
+          <p className="hx-body">One account for your whole program: save designs, approve proofs and track every order to your door.</p>
         </div>
         <SignUp appearance={moaClerkAppearance} signInUrl="/sign-in" fallbackRedirectUrl="/orders" />
       </div>

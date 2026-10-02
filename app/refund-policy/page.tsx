@@ -1,11 +1,13 @@
+import { PageHero } from "@/components/hx/PageHero";
 export const metadata = { title: "Refund Policy | MOA Shop" };
 
 export default function RefundPolicyPage() {
   return (
-    <main className="page" style={{ maxWidth: 760 }}>
-      <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
-      <h1 className="page-title">Refund Policy</h1>
-      <p className="lede">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
+    <main className="hx">
+      <PageHero title="Refunds">
+        <p className="hx-body">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
+      </PageHero>
+      <div className="hx-row hx-legal">
 
       <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
@@ -28,6 +30,7 @@ export default function RefundPolicyPage() {
           <h2 style={hStyle}>Contact</h2>
           <p><a href="mailto:production@magnumopus.agency" style={{ color: "var(--color-terracotta)" }}>production@magnumopus.agency</a></p>
         </section>
+      </div>
       </div>
     </main>
   );

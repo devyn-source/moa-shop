@@ -1,21 +1,14 @@
 import Link from "next/link";
+import { PageHero } from "@/components/hx/PageHero";
 
 export default function NotFound() {
   return (
-    <main className="page nf">
-      <div className="nf-inner">
-        <p className="eyebrow">404</p>
-        <h1 className="nf-headline">This page isn&apos;t in the catalog</h1>
-        <p className="nf-lede">
-          The URL might be off, the SKU was retired, or the link is older than this build. Head back to the shop , 
-          everything live is there.
-        </p>
-        <div className="action-row" style={{ marginTop: 24 }}>
-          <Link href="/" className="button">
-            Back to the shop
-          </Link>
-        </div>
-      </div>
+    <main className="hx">
+      <PageHero title="Page not found">
+        <p className="hx-body">The link might be old or the style was retired. Everything you can order is in the shop.</p>
+        <Link href="/shop" className="hx-btn hx-btn--primary">Browse the styles</Link>
+      </PageHero>
+      <div className="hx-row hx-endpad" />
     </main>
   );
 }

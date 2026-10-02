@@ -1,3 +1,4 @@
+import { PageHero } from "@/components/hx/PageHero";
 import Link from "next/link";
 
 export const metadata = { title: "Terms of Service | MOA Shop" };
@@ -5,10 +6,11 @@ export const metadata = { title: "Terms of Service | MOA Shop" };
 // First-draft Terms for the self-serve catalog. Review with counsel before launch.
 export default function TermsPage() {
   return (
-    <main className="page" style={{ maxWidth: 760 }}>
-      <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Legal</p>
-      <h1 className="page-title">Terms of Service</h1>
-      <p className="lede">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
+    <main className="hx">
+      <PageHero title="Terms of service">
+        <p className="hx-body">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
+      </PageHero>
+      <div className="hx-row hx-legal">
 
       <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
@@ -43,6 +45,7 @@ export default function TermsPage() {
           <h2 style={hStyle}>8. Contact</h2>
           <p>Questions? <a href="mailto:production@magnumopus.agency" style={{ color: "var(--color-terracotta)" }}>production@magnumopus.agency</a>.</p>
         </section>
+      </div>
       </div>
     </main>
   );

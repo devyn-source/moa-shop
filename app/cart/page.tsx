@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PageHero } from "@/components/hx/PageHero";
 import Image from "next/image";
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -68,31 +69,19 @@ export default function CartPage() {
   const { bundles, singles } = useMemo(() => groupCartItems(items), [items]);
 
   return (
-    <main className="page">
-      <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/shop">Shop</Link>
-        <span aria-hidden>/</span>
-        <span className="crumb-current">Cart</span>
-      </nav>
-
-      <div className="section-head">
-        <div>
-          <p className="eyebrow">Your order</p>
-          <h2>Cart</h2>
-        </div>
+    <main className="hx">
+      <PageHero title="Cart">
         {hydrated && items.length > 0 ? (
-          <span className="label">
-            {bundles.length > 0 ? `${bundles.length} box${bundles.length === 1 ? "" : "es"} · ` : ""}
-            {count.toLocaleString()} units
-          </span>
+          <p className="hx-body">{count.toLocaleString()} units across {items.length} {items.length === 1 ? "style" : "styles"}. Each line is made to its own approved proof.</p>
         ) : null}
-      </div>
-
+      </PageHero>
+      <div className="hx-row hx-row--tight hx-endpad">
       {!hydrated ? (
         <div className="empty-state">Loading cart…</div>
       ) : items.length === 0 ? (
-        <div className="empty-state">
-          Your cart is empty. <Link href="/shop" className="link-button">Browse the shop</Link>
+        <div className="hx-empty">
+          <p className="hx-lead">Your cart is empty.</p>
+          <Link className="hx-btn hx-btn--primary" href="/shop">Browse the styles</Link>
         </div>
       ) : (
         <>
@@ -189,6 +178,7 @@ export default function CartPage() {
         </div>
         </>
       )}
+      </div>
     </main>
   );
 }

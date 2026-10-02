@@ -58,21 +58,8 @@ export default async function OrdersPage() {
     <main className="page">
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <p className="eyebrow" style={{ color: "var(--color-terracotta)" }}>Your account</p>
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              fontSize: 28,
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              color: "var(--color-charcoal)",
-              margin: "6px 0 0"
-            }}
-          >
-            Your orders
-          </h1>
-          <p style={{ fontSize: 13, color: "var(--color-neutral)", margin: "6px 0 0" }}>{email}</p>
+          <h1 className="hx-h2">Your orders</h1>
+          <p className="hx-body" style={{ marginTop: 10 }}>{email}</p>
         </div>
       </div>
 

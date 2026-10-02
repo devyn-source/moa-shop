@@ -1,8 +1,10 @@
-import { HomeCatalog } from "@/components/HomeCatalog";
+import { PageHero } from "@/components/hx/PageHero";
+import { StyleTiles } from "@/components/hx/StyleTiles";
+import { HowRows } from "@/components/hx/HowRows";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { currency } from "@/lib/pricing";
 import { getProducts } from "@/lib/store";
 import { listModelThumbs } from "@/lib/pattern-files";
-import { isBundleEligible } from "@/lib/seed";
-import { bundleStartingPriceUsd } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,57 +20,27 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  // Packaging assets are hidden (unpublished), so read the full catalog to price
-  // the PR Box card's "from $X/box".
-  const [products, modelThumbs, all] = await Promise.all([
-    getProducts(),
-    listModelThumbs(),
-    getProducts({ includeDrafts: true }),
-  ]);
-  const bundleStartFromUsd = bundleStartingPriceUsd(
-    all.filter(isBundleEligible),
-    all.filter((p) => p.category === "packaging")
-  );
+  const [all, modelThumbs] = await Promise.all([getProducts(), listModelThumbs()]);
+  const products = all.filter((p) => !p.isBundleBuilder && p.category !== "packaging" && p.slug !== "test-sku");
 
   return (
-    <main className="page">
-      <section className="shop-hero">
-        <div className="shop-hero-text">
-          <p className="eyebrow">The MOA Shop</p>
-          <h1 className="shop-hero-title">Custom cut and sew, in smaller runs.</h1>
-          <p className="shop-hero-lede">Every style is cut and sewn to our own patterns. Design it on the garment, get a proof within 24 hours and pay one invoice.</p>
-        </div>
-        <ul className="shop-hero-facts">
-          <li><strong>50</strong><span>Piece minimum</span></li>
-          <li><strong>24 hr</strong><span>Proof turnaround</span></li>
-          <li><strong>{products.length}</strong><span>Styles, our own patterns</span></li>
-        </ul>
+    <main className="hx">
+      <ScrollReveal />
+      <PageHero title="The styles">
+        <p className="hx-body">Every style is cut and sewn to our own patterns. Design it on the garment, get a proof within 24 business hours and pay one invoice.</p>
+        <dl className="hx-facts">
+          <div><dt>Piece minimum</dt><dd>{Math.min(...products.map((p) => p.moq))}</dd></div>
+          <div><dt>Proof turnaround</dt><dd>24 hr</dd></div>
+          <div><dt>From, per unit</dt><dd>{currency(Math.min(...products.flatMap((p) => p.priceTiers.map((t) => t.perUnitUsd))))}</dd></div>
+        </dl>
+      </PageHero>
+
+      <section className="hx-row hx-row--tight">
+        <StyleTiles products={products} thumbs={modelThumbs} />
       </section>
 
-      <HomeCatalog products={products} bundleStartFromUsd={bundleStartFromUsd} modelThumbs={modelThumbs} filters={false} />
-
-      <section className="value-strip" aria-label="How it works">
-        <div className="value-card">
-          <span className="value-num">01</span>
-          <h3>Prices shown</h3>
-          <p>One price ladder per style. What you see is what you pay. One invoice.</p>
-        </div>
-        <div className="value-card">
-          <span className="value-num">02</span>
-          <h3>Proof in 24 business hours</h3>
-          <p>The mockup updates as you design. Our team reviews it and your proof arrives within 24 business hours. Nothing is made until you approve it.</p>
-        </div>
-        <div className="value-card">
-          <span className="value-num">03</span>
-          <h3>Cut and sewn to our patterns</h3>
-          <p>Every style is cut and sewn to the patterns we produce for our clients. A short range, not a catalog of blanks.</p>
-        </div>
-        <div className="value-card">
-          <span className="value-num">04</span>
-          <h3>Tracked to your door</h3>
-          <p>Status from approval to delivery. Carrier tracking by email when it ships.</p>
-        </div>
-      </section>
+      <HowRows />
+      <div className="hx-row hx-endpad" />
     </main>
   );
 }
