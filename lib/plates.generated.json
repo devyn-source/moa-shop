@@ -148,21 +148,21 @@
    "front": {
     "w": 2400,
     "h": 3000,
-    "hpsY": 616.0,
-    "cfX": 1162.0,
-    "pxPerIn": 66.019
+    "hpsY": 615.0,
+    "cfX": 1209.0,
+    "pxPerIn": 66.131
    },
    "back": {
     "w": 2400,
     "h": 3000,
-    "hpsY": 641.0,
-    "cfX": 1199.5,
-    "pxPerIn": 64.15
+    "hpsY": 637.0,
+    "cfX": 1195.0,
+    "pxPerIn": 64.486
    }
   },
   "base": "light",
-  "v": "78fe2b8060",
-  "card": "card-d1b07c0b8a.webp",
+  "v": "66b9eeb022",
+  "card": "card-20f62c5f74.webp",
   "colours": {
    "light": "#C8C8C8"
   }
