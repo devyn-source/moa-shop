@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -927,6 +929,10 @@ export function PdpConfigurator({
 
   // New orders go through a review first: the spec in plain words is what we produce.
   const [reviewOpen, setReviewOpen] = useState(false);
+  // The pinned bar renders straight into <body>, outside every page wrapper, so no
+  // later section (the footer) can ever paint over it.
+  const [portalReady, setPortalReady] = useState(false);
+  useEffect(() => setPortalReady(true), []);
   const [reviewZoom, setReviewZoom] = useState(false);
   const onCta = bundle ? handleAddToBox : editOrder ? handleUpdate : () => setReviewOpen(true);
 
@@ -1620,6 +1626,7 @@ export function PdpConfigurator({
       </aside>
 
       {/* The one pinned bar on every screen size: what you picked, price, and the CTA. */}
+{portalReady ? createPortal(
       <div className="pdpx-bottombar" aria-hidden={false}>
         <div className="pdpx-bottombar-inner">
           <div className="pdpx-bb-cell">
@@ -1651,7 +1658,9 @@ export function PdpConfigurator({
           </div>
           {ctaButton("pdpx-bb-cta")}
         </div>
-      </div>
+      </div>,
+        document.body
+      ) : null}
 
 
       {reviewOpen ? (() => {

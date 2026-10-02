@@ -6786,7 +6786,7 @@ body.is-scrolled .site-header {
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 18;
+  z-index: 50; /* above the page and footer, below the review and label dialogs */
   background: var(--color-charcoal);
   color: var(--color-cream);
   border-top: 1px solid rgba(238, 234, 227, 0.06);
@@ -9090,7 +9090,7 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .pdpx-addon.is-on .pdpx-addon-btn { background: #fff; color: var(--color-charcoal); }
 
 /* Review: the garment large, the order in plain words, one action. */
-.rv { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(4px); }
+.rv { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 24px; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(4px); }
 .rv-card { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr); width: min(1240px, 100%); max-height: calc(100vh - 48px); overflow: hidden; background: var(--color-cream); border-radius: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3); }
 .rv-stage { position: relative; display: grid; grid-template-columns: 1fr; align-content: center; gap: 12px; padding: 28px 28px 72px; background: var(--frame-bg); }
 .rv-stage.is-two { grid-template-columns: 1fr 1fr; }
