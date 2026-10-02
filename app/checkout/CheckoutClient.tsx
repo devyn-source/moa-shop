@@ -1,5 +1,7 @@
 "use client";
 
+import { BespokeLine } from "@/components/hx/Bespoke";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
@@ -257,16 +259,7 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
             {/* Escape hatch for buyers who want a human before a four-figure card
                 charge. Tracked: sustained clicks here = signal to build an
                 invoice/PO payment path (see launch plan, GATE 2). */}
-            <p className="trust-note" style={{ marginTop: 6 }}>
-              Prefer to talk it through first?{" "}
-              <a
-                href={`mailto:production@magnumopus.agency?subject=${encodeURIComponent(`Order question: ${count.toLocaleString()} units, ${currency(total)}`)}`}
-                style={{ color: "var(--color-terracotta)", fontWeight: 700 }}
-                onClick={() => analytics.track("talk_to_us_clicked", { value: total, count })}
-              >
-                Email a real person
-              </a>
-            </p>
+            <BespokeLine from="checkout" className="trust-note" />
             {/* Invoice/PO hand-raise lane — a lead, not a payment path. Never
                 touches the Stripe flow or cart state. */}
             <InvoiceRequestDialog prefillEmail={accountEmail ?? f.contactEmail} />

@@ -1,3 +1,4 @@
+import { BespokeLine } from "@/components/hx/Bespoke";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -185,6 +186,7 @@ export default async function LandingPage() {
             <Link className="hx-btn hx-btn--primary" href="#styles">Start designing</Link>
             <Link className="hx-btn hx-btn--dark" href="/shop">Browse styles</Link>
           </div>
+          <BespokeLine from="landing" />
         </div>
       </section>
     </main>

@@ -1,3 +1,4 @@
+import { BespokeLine } from "@/components/hx/Bespoke";
 import { PageHero } from "@/components/hx/PageHero";
 import { StyleTiles } from "@/components/hx/StyleTiles";
 import { HowRows } from "@/components/hx/HowRows";
@@ -40,6 +41,7 @@ export default async function HomePage() {
       </section>
 
       <HowRows />
+      <section className="hx-row"><BespokeLine from="shop" /></section>
       <div className="hx-row hx-endpad" />
     </main>
   );

@@ -8,7 +8,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
   return (
     <main className="hx">
       <PageHero title="Something went wrong">
-        <p className="hx-body">Your cart and any paid orders are safe. Try again, or email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> with what you were doing and we will sort it.</p>
+        <p className="hx-body">Your cart and any paid orders are safe. Try again, or head back to the styles.</p>
         <div className="hx-hero-ctas">
           <button className="hx-btn hx-btn--primary" onClick={() => reset()} type="button">Try again</button>
           <a className="hx-btn hx-btn--dark" href="/shop">Browse the styles</a>

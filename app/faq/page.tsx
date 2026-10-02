@@ -1,3 +1,4 @@
+import { inquiryUrl } from "@/components/hx/Bespoke";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FAQ_GROUPS, FAQ_JSONLD } from "@/lib/faqs";
@@ -42,12 +43,12 @@ export default function FaqPage() {
       ))}
 
       <section className="hx-row hx-final">
-        <h2 className="hx-h2 hx-final-h">Still have a question?</h2>
+        <h2 className="hx-h2 hx-final-h">Need something more custom?</h2>
         <div className="hx-split-side">
-          <p className="hx-body">Email <a href="mailto:production@magnumopus.agency">production@magnumopus.agency</a> and the studio will help.</p>
+          <p className="hx-body">For bespoke styles, your own fabrics or a larger program, tell us about the project.</p>
           <div className="hx-hero-ctas">
             <Link className="hx-btn hx-btn--primary" href="/shop">Start designing</Link>
-            <a className="hx-btn hx-btn--dark" href="mailto:production@magnumopus.agency">Email the studio</a>
+            <a className="hx-btn hx-btn--dark" href={inquiryUrl("faq")} target="_blank" rel="noopener">Start a project</a>
           </div>
         </div>
       </section>

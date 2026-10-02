@@ -14,9 +14,6 @@ export default function ProductError({ reset }: { error: Error & { digest?: stri
         <button className="button" onClick={() => reset()} type="button">Try again</button>
         <a className="secondary-button" href="/shop">Back to the catalog</a>
       </div>
-      <p className="trust-note" style={{ marginTop: 22 }}>
-        Still stuck? <a href="mailto:production@magnumopus.agency" style={{ color: "var(--color-terracotta)", fontWeight: 700 }}>Email a real person</a> and include the product name and we&apos;ll sort it.
-      </p>
     </main>
   );
 }
