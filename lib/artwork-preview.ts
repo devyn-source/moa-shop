@@ -28,6 +28,7 @@ export async function prepareArtworkPreview(bytes: Buffer, contentType: string) 
       } finally { factory.destroy(surface); page.cleanup(); }
     } catch (error) {
       if (error instanceof Error && error.message.includes("single-page")) throw error;
+      console.warn("[artwork-preview] PDF render failed:", error instanceof Error ? error.message : "unknown error");
       throw new Error("This PDF could not be previewed. Use an unlocked, single-page PDF or a PNG.");
     } finally { await task.destroy(); }
   }
