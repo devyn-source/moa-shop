@@ -3,10 +3,11 @@ import sharp from "sharp";
 import { getSupabase } from "@/lib/supabase";
 import { apiError } from "@/lib/errors";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { prepareArtworkPreview } from "@/lib/artwork-preview";
 
 export const runtime = "nodejs";
 
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB — matches bucket file_size_limit
+const MAX_BYTES = 4 * 1024 * 1024;
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365; // 1 year — spans the order lifecycle + email + vendor handoff
 // SVG is intentionally NOT accepted: it's an active document (script/XSS surface)
 // and sanitizing it reliably is hard. PDF covers the vector/print use case.
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "That file is empty." }, { status: 400 });
     }
     if (file.size > MAX_BYTES) {
-      return NextResponse.json({ error: "File too large (50 MB max)." }, { status: 413 });
+      return NextResponse.json({ error: "Use a file under 4 MB." }, { status: 413 });
     }
     if (!ALLOWED.has(file.type)) {
       return NextResponse.json(
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     let kind: "vector" | "raster" = "vector";
     let meta: { width?: number; height?: number; density?: number; space?: string } = {};
 
-    if (RASTER.has(file.type)) {
+    if (RASTER.has(sniffed)) {
       kind = "raster";
       try {
         const m = await sharp(buf).metadata();
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       if (longEdge < MIN_LONG_EDGE) {
         return NextResponse.json(
           {
-            error: `This image is too small to print (${w}×${h}px). Upload at least ${MIN_LONG_EDGE}px on the longest side, or a vector file (SVG or PDF).`,
+            error: `This image is too small to print (${w}×${h}px). Use at least ${MIN_LONG_EDGE}px on the longest side, or a single-page PDF.`,
           },
           { status: 422 }
         );
@@ -108,6 +109,10 @@ export async function POST(request: Request) {
       }
     }
 
+    let preview;
+    try { preview = await prepareArtworkPreview(buf, sniffed); }
+    catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not preview this file. Try a PNG." }, { status: 422 }); }
+
     // --- Validation passed → store (rejected files never hit storage) --------
     const supabase = getSupabase();
     const id = crypto.randomUUID();
@@ -118,20 +123,34 @@ export async function POST(request: Request) {
     if (upErr) {
       return NextResponse.json({ error: upErr.message }, { status: 500 });
     }
+    // Avoid colliding with an original named preview.png.
+    const imagePath = `${id}/mockup-preview.png` === path ? `${id}/mockup-preview-2.png` : `${id}/mockup-preview.png`;
+    const { error: previewError } = await supabase.storage.from("artwork").upload(imagePath, new Uint8Array(preview.bytes), { contentType: "image/png", upsert: false });
+    if (previewError) {
+      await supabase.storage.from("artwork").remove([path]);
+      return NextResponse.json({ error: "Could not save your preview. Please try again." }, { status: 500 });
+    }
     // Private bucket → a long-lived SIGNED url (token required; not guessable /
     // enumerable like a public url). Covers the order lifecycle + email + MoaOS.
     const { data: signed, error: signErr } = await supabase.storage.from("artwork").createSignedUrl(path, SIGNED_URL_TTL);
     if (signErr || !signed?.signedUrl) {
+      await supabase.storage.from("artwork").remove([path, imagePath]);
       return NextResponse.json({ error: "Stored, but couldn't sign the file URL. Please retry." }, { status: 500 });
+    }
+    const { data: previewSigned } = await supabase.storage.from("artwork").createSignedUrl(imagePath, SIGNED_URL_TTL);
+    if (!previewSigned?.signedUrl) {
+      await supabase.storage.from("artwork").remove([path, imagePath]);
+      return NextResponse.json({ error: "Could not save your preview. Please try again." }, { status: 500 });
     }
     return NextResponse.json({
       url: signed.signedUrl,
+      previewUrl: previewSigned.signedUrl,
       path,
       fileName: file.name,
       contentType: sniffed,
       bytes: file.size,
       kind,
-      meta,
+      meta: { ...meta, width: preview.sourceWidth, height: preview.sourceHeight },
       warning,
     });
   } catch (err) {

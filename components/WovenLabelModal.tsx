@@ -14,6 +14,7 @@ export type WovenLabel = {
   labelColor: string; // fabric base color (hex)
   thread: string; // woven thread color (hex)
   logoUrl?: string;
+  logoFileUrl?: string;
   logoName?: string;
   logoTransform?: ArtTransform; // logo position + size within the label box
 };
@@ -45,6 +46,7 @@ export function WovenLabelModal({
   const [labelColor, setLabelColor] = useState(initial?.labelColor ?? "#FFFFFF");
   const [thread, setThread] = useState(initial?.thread ?? "#1E1E1E");
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl);
+  const [logoFileUrl, setLogoFileUrl] = useState(initial?.logoFileUrl);
   const [logoName, setLogoName] = useState(initial?.logoName);
   const [logoTransform, setLogoTransform] = useState<ArtTransform>(initial?.logoTransform ?? DEFAULT_LOGO_TF);
   const [uploading, setUploading] = useState(false);
@@ -75,9 +77,10 @@ export function WovenLabelModal({
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
-      const data = (await res.json()) as { url?: string; error?: string; warning?: string };
+      const data = (await res.json()) as { url?: string; previewUrl?: string; error?: string; warning?: string };
       if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
-      setLogoUrl(data.url);
+      setLogoUrl(data.previewUrl ?? data.url);
+      setLogoFileUrl(data.url);
       setLogoName(file.name);
       setLogoTransform(DEFAULT_LOGO_TF);
       setUploadMsg(data.warning ?? "Uploaded");
@@ -131,13 +134,13 @@ export function WovenLabelModal({
         {/* logo upload */}
         <div className="wl-field">
           <span className="wl-label">Logo (optional)</span>
-          <input ref={fileRef} type="file" accept="image/png,image/svg+xml,application/pdf,.ai,.eps" hidden onChange={(e) => handleLogo(e.target.files?.[0])} />
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf" hidden onChange={(e) => handleLogo(e.target.files?.[0])} />
           <button type="button" className="wl-upload" onClick={() => fileRef.current?.click()} disabled={uploading}>
             {uploading ? "Uploading…" : logoName ? `↻ ${logoName}` : "Upload logo"}
           </button>
           <p className={`wl-hint${uploadMsg && uploadMsg !== "Uploaded" ? " is-warn" : ""}`}>
             {uploadMsg ??
-              "Woven labels are ~2 × 1 in. Use a vector (SVG / AI / PDF) or a transparent PNG ≥ 1200px. Keep it simple: woven art is solid thread colours, not gradients."}
+              "Woven labels are ~2 × 1 in. Use a single-page PDF or a transparent PNG, JPG or WEBP. Up to 4 MB. Keep it simple: woven art is solid thread colours, not gradients."}
           </p>
         </div>
 
@@ -172,7 +175,7 @@ export function WovenLabelModal({
               type="button"
               className="wl-add"
               disabled={!text.trim() && !logoUrl}
-              onClick={() => onSave({ text: text.trim(), fold: "flat", placement: "neck", labelColor, thread, logoUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
+              onClick={() => onSave({ text: text.trim(), fold: "flat", placement: "neck", labelColor, thread, logoUrl, logoFileUrl, logoName, logoTransform: logoUrl ? logoTransform : undefined })}
             >
               {initial ? "Update label" : "Add to order"}
             </button>

@@ -21,7 +21,8 @@ import type { CatalogProduct } from "@/lib/types";
 import { analytics } from "@/lib/analytics";
 import { presetsFor, presetSpec, type PlacementPreset } from "@/lib/presets";
 import { readArtColours, nearestPms } from "@/lib/art-colours";
-import PlateComposite from "./PlateComposite";
+import PlateComposite, { type PlateHandle, type PlateStatus } from "./PlateComposite";
+import { draftKey, readDesignDraft, type DesignDraft } from "@/lib/design-draft";
 import { colourSlug, type PlateRef } from "@/lib/plates-server";
 import type { PlatePlacement, PlateView, PrintCheck, DecorationMethod } from "@/lib/plates";
 import { WovenLabelModal, type WovenLabel } from "./WovenLabelModal";
@@ -145,7 +146,8 @@ export function PdpConfigurator({
   seed,
   bundle,
   modelUrl,
-  plate
+  plate,
+  cartLineId
 }: {
   product: CatalogProduct;
   editOrder?: EditSeed;
@@ -156,6 +158,7 @@ export function PdpConfigurator({
   // Photoreal plates for this style (sku-plates bucket). When the chosen colour has
   // a plate, the composite is the main stage and placements are held in inches.
   plate?: PlateRef | null;
+  cartLineId?: string;
 }) {
   // editOrder = editing an existing order (CTA updates it). seed = a shared config
   // pre-fill (CTA adds to cart normally). Both seed the same initial state.
@@ -219,6 +222,8 @@ export function PdpConfigurator({
   const [decorationIds, setDecorationIds] = useState<string[]>(seed0?.decorationIds ?? []);
   const [pantones, setPantones] = useState<PmsColor[]>(seed0?.pantones ?? []);
   const [artworkUrl, setArtworkUrl] = useState<string | null>(seed0?.artworkFileUrl ?? null);
+  const [artworkSourceUrl, setArtworkSourceUrl] = useState<string | null>(seed0?.artworkFileUrl ?? null);
+  const [artIsVector, setArtIsVector] = useState(false);
   const [artworkName, setArtworkName] = useState<string | null>(seed0?.artworkFileName ?? null);
   // Native pixel dims of a raster upload — for print-resolution QA against the
   // ACTUAL physical print size (the 1200px upload floor only knows absolute px).
@@ -272,12 +277,12 @@ export function PdpConfigurator({
   const applyPreset3d = (p: PlacementPreset) => setPreset({ ...p, key: `${p.id}-${Date.now()}` });
   // One print per area: the front, the back, and the back neck (which sits above a back print).
   // The back neck stacks with a back print, so on the back the "area" for replacing is the body print.
-  const areaOf = (p: Pick<PlacementPreset, "id" | "view">) => (p.id === "nape" ? "neck" : p.view);
+  const areaOf = (p: Pick<PlacementPreset, "id" | "view">) => p.view;
   const AREA_LABEL: Record<string, string> = { front: "Front", back: "Back" };
 
   // Same artwork on another style: the last upload (and its method, inks and
   // placement) is remembered in this browser for a week and offered on the next PDP.
-  type SavedArt = { url: string; name: string; meta: { width: number; height: number } | null; decorationIds?: string[]; pantones?: PmsColor[]; presetId?: string; ts: number };
+  type SavedArt = { sourceUrl?: string; isVector?: boolean; url: string; name: string; meta: { width: number; height: number } | null; decorationIds?: string[]; pantones?: PmsColor[]; presetId?: string; ts: number };
   const ART_KEY = "moa:last-artwork";
   const rememberArt = (a: Omit<SavedArt, "ts">) => {
     try { localStorage.setItem(ART_KEY, JSON.stringify({ ...a, ts: Date.now() })); } catch { /* storage unavailable */ }
@@ -291,6 +296,16 @@ export function PdpConfigurator({
     setArtworkName(a.name);
     setArtMeta(a.meta);
     setArtworkUrl(a.url);
+    setArtworkSourceUrl(a.sourceUrl ?? a.url);
+    setArtIsVector(Boolean(a.isVector));
+    if (plate && match) {
+      setPlateP((all) => [...all.filter((p) => p.piece !== (plateView === "front" ? 1 : 2)), {
+        id: match.id, artUrl: a.url, fileUrl: a.sourceUrl ?? a.url, fileName: a.name,
+        pixelWidth: a.meta?.width, pixelHeight: a.meta?.height, isVector: a.isVector,
+        piece: match.view === "front" ? 1 : 2, widthIn: match.widthIn, belowHpsIn: match.belowHpsIn, fromCfIn: match.fromCfIn,
+      }]);
+      setPlateView(match.view); setPlateActive(match.id);
+    }
     setLastArt(null);
     analytics.track("artwork_reused", { slug: product.slug });
   };
@@ -309,7 +324,6 @@ export function PdpConfigurator({
     if (has3d) setStageMode("3d");
   }, [has3d]);
   useEffect(() => {
-    if (plate && artworkUrl && presets.length && !plateP.length) addPlatePreset(presets[0]);
     if (artworkUrl && presets.length && !preset && !place3d.some((p) => p.id !== "current")) applyPreset3d(presets[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artworkUrl, presets.length]);
@@ -320,6 +334,7 @@ export function PdpConfigurator({
       if (a?.url === artworkUrl) localStorage.setItem("moa:last-artwork", JSON.stringify({ ...a, decorationIds, pantones, presetId: preset?.id ?? a.presetId }));
     } catch { /* storage unavailable */ }
   }, [artworkUrl, decorationIds, pantones, preset?.id]);
+  const supportsNeckLabel = ["tee", "hoodie", "knitwear", "outerwear"].includes(product.category);
   const [wovenLabel, setWovenLabel] = useState<WovenLabel | null>(null);
   const [fabricOptionId, setFabricOptionId] = useState<string>(product.fabricOptions?.[0]?.id ?? "");
   const fabricOption = product.fabricOptions?.find((o) => o.id === fabricOptionId);
@@ -331,7 +346,7 @@ export function PdpConfigurator({
   const [savedPlacements, setSavedPlacements] = useState<ExtraPlacement[]>(seed0?.extraPlacements ?? []);
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  const { addItem } = useCart();
+  const { addItem, updateItem, items: cartItems, hydrated: cartHydrated } = useCart();
   const { toast } = useToast();
 
   // Fire product_viewed once per SKU (Shopify-style funnel entry).
@@ -373,27 +388,58 @@ export function PdpConfigurator({
   const [plateView, setPlateView] = useState<PlateView>("front");
   const [spin, setSpin] = useState(false);
   const [plateP, setPlateP] = useState<PlatePlacement[]>([]);
+  const frontHandle = useRef<PlateHandle>(null), backHandle = useRef<PlateHandle>(null);
+  const [plateStatuses, setPlateStatuses] = useState<Record<string, { key: string; status: PlateStatus }>>({});
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftMessage, setDraftMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [plateActive, setPlateActive] = useState<string | null>(null);
   const [plateChecks, setPlateChecks] = useState<Record<string, PrintCheck>>({});
   const plateMethod = (decorationIds[0] as DecorationMethod | undefined) ?? "screen_print";
   const artAspect = artMeta ? artMeta.width / artMeta.height : 1;
   const addPlatePreset = (pr: PlacementPreset) => {
-    if (!artworkUrl) return;
-    // Placements that occupy the same area replace each other (left chest, centre chest
-    // and full front are one choice; so are the large back prints). Back neck stacks.
-    const group = (id: string) => areaOf(presets.find((x) => x.id === id) ?? pr);
-    setPlateP((list) => {
-      if (list.some((q) => q.id === pr.id)) return list;
-      const kept = list.filter((q) => group(q.id) !== group(pr.id));
-      return [...kept, { id: pr.id, artUrl: artworkUrl, piece: pr.view === "front" ? 1 : 2, widthIn: pr.widthIn, belowHpsIn: pr.belowHpsIn, fromCfIn: pr.fromCfIn }];
-    });
-    setPlateActive(pr.id);
-    setPlateView(pr.view);
-    setSpin(false);
+    const piece = pr.view === "front" ? 1 : 2;
+    const previous = plateP.find((q) => q.piece === piece);
+    if (!previous && !artworkUrl) return;
+    setPlateP((list) => [...list.filter((q) => q.piece !== piece), {
+      artUrl: previous?.artUrl ?? artworkUrl!, fileUrl: previous?.fileUrl ?? artworkSourceUrl ?? artworkUrl!,
+      fileName: previous?.fileName ?? artworkName ?? "Artwork", pixelWidth: previous?.pixelWidth ?? artMeta?.width,
+      pixelHeight: previous?.pixelHeight ?? artMeta?.height, isVector: previous?.isVector ?? artIsVector,
+      id: pr.id, piece, widthIn: pr.widthIn, belowHpsIn: pr.belowHpsIn, fromCfIn: pr.fromCfIn,
+    }]);
+    setPlateActive(pr.id); setPlateView(pr.view); setSpin(false);
   };
-  const plateList = artworkUrl ? plateP.map((q) => ({ ...q, artUrl: artworkUrl, method: plateMethod })) : [];
+  const plateList = plateP.map((q) => ({ ...q, method: plateMethod }));
+  const availableViews = (["front", "back"] as const).filter((v) => plate?.manifest.kind === "2d" ? plate.manifest.views?.[v] : plate?.manifest.hpsUv?.[v]);
+  const renderKey = JSON.stringify([variantId, plateList, plate?.manifest.v]);
+  const previewReady = !plateOn || availableViews.every((v) => plateStatuses[v]?.key === renderKey && plateStatuses[v]?.status === "ready");
+  const failedView = availableViews.find((v) => plateStatuses[v]?.key === renderKey && plateStatuses[v]?.status === "error");
   const plateBlocked = plateOn && plateP.some((q) => plateChecks[q.id] && !plateChecks[q.id].ok);
-  const activeP = plateP.find((q) => q.id === plateActive) ?? plateP[plateP.length - 1];
+  const activeP = plateP.find((q) => q.id === plateActive && (q.piece === 1) === (plateView === "front")) ?? plateP.find((q) => (q.piece === 1) === (plateView === "front"));
+  const design: DesignDraft = { version: 1, slug: product.slug, savedAt: Date.now(), variantId, decorationIds: decorationIds.slice(0, 1), sizeQty, placements: plateP, wovenLabel, fabricOptionId };
+  const designKey = JSON.stringify([variantId, decorationIds, sizeQty, plateP, wovenLabel, fabricOptionId]);
+  useEffect(() => {
+    if (!plateOn || draftLoaded || !cartHydrated) return;
+    try {
+      const candidate = cartLineId ? cartItems.find((item) => item.lineId === cartLineId)?.design : JSON.parse(localStorage.getItem(draftKey(product.slug)) ?? "null");
+      const saved = readDesignDraft(candidate, product.slug, cartLineId && typeof candidate?.savedAt === "number" ? candidate.savedAt : Date.now());
+      if (saved && product.variants.some((v) => v.id === saved.variantId)) {
+        setVariantId(saved.variantId);
+        setWovenLabel(supportsNeckLabel ? saved.wovenLabel ?? null : null);
+        if (saved.fabricOptionId && product.fabricOptions?.some((f) => f.id === saved.fabricOptionId)) setFabricOptionId(saved.fabricOptionId);
+        setDecorationIds(saved.decorationIds.filter((id) => product.decorations.some((d) => d.id === id && d.isAvailable !== false)));
+        setSizeQty(Object.fromEntries(product.sizes.map((size) => [size, saved.sizeQty[size] ?? 0])));
+        const accepted = saved.placements.filter((p) => presets.some((pr) => pr.id === p.id && (pr.view === "front" ? 1 : 2) === p.piece));
+        setPlateP(accepted);
+        const art = accepted[0];
+        if (art) { setArtworkUrl(art.artUrl); setArtworkSourceUrl(art.fileUrl ?? art.artUrl); setArtworkName(art.fileName ?? "Artwork"); setArtMeta(art.pixelWidth && art.pixelHeight ? { width: art.pixelWidth, height: art.pixelHeight } : null); setArtIsVector(Boolean(art.isVector)); setPlateActive(art.id); }
+        setDraftMessage(cartLineId ? "Editing the item in your order" : "Your saved design is restored");
+      }
+    } catch { /* a missing or invalid local draft never blocks browsing */ }
+    setDraftLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plateOn, cartHydrated, cartItems, draftLoaded]);
+
   const decorationAdder = decoSelected.reduce((s, d) => s + d.perUnitAdderUsd, 0);
   // Ink-color cap = the most restrictive selected method's max (default 8 for
   // methods without a max, e.g. embroidery thread colors). Clamp the pick to it.
@@ -419,7 +465,7 @@ export function PdpConfigurator({
   // (saved below, or the editor on top of saved ones) adds the flat fee.
   const editorComplete = Boolean(artworkUrl && placement);
   const placementCount = plateOn
-    ? artworkUrl ? plateP.length : 0
+    ? plateP.length
     : use3dPlacement
     ? artworkUrl && place3d.length ? place3d.length : 0
     : savedPlacements.length + (editorComplete ? 1 : 0);
@@ -475,16 +521,23 @@ export function PdpConfigurator({
     // existing derivePlacement → real-inch dims / DPI / proof / tech-pack all
     // work natively — the 3D garment is just the editing surface.
     if (plateOn) {
-      if (!plateP.length || !artworkUrl) return [];
+      if (!plateP.length) return [];
       return plateP.map((q) => {
         const view: "front" | "back" = q.piece === 1 ? "front" : "back";
-        const heightIn = Math.round((q.widthIn / artAspect) * 4) / 4;
+        const aspect = q.pixelWidth && q.pixelHeight ? q.pixelWidth / q.pixelHeight : artAspect;
+        const heightIn = Math.round((q.widthIn / aspect) * 1000) / 1000;
+        const cal = plate?.manifest.views?.[view];
+        const width = cal ? q.widthIn * cal.pxPerIn / cal.w : 0.4;
+        const height = cal ? heightIn * cal.pxPerIn / cal.h : 0.4;
+        const box = cal ? { x: (cal.cfX + (view === "front" ? 1 : -1) * q.fromCfIn * cal.pxPerIn) / cal.w - width / 2, y: (cal.hpsY + q.belowHpsIn * cal.pxPerIn) / cal.h, w: width, h: height, r: 0 } : { x: 0.3, y: 0.3, w: width, h: height, r: 0 };
         const fromCenterIn = view === "front" ? q.fromCfIn : -q.fromCfIn; // spec convention: + = screen right
         return {
           view, zoneId: q.id, zoneLabel: presets.find((pr) => pr.id === q.id)?.label ?? q.id,
-          box: { x: 0.3, y: 0.3, w: 0.4, h: 0.4, r: 0 }, art: { ox: 0, oy: 0, sx: 1, sy: 1, r: q.rotDeg ?? 0 },
-          method, colors, pantones: pms, maxColors, widthIn: q.widthIn, heightIn,
-          artworkFileUrl: artworkUrl ?? undefined, artworkFileName: artworkName ?? undefined,
+          box, art: { ox: 0, oy: 0, sx: 1, sy: 1, r: q.rotDeg ?? 0 },
+          // Each side prints in its own file colours. A palette inferred from
+          // another side must never override the production original.
+          method, maxColors, widthIn: q.widthIn, heightIn,
+          artworkFileUrl: q.fileUrl ?? q.artUrl, artworkPreviewUrl: q.artUrl, artworkFileName: q.fileName ?? artworkName ?? undefined,
           spec3d: { widthIn: q.widthIn, heightIn, belowHpsIn: q.belowHpsIn, fromCenterIn, horizontal: horizontalLabel(fromCenterIn, view) },
         };
       });
@@ -551,7 +604,7 @@ export function PdpConfigurator({
     return Math.round(artMeta.width / d.widthIn);
   }, [artMeta, placement, calibration, view, artTransform]);
   const dpi3d = use3dPlacement ? place3d.reduce<number | null>((m, p) => (p.dpi == null ? m : m == null ? p.dpi : Math.min(m, p.dpi)), null) : null;
-  const dpiPlate = plateOn && artMeta ? plateP.reduce<number | null>((m, q) => { const d = Math.round(artMeta.width / q.widthIn); return m == null ? d : Math.min(m, d); }, null) : null;
+  const dpiPlate = plateOn ? plateP.reduce<number | null>((m, q) => { if (q.isVector || !q.pixelWidth) return m; const d = Math.round(q.pixelWidth / q.widthIn); return m == null ? d : Math.min(m, d); }, null) : null;
   const effDpi = plateOn ? dpiPlate : use3dPlacement ? dpi3d : printDpi;
   const lowRes = effDpi != null && effDpi < 150;
   const blockRes = effDpi != null && effDpi < 100;
@@ -579,6 +632,16 @@ export function PdpConfigurator({
   };
 
   const [uploading, setUploading] = useState(false);
+  const uploadController = useRef<AbortController | null>(null);
+  useEffect(() => () => uploadController.current?.abort(), []);
+  useEffect(() => {
+    if (!plateOn || !draftLoaded || uploading || cartLineId || seed0 || bundle) return;
+    const timer = window.setTimeout(() => {
+      try { localStorage.setItem(draftKey(product.slug), JSON.stringify(design)); } catch { /* local storage unavailable */ }
+    }, 350);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [designKey, draftLoaded, uploading, cartLineId]);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadWarning, setUploadWarning] = useState<string | null>(null);
 
@@ -609,11 +672,14 @@ export function PdpConfigurator({
   const onStagePointerLeave = () => setTilt({ x: 0, y: 0 });
 
   const removeArtwork = () => {
-    if (artworkUrl?.startsWith("blob:")) URL.revokeObjectURL(artworkUrl);
-    setArtworkUrl(null);
-    setArtworkName(null);
-    setArtMeta(null);
-    setUploadError(null);
+    uploadController.current?.abort();
+    setUploading(false);
+    if (plateOn) {
+      const kept = plateP.filter((q) => (q.piece === 1) !== (plateView === "front"));
+      setPlateP(kept); setPlateActive(null); setUploadError(null);
+      if (!kept.length) { setArtworkUrl(null); setArtworkSourceUrl(null); setArtworkName(null); setArtMeta(null); }
+    } else { setArtworkUrl(null); setArtworkSourceUrl(null); setArtworkName(null); setArtMeta(null); }
+    setUploadWarning(null);
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -648,52 +714,46 @@ export function PdpConfigurator({
   };
 
   const handleFile = async (file: File | undefined | null) => {
-    if (!file) return;
-    setArtNote(null);
-    setUploadError(null);
-    setUploadWarning(null);
-    // Show a local preview immediately while the upload runs.
-    const localPreview = URL.createObjectURL(file);
-    setArtworkUrl(localPreview);
-    if (/^image\/(png|jpe?g|webp|svg\+xml)$/.test(file.type)) void suggestFromArt(localPreview);
-    setArtworkName(file.name);
-    if (!placementId) {
-      setPlacementId(placements[0]?.id ?? null);
+    if (!file || uploading) return;
+    setUploadError(null); setUploadWarning(null); setSaveError(null);
+    if (!["image/png", "image/jpeg", "image/webp", "application/pdf"].includes(file.type)) {
+      setUploadError("Use PNG, JPG, WEBP or a single-page PDF."); return;
     }
+    if (file.size > 4 * 1024 * 1024) { setUploadError("Use a file under 4 MB."); return; }
+    const targetView = plateView;
+    const controller = new AbortController(); uploadController.current = controller;
     setUploading(true);
+    const timeout = window.setTimeout(() => controller.abort(), 60000);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload-artwork", { method: "POST", body: fd });
-      const data = (await res.json()) as { url?: string; error?: string; warning?: string; kind?: string; meta?: { width?: number; height?: number } };
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Upload failed");
-      }
-      // Swap the local blob URL for the persisted public URL so it survives
-      // navigation into the cart + ends up on the order.
-      URL.revokeObjectURL(localPreview);
-      setArtworkUrl(data.url);
+      const fd = new FormData(); fd.append("file", file);
+      const res = await fetch("/api/upload-artwork", { method: "POST", body: fd, signal: controller.signal });
+      const data = await res.json().catch(() => ({})) as { url?: string; previewUrl?: string; error?: string; warning?: string; kind?: string; meta?: { width?: number; height?: number } };
+      if (!res.ok || !data.url || !data.previewUrl) throw new Error(data.error ?? "Upload failed. Please try again.");
+      // A replacement commits only once it has a usable image. The previous
+      // artwork and placement survive a rejected, cancelled or failed upload.
+      const image = new window.Image(); image.crossOrigin = "anonymous"; image.src = data.previewUrl; await image.decode();
+      if (controller.signal.aborted) return;
+      const meta = data.meta?.width && data.meta.height ? { width: data.meta.width, height: data.meta.height } : { width: image.naturalWidth, height: image.naturalHeight };
+      setArtworkUrl(data.previewUrl); setArtworkSourceUrl(data.url); setArtworkName(file.name); setArtIsVector(data.kind === "vector"); setArtMeta(meta);
       setUploadWarning(data.warning ?? null);
-      const meta = data.kind === "raster" && data.meta?.width && data.meta?.height ? { width: data.meta.width, height: data.meta.height } : null;
-      setArtMeta(meta);
-      rememberArt({ url: data.url, name: file.name, meta });
+      if (plateOn) {
+        const piece = targetView === "front" ? 1 : 2;
+        const current = plateP.find((p) => p.piece === piece);
+        const pr = presets.find((p) => p.id === current?.id) ?? presets.find((p) => p.view === targetView);
+        if (!pr) throw new Error("This view does not support artwork.");
+        const next: PlatePlacement = { id: pr.id, piece, widthIn: current?.widthIn ?? pr.widthIn, belowHpsIn: current?.belowHpsIn ?? pr.belowHpsIn, fromCfIn: current?.fromCfIn ?? pr.fromCfIn,
+          artUrl: data.previewUrl, fileUrl: data.url, fileName: file.name, pixelWidth: meta.width, pixelHeight: meta.height, isVector: data.kind === "vector" };
+        setPlateP((all) => [...all.filter((p) => p.piece !== piece), next]);
+        setPlateActive(pr.id); setPlateView(targetView);
+      } else if (!placementId) setPlacementId(placements[0]?.id ?? null);
+      rememberArt({ url: data.previewUrl, sourceUrl: data.url, name: file.name, meta, isVector: data.kind === "vector" });
+      void suggestFromArt(data.previewUrl);
       analytics.artworkUploaded({ slug: product.slug, file: file.name, kind: data.kind ?? "unknown", low_res: Boolean(data.warning) });
-    } catch (err) {
-      URL.revokeObjectURL(localPreview);
-      setArtworkUrl(null);
-      setArtworkName(null);
-      setArtMeta(null);
-      setArtNote(null);
-      // A rejected file must not stay on the garment: drop placements made from its preview.
-      setPlateP([]);
-      setPlateChecks({});
-      setPlateActive(null);
-      setPlace3d([]);
-      setPreset(null);
-      if (suggestedFromArt.current) { setDecorationIds([]); setPantones([]); suggestedFromArt.current = false; }
-      setUploadError(err instanceof Error ? err.message : "Upload failed");
+    } catch (error) {
+      setUploadError(controller.signal.aborted ? "Upload interrupted. Please try again." : error instanceof Error ? error.message : "Upload failed. Please try again.");
     } finally {
-      setUploading(false);
+      clearTimeout(timeout); setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
@@ -745,7 +805,16 @@ export function PdpConfigurator({
     try {
       await new Promise((r) => setTimeout(r, 60));
       let dataUrl: string;
-      if (is3d) {
+      if (plateOn) {
+        const handle = plateView === "front" ? frontHandle.current : backHandle.current;
+        if (!handle) throw new Error("Preview is still loading.");
+        const blob = await handle.exportPng();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a"); link.href = url;
+        link.download = `${product.slug}-${variant?.colorLabel ?? "mockup"}-${plateView}.png`.replace(/\s+/g, "-").toLowerCase();
+        link.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+        return;
+      } else if (is3d) {
         // WebGL: read the rendered frame straight off the canvas. Works because
         // the 3D Canvas is created with preserveDrawingBuffer (see Garment3D).
         const canvas = stageRef.current.querySelector("canvas");
@@ -761,14 +830,39 @@ export function PdpConfigurator({
       a.click();
       analytics.track("mockup_downloaded", { slug: product.slug, mode: is3d ? "3d" : "2d" });
     } catch {
-      /* ignore — download is best-effort */
+      toast("Could not download the mockup. Please wait for the preview and try again.");
     } finally {
       setDownloading(false);
     }
   };
 
-  const handleAddToCart = () => {
-    if (belowMoq || !variant || submitting || blockRes) return;
+  const savingOrder = useRef(false);
+  const snapshots = useRef<{ key: string; urls: Partial<Record<PlateView, string>> }>({ key: "", urls: {} });
+  const handleAddToCart = async () => {
+    if (cartLineId && !cartItems.some((item) => item.lineId === cartLineId)) { setSaveError("This item is no longer in your cart. Open the style from the shop to start a new order."); return; }
+    if (belowMoq || !variant || submitting || savingOrder.current || blockRes || plateBlocked || uploading || !previewReady || (plateOn && (!plateP.length || !decoSelected.length))) return;
+    savingOrder.current = true; setSubmitting(true); setSaveError(null);
+    try {
+      if (snapshots.current.key !== designKey) snapshots.current = { key: designKey, urls: {} };
+      const mockupUrls: Partial<Record<PlateView, string>> = snapshots.current.urls;
+      if (plateOn) {
+        const views = availableViews.filter((v) => plateP.some((p) => (p.piece === 1) === (v === "front")));
+        for (const v of views) {
+          if (mockupUrls[v]) continue;
+          const handle = v === "front" ? frontHandle.current : backHandle.current;
+          if (!handle) throw new Error("The preview is not ready. Please try again.");
+          const png = await handle.exportPng();
+          const bitmap = await createImageBitmap(png);
+          const canvas = document.createElement("canvas"); canvas.width = 1600; canvas.height = Math.round(1600 * bitmap.height / bitmap.width);
+          canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close();
+          const image = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("Could not save the preview.")), "image/webp", 0.95));
+          const form = new FormData(); form.append("view", v); form.append("file", image, `${v}.webp`);
+          const response = await fetch("/api/upload-mockup", { method: "POST", body: form, signal: AbortSignal.timeout(30000) });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.url) throw new Error(data.error ?? "Your mockup could not be saved. Please try again.");
+          mockupUrls[v] = data.url;
+        }
+      }
     const decorationLabel = (decoSelected.length
       ? decoSelected.map((d) => d.label).join(" + ")
       : "Undecorated") + (wovenLabel ? " + Woven label" : "");
@@ -787,7 +881,9 @@ export function PdpConfigurator({
       const file = p.artworkFileUrl ? `  Art file: ${p.artworkFileName ?? "uploaded"} (${p.artworkFileUrl})` : "";
       return [head, box, art, file].filter(Boolean).join("\n");
     });
-    addItem({
+    const saveItem = cartLineId ? (item: Omit<import("./CartProvider").CartItem, "lineId">) => updateItem(cartLineId, item) : addItem;
+    saveItem({
+      ...(plateOn ? { mockupUrls: { ...mockupUrls }, design } : {}),
       productId: product.id,
       slug: product.slug,
       displayName: product.displayName,
@@ -808,7 +904,7 @@ export function PdpConfigurator({
       artworkFileUrl: primary?.artworkFileUrl ?? artworkUrl ?? undefined,
       artworkNotes: [
         ...placementNotes,
-        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · label fabric ${wovenLabel.labelColor} · thread ${wovenLabel.thread} · inside neck${wovenLabel.logoTransform ? ` · logo box ox=${wovenLabel.logoTransform.ox.toFixed(2)} oy=${wovenLabel.logoTransform.oy.toFixed(2)} w=${wovenLabel.logoTransform.sx.toFixed(2)} h=${wovenLabel.logoTransform.sy.toFixed(2)}` : ""}`] : []),
+        ...(wovenLabel ? [`Woven label: ${wovenLabel.logoUrl ? `logo ${wovenLabel.logoName} (${wovenLabel.logoFileUrl ?? wovenLabel.logoUrl})` : `"${wovenLabel.text}"`} · label fabric ${wovenLabel.labelColor} · thread ${wovenLabel.thread} · inside neck${wovenLabel.logoTransform ? ` · logo box ox=${wovenLabel.logoTransform.ox.toFixed(2)} oy=${wovenLabel.logoTransform.oy.toFixed(2)} w=${wovenLabel.logoTransform.sx.toFixed(2)} h=${wovenLabel.logoTransform.sy.toFixed(2)}` : ""}`] : []),
       ].join("\n"),
       // Structured placement — primary threads to the tech pack/proof; the full
       // set rides along for multi-placement orders.
@@ -819,7 +915,11 @@ export function PdpConfigurator({
       fabricLabel: fabricOption?.label,
       fabricUpchargeUsd: fabricAdder,
     });
-    toast("Added to your order", { href: "/cart", cta: "View cart" });
+    setReviewOpen(false);
+    toast(cartLineId ? "Your order is updated" : "Added to your order", { href: "/cart", cta: "View cart" });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save your design. Please try again.");
+    } finally { savingOrder.current = false; setSubmitting(false); }
   };
 
   // BUNDLE MODE — same full payload as add-to-cart, but handed to the box (no
@@ -913,6 +1013,34 @@ export function PdpConfigurator({
     }
   };
 
+  // New orders go through a review first: the spec in plain words is what we produce.
+  const [reviewOpen, setReviewOpen] = useState(false);
+  // The pinned bar renders straight into <body>, outside every page wrapper, so no
+  // later section (the footer) can ever paint over it.
+  const [portalReady, setPortalReady] = useState(false);
+  useEffect(() => setPortalReady(true), []);
+  const [reviewZoom, setReviewZoom] = useState(false);
+  const reviewRef = useRef<HTMLDivElement>(null);
+  const submittingRef = useRef(submitting); submittingRef.current = submitting;
+  useEffect(() => {
+    if (!reviewOpen) return;
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    reviewRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !submittingRef.current) { event.preventDefault(); setReviewOpen(false); }
+      if (event.key !== "Tab") return;
+      const controls = [...(reviewRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]') ?? [])].filter((el) => el.getClientRects().length);
+      if (!controls.length) { event.preventDefault(); return; }
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === reviewRef.current)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || document.activeElement === reviewRef.current)) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = overflow; document.removeEventListener("keydown", onKey); trigger?.focus({ preventScroll: true }); };
+  }, [reviewOpen]);
+
   if (done) {
     return (
       <section className="pdpx">
@@ -927,20 +1055,17 @@ export function PdpConfigurator({
     );
   }
 
-  // New orders go through a review first: the spec in plain words is what we produce.
-  const [reviewOpen, setReviewOpen] = useState(false);
-  // The pinned bar renders straight into <body>, outside every page wrapper, so no
-  // later section (the footer) can ever paint over it.
-  const [portalReady, setPortalReady] = useState(false);
-  useEffect(() => setPortalReady(true), []);
-  const [reviewZoom, setReviewZoom] = useState(false);
-  const onCta = bundle ? handleAddToBox : editOrder ? handleUpdate : () => setReviewOpen(true);
+  const onCta = bundle ? handleAddToBox : editOrder ? handleUpdate : () => {
+    if (plateOn && !plateP.length) { setStep("placement"); return; }
+    if (plateOn && !decoSelected.length) { setStep("decoration"); return; }
+    setReviewOpen(true);
+  };
 
   // One CTA definition, rendered in the rail and in the pinned bottom bar.
   const ctaButton = (className: string) => (
-    <button type="button" className={className} onClick={onCta} disabled={belowMoq || submitting || blockRes || plateBlocked}>
+    <button type="button" className={className} onClick={onCta} disabled={belowMoq || submitting || blockRes || plateBlocked || uploading || !previewReady}>
 
-            {plateBlocked
+            {uploading ? "Uploading artwork..." : failedView ? "Reload preview to continue" : !previewReady ? "Preparing preview..." : plateOn && !plateP.length ? "Add artwork" : plateOn && !decoSelected.length ? "Choose decoration" : plateBlocked
               ? "Move the artwork inside the print area"
               : blockRes
               ? "Resolution too low for this size"
@@ -999,7 +1124,7 @@ export function PdpConfigurator({
           ) : (
             <span className="pdpx-eyebrow pdpx-eyebrow--muted">{view} view</span>
           )}
-          <button type="button" className="pdpx-download pdpx-download--icon" onClick={handleDownload} disabled={downloading} aria-label="Download image" title="Download image">
+          <button type="button" className="pdpx-download pdpx-download--icon" onClick={handleDownload} disabled={downloading || !previewReady || uploading} aria-label="Download image" title="Download image">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 13.5h11" stroke="currentColor" strokeWidth="1.6" /></svg>
           </button>
         </div>
@@ -1010,18 +1135,25 @@ export function PdpConfigurator({
         <div
           ref={stageRef}
           className={`pdpx-canvas${downloading ? " is-capturing" : ""}${is3d ? " is-3d" : ""}`}
-          onPointerMove={is3d ? undefined : onStagePointerMove}
-          onPointerLeave={is3d ? undefined : onStagePointerLeave}
+          onPointerMove={is3d || plateOn ? undefined : onStagePointerMove}
+          onPointerLeave={is3d || plateOn ? undefined : onStagePointerLeave}
         >
           {plateOn && !spin ? (
             <div className="pdpx-canvas-plate">
-              <PlateComposite
-                base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={plateView} manifest={plate!.manifest}
-                placements={plateList.filter((q) => (q.piece === 1) === (plateView === "front"))}
-                onChange={(next) => setPlateP((all) => all.map((q) => next.find((n) => n.id === q.id) ?? q))}
-                onCheck={(c) => setPlateChecks((prev) => ({ ...prev, ...c }))}
-                guides={step === "placement"}
-              />
+              {availableViews.map((v) => (
+                <div key={v} className={`pdpx-plate-view${plateView === v ? " is-visible" : ""}`} aria-hidden={plateView !== v} inert={plateView !== v}>
+                  <PlateComposite
+                    base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessory"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest}
+                    placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))}
+                    onChange={(next) => setPlateP((all) => all.map((q) => next.find((n) => n.id === q.id) ?? q))}
+                    onCheck={(checks) => setPlateChecks((prev) => ({ ...prev, ...checks }))}
+                    onSelect={setPlateActive} selectedId={activeP?.id}
+                    onStatus={(status) => setPlateStatuses((prev) => prev[v]?.key === renderKey && prev[v]?.status === status ? prev : { ...prev, [v]: { key: renderKey, status } })}
+                    renderKey={renderKey} exportRef={v === "front" ? frontHandle : backHandle} label={`${product.displayName}, ${variant?.colorLabel}`}
+                    guides={step === "placement" && plateView === v}
+                  />
+                </div>
+              ))}
             </div>
           ) : placing3d && artworkUrl && modelUrl && !plateOn ? (
             <div className="pdpx-canvas-3d">
@@ -1103,6 +1235,7 @@ export function PdpConfigurator({
           )}
         </div>
 
+        {failedView ? <p className="pdpx-save-error" role="alert">The {failedView} preview needs to reload. <button type="button" className="pdpx-active-remove" onClick={() => setPlateView(failedView)}>Open {failedView}</button></p> : null}
         <p className="pdpx-shotnote">
           {is3d
             ? `3D preview, ${variant?.colorLabel} · drag to rotate, scroll to zoom`
@@ -1115,6 +1248,7 @@ export function PdpConfigurator({
           <p className="pdpx-style">Style {product.skuCode}</p>
           <h1 className="pdpx-title">{product.displayName}</h1>
           <p className="pdpx-lede">{product.headline}</p>
+          {draftLoaded && plateOn ? <p className="pdpx-draft" role="status">{draftMessage ?? "Your design saves in this browser"}</p> : null}
         </div>
 
         <div className="pdpx-steps">
@@ -1241,7 +1375,7 @@ export function PdpConfigurator({
                         <input
                           ref={fileRef}
                           type="file"
-                          accept="image/png,image/jpeg,image/svg+xml,application/pdf,.ai,.eps"
+                          accept="image/png,image/jpeg,image/webp,application/pdf"
                           className="pdpx-file"
                           onChange={(e) => handleFile(e.target.files?.[0])}
                         />
@@ -1266,9 +1400,9 @@ export function PdpConfigurator({
                           onDragLeave={() => setDragOver(false)}
                           onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
                         >
-                          <span className="pdpx-drop-eyebrow">Your artwork</span>
+                          <span className="pdpx-drop-eyebrow">{plateOn ? `${plateView} artwork` : "Your artwork"}</span>
                           <span className="pdpx-drop-cta">
-                            {uploading ? "Uploading…" : artworkName ? artworkName : "Upload artwork"}
+                            {uploading ? "Preparing artwork..." : plateOn ? activeP?.fileName ?? "Upload artwork" : artworkName ?? "Upload artwork"}
                           </span>
                           <span className={`pdpx-drop-hint${uploadError ? " is-error" : uploadWarning && artworkUrl && !uploading ? " is-warn" : artworkUrl && !uploading ? " is-ok" : ""}`}>
                             {uploadError
@@ -1276,10 +1410,12 @@ export function PdpConfigurator({
                               : uploadWarning && artworkUrl && !uploading
                               ? uploadWarning
                               : artworkUrl && !uploading
-                              ? "Uploaded · high-resolution, print-ready"
-                              : "PNG, JPG, SVG, WEBP, PDF, vector preferred"}
+                              ? "Artwork uploaded"
+                              : "PNG, JPG, WEBP or single-page PDF. Up to 4 MB."}
                           </span>
                         </button>
+                        {plateOn && activeP ? <div className="pdpx-art-actions"><button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}>Replace {plateView} artwork</button><button type="button" onClick={removeArtwork} disabled={uploading}>Remove</button></div> : null}
+                        {plateOn && !activeP && plateP.length ? <button type="button" className="pdpx-reuse-btn" onClick={() => { const pr = presets.find((p) => p.view === plateView); if (pr) addPlatePreset(pr); }}>Use the same artwork on the {plateView}</button> : null}
 
                         {use3dPlacement || plateOn ? (
                           artworkUrl && presets.length ? (
@@ -1290,8 +1426,7 @@ export function PdpConfigurator({
                                   {(["front", "back"] as const).filter((ar) => presets.some((p) => p.view === ar)).map((area) => {
                                     const opts = presets.filter((p) => p.view === area);
                                     const chosenIds = plateP.filter((q) => opts.some((o) => o.id === q.id)).map((q) => q.id);
-                                    const nape = opts.find((o) => o.id === "nape");
-                                    const body = opts.filter((o) => o.id !== "nape");
+
                                     // Back row choices: each print on its own, plus back neck with a back print.
                                     const choices: { key: string; label: string; ids: string[] }[] = [
                                       ...opts.map((o) => ({ key: o.id, label: o.label, ids: [o.id] })),
@@ -1300,20 +1435,17 @@ export function PdpConfigurator({
                                     const choose = (ids: string[]) => {
                                       setPlateP((l) => l.filter((q) => !opts.some((o) => o.id === q.id)));
                                       ids.forEach((id) => { const pr = opts.find((o) => o.id === id); if (pr) addPlatePreset(pr); });
-                                      if (nape && ids.includes("nape") && ids.length > 1) {
-                                        // Back print starts 2 in below the neck print so the two never touch.
-                                        const clear = Math.ceil((nape.belowHpsIn + nape.widthIn / artAspect + 2) * 4) / 4;
-                                        setPlateP((l) => l.map((q) => (q.id !== "nape" && opts.some((o) => o.id === q.id) && q.belowHpsIn < clear ? { ...q, belowHpsIn: clear } : q)));
-                                      }
                                       setPlateView(area);
                                       if (ids.length) setPlateActive(ids[ids.length - 1]);
                                     };
                                     const cal = plate!.manifest.views?.[area];
+                                    const areaArt = plateP.find((q) => (q.piece === 1) === (area === "front"));
+                                    const areaAspect = areaArt?.pixelWidth && areaArt.pixelHeight ? areaArt.pixelWidth / areaArt.pixelHeight : artAspect;
                                     const thumb = (ids: string[]) => (
                                       <span className="pdpx-area-thumb" style={cal ? { backgroundImage: `url(${plate!.base}/${area}.webp${plate!.manifest.v ? `?v=${plate!.manifest.v}` : ""})` } : undefined}>
                                         {cal ? ids.map((id) => {
                                           const p = opts.find((o) => o.id === id)!;
-                                          const ppi = cal.pxPerIn, w = p.widthIn * ppi, h = w / artAspect;
+                                          const ppi = cal.pxPerIn, w = p.widthIn * ppi, h = w / areaAspect;
                                           const cx = cal.cfX + (area === "front" ? 1 : -1) * p.fromCfIn * ppi, top = cal.hpsY + p.belowHpsIn * ppi;
                                           return <i key={id} style={{ left: `${((cx - w / 2) / cal.w) * 100}%`, top: `${(top / cal.h) * 100}%`, width: `${(w / cal.w) * 100}%`, height: `${(h / cal.h) * 100}%` }} />;
                                         }) : null}
@@ -1356,15 +1488,16 @@ export function PdpConfigurator({
                                   </div>
                                   <label className="pdpx-width">
                                     <span>Width</span>
-                                    <input type="range" min={1} max={14} step={0.25} value={activeP.widthIn} onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, widthIn: +e.target.value } : q)))} />
+                                    <input type="range" min={0.5} max={14} step={0.25} value={activeP.widthIn} onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, widthIn: +e.target.value } : q)))} />
                                     <em>{activeP.widthIn} in</em>
                                   </label>
                                   <label className="pdpx-width">
-                                    <span>Height</span>
-                                    <input type="range" min={0.5} max={20} step={0.25} value={activeP.belowHpsIn} aria-label="Distance below the shoulder" onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, belowHpsIn: +e.target.value } : q)))} />
+                                    <span>Position</span>
+                                    <input type="range" min={0.5} max={20} step={0.25} value={activeP.belowHpsIn} aria-label={["headwear", "bag", "accessory"].includes(product.category) ? "Distance below the top" : "Distance below the shoulder"} onChange={(e) => setPlateP((l) => l.map((q) => (q.id === activeP.id ? { ...q, belowHpsIn: +e.target.value } : q)))} />
                                     <em>{activeP.belowHpsIn} in</em>
                                   </label>
-                                  <p className="pdpx-slider-hint">Height is measured down from the top of the shoulder (HPS).</p>
+                                  <div className="pdpx-art-actions"><button type="button" onClick={() => setPlateP((all) => all.map((q) => q.id === activeP.id ? { ...q, fromCfIn: 0 } : q))}>Centre artwork</button><button type="button" onClick={() => { const pr = presets.find((p) => p.id === activeP.id); if (pr) addPlatePreset(pr); }}>Reset placement</button></div>
+                                  <p className="pdpx-slider-hint">{["headwear", "bag", "accessory"].includes(product.category) ? "Position is measured down from the top of the product body." : "Position is measured down from the top of the shoulder."}</p>
                                   <p className={`pdpx-printable${plateChecks[activeP.id] && !plateChecks[activeP.id].ok ? " is-bad" : ""}`}>
                                     {plateChecks[activeP.id] && !plateChecks[activeP.id].ok ? plateChecks[activeP.id].reason : `Printable. ${activeP.widthIn} in wide, ${activeP.belowHpsIn} in below HPS, ${activeP.fromCfIn === 0 ? "centred" : `${Math.abs(activeP.fromCfIn)} in wearer's ${activeP.fromCfIn > 0 ? "left" : "right"}`}.`}
                                   </p>
@@ -1549,7 +1682,7 @@ export function PdpConfigurator({
           </div>
 
           {/* Woven-label add-on: garments only (boxes/packaging don't take labels) */}
-          {!isPackaging ? (
+          {supportsNeckLabel ? (
             <div className={`pdpx-addon${wovenLabel ? " is-on" : ""}`}>
               <span className="pdpx-addon-swatch" style={{ background: wovenLabel?.labelColor ?? "#1E1E1E" }} aria-hidden>
                 {wovenLabel?.logoUrl ? (
@@ -1677,19 +1810,20 @@ export function PdpConfigurator({
           if (!q || !cal) return { width: "100%", left: 0, top: 0 };
           const ppi = cal.pxPerIn;
           const fx = (cal.cfX + (v === "front" ? 1 : -1) * q.fromCfIn * ppi) / cal.w;
-          const fy = (cal.hpsY + (q.belowHpsIn + q.widthIn / artAspect / 2) * ppi) / cal.h;
+          const qAspect = q.pixelWidth && q.pixelHeight ? q.pixelWidth / q.pixelHeight : artAspect;
+          const fy = (cal.hpsY + (q.belowHpsIn + q.widthIn / qAspect / 2) * ppi) / cal.h;
           const clamp = (f: number) => Math.min(Math.max(f, 0.5 / ZOOM), 1 - 0.5 / ZOOM);
           return { width: `${ZOOM * 100}%`, left: `${50 - clamp(fx) * ZOOM * 100}%`, top: `${50 - clamp(fy) * ZOOM * 100}%` };
         };
         const sideWords = (q: { fromCfIn: number; piece: number }) => (Math.abs(q.fromCfIn) < 0.25 ? "centred" : `${q.fromCfIn > 0 ? "left" : "right"} side`);
         return (
-        <div className="rv" role="dialog" aria-modal="true" aria-label="Review your order" onClick={() => setReviewOpen(false)}>
+        createPortal(<div ref={reviewRef} tabIndex={-1} className="rv" role="dialog" aria-modal="true" aria-label="Review your order" onClick={() => { if (!submitting) setReviewOpen(false); }}>
           <div className="rv-card" onClick={(e) => e.stopPropagation()}>
             <div className={`rv-stage${shown.length > 1 ? " is-two" : ""}${reviewZoom ? " is-zoom" : ""}`}>
               {plateOn ? shown.map((v) => (
                 <figure key={v} className="rv-view">
                   <div className="rv-zoom" style={zoomStyle(v)}>
-                    <PlateComposite base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessories"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
+                    <PlateComposite base={plate!.base} colour={plateColour} tint={plateTint} heather={/heather/i.test(variant?.colorLabel ?? "")} clearanceIn={["headwear", "bag", "accessory"].includes(product.category) ? 0.4 : 0.75} view={v} manifest={plate!.manifest} placements={plateList.filter((q) => (q.piece === 1) === (v === "front"))} guides={false} />
                   </div>
                   <figcaption>{v === "front" ? "Front" : "Back"}</figcaption>
                 </figure>
@@ -1744,13 +1878,14 @@ export function PdpConfigurator({
                 <li><b>4</b><span>Delivered {formatDeliveredBy(product.leadTimeDays)}</span></li>
               </ol>
 
-              <button type="button" className="rv-cta" onClick={() => { setReviewOpen(false); handleAddToCart(); }} disabled={submitting}>
-                <span>Add to order</span><span>{currency(subtotal)}</span>
+              <button type="button" className="rv-cta" onClick={() => void handleAddToCart()} disabled={submitting || !previewReady || plateBlocked || blockRes || uploading}>
+                <span>{submitting ? "Saving your design..." : cartLineId ? "Update order" : "Add to order"}</span><span>{currency(subtotal)}</span>
               </button>
-              <button type="button" className="rv-back" onClick={() => setReviewOpen(false)}>Back to editing</button>
+              {saveError ? <p className="pdpx-save-error" role="alert">{saveError}</p> : null}
+              <button type="button" className="rv-back" disabled={submitting} onClick={() => { if (!submitting) setReviewOpen(false); }}>Back to editing</button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
         );
       })() : null}
 

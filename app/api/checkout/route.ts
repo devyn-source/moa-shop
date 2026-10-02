@@ -1,3 +1,5 @@
+import plateIndex from "@/lib/plates.generated.json";
+import { validMockupUrls } from "@/lib/mockup-urls";
 import { NextResponse } from "next/server";
 import { createOrder, getProductById } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
@@ -14,6 +16,7 @@ import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 export const runtime = "nodejs";
 
 type CartLine = {
+  mockupUrls?: OrderInput["mockupUrls"];
   productId: string;
   variantId: string;
   decorationIds: string[];
@@ -75,9 +78,18 @@ export async function POST(request: Request) {
     if (express) {
       for (const item of items) {
         const product = await getProductById(item.productId);
+        if (product && product.slug in plateIndex && !item.bundleId && !item.mockupUrls) {
+          return NextResponse.json({ error: `Open ${product.displayName} from your cart and save its design before checking out.` }, { status: 400 });
+        }
         if (!product || !inLaunchScope(product)) {
           return NextResponse.json({ error: `${item.displayName || "One item"} is not available to order right now. Remove it from your cart to continue.` }, { status: 400 });
         }
+      }
+    }
+
+    for (const item of items) {
+      if (item.mockupUrls && !validMockupUrls(item.mockupUrls, process.env.SUPABASE_URL)) {
+        return NextResponse.json({ error: "A saved mockup is invalid. Open that item and save the design again." }, { status: 400 });
       }
     }
 
@@ -110,6 +122,7 @@ export async function POST(request: Request) {
           artworkNotes: item.artworkNotes || "",
           artworkPlacement: item.artworkPlacement,
           artworkPlacements: item.artworkPlacements,
+          mockupUrls: item.mockupUrls,
           wovenLabel: item.wovenLabel,
           fabricOptionId: item.fabricOptionId,
           sizeBreakdown: item.sizeBreakdown
@@ -195,6 +208,7 @@ export async function POST(request: Request) {
             artworkNotes: src.artworkNotes || "",
             artworkPlacement: src.artworkPlacement,
             artworkPlacements: src.artworkPlacements,
+            mockupUrls: src.mockupUrls,
             wovenLabel: src.wovenLabel,
             fabricOptionId: src.fabricOptionId,
             sizeBreakdown: src.sizeBreakdown,
@@ -246,8 +260,15 @@ export async function POST(request: Request) {
       for (const c of created) {
         try {
           const url = await generateProof(c.order, proofOrigin);
+          if (!url && c.order.mockupUrls) throw new Error("Could not store the proof");
           if (url) { await setOrderProof(c.order.id, url); c.order.proofUrl = url; }
-        } catch (e) { console.warn("[express] proof render failed", c.order.id, e); }
+        } catch (e) {
+          console.warn("[express] proof render failed", c.order.id, e);
+          if (c.order.mockupUrls) {
+            for (const entry of created) await updateOrderStatus(entry.order.id, "cancelled", "Mockup could not be saved; customer can retry").catch(() => null);
+            return NextResponse.json({ error: "Your mockup could not be attached to the order. Please try again." }, { status: 502 });
+          }
+        }
       }
       const pushed = await pushExpressOrder(created.map((c) => c.order), contact, contact.shipToName, contact.shipToAddress);
       if (!pushed.ok) {

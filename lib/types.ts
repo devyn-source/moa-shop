@@ -165,6 +165,7 @@ export type ArtworkPlacement = {
   // own art (e.g. chest logo + back graphic). Absent on the primary placement,
   // which inherits the order-level artworkFileUrl/Name.
   artworkFileUrl?: string;
+  artworkPreviewUrl?: string;
   artworkFileName?: string;
   // 3D-driven placement capture (buyer placed art on the 3D garment). `uv` is the
   // mesh UV at the decal center — the production invariant that maps to the DXF
@@ -205,6 +206,7 @@ export type ShopOrder = {
   bundleDiscountUsd?: number; // this line's share of the box discount (already reflected in totalUsd)
   artworkFileName: string;
   artworkFileUrl?: string;
+  artworkPreviewUrl?: string;
   artworkNotes: string;
   artworkPlacement?: ArtworkPlacement; // the primary placement (back-compat)
   artworkPlacements?: ArtworkPlacement[]; // full set for multi-placement orders (incl. the primary)
@@ -212,6 +214,7 @@ export type ShopOrder = {
   fabricOptionId?: string; // chosen fabric tier (econ/premium) — upcharge priced server-side
   fabricLabel?: string; // display label of the chosen fabric
   sizeBreakdown?: Record<string, number>; // size run (e.g. { S: 10, M: 20 })
+  mockupUrls?: Partial<Record<"front" | "back", string>>;
   proofUrl?: string; // auto-generated proof image (garment + placed art)
   proofApprovedAt?: string; // customer sign-off — the QA. Gates the vendor send.
   // Proof-approval follow-through (orders that are paid but not yet approved).
@@ -264,6 +267,7 @@ export type ShopOrder = {
 };
 
 export type OrderInput = {
+  mockupUrls?: Partial<Record<"front" | "back", string>>;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -274,6 +278,7 @@ export type OrderInput = {
   quantity: number;
   artworkFileName: string;
   artworkFileUrl?: string;
+  artworkPreviewUrl?: string;
   artworkNotes: string;
   artworkPlacement?: ArtworkPlacement; // the primary placement (back-compat)
   artworkPlacements?: ArtworkPlacement[]; // full set for multi-placement orders (incl. the primary)

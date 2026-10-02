@@ -49,10 +49,10 @@ export default async function ProductPage({
   searchParams
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string; kit?: string; plates?: string }>;
+  searchParams: Promise<{ preview?: string; kit?: string; plates?: string; edit?: string }>;
 }) {
   const { slug } = await params;
-  const { preview, kit, plates } = await searchParams;
+  const { preview, kit, plates, edit } = await searchParams;
   const product = await getProductBySlug(slug);
 
   // Unpublished SKUs (e.g. the internal test SKU) render only with a valid
@@ -141,7 +141,7 @@ export default async function ProductPage({
       {await (async () => {
         // Plate styles never need the 3D model: skip that storage lookup entirely.
         const plate = await getPlate(product.slug, { preview: plates === "preview" });
-        return <PdpConfigurator product={product} modelUrl={plate ? null : await getModelUrl(product.slug)} plate={plate} />;
+        return <PdpConfigurator key={`${product.id}:${edit ?? "new"}`} cartLineId={edit} product={product} modelUrl={plate ? null : await getModelUrl(product.slug)} plate={plate} />;
       })()}
 
       {launchMode() ? null : (

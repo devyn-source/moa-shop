@@ -245,6 +245,7 @@ export async function createOrder(input: OrderInput, opts: { paid?: boolean } = 
     artworkNotes: input.artworkNotes,
     artworkPlacement: input.artworkPlacement,
     artworkPlacements: input.artworkPlacements,
+    mockupUrls: input.mockupUrls,
     wovenLabel: input.wovenLabel,
     fabricOptionId: input.fabricOptionId,
     fabricLabel: input.fabricLabel ?? product.fabricOptions?.find((o) => o.id === input.fabricOptionId)?.label,

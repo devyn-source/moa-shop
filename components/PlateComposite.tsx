@@ -5,7 +5,7 @@
 // the same inches as the factory sheet. It bends with the folds (shading pass),
 // stays on its pattern piece (piece mask) and takes the decoration method's finish.
 // Drag the artwork on the photo to move it; the parent receives inches.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import {
   loadDataPng, sampleAt, artRectMm, inchesFromCentreMm, plateUrl, WEARER_LEFT_SIGN, MM,
   buildCoverage, checkPrintable, mmToPx, helperMaps2D,
@@ -156,7 +156,10 @@ export function trimShade(hex: string): string {
   return "#" + [a, bb, cc].map((v) => Math.round(Math.min(1, Math.max(0, v + m0)) * 255).toString(16).padStart(2, "0")).join("");
 }
 
-type Loaded = { gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number]; baseLum: number; img: [number, number]; cal2d?: import("@/lib/plates").Plate2DView };
+export type PlateStatus = "loading" | "ready" | "error";
+export type PlateHandle = { exportPng: () => Promise<Blob> };
+
+type Loaded = { buffer: WebGLBuffer; shaders: WebGLShader[]; gl: WebGL2RenderingContext; prog: WebGLProgram; tex: Record<string, WebGLTexture>; uv: DecodedMap; pieces: DecodedMap; size: [number, number]; baseLum: number; img: [number, number]; cal2d?: import("@/lib/plates").Plate2DView };
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string) {
   const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s);
@@ -178,7 +181,25 @@ function fabricLum(img: HTMLImageElement): number {
   return vals[Math.floor(vals.length * 0.5)]; // median fabric brightness
 }
 
-const loadImage = (url: string) => new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => res(i); i.onerror = rej; i.src = url; });
+// Share decoded images between the stage, back view and review. Failed loads are
+// evicted so Retry can recover; the bounded cache never keeps an entire catalog.
+const imageCache = new Map<string, Promise<HTMLImageElement>>();
+function loadImage(url: string): Promise<HTMLImageElement> {
+  const cached = imageCache.get(url);
+  if (cached) return cached;
+  const pending = new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    const timer = window.setTimeout(() => { img.src = ""; reject(new Error("Image timed out")); }, 20000);
+    img.crossOrigin = "anonymous";
+    img.onload = () => { clearTimeout(timer); resolve(img); };
+    img.onerror = () => { clearTimeout(timer); reject(new Error("Could not load the image")); };
+    img.src = url;
+  });
+  imageCache.set(url, pending);
+  if (imageCache.size > 24) imageCache.delete(imageCache.keys().next().value!);
+  pending.catch(() => { if (imageCache.get(url) === pending) imageCache.delete(url); });
+  return pending;
+}
 
 function imageTexture(gl: WebGL2RenderingContext, img: TexImageSource, filter: number = gl.LINEAR) {
   const t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
@@ -199,7 +220,7 @@ function dataTexture(gl: WebGL2RenderingContext, m: DecodedMap, single: boolean)
   return t;
 }
 
-export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, heather = false, clearanceIn = DEFAULT_CLEARANCE_IN, className }: {
+export default function PlateComposite({ base, colour, view, manifest, placements, onChange, onCheck, guides = true, tint, heather = false, clearanceIn = DEFAULT_CLEARANCE_IN, className, selectedId, onSelect, onStatus, renderKey = "", exportRef, label = "Product mockup" }: {
   base: string; // e.g. "/lab/plates/fixture-tee"
   colour: string; view: PlateView; manifest: PlateManifest;
   heather?: boolean; // render the fabric as a heather (fibre melange)
@@ -210,11 +231,22 @@ export default function PlateComposite({ base, colour, view, manifest, placement
   onCheck?: (checks: Record<string, PrintCheck>) => void; // printable or not, per placement
   guides?: boolean;
   className?: string;
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
+  onStatus?: (status: PlateStatus) => void;
+  renderKey?: string;
+  exportRef?: Ref<PlateHandle>;
+  label?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctx = useRef<Loaded | null>(null);
   const arts = useRef<Map<string, { tex: WebGLTexture; aspect: number }>>(new Map());
   const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<PlateStatus>("loading");
+  const [retry, setRetry] = useState(0);
+  const callbacks = useRef({ onStatus, onCheck });
+  callbacks.current = { onStatus, onCheck };
+  const report = (next: PlateStatus) => { setStatus(next); callbacks.current.onStatus?.(next); };
   // Parents pass a fresh array every render; redraw only when the content changes.
   const placementsKey = JSON.stringify(placements.map((p) => [p.id, p.artUrl, p.piece, p.widthIn, p.belowHpsIn, p.fromCfIn, p.rotDeg ?? 0, p.method ?? "", p.inkHex ?? ""]));
   const [readout, setReadout] = useState<string | null>(null);
@@ -224,13 +256,24 @@ export default function PlateComposite({ base, colour, view, manifest, placement
   const lastChecks = useRef("");
   const [overlay, setOverlay] = useState<{ size: [number, number]; frames: { id: string; pts: string; ok: boolean }[]; cf: string | null; hps: [number, number] | null; dims: { x1: number; y1: number; x2: number; y2: number; label: string }[]; reason: string | null }>({ size: [1, 1], frames: [], cf: null, hps: null, dims: [], reason: null });
 
+  // A 2D photo is independent of the selected garment colour. Tint is a uniform,
+  // so changing swatches never fetches an image or recompiles the renderer.
+  const sourceColour = manifest.kind === "2d" ? "photo" : colour;
+  const manifestKey = JSON.stringify(manifest);
   // Load the plate for this colour + view.
   useEffect(() => {
     let dead = false;
+    let loaded: Loaded | null = null;
+    const cv = canvasRef.current;
+    if (!cv) return;
+    report("loading");
+    const lost = (event: Event) => { event.preventDefault(); setReady(false); report("error"); };
+    const restored = () => setRetry((n) => n + 1);
+    cv.addEventListener("webglcontextlost", lost);
+    cv.addEventListener("webglcontextrestored", restored);
     (async () => {
-      const cv = canvasRef.current; if (!cv) return;
       const gl = cv.getContext("webgl2", { premultipliedAlpha: true, antialias: true, preserveDrawingBuffer: true });
-      if (!gl) return;
+      if (!gl) throw new Error("The preview is not available in this browser.");
       const cal2d = manifest.kind === "2d" ? manifest.views?.[view] : undefined;
       let beauty: HTMLImageElement, shading: HTMLImageElement, uv: DecodedMap, pieces: DecodedMap;
       if (cal2d) {
@@ -251,37 +294,64 @@ export default function PlateComposite({ base, colour, view, manifest, placement
       const trimImg = cal2d && trimFile ? await loadImage(`${base}/${trimFile}`).catch(() => null) : null;
       if (dead) return;
       const prog = gl.createProgram()!;
-      gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VS)); gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
-      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      const shaders = [compile(gl, gl.VERTEX_SHADER, VS), compile(gl, gl.FRAGMENT_SHADER, FS)];
+      shaders.forEach((shader) => gl.attachShader(prog, shader));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("Could not start the preview.");
+      const buf = gl.createBuffer()!; gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
       const loc = gl.getAttribLocation(prog, "aPos"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-      ctx.current = { gl, prog, uv, pieces, size: [uv.width, uv.height], baseLum: fabricLum(beauty), img: [beauty.naturalWidth, beauty.naturalHeight], cal2d, tex: {
+      loaded = { buffer: buf, shaders, gl, prog, uv, pieces, size: [uv.width, uv.height], baseLum: fabricLum(beauty), img: [beauty.naturalWidth, beauty.naturalHeight], cal2d, tex: {
         ...(trimImg ? { trim: imageTexture(gl, trimImg) } : {}),
         beauty: imageTexture(gl, beauty), shading: imageTexture(gl, shading), uv: dataTexture(gl, uv, false), pieces: dataTexture(gl, pieces, true),
       } };
+      ctx.current = loaded;
       arts.current.clear();
       coverage.current.clear();
+      lastChecks.current = "";
       setReady(true);
-    })().catch((e) => console.error("plate load failed", e));
-    return () => { dead = true; setReady(false); };
-  }, [base, colour, view]);
+    })().catch(() => { if (!dead) report("error"); });
+    return () => {
+      dead = true;
+      cv.removeEventListener("webglcontextlost", lost);
+      cv.removeEventListener("webglcontextrestored", restored);
+      if (loaded) {
+        const { gl, prog, buffer, shaders, tex } = loaded;
+        Object.values(tex).forEach((t) => gl.deleteTexture(t));
+        arts.current.forEach((a) => gl.deleteTexture(a.tex));
+        arts.current.clear();
+        shaders.forEach((shader) => gl.deleteShader(shader));
+        gl.deleteBuffer(buffer);
+        gl.deleteProgram(prog);
+        if (ctx.current === loaded) ctx.current = null;
+      }
+      setReady(false);
+    };
+    // The complete manifest is represented by manifestKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, sourceColour, view, manifestKey, retry]);
 
-  // Load any new artwork, then draw.
+  // Load artwork atomically. Never report a finished preview until every texture
+  // is present, and ignore work from an older upload or view.
   useEffect(() => {
     if (!ready || !ctx.current) return;
     let dead = false;
+    const current = ctx.current;
+    report("loading");
     (async () => {
-      const { gl } = ctx.current!;
-      for (const p of placements) {
-        if (arts.current.has(p.artUrl)) continue;
-        const img = await loadImage(p.artUrl);
-        arts.current.set(p.artUrl, { tex: imageTexture(gl, img), aspect: img.naturalWidth / img.naturalHeight || 1 });
-      }
-      if (!dead) { draw(); measure(); }
-    })();
+      const { gl } = current;
+      const urls = [...new Set(placements.map((p) => p.artUrl))];
+      const images = await Promise.all(urls.filter((url) => !arts.current.has(url)).map(async (url) => [url, await loadImage(url)] as const));
+      if (dead || ctx.current !== current) return;
+      images.forEach(([url, img]) => arts.current.set(url, { tex: imageTexture(gl, img), aspect: img.naturalWidth / img.naturalHeight || 1 }));
+      arts.current.forEach((a, url) => { if (!urls.includes(url)) { gl.deleteTexture(a.tex); arts.current.delete(url); } });
+      draw(); measure(); report("ready");
+    })().catch(() => { if (!dead) report("error"); });
     return () => { dead = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, placementsKey, dragging, tint, heather]);
+  }, [ready, placementsKey, tint, heather, renderKey, clearanceIn]);
+
+  useEffect(() => { if (ready) measure(); }, [selectedId, dragging, guides, ready]);
 
   function cov(piece: number) {
     const c = ctx.current!;
@@ -295,7 +365,7 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     const frames: { id: string; pts: string; ok: boolean }[] = [], checks: Record<string, PrintCheck> = {};
     const dims: { x1: number; y1: number; x2: number; y2: number; label: string }[] = [];
     let reason: string | null = null, cfLine: string | null = null, hpsPt: [number, number] | null = null;
-    const focus = dragging ?? placements[placements.length - 1]?.id;
+    const focus = dragging ?? selectedId ?? placements[placements.length - 1]?.id;
     for (const p of placements) {
       const a = arts.current.get(p.artUrl); if (!a) continue;
       const cv = cov(p.piece), r = artRectMm(p, view, manifest, a.aspect);
@@ -325,15 +395,15 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     }
     setOverlay({ size: c.size, frames, cf: cfLine, hps: hpsPt, dims, reason });
     const sig = JSON.stringify(checks);
-    if (sig !== lastChecks.current) { lastChecks.current = sig; onCheck?.(checks); }
+    if (sig !== lastChecks.current) { lastChecks.current = sig; callbacks.current.onCheck?.(checks); }
   }
 
-  function draw() {
+  function draw(exportWidth?: number) {
     const c = ctx.current, cv = canvasRef.current; if (!c || !cv) return;
     const { gl, prog, tex, size } = c;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     // Big canvases (close-up) cap at the plate's own resolution: no wasted pixels.
-    const w = Math.round(cv.clientWidth * dpr), h = Math.round((cv.clientWidth * dpr * size[1]) / size[0]);
+    const w = exportWidth ?? Math.max(1, Math.min(c.img[0], Math.round(cv.clientWidth * dpr))), h = Math.round(w * size[1] / size[0]);
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(prog);
@@ -374,12 +444,25 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
-  // Redraw at the new size whenever the element resizes (window, layout, close-up zoom).
+  const drawRef = useRef(draw);
+  drawRef.current = draw;
   useEffect(() => {
-    const cv = canvasRef.current; if (!cv || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => draw());
-    ro.observe(cv); return () => ro.disconnect();
-  });
+    const cv = canvasRef.current; if (!cv) return;
+    const observer = new ResizeObserver(() => drawRef.current());
+    observer.observe(cv);
+    return () => observer.disconnect();
+  }, []);
+
+  useImperativeHandle(exportRef, () => ({
+    async exportPng() {
+      const c = ctx.current, canvas = canvasRef.current;
+      if (!c || !canvas || status !== "ready") throw new Error("Wait for the preview to finish loading.");
+      draw(c.img[0]);
+      try {
+        return await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Could not export the image.")), "image/png"));
+      } finally { draw(); }
+    },
+  }));
 
   // Pointer -> plate pixel -> pattern mm.
   const hitAt = (e: React.PointerEvent) => {
@@ -388,11 +471,15 @@ export default function PlateComposite({ base, colour, view, manifest, placement
     return sampleAt(c.uv, c.pieces, ((e.clientX - b.left) / b.width) * c.size[0], ((e.clientY - b.top) / b.height) * c.size[1]);
   };
   const onDown = (e: React.PointerEvent) => {
+    if (!onChange || !guides || status !== "ready") return;
     const s = hitAt(e); if (!s) return;
     for (let i = placements.length - 1; i >= 0; i--) {
       const p = placements[i]; const a = arts.current.get(p.artUrl); if (!a || p.piece !== s.piece) continue;
       const r = artRectMm(p, view, manifest, a.aspect);
       if (s.u >= r.u0 && s.u <= r.u0 + r.w && s.v <= r.vTop && s.v >= r.vTop - r.h) {
+        onSelect?.(p.id);
+        e.preventDefault();
+        canvasRef.current?.focus({ preventScroll: true });
         drag.current = { id: p.id, du: s.u - (r.u0 + r.w / 2), dv: s.v - r.vTop };
         setDragging(p.id);
         (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -415,18 +502,32 @@ export default function PlateComposite({ base, colour, view, manifest, placement
   };
   const onUp = () => { drag.current = null; setDragging(null); setReadout(null); };
 
-  void WEARER_LEFT_SIGN; void MM;
+  const onKey = (event: React.KeyboardEvent) => {
+    if (!guides || !onChange || !selectedId || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const distance = event.shiftKey ? 0.5 : 0.125;
+    onChange(placements.map((p) => p.id !== selectedId ? p : {
+      ...p,
+      belowHpsIn: Math.max(0, p.belowHpsIn + (event.key === "ArrowUp" ? -distance : event.key === "ArrowDown" ? distance : 0)),
+      fromCfIn: p.fromCfIn + (event.key === "ArrowLeft" ? -distance : event.key === "ArrowRight" ? distance : 0) * WEARER_LEFT_SIGN[view],
+    }));
+  };
+  const photoUrl = manifest.kind === "2d" ? `${base}/${view}.webp${manifest.v ? `?v=${manifest.v}` : ""}` : plateUrl(base, colour, view, "beauty");
   return (
-    <div className={`platex ${className ?? ""}`}>
-      <canvas ref={canvasRef} className="platex-canvas" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} />
+    <div className={`platex ${className ?? ""}`} data-state={status} aria-busy={status === "loading"}>
+      {/* The underlying photo preserves the silhouette during startup or recovery. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {!ready ? <img className="platex-placeholder" src={photoUrl} alt="" /> : null}
+      <canvas ref={canvasRef} className={`platex-canvas${guides && onChange && placements.length ? " is-editable" : ""}`} aria-label={`${label}, ${view} view${guides && placements.length ? ". Drag artwork to move it, or use arrow keys." : ""}`} role="img" tabIndex={guides && onChange && placements.length ? 0 : undefined} onKeyDown={onKey} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} />
       {ready ? (
         <svg className="platex-overlay" viewBox={`0 0 ${overlay.size[0]} ${overlay.size[1]}`} preserveAspectRatio="none" aria-hidden>
-          {overlay.frames.filter((f) => !f.ok || (guides && dragging === f.id)).map((f) => <polygon key={f.id} className={`platex-frame${f.ok ? "" : " is-bad"}`} points={f.pts} />)}
+          {guides && onChange ? overlay.frames.map((frame) => <polygon key={`target-${frame.id}`} className="platex-drag-target" points={frame.pts} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} />) : null}
+          {overlay.frames.filter((f) => !f.ok || (guides && (dragging === f.id || selectedId === f.id))).map((f) => <polygon key={f.id} className={`platex-frame${f.ok ? "" : " is-bad"}`} points={f.pts} />)}
+          {dragging && overlay.cf ? <polyline className="platex-cf" points={overlay.cf} /> : null}
         </svg>
       ) : null}
-      {overlay.reason ? <p className="platex-reason">{overlay.reason}</p> : null}
-      
-      {!ready ? <span className="platex-loading">Loading</span> : null}
+      {status === "error" ? <div className="platex-error" role="alert"><strong>Preview unavailable</strong><span>Your design is still here.</span><button type="button" onClick={() => setRetry((n) => n + 1)}>Reload preview</button></div> : null}
+      {status === "loading" && !ready ? <span className="platex-loading" role="status">Preparing your preview</span> : null}
     </div>
   );
 }

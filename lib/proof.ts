@@ -5,6 +5,7 @@ import "server-only";
 // review). Multi-placement orders render every location: each view (front/back)
 // becomes a side-by-side panel with all of that view's placements composited.
 import sharp from "sharp";
+import { validMockupUrls } from "./mockup-urls";
 import { getSupabase } from "./supabase";
 import { getProductById } from "./store";
 import { hexToRgb } from "./pantones";
@@ -30,7 +31,7 @@ async function artLayerFor(
   fallbackUrl: string | undefined,
   offsetX: number
 ): Promise<sharp.OverlayOptions | null> {
-  const url = pl.artworkFileUrl ?? fallbackUrl;
+  const url = pl.artworkPreviewUrl ?? pl.artworkFileUrl ?? fallbackUrl;
   if (!url) return null;
   const artBuf = await fetchBuf(url);
   if (!artBuf) return null;
@@ -109,6 +110,16 @@ export async function generateProof(order: ShopOrder, origin: string): Promise<s
   for (let i = 0; i < views.length; i++) {
     const v = views[i];
     const offsetX = i * W;
+    if (order.mockupUrls) {
+      if (!validMockupUrls(order.mockupUrls, process.env.SUPABASE_URL)) throw new Error("Invalid mockup reference");
+      const source = order.mockupUrls[v];
+      if (!source) throw new Error(`Missing ${v} mockup`);
+      const snapshot = await fetchBuf(source);
+      if (!snapshot) throw new Error(`Could not load ${v} mockup`);
+      const image = await sharp(snapshot).resize(W, H, { fit: "contain", background: "#FFFFFF" }).png().toBuffer();
+      layers.push({ input: image, left: offsetX, top: 0 });
+      continue;
+    }
     const gp = garmentFor(v);
     if (gp) {
       const gbuf = await fetchBuf(`${origin}${gp}`);

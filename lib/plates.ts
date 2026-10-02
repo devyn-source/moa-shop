@@ -32,6 +32,11 @@ export type DecorationMethod = "screen_print" | "embroidery" | "rubber_applique"
 export type PlatePlacement = {
   id: string;
   artUrl: string;
+  fileUrl?: string;
+  fileName?: string;
+  pixelWidth?: number;
+  pixelHeight?: number;
+  isVector?: boolean;
   piece: number; // pattern piece it prints on (1 front body, 2 back body, ...)
   widthIn: number;
   belowHpsIn: number; // top edge of the art below HPS
@@ -51,7 +56,9 @@ export type DecodedMap = { width: number; height: number; data: Uint8Array; chan
 // Decode a data PNG without the browser touching it (no premultiplied alpha,
 // no colour management), so the encoded millimetres survive exactly.
 export async function loadDataPng(url: string): Promise<DecodedMap> {
-  const buf = await (await fetch(url)).arrayBuffer();
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Could not load the product preview.");
+  const buf = await response.arrayBuffer();
   const img = decode(new Uint8Array(buf));
   const data = img.data instanceof Uint8Array ? img.data : new Uint8Array(img.data.buffer);
   return { width: img.width, height: img.height, data, channels: img.channels };
@@ -165,7 +172,10 @@ export type PrintCheck = { ok: boolean; reason?: string };
 
 // Is the whole art rectangle inside the printable area? If not, say which way and how far.
 export function checkPrintable(cv: Coverage, r: { u0: number; vTop: number; w: number; h: number }, clearanceIn: number): PrintCheck {
-  if (!cv.cols) return { ok: true };
+  if (!cv.cols || !cv.rows) return { ok: false, reason: "The print area could not be checked. Reload the preview." };
+  if (![r.u0, r.vTop, r.w, r.h].every(Number.isFinite) || r.w <= 0 || r.h <= 0) {
+    return { ok: false, reason: "Choose a valid artwork size." };
+  }
   let bad = 0, worst = { dl: 0, dr: 0, dt: 0, db: 0 };
   const N = 24;
   for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {

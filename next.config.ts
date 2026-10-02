@@ -26,6 +26,10 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdfjs-dist", "@napi-rs/canvas"],
+  outputFileTracingIncludes: {
+    "/api/upload-artwork": ["./node_modules/pdfjs-dist/standard_fonts/**/*", "./node_modules/pdfjs-dist/cmaps/**/*", "./node_modules/pdfjs-dist/wasm/**/*", "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+  },
   // Launch mode is known to browser code too (cart, promo banners).
   env: { NEXT_PUBLIC_EXPRESS: process.env.EXPRESS_CHECKOUT ?? "" },
   productionBrowserSourceMaps: false, // don't ship source maps to the browser

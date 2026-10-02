@@ -16,8 +16,8 @@ function SingleLine({ item, onRemove }: { item: CartItem; onRemove: (id: string)
   const sizes = Object.entries(item.sizeQty);
   return (
     <div className="cart-line">
-      <Link href={`/p/${item.slug}`} className="cart-thumb" aria-label={`Reconfigure ${item.displayName}`}>
-        {item.image ? (
+      <Link href={`/p/${item.slug}?edit=${item.lineId}`} className="cart-thumb" aria-label={`Reconfigure ${item.displayName}`}>
+        {item.mockupUrls?.front || item.mockupUrls?.back ? <img className="cart-thumb-base" src={item.mockupUrls.front ?? item.mockupUrls.back} alt={`${item.displayName} with your artwork`} /> : item.image ? (
           <>
             <Image className="cart-thumb-base" src={item.image} alt="" width={1600} height={2000} sizes="110px" />
             {item.colorHex ? (
@@ -34,12 +34,13 @@ function SingleLine({ item, onRemove }: { item: CartItem; onRemove: (id: string)
         ) : (
           <span className="cart-line-ph">{item.skuCode}</span>
         )}
-        {item.artworkFileUrl ? <img className="cart-thumb-art" src={item.artworkFileUrl} alt="" loading="lazy" /> : null}
+        {!item.mockupUrls && item.artworkFileUrl ? <img className="cart-thumb-art" src={item.artworkFileUrl} alt="" loading="lazy" /> : null}
       </Link>
       <div className="cart-line-body">
         <div className="cart-line-top">
           <div>
             <h3>{item.displayName}</h3>
+            <Link className="cart-edit" href={`/p/${item.slug}?edit=${item.lineId}`}>{item.design ? "Edit design" : "Finish design"}</Link>
             <p className="cart-line-meta">
               Style {item.skuCode} · {item.colorLabel} · {item.decorationLabel}
             </p>
