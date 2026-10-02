@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { handleExpressStripeSession } from "@/lib/express-payment";
+import { getCheckoutOrders } from "@/lib/store";
+import type Stripe from "stripe";
 import { getOrderById, markOrderPaid, setOrderProof, updateOrderStatus } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
 import { sendOrderConfirmation, sendProofApproval, sendPaymentIncomplete } from "@/lib/email";
@@ -27,7 +30,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Signature verification failed: ${error instanceof Error ? error.message : ""}` }, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
+  const checkoutEvent = event.data.object as Stripe.Checkout.Session;
+  if (checkoutEvent.metadata?.expressCheckoutId) {
+    try {
+      if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+        await handleExpressStripeSession(checkoutEvent);
+      } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+        for (const order of await getCheckoutOrders(checkoutEvent.metadata.expressCheckoutId)) {
+          if (order.paymentStatus === "unpaid" && order.stripeSessionId === checkoutEvent.id) {
+            await updateOrderStatus(order.id, "cancelled", "Payment was not completed. No charge was made.");
+          }
+        }
+      }
+      return NextResponse.json({ received: true });
+    } catch (error) {
+      console.error("[stripe-webhook] Express handoff failed", error instanceof Error ? error.message : "unknown");
+      return NextResponse.json({ error: "Paid order handoff needs retry" }, { status: 500 });
+    }
+  }
+
+  if ((event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") && checkoutEvent.payment_status === "paid") {
     const session = event.data.object as { id: string; metadata?: { orderIds?: string } };
     const ids = (session.metadata?.orderIds ?? "").split(",").filter(Boolean);
     for (const id of ids) {

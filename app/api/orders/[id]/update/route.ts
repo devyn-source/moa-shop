@@ -24,6 +24,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // Ownership: only the signed-in owner may edit their order's config.
   const email = await currentCustomerEmail();
   if (!ownsOrder(order, email)) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  if (order.fulfillment?.mode === "express") return NextResponse.json({ error: "Request changes from the production proof in your account." }, { status: 409 });
   if (order.proofApprovedAt) return NextResponse.json({ error: "This order is already approved and in production." }, { status: 400 });
 
   const parsed = orderUpdateSchema.safeParse(await request.json().catch(() => ({})));

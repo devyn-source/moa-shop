@@ -52,6 +52,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return page("Not authorized", "This isn't your order", "Sign in with the email used to place this order to approve it.");
   }
 
+  if (order.fulfillment?.mode === "express") {
+    return order.fulfillment.catalogOrderId
+      ? NextResponse.redirect(new URL(`/orders/express/${encodeURIComponent(order.fulfillment.catalogOrderId)}`, ORIGIN))
+      : page("Proof not ready", "Your proof follows payment", "Complete checkout first. Your production proof will be available in your account.");
+  }
+  if (order.paymentStatus !== "paid" || !order.proofUrl || order.status === "cancelled") return page("Proof not ready", "Approval is unavailable", "Complete payment and wait for your production proof before approving.");
   if (order.proofApprovedAt) {
     return page("Already approved", "You're all set", `Order ${order.orderNumber} is approved and in motion. We'll email tracking the moment it ships.`);
   }

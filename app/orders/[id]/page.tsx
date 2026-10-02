@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { OrderTracker } from "@/components/OrderTracker";
 import { ReorderButton } from "@/components/ReorderButton";
 import { ReorderBundleButton } from "@/components/ReorderBundleButton";
@@ -128,6 +128,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   if (!ownsOrder(order, email)) {
     notFound();
   }
+  if (order.fulfillment?.mode === "express" && order.fulfillment.catalogOrderId) redirect(`/orders/express/${encodeURIComponent(order.fulfillment.catalogOrderId)}`);
 
   // --- PR Box: render the whole box (one tracker + every line) ---
   if (order.bundleId) {

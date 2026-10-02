@@ -11,11 +11,11 @@ export const FAQ_GROUPS: FaqGroup[] = [
     items: [
       {
         q: "What is the MOA Shop?",
-        a: "The MOA Shop is the self-serve side of Magnum Opus Agency, built for smaller orders. Every style is fully custom, cut and sewn to our own patterns. You design it yourself on the garment, our team sends your proof within 24 business hours, you approve it and pay one invoice, and we make it with our factory partners and ship it.",
+        a: "The MOA Shop is the self-serve side of Magnum Opus Agency, built for smaller orders. Every style is fully custom, cut and sewn to our own patterns. You design it on the garment and pay at checkout. Our team prepares your production proof within 24 business hours. Once you approve it, we make it with our factory partners and ship it.",
       },
       {
         q: "How does made-to-order merch work?",
-        a: "Choose a style and colour, build your size run, upload your artwork, pick a decoration method, and place the print on the garment. You see your mockup as you design. After you submit, the MOA team reviews it and your proof arrives within 24 business hours. You approve it in your account and pay one invoice for the full order, then production starts. We produce it to spec and ship it with tracking.",
+        a: "Choose a style and colour, build your size run, upload your artwork, pick a decoration method, and place the print on the garment. You see your mockup as you design. Pay for the full order at checkout. The MOA team reviews your artwork and your production proof arrives within 24 business hours. Approve it or request a change in your account. Production starts after approval. We produce it to spec and ship it with tracking.",
       },
       {
         q: "Who is Magnum Opus Agency?",
@@ -32,7 +32,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
       },
       {
         q: "How do I pay?",
-        a: "You pay one invoice for the full order. After you submit, your proof arrives within 24 business hours. Once you approve it in your account, you pay the invoice and production starts. Nothing goes into production until you approve and pay. Need a PO or net terms? There's a request link at checkout, and a real person replies within one business day.",
+        a: "You pay the full order total by card at checkout. Your production proof follows payment, within 24 business hours. Review it or request a change in your account. Nothing goes into production until you approve. Need a PO or net terms? There's a request link at checkout, and a real person replies within one business day.",
       },
       {
         q: "What artwork files can I upload?",

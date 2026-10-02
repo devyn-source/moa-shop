@@ -162,6 +162,7 @@ async function buildIntakePayload(order: ShopOrder) {
 // Push an order into MoaOS. Idempotent on the MoaOS side (shop_order_id), and
 // safe to re-run from the reconcile cron. Records the outcome on the order.
 export async function pushOrderToMoaOS(order: ShopOrder): Promise<{ pushed: boolean; reason?: string }> {
+  if (order.fulfillment?.mode === "express") return { pushed: false, reason: "Express order uses the paid checkout pipeline" };
   const mode = fulfillmentMode();
   if (mode === "off") return { pushed: false, reason: "mode=off" };
 

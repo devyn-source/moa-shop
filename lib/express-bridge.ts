@@ -1,9 +1,7 @@
-// MOA Express bridge. With EXPRESS_CHECKOUT=1 the storefront stops taking card
-// payment: checkout prices every line exactly as before (upsells, fabric
-// tiers, PR Box discounts), renders the proof mockups, then hands the priced
-// order to MoaOS (/api/express/engine-order). MoaOS creates one Express
-// project on the /design board at 100% deposit; the team builds the tech pack
-// by hand and sends the proof with a single invoice.
+// MOA Express bridge. Checkout prices each line and saves the reviewed mockup.
+// Only after payment is confirmed does it send the full order and verified
+// payment to MoaOS. The team prepares a production proof for approval, with no
+// second invoice. EXPRESS_SANDBOX=1 keeps the payment step simulated.
 //
 // Env: EXPRESS_CHECKOUT=1, MOAOS_EXPRESS_URL (e.g. https://os.magnumopus.agency),
 // EXPRESS_SECRET (shared with MoaOS), EXPRESS_SANDBOX=1 for test runs,
@@ -16,8 +14,9 @@ export const expressCheckoutEnabled = () => process.env.EXPRESS_CHECKOUT === "1"
 
 type Contact = { contactName: string; contactEmail: string; contactPhone?: string; companyName: string };
 type Ship = { line1: string; line2: string; city: string; state: string; postalCode: string; country: string };
+export type ExpressPayment = { method: "stripe" | "sandbox"; id: string; amountUsd: number; paidAt: string };
 
-export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, shipToName: string, shipTo: Ship, notes?: string): Promise<{ ok: true; orderNumber: string } | { ok: false; error: string }> {
+export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, shipToName: string, shipTo: Ship, notes?: string, payment?: ExpressPayment): Promise<{ ok: true; orderNumber: string } | { ok: false; error: string }> {
   const base = (process.env.MOAOS_EXPRESS_URL || "").replace(/\/$/, "");
   const secret = process.env.EXPRESS_SECRET || "";
   if (!base || !secret) return { ok: false, error: "Express bridge is not configured" };
@@ -78,10 +77,12 @@ export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, sh
       contact: { contactName: contact.contactName, contactEmail: contact.contactEmail, contactPhone: contact.contactPhone || undefined, companyName: contact.companyName },
       shipTo: { name: shipToName || undefined, line1: shipTo.line1 || undefined, line2: shipTo.line2 || undefined, city: shipTo.city || "Unknown", state: shipTo.state || undefined, postalCode: shipTo.postalCode || undefined, country: shipTo.country || "US" },
       notes,
+      payment,
       lines,
     }),
   });
-  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; orderNumber?: string; error?: string; errors?: Record<string, string> };
+  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; orderNumber?: string; paymentRecorded?: boolean; error?: string; errors?: Record<string, string> };
   if (!res.ok || !data.ok || !data.orderNumber) return { ok: false, error: data.error || JSON.stringify(data.errors || {}).slice(0, 300) || `MoaOS ${res.status}` };
+  if (payment && !data.paymentRecorded) return { ok: false, error: "Payment handoff is not ready" };
   return { ok: true, orderNumber: data.orderNumber };
 }

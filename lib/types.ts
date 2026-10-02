@@ -228,6 +228,8 @@ export type ShopOrder = {
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
   stripeSessionId?: string;
+  checkoutId?: string;
+  checkoutMode?: "express_sandbox" | "express_stripe";
   shipToName: string;
   shipToAddress: {
     line1: string;

@@ -3,15 +3,17 @@ import { OrderTracker } from "@/components/OrderTracker";
 import { CartClear } from "@/components/CartClear";
 import { currency } from "@/lib/pricing";
 import { getOrderById } from "@/lib/store";
+import { PaidCheckout } from "./PaidCheckout";
 
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutSuccessPage({
   searchParams
 }: {
-  searchParams: Promise<{ orders?: string; express?: string }>;
+  searchParams: Promise<{ orders?: string; express?: string; checkout?: string; token?: string; session_id?: string }>;
 }) {
   const params = await searchParams;
+  if (params.checkout) return <PaidCheckout checkoutId={params.checkout} token={params.token} sessionId={params.session_id} />;
   const ids = (params.orders ?? "").split(",").filter(Boolean);
   const fetched = await Promise.all(ids.map((id) => getOrderById(id)));
   const orders = fetched.filter((o): o is NonNullable<typeof o> => o !== null);

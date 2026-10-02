@@ -1,11 +1,13 @@
 import plateIndex from "@/lib/plates.generated.json";
+import { checkoutContactSchema } from "@/lib/checkout-contact";
 import { validMockupUrls } from "@/lib/mockup-urls";
 import { NextResponse } from "next/server";
 import { createOrder, getProductById } from "@/lib/store";
 import { getStripe } from "@/lib/stripe";
-import { expressCheckoutEnabled, pushExpressOrder } from "@/lib/express-bridge";
+import { assertExpressPaymentReady, beginExpressPayment } from "@/lib/express-payment";
+import { expressCheckoutEnabled } from "@/lib/express-bridge";
 import { generateProof } from "@/lib/proof";
-import { setOrderProof, setOrderFulfillment, updateOrderStatus } from "@/lib/store";
+import { setOrderProof, updateOrderStatus } from "@/lib/store";
 import { calculateOrderPrice, getPriceTier, round2 } from "@/lib/pricing";
 import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
 import { apiError } from "@/lib/errors";
@@ -58,20 +60,25 @@ export async function POST(request: Request) {
     if (!(await rateLimit("checkout", clientIp(request)))) {
       return NextResponse.json({ error: "Too many checkout attempts. Please wait a few minutes." }, { status: 429 });
     }
-    const { items, contact, ipAttested } = (await request.json()) as Body;
-    if (!items?.length) {
+    const { items, contact: rawContact, ipAttested } = (await request.json()) as Body;
+    if (!Array.isArray(items) || !items.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
+    if (items.length > 30) return NextResponse.json({ error: "Please check out with up to 30 items at a time." }, { status: 400 });
     // Artwork IP attestation — the customer must certify they hold the rights.
     if (!ipAttested) {
       return NextResponse.json({ error: "Please confirm you own or have the rights to use this artwork." }, { status: 400 });
     }
+    const parsedContact = checkoutContactSchema.safeParse(rawContact);
+    if (!parsedContact.success) {
+      return NextResponse.json({ error: parsedContact.error.issues[0]?.message || "Check your contact and shipping details." }, { status: 400 });
+    }
+    const contact = parsedContact.data;
 
-    // Express mode submits the priced order to MoaOS for proof + a single 100%
-    // invoice instead of taking card payment here. Otherwise validate Stripe is
-    // configured before creating any orders (avoids orphans).
+    // Confirm the paid-order receiver is ready before creating a checkout.
     const express = expressCheckoutEnabled();
     const stripe = express ? null : getStripe();
+    if (express) await assertExpressPaymentReady();
 
     // Express launch scope: only the production-ready styles (plus packaging
     // add-ons) can be ordered, whatever an old cart still holds.
@@ -251,11 +258,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Nothing to check out" }, { status: 400 });
     }
 
-    const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+    const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || new URL(request.url).origin;
 
     if (express) {
       // Render each line's mockup now so the customer sees it immediately and
-      // MOA reviews the exact image the customer approved on screen.
+      // MOA reviews the exact image the customer reviewed on screen.
       const proofOrigin = process.env.NEXT_PUBLIC_SITE_ORIGIN || origin;
       for (const c of created) {
         try {
@@ -270,22 +277,12 @@ export async function POST(request: Request) {
           }
         }
       }
-      const pushed = await pushExpressOrder(created.map((c) => c.order), contact, contact.shipToName, contact.shipToAddress);
-      if (!pushed.ok) {
-        console.error("[express] push to MoaOS failed:", pushed.error);
-        // Close the half-made shop orders so they never sit in admin as live carts.
-        for (const c of created) await updateOrderStatus(c.order.id, "cancelled", "Express submit to MoaOS failed; customer asked to retry").catch(() => null);
-        return NextResponse.json({ error: "We could not submit your order. Please try again in a minute." }, { status: 502 });
+      try {
+        return NextResponse.json({ url: await beginExpressPayment(created.map((c) => c.order), origin) });
+      } catch (error) {
+        for (const c of created) await updateOrderStatus(c.order.id, "cancelled", "Payment checkout could not start. No charge was made.").catch(() => null);
+        throw error;
       }
-      const pushedAt = new Date().toISOString();
-      for (const c of created) {
-        await setOrderFulfillment(c.order.id, { mode: "express", pushedAt, catalogOrderId: pushed.orderNumber });
-        // Payment happens on the MoaOS invoice, so the shop row must leave
-        // awaiting_payment: the fulfillment cron cancels those after 48h. Unpaid
-        // artwork_qa is ignored by every cron, reminder and Stripe path.
-        await updateOrderStatus(c.order.id, "artwork_qa", `Submitted to MOA as ${pushed.orderNumber}. Proof in progress.`);
-      }
-      return NextResponse.json({ url: `${origin}/checkout/success?orders=${created.map(({ order }) => order.id).join(",")}&express=${encodeURIComponent(pushed.orderNumber)}` });
     }
 
     if (!stripe) throw new Error("Stripe is not configured");

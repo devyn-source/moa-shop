@@ -322,21 +322,21 @@ export async function updateOrderStatus(
   return updated;
 }
 
-export async function markOrderPaid(id: string, stripeSessionId: string): Promise<void> {
+export async function markOrderPaid(id: string, stripeSessionId: string, simulated = false): Promise<void> {
   const current = await getOrderById(id);
   if (!current) return;
-  if (current.paymentStatus === "paid") return; // idempotent — webhook may fire twice
+  if (current.paymentStatus === "paid" || current.paymentStatus === "simulated_paid") return;
 
   const now = new Date().toISOString();
   const updated: ShopOrder = {
     ...current,
-    paymentStatus: "paid",
+    paymentStatus: simulated ? "simulated_paid" : "paid",
     status: "artwork_qa",
     stripeSessionId,
     updatedAt: now,
     statusLog: [
       ...current.statusLog,
-      { statusFrom: current.status, statusTo: "paid", note: "Payment received via Stripe.", createdAt: now },
+      { statusFrom: current.status, statusTo: "paid", note: simulated ? "Sandbox payment confirmed. No charge was made." : "Payment received via Stripe.", createdAt: now },
       { statusFrom: "paid", statusTo: "artwork_qa", note: "Order routed to artwork QA.", createdAt: now }
     ]
   };
@@ -349,6 +349,19 @@ export async function markOrderPaid(id: string, stripeSessionId: string): Promis
   if (error) {
     throw new Error(`Failed to mark order paid: ${error.message}`);
   }
+}
+
+export async function getCheckoutOrders(checkoutId: string): Promise<ShopOrder[]> {
+  const { data, error } = await getSupabase().from("orders").select("data").eq("data->>checkoutId", checkoutId).order("created_at");
+  if (error) throw new Error("Could not load checkout");
+  return (data ?? []).map((row) => row.data as ShopOrder);
+}
+
+export async function setOrderCheckout(id: string, checkout: Pick<ShopOrder, "checkoutId" | "checkoutMode" | "stripeSessionId">): Promise<void> {
+  const order = await getOrderById(id);
+  if (!order) throw new Error("Order not found");
+  const { error } = await getSupabase().from("orders").update({ data: { ...order, ...checkout, fulfillment: { ...order.fulfillment, mode: "express" } } }).eq("id", id);
+  if (error) throw new Error("Could not save checkout");
 }
 
 // Merge a patch into the order's fulfillment mirror (MoaOS pipeline state).
@@ -410,6 +423,7 @@ export async function getOrdersNeedingFulfillment(): Promise<ShopOrder[]> {
   const orders = await getOrders();
   return orders.filter(
     (o) =>
+      o.fulfillment?.mode !== "express" &&
       o.paymentStatus === "paid" &&
       o.status !== "cancelled" &&
       (Boolean(o.proofApprovedAt) || Boolean(o.fulfillment?.catalogOrderId))
@@ -443,6 +457,7 @@ export async function getProofReminderCandidates(): Promise<ShopOrder[]> {
   const now = Date.now();
   const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
   return orders.filter((o) => {
+    if (o.fulfillment?.mode === "express") return false;
     if (o.paymentStatus !== "paid") return false;
     if (o.proofApprovedAt || o.changesRequestedAt || o.cancelledAt) return false;
     if (o.status === "cancelled") return false;

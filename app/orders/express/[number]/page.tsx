@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 
 const STEPS = [
   { key: "received", label: "Order received" },
+  { key: "paid", label: "Paid" },
   { key: "proof", label: "Proof" },
   { key: "approved", label: "Approved" },
-  { key: "paid", label: "Paid" },
   { key: "production", label: "In production" },
   { key: "shipped", label: "Shipped" },
 ];
@@ -19,9 +19,9 @@ function stepIndex(o: ExpressOrderView): number {
   if (o.shippedAt || o.status === "shipped" || o.status === "delivered") return 5;
   if (o.status === "launched") return 4;
   if (o.invoice.paid && o.allApproved) return 4;
-  if (o.invoice.paid) return 3;
-  if (o.allApproved) return 2;
-  if (o.rounds.length) return 1;
+  if (o.allApproved) return 3;
+  if (o.rounds.length) return 2;
+  if (o.invoice.paid) return 1;
   return 0;
 }
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" }) + " PT" : "");
@@ -64,7 +64,7 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
           <h2 style={{ margin: 0 }}>{round ? `Proof round ${round}` : o.rounds.length ? "Your pieces" : "Your pieces"}</h2>
           {round ? <span style={label}>{round <= o.includedRounds ? `Round ${round} of ${o.includedRounds} included` : `Round ${round}, beyond the included rounds`}</span> : null}
         </div>
-        {!o.rounds.length ? <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>We are checking every placement against your artwork. Your proof and invoice arrive here within 24 business hours.</p> : null}
+        {!o.rounds.length ? <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>We are checking every placement against your artwork. Your production proof arrives here within 24 business hours.</p> : null}
         <div style={{ display: "grid", gap: 14 }}>
           {o.pieces.map((p) => (
             <article key={p.ref} style={{ ...card, display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)", gap: 18 }} className="express-piece">
@@ -89,12 +89,12 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
       </section>
 
       <section style={{ ...card, display: "grid", gap: 10 }}>
-        <p style={{ ...label, margin: 0 }}>Invoice · one payment for the full order</p>
+        <p style={{ ...label, margin: 0 }}>Payment · one payment for the full order</p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <strong style={{ fontSize: 22 }}>{o.invoice.total ? currency(o.invoice.total) : "Sent with your proof"}</strong>
+          <strong style={{ fontSize: 22 }}>{o.invoice.total ? currency(o.invoice.total) : "Order total"}</strong>
           {o.invoice.paid ? <span style={label}>Paid</span>
             : o.invoice.canPay ? <a className="button" href={o.invoice.payUrl || "#"}>Pay invoice</a>
-            : <span style={{ fontSize: 12, opacity: 0.7 }}>{o.rounds.length ? "Approve every piece to pay" : "Arrives with your proof"}</span>}
+            : <span style={{ fontSize: 12, opacity: 0.7 }}>{o.rounds.length ? "Payment pending" : "Arrives with your proof"}</span>}
         </div>
         {o.invoice.url ? <a href={o.invoice.url} style={{ fontSize: 12 }}>View invoice</a> : null}
         <p style={{ margin: 0, fontSize: 11, opacity: 0.6, lineHeight: 1.6 }}>By approving you confirm spelling, colours, placement and sizes. Screen colours differ slightly from finished goods. Nothing changes once production starts. One round of changes is included.</p>

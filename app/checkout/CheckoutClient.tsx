@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { analytics } from "@/lib/analytics";
 import { currency } from "@/lib/pricing";
-import { BrandSelect } from "@/components/BrandSelect";
 import { InvoiceRequestDialog } from "@/components/InvoiceRequestDialog";
 import { useUser } from "@clerk/nextjs";
 
@@ -52,218 +51,149 @@ const COUNTRIES = [
   "Brazil", "Japan", "South Korea", "Singapore", "Hong Kong", "United Arab Emirates", "India", "Other",
 ].map((c) => ({ value: c, label: c }));
 
-type Form = {
+type ContactForm = {
   contactName: string; contactEmail: string; contactPhone: string; companyName: string;
   shipToName: string; line1: string; line2: string; city: string; state: string; postalCode: string; country: string;
 };
 
 export function CheckoutClient({ express = false }: { express?: boolean }) {
   const { items, total, count, hydrated } = useCart();
+  const formRef = useRef<HTMLFormElement>(null);
+  const submittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [country, setCountry] = useState("United States");
+  const [ipAttested, setIpAttested] = useState(false);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
+  const isUS = country === "United States";
+
   useEffect(() => {
     if (hydrated && items.length) analytics.beginCheckout({ count, value: total });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [f, setF] = useState<Form>({
-    contactName: "", contactEmail: "", contactPhone: "", companyName: "",
-    shipToName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "United States",
-  });
-  const on = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
-  const setVal = (k: keyof Form, v: string) => setF((p) => ({ ...p, [k]: v }));
 
-  const [ipAttested, setIpAttested] = useState(false);
-  const [accountEmail, setAccountEmail] = useState<string | null>(null);
-
-  // Pre-fill contact from the signed-in Clerk account (when Clerk is configured).
-  // Fields stay editable — the order contact may differ. The hook lives in the
-  // guarded child below so envs without Clerk still prerender.
+  // Native inputs retain browser autofill. Late account loading must never
+  // overwrite something the customer or their browser has already entered.
   const handlePrefill = useCallback((name: string | null, email: string | null) => {
     setAccountEmail(email);
-    setF((p) => ({ ...p, contactName: name || p.contactName, contactEmail: email || p.contactEmail }));
+    for (const [key, value] of [["contactName", name], ["contactEmail", email]]) {
+      const field = formRef.current?.elements.namedItem(key || "");
+      if (field instanceof HTMLInputElement && !field.value && value) field.value = value;
+    }
   }, []);
 
-  const isUS = f.country === "United States";
-
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submittingRef.current) return;
     if (!ipAttested) {
-      setError("Please confirm you own or have the rights to use this artwork.");
+      setError("Please confirm you have the rights to use this artwork.");
       return;
     }
+    // Read the DOM at submission, including autofill values that may not have
+    // dispatched a React change event. Do not persist personal data locally.
+    const fields = new FormData(e.currentTarget);
+    const value = (key: keyof ContactForm) => String(fields.get(key) ?? "").trim();
+    const contact = {
+      contactName: value("contactName"), contactEmail: value("contactEmail").toLowerCase(),
+      contactPhone: value("contactPhone"), companyName: value("companyName"),
+      shipToName: value("shipToName") || value("contactName"),
+      shipToAddress: {
+        line1: value("line1"), line2: value("line2"), city: value("city"), state: value("state"),
+        postalCode: value("postalCode"), country: country === "Other" ? String(fields.get("otherCountry") ?? "").trim() : value("country"),
+      },
+    };
+    submittingRef.current = true;
     setSubmitting(true);
     setError("");
     analytics.checkoutSubmitted({ count, value: total });
-
-    const contact = {
-      contactName: f.contactName, contactEmail: f.contactEmail, contactPhone: f.contactPhone, companyName: f.companyName,
-      shipToName: f.shipToName,
-      shipToAddress: { line1: f.line1, line2: f.line2, city: f.city, state: f.state, postalCode: f.postalCode, country: f.country },
-    };
-
     const payloadItems = items.map((item) => {
       const sizeSummary = Object.entries(item.sizeQty).map(([s, q]) => `${s}:${q}`).join(" ");
       return {
         productId: item.productId, variantId: item.variantId, decorationIds: item.decorationIds,
         quantity: item.quantity, displayName: item.displayName, colorLabel: item.colorLabel,
         decorationLabel: item.decorationLabel, artworkFileName: item.artworkFileName, artworkFileUrl: item.artworkFileUrl,
-        mockupUrls: item.mockupUrls, artworkPlacement: item.artworkPlacement, artworkPlacements: item.artworkPlacements, wovenLabel: item.wovenLabel, sizeBreakdown: item.sizeQty,
+        mockupUrls: item.mockupUrls, artworkPlacement: item.artworkPlacement, artworkPlacements: item.artworkPlacements,
+        wovenLabel: item.wovenLabel, fabricOptionId: item.fabricOptionId, sizeBreakdown: item.sizeQty,
         artworkNotes: sizeSummary ? `Sizes: ${sizeSummary}${item.artworkNotes ? `\n\n${item.artworkNotes}` : ""}` : item.artworkNotes,
-        // PR Box grouping — server re-prices + re-validates the discount from these.
         bundleId: item.bundleId, bundleLabel: item.bundleLabel, bundleRole: item.bundleRole, perBoxQty: item.perBoxQty, printed: item.printed,
       };
     });
-
-    const res = await fetch("/api/checkout", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: payloadItems, contact, ipAttested }),
-    });
-    const data = (await res.json()) as { url?: string; error?: string };
-    if (!res.ok || !data.url) {
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: payloadItems, contact, ipAttested }),
+      });
+      const data = await res.json().catch(() => ({})) as { url?: string; error?: string };
+      if (res.status === 401) throw new Error("Your session has expired. Sign in again to continue; your cart is saved.");
+      if (!res.ok || !data.url) throw new Error(data.error || "Payment could not start. Check your details and try again.");
+      window.location.assign(data.url);
+    } catch (err) {
+      setError(err instanceof TypeError ? "We could not connect. Your details are still here. Please try again." : err instanceof Error ? err.message : "Checkout could not start. Please try again.");
+      submittingRef.current = false;
       setSubmitting(false);
-      setError(data.error || "Checkout could not start. Check the fields and try again.");
-      return;
     }
-    window.location.href = data.url;
   }
 
-  if (hydrated && items.length === 0) {
-    return (
-      <main className="page">
-        <div className="empty-state">Your cart is empty. <Link href="/shop" className="link-button">Browse the shop</Link></div>
-      </main>
-    );
-  }
+  if (!hydrated) return <main className="page checkout-page" aria-busy="true"><p>Loading your order…</p></main>;
+  if (!items.length) return <main className="page checkout-page"><div className="empty-state">Your cart is empty. <Link href="/shop" className="link-button">Browse the shop</Link></div></main>;
 
   return (
-    <main className="page">
+    <main className="page checkout-page">
       {clerkConfigured ? <ClerkContactPrefill onPrefill={handlePrefill} /> : null}
-      <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/shop">Shop</Link><span aria-hidden>/</span>
-        <Link href="/cart">Cart</Link><span aria-hidden>/</span>
-        <span className="crumb-current">Checkout</span>
+      <nav className="co-progress" aria-label="Checkout progress">
+        <Link href="/cart"><span>01</span> Cart</Link>
+        <span aria-current="step"><span>02</span> Details</span>
+        <span><span>03</span> Payment</span>
       </nav>
-
-      <div className="config-shell">
-        <form onSubmit={submit} className="config-form" id="checkout-form">
-          <div className="config-head">
-            <p className="eyebrow">Checkout</p>
-            <h1 className="page-title">Contact &amp; shipping</h1>
-            <p className="lede">Entered once and applied to every SKU in your order.</p>
-          </div>
-
-          {accountEmail && (
-            <div className="co-account">
-              <div>
-                <p className="co-account-label">Signed in</p>
-                <p className="co-account-email">{accountEmail}</p>
-              </div>
-            </div>
-          )}
-
-          <section className="co-section">
-            <p className="co-section-title">Contact</p>
+      <header className="co-heading">
+        <p className="eyebrow">Checkout</p>
+        <h1 className="hx-h2">The final details.</h1>
+        <p className="hx-body">One delivery address for your order. Your production proof follows payment.</p>
+      </header>
+      <div className="co-layout">
+        <form onSubmit={submit} ref={formRef} className="co-form" id="checkout-form" autoComplete="on" aria-busy={submitting}>
+          {accountEmail ? <div className="co-identity"><span>Signed in as</span> {accountEmail}</div> : null}
+          <section className="co-card" aria-labelledby="contact-heading">
+            <div className="co-card-head"><span className="co-section-number">01</span><div><h2 id="contact-heading">Contact</h2><p>Order updates and your proof go to this email.</p></div></div>
             <div className="co-grid">
-              <label className="co-field">
-                <span className="label">Contact name</span>
-                <input className="co-input" value={f.contactName} onChange={on("contactName")} required autoComplete="name" />
-              </label>
-              <label className="co-field">
-                <span className="label">Email</span>
-                <input className="co-input" type="email" value={f.contactEmail} onChange={on("contactEmail")} required autoComplete="email" />
-              </label>
-              <label className="co-field">
-                <span className="label">Phone</span>
-                <input className="co-input" value={f.contactPhone} onChange={on("contactPhone")} autoComplete="tel" inputMode="tel" />
-              </label>
-              <label className="co-field">
-                <span className="label">Company</span>
-                <input className="co-input" value={f.companyName} onChange={on("companyName")} autoComplete="organization" />
-              </label>
+              <label className="co-field" htmlFor="contact-name"><span className="label">Full name</span><input className="co-input" id="contact-name" name="contactName" required autoComplete="section-contact name" maxLength={120} /></label>
+              <label className="co-field" htmlFor="contact-email"><span className="label">Email address</span><input className="co-input" id="contact-email" name="contactEmail" type="email" required autoComplete="section-contact email" autoCapitalize="none" spellCheck={false} maxLength={200} /></label>
+              <label className="co-field" htmlFor="contact-phone"><span className="label">Phone <small>Optional</small></span><input className="co-input" id="contact-phone" name="contactPhone" type="tel" autoComplete="section-contact tel" maxLength={40} /></label>
+              <label className="co-field" htmlFor="contact-company"><span className="label">Company <small>Optional</small></span><input className="co-input" id="contact-company" name="companyName" autoComplete="section-contact organization" maxLength={160} /></label>
             </div>
           </section>
-
-          <section className="co-section">
-            <p className="co-section-title">Ship to</p>
+          <section className="co-card" aria-labelledby="shipping-heading">
+            <div className="co-card-head"><span className="co-section-number">02</span><div><h2 id="shipping-heading">Shipping address</h2><p>Where should we send your finished pieces?</p></div></div>
             <div className="co-grid">
-              <label className="co-field co-field--full">
-                <span className="label">Recipient / attention</span>
-                <input className="co-input" value={f.shipToName} onChange={on("shipToName")} autoComplete="name" placeholder="Name on the shipment" />
-              </label>
-              <label className="co-field co-field--full">
-                <span className="label">Address line 1</span>
-                <input className="co-input" value={f.line1} onChange={on("line1")} required autoComplete="address-line1" />
-              </label>
-              <label className="co-field co-field--full">
-                <span className="label">Address line 2</span>
-                <input className="co-input" value={f.line2} onChange={on("line2")} autoComplete="address-line2" placeholder="Suite, floor, unit (optional)" />
-              </label>
-              <label className="co-field">
-                <span className="label">City</span>
-                <input className="co-input" value={f.city} onChange={on("city")} required autoComplete="address-level2" />
-              </label>
-              <div className="co-field">
-                <span className="label">{isUS ? "State" : "State / Province"}</span>
-                {isUS ? (
-                  <div className="co-select">
-                    <BrandSelect value={f.state} options={US_STATES} ariaLabel="State" onChange={(v) => setVal("state", v)} />
-                  </div>
-                ) : (
-                  <input className="co-input" value={f.state} onChange={on("state")} placeholder="State / Province / Region" />
-                )}
-              </div>
-              <label className="co-field">
-                <span className="label">Postal code</span>
-                <input className="co-input" value={f.postalCode} onChange={on("postalCode")} required autoComplete="postal-code" />
-              </label>
-              <div className="co-field">
-                <span className="label">Country</span>
-                <div className="co-select">
-                  <BrandSelect value={f.country} options={COUNTRIES} ariaLabel="Country" onChange={(v) => setVal("country", v)} />
-                </div>
-              </div>
+              <label className="co-field co-field--full" htmlFor="shipping-country"><span className="label">Country / region</span><select className="co-input co-native-select" id="shipping-country" name="country" autoComplete="section-shipping shipping country-name" defaultValue="United States" onChange={(e) => setCountry(e.target.value)} required>{COUNTRIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
+              {country === "Other" ? <label className="co-field co-field--full" htmlFor="shipping-other-country"><span className="label">Country name</span><input className="co-input" id="shipping-other-country" name="otherCountry" required autoComplete="section-shipping shipping country-name" maxLength={80} /></label> : null}
+              <label className="co-field co-field--full" htmlFor="shipping-recipient"><span className="label">Recipient <small>Optional</small></span><input className="co-input" id="shipping-recipient" name="shipToName" autoComplete="section-shipping shipping name" maxLength={160} placeholder="Same as contact name" /></label>
+              <label className="co-field co-field--full" htmlFor="shipping-address"><span className="label">Street address</span><input className="co-input" id="shipping-address" name="line1" required autoComplete="section-shipping shipping address-line1" maxLength={200} /></label>
+              <label className="co-field co-field--full" htmlFor="shipping-address2"><span className="label">Apartment, suite, etc. <small>Optional</small></span><input className="co-input" id="shipping-address2" name="line2" autoComplete="section-shipping shipping address-line2" maxLength={200} /></label>
+              <label className="co-field co-field--full" htmlFor="shipping-city"><span className="label">City</span><input className="co-input" id="shipping-city" name="city" required autoComplete="section-shipping shipping address-level2" maxLength={120} /></label>
+              <label className="co-field" htmlFor="shipping-state"><span className="label">{isUS ? "State" : "State / province"}</span>{isUS ? <select className="co-input co-native-select" id="shipping-state" name="state" required autoComplete="section-shipping shipping address-level1" defaultValue="">{US_STATES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select> : <input className="co-input" id="shipping-state" name="state" autoComplete="section-shipping shipping address-level1" maxLength={80} />}</label>
+              <label className="co-field" htmlFor="shipping-postal"><span className="label">{isUS ? "ZIP code" : "Postal code"}</span><input className="co-input" id="shipping-postal" name="postalCode" required autoComplete="section-shipping shipping postal-code" inputMode={isUS ? "numeric" : "text"} maxLength={20} /></label>
             </div>
-            {error ? <p className="form-error" style={{ marginTop: 16 }}>{error}</p> : null}
           </section>
         </form>
-
-        <aside className="price-box panel">
-          <div className="price-box-pad">
-            <p className="eyebrow">Order summary</p>
-            <div className="price-stack">
-              {items.map((item) => (
-                <div className="price-line" key={item.lineId}>
-                  <span>{item.displayName} · {item.quantity.toLocaleString()}</span>
-                  <strong>{currency(item.totalUsd)}</strong>
-                </div>
-              ))}
-            </div>
-            <div className="price-total-big">
-              <span className="price-total-num">{currency(total)}</span>
-              <span className="price-total-sub">{items.length} orders · {count.toLocaleString()} units</span>
-            </div>
-            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "4px 0 14px", cursor: "pointer" }}>
-              <input type="checkbox" checked={ipAttested} onChange={(e) => setIpAttested(e.target.checked)} style={{ marginTop: 3, accentColor: "var(--color-terracotta)", width: 16, height: 16 }} />
-              <span style={{ fontSize: 12, lineHeight: 1.5, color: "var(--color-neutral)" }}>
-                I own or have the rights to use this artwork, and agree to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "var(--color-terracotta)" }}>Terms</a> &amp; <a href="/refund-policy" target="_blank" rel="noreferrer" style={{ color: "var(--color-terracotta)" }}>Refund Policy</a>.
-              </span>
-            </label>
-            <button className="button button--lg button--full" type="submit" form="checkout-form" disabled={submitting || !ipAttested}>
-              {express
-                ? submitting ? "Submitting your order…" : `Submit order, ${currency(total)}`
-                : submitting ? "Redirecting to checkout…" : `Pay ${currency(total)} · secure checkout`}
-            </button>
-            <p className="trust-note">{express
-              ? "Nothing is charged now. Your proof arrives within 24 business hours with one invoice for the full order, and production starts once you approve and pay."
-              : "Secure payment via Stripe. One order is created per SKU."}</p>
-            {/* Escape hatch for buyers who want a human before a four-figure card
-                charge. Tracked: sustained clicks here = signal to build an
-                invoice/PO payment path (see launch plan, GATE 2). */}
-            <BespokeLine from="checkout" className="trust-note" />
-            {/* Invoice/PO hand-raise lane — a lead, not a payment path. Never
-                touches the Stripe flow or cart state. */}
-            <InvoiceRequestDialog prefillEmail={accountEmail ?? f.contactEmail} />
-          </div>
+        <aside className="co-summary" aria-labelledby="summary-heading">
+          <div className="co-summary-head"><h2 id="summary-heading">Your order</h2><Link href="/cart">Edit cart</Link></div>
+          <div className="co-items">{items.map((item) => (
+            <article className="co-item" key={item.lineId}>
+              {item.mockupUrls?.front || item.mockupUrls?.back || item.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.mockupUrls?.front || item.mockupUrls?.back || item.image} alt={`${item.displayName} in ${item.colorLabel}`} className="co-item-image" />
+              ) : <div className="co-item-image" aria-hidden="true" />}
+              <div><h3>{item.displayName}</h3><p>{item.colorLabel} · {item.quantity.toLocaleString()} units</p><p>{item.decorationLabel}</p><strong>{currency(item.totalUsd)}</strong></div>
+            </article>
+          ))}</div>
+          <div className="co-total"><div><span>Order total</span><small>{count.toLocaleString()} units · {items.length} {items.length === 1 ? "style" : "styles"}</small></div><strong>{currency(total)}</strong></div>
+          <label className="co-consent"><input type="checkbox" name="ipAttested" form="checkout-form" checked={ipAttested} onChange={(e) => setIpAttested(e.target.checked)} required /><span>I have the rights to use this artwork and agree to the <Link href="/terms" target="_blank">Terms</Link> and <Link href="/refund-policy" target="_blank">Refund Policy</Link>.</span></label>
+          {error ? <p className="co-error" role="alert">{error}</p> : null}
+          <button className="button button--lg button--full co-pay" type="submit" form="checkout-form" disabled={submitting || !ipAttested}>{submitting ? "Opening payment…" : "Continue to payment"}<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+          <p className="co-payment-note">Pay for your order, then review your production proof. Nothing is made until you approve.</p>
+          <div className="co-next"><span>After payment</span><h3>Your proof, then production.</h3><p>{express ? "We check every placement and prepare your proof within 24 business hours. Review it or request a change from your account." : "We check your artwork and prepare your production proof for approval in your account."}</p></div>
+          <div className="co-help"><InvoiceRequestDialog prefillEmail={accountEmail ?? ""} /><BespokeLine from="checkout" className="trust-note" /></div>
         </aside>
       </div>
     </main>
