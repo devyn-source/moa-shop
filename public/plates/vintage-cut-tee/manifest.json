@@ -5,21 +5,21 @@
   "front": {
    "w": 2400,
    "h": 3000,
-   "hpsY": 615.0,
-   "cfX": 1209.0,
-   "pxPerIn": 66.131
+   "hpsY": 643.0,
+   "cfX": 1200.0,
+   "pxPerIn": 64.037
   },
   "back": {
    "w": 2400,
    "h": 3000,
-   "hpsY": 637.0,
-   "cfX": 1195.0,
-   "pxPerIn": 64.486
+   "hpsY": 643.0,
+   "cfX": 1199.5,
+   "pxPerIn": 64.0
   }
  },
  "base": "light",
- "v": "66b9eeb022",
- "card": "card-d1b07c0b8a.webp",
+ "v": "1e7a12d6c5",
+ "card": "card-777dadc10b.webp",
  "colours": {
   "light": "#C8C8C8"
  }
