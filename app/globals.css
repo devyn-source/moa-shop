@@ -9320,3 +9320,6 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 @media (min-width: 901px) {
   .pdpx-stage > .pdpx-stage-toolbar, .pdpx-stage > .pdpx-shotnote { width: min(100%, calc((100vh - 190px) * 0.8)); margin-left: auto; margin-right: auto; }
 }
+/* Closing headlines sit in a 1/3 column: size them to the column so long words never spill. */
+.hx-final-h { font-size: clamp(28px, 3.3vw, 52px) !important; }
+.hx-pagehero-title, .signin-brand .hx-h2 { font-size: clamp(32px, 4.4vw, 68px) !important; }
