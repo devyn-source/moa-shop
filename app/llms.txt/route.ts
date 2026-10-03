@@ -26,7 +26,7 @@ export async function GET() {
 
   const md = `# MOA Shop by Magnum Opus Agency
 
-> MOA Shop is the self-serve lane for smaller orders from Magnum Opus Agency (MOA), a Los Angeles product design studio. Every style is custom cut and sewn to MOA's own patterns. Customers design their piece on the garment, receive a proof from the MOA team within 24 business hours, and pay one invoice for the full order before production.
+> MOA Shop is the self-serve lane for smaller orders from Magnum Opus Agency (MOA), a Los Angeles product design studio. Every style is custom cut and sewn to MOA's own patterns. Customers design their piece on the garment and pay the full total at checkout. The MOA team prepares a production proof by 5 p.m. Pacific on the next business day (Monday to Friday). Production is released only after customer approval.
 
 ## What MOA Shop is
 - Fully custom apparel and accessories for smaller orders, cut and sewn to MOA's own patterns.
@@ -38,9 +38,9 @@ export async function GET() {
 ## How it works
 1. Choose a style, colour and fabric.
 2. Upload your artwork and place it on the 3D garment. Choose a decoration method and Pantone ink colours.
-3. Build your size run above the style's minimum and submit the order. Nothing is charged at this step.
-4. The MOA team prepares your proof within 24 business hours. Approve each piece or request a change in your account. Two proof rounds are included.
-5. Pay one invoice for the full order.
+3. Build your size run above the style's minimum and pay the full order total by card at checkout.
+4. The MOA team prepares your proof by the next business day. Approve each piece or request a change in your account. The first proof and one revision round are included.
+5. Approve the final production proof for each piece. No second payment is needed.
 6. MOA produces the order to spec with its partner factories, runs QC and ships it with tracking.
 
 ## Key facts

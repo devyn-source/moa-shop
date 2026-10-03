@@ -17,7 +17,7 @@ import type { CatalogProduct } from "@/lib/types";
 export const metadata: Metadata = {
   title: "Custom Cut and Sew Merch for Smaller Orders | MOA Shop",
   description:
-    "Custom cut and sew in smaller runs. Every style is made to our own patterns. Design it on the garment, a proof within 24 business hours and one invoice.",
+    "Custom cut and sew in smaller runs. Every style is made to our own patterns. Design it on the garment, a proof by the next business day and one invoice.",
 };
 
 const fromPrice = (p: CatalogProduct) => Math.min(...p.priceTiers.map((t) => t.perUnitUsd));
@@ -60,14 +60,14 @@ export default async function LandingPage() {
           <ul className="hx-hero-tags">
             <li>Cut and sew</li>
             <li>{moq} piece minimum</li>
-            <li>Proof in 24 hours</li>
+            <li>Proof in one business day</li>
             <li>One invoice</li>
           </ul>
           <h1 className="hx-wordmark">MOA Shop</h1>
           <div className="hx-hero-foot">
             <div>
               <p className="hx-hero-lede">Custom merch in smaller runs, cut and sewn to our own patterns.</p>
-              <p className="hx-hero-sub">From {currency(fromLow)}/unit. Designed on the garment, proofed within 24 business hours.</p>
+              <p className="hx-hero-sub">From {currency(fromLow)}/unit. Designed on the garment, proofed by the next business day.</p>
             </div>
             <div className="hx-hero-ctas">
               <Link className="hx-btn hx-btn--primary" href="#styles">Start designing</Link>

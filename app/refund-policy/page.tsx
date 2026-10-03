@@ -5,7 +5,7 @@ export default function RefundPolicyPage() {
   return (
     <main className="hx">
       <PageHero title="Refunds">
-        <p className="hx-body">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
+        <p className="hx-body">Magnum Opus Agency, MOA Shop. Last updated October 2026.</p>
       </PageHero>
       <div className="hx-row hx-legal">
 
@@ -15,8 +15,8 @@ export default function RefundPolicyPage() {
           <p>Cancel any time before approving your proof for a <strong>full refund</strong>, no questions asked. Until you approve, nothing has been produced.</p>
         </section>
         <section>
-          <h2 style={hStyle}>After you approve (in production)</h2>
-          <p>Because every item is custom-made to the spec you approved, approved orders are generally <strong>non-refundable</strong> once in production. If you need a change, reach out before approving. Two proof rounds are included with every order. Further rounds are available on request.</p>
+          <h2 style={hStyle}>After production begins</h2>
+          <p>Because every item is custom-made to the spec you approved, approved orders are generally <strong>non-refundable</strong> once in production. If you need a change, reach out before approving. Your first proof and one revision round are included with every order. Further rounds are available on request.</p>
         </section>
         <section>
           <h2 style={hStyle}>Defects &amp; errors</h2>

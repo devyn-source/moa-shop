@@ -24,10 +24,10 @@ export async function getExpressOrder(number: string, email: string): Promise<Ex
   return j?.ok && j.order ? j.order : null;
 }
 
-export async function postExpressDecision(input: { number: string; email: string; name: string; skuId: string; decision: "approved" | "changes"; comment?: string }) {
+export async function postExpressDecision(input: { number: string; email: string; name: string; skuId: string; round: number; decision: "approved" | "changes"; comment?: string }) {
   const r = await fetch(`${base()}/api/express/customer/decision`, { method: "POST", headers: headers(), body: JSON.stringify(input) });
   const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-  return { ok: !!j.ok && r.ok, error: j.error };
+  return { ok: !!j.ok && r.ok, error: j.error, status: r.status };
 }
 
 export async function sandboxPay(number: string) {

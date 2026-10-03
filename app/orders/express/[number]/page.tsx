@@ -12,13 +12,12 @@ const STEPS = [
   { key: "paid", label: "Paid" },
   { key: "proof", label: "Proof" },
   { key: "approved", label: "Approved" },
-  { key: "production", label: "In production" },
+  { key: "production", label: "Preparing production" },
   { key: "shipped", label: "Shipped" },
 ];
 function stepIndex(o: ExpressOrderView): number {
   if (o.shippedAt || o.status === "shipped" || o.status === "delivered") return 5;
   if (o.status === "launched") return 4;
-  if (o.invoice.paid && o.allApproved) return 4;
   if (o.allApproved) return 3;
   if (o.rounds.length) return 2;
   if (o.invoice.paid) return 1;
@@ -64,7 +63,7 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
           <h2 style={{ margin: 0 }}>{round ? `Proof round ${round}` : o.rounds.length ? "Your pieces" : "Your pieces"}</h2>
           {round ? <span style={label}>{round <= o.includedRounds ? `Round ${round} of ${o.includedRounds} included` : `Round ${round}, beyond the included rounds`}</span> : null}
         </div>
-        {!o.rounds.length ? <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>We are checking every placement against your artwork. Your production proof arrives here within 24 business hours.</p> : null}
+        {!o.rounds.length ? <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>We are checking your artwork, measurements and placements. Your first production proof is due by 5 p.m. Pacific on the next business day after payment (Monday to Friday). You can approve it or request a change here.</p> : null}
         <div style={{ display: "grid", gap: 14 }}>
           {o.pieces.map((p) => (
             <article key={p.ref} style={{ ...card, display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)", gap: 18 }} className="express-piece">
@@ -81,7 +80,7 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
                 </div>
                 {p.spec ? <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 12, lineHeight: 1.6, opacity: 0.8 }}>{p.spec.split("\n").filter((l) => !/^(Engine |Artwork: http)/.test(l)).join("\n")}</pre> : null}
                 {p.decision === "changes" && p.comment ? <p style={{ margin: 0, fontSize: 12 }}>Your note: &ldquo;{p.comment}&rdquo;</p> : null}
-                {p.decision === "pending" && p.skuId ? <ExpressDecision number={o.orderNumber} skuId={p.skuId} /> : null}
+                {p.decision === "pending" && p.skuId && round && !["cancelled", "launched", "shipped", "delivered"].includes(o.status) ? <ExpressDecision key={`${p.skuId}-${round}`} number={o.orderNumber} skuId={p.skuId} round={round} /> : null}
               </div>
             </article>
           ))}
@@ -97,7 +96,7 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
             : <span style={{ fontSize: 12, opacity: 0.7 }}>{o.rounds.length ? "Payment pending" : "Arrives with your proof"}</span>}
         </div>
         {o.invoice.url ? <a href={o.invoice.url} style={{ fontSize: 12 }}>View invoice</a> : null}
-        <p style={{ margin: 0, fontSize: 11, opacity: 0.6, lineHeight: 1.6 }}>By approving you confirm spelling, colours, placement and sizes. Screen colours differ slightly from finished goods. Nothing changes once production starts. One round of changes is included.</p>
+        <p style={{ margin: 0, fontSize: 11, opacity: 0.6, lineHeight: 1.6 }}>By approving you confirm spelling, colours, placement and sizes. Screen colours may differ slightly from finished goods. Your first proof and one revision round are included. Production timing starts after every piece is approved.</p>
       </section>
 
       {o.tracking ? (

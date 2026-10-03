@@ -14,7 +14,7 @@ import Garment3DDecoratorClient from "./Garment3DDecoratorClient";
 import Garment3DPreviewClient from "./Garment3DPreviewClient";
 import type { StudioCapture } from "./Garment3DDecorator";
 import { useCart } from "./CartProvider";
-import { currency, formatLeadTime, formatDeliveredBy, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
+import { currency, formatLeadTime, WOVEN_LABEL_ADDER_USD, EXTRA_PLACEMENT_ADDER_USD } from "@/lib/pricing";
 import { getDefaultZones, normaliseZonesPayload, isZoneSpecable, normaliseCalibration, derivePlacement, horizontalLabel, type ProductZones, type ProductCalibration } from "@/lib/zones";
 import type { PmsColor } from "@/lib/pantones";
 import type { CatalogProduct } from "@/lib/types";
@@ -1048,7 +1048,7 @@ export function PdpConfigurator({
           <p className="pdpx-eyebrow" style={{ color: "var(--color-terracotta)" }}>Updated</p>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.5px", margin: "10px 0 12px" }}>Fresh proof on the way</h2>
           <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--color-neutral)", maxWidth: 460, margin: "0 auto" }}>
-            We&apos;ve saved your changes. The MOA team reviews them and your updated proof arrives within 24 business hours. Nothing goes to production until you approve the new version.
+            We&apos;ve saved your changes. The MOA team reviews them and prepares your updated proof. Nothing goes to production until you approve the new version.
           </p>
         </div>
       </section>
@@ -1678,7 +1678,7 @@ export function PdpConfigurator({
         <div className="pdpx-extras">
           <div className="pdpx-eta">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><rect x="1.5" y="3" width="13" height="11.5" rx="2" stroke="currentColor" strokeWidth="1.4" /><path d="M1.5 6.5h13M5 1.5v3M11 1.5v3" stroke="currentColor" strokeWidth="1.4" /></svg>
-            <span><strong>Delivered by {formatDeliveredBy(product.leadTimeDays)}</strong><em>{formatLeadTime(product.leadTimeDays)} from today</em></span>
+            <span><strong>Estimated delivery: {formatLeadTime(product.leadTimeDays)}</strong><em>After production-proof approval</em></span>
           </div>
 
           {/* Woven-label add-on: garments only (boxes/packaging don't take labels) */}
@@ -1872,10 +1872,10 @@ export function PdpConfigurator({
               </section>
 
               <ol className="rv-steps">
-                <li className="is-now"><b>1</b><span>Add to order</span></li>
-                <li><b>2</b><span>Proof in 24 hours</span></li>
-                <li><b>3</b><span>Approve and pay</span></li>
-                <li><b>4</b><span>Delivered {formatDeliveredBy(product.leadTimeDays)}</span></li>
+                <li className="is-now"><b>1</b><span>Checkout and pay</span></li>
+                <li><b>2</b><span>Proof in one business day</span></li>
+                <li><b>3</b><span>Approve for production</span></li>
+                <li><b>4</b><span>Delivery {formatLeadTime(product.leadTimeDays)} after approval</span></li>
               </ol>
 
               <button type="button" className="rv-cta" onClick={() => void handleAddToCart()} disabled={submitting || !previewReady || plateBlocked || blockRes || uploading}>

@@ -192,7 +192,7 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
           {error ? <p className="co-error" role="alert">{error}</p> : null}
           <button className="button button--lg button--full co-pay" type="submit" form="checkout-form" disabled={submitting || !ipAttested}>{submitting ? "Opening payment…" : "Continue to payment"}<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
           <p className="co-payment-note">Pay for your order, then review your production proof. Nothing is made until you approve.</p>
-          <div className="co-next"><span>After payment</span><h3>Your proof, then production.</h3><p>{express ? "We check every placement and prepare your proof within 24 business hours. Review it or request a change from your account." : "We check your artwork and prepare your production proof for approval in your account."}</p></div>
+          <div className="co-next"><span>After payment</span><h3>Your proof, then production.</h3><p>{express ? "We check every placement and prepare your proof by the end of the next business day. Review it or request a change from your account." : "We check your artwork and prepare your production proof for approval in your account."}</p></div>
           <div className="co-help"><InvoiceRequestDialog prefillEmail={accountEmail ?? ""} /><BespokeLine from="checkout" className="trust-note" /></div>
         </aside>
       </div>

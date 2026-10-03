@@ -30,8 +30,7 @@ export default async function CheckoutSuccessPage({
         <h1 className="success-headline">We&apos;ve got your order</h1>
         {expressNumber ? (
           <p className="success-lede">
-            Your mockups are below. MOA checks every placement and sends your proof with one invoice for the full
-            order within 24 business hours. Approve the proof and pay the invoice, and production starts that day.
+            Your mockups are below. MOA checks every placement and prepares your production proof by the end of the next business day. Review your proof and payment status in your account. Production is released after payment and approval.
           </p>
         ) : (
           <p className="success-lede">
@@ -86,15 +85,15 @@ export default async function CheckoutSuccessPage({
           <li>
             <span className="success-step-num">01</span>
             <div>
-              <h3>{expressNumber ? "Proof and invoice" : "Artwork QA"}</h3>
-              <p>{expressNumber ? "Within 24 business hours: your proof for every piece and one invoice for the full order." : "MOA reviews your art, mockup, and production specs. Usually 1 to 3 business days."}</p>
+              <h3>{expressNumber ? "Production proof" : "Artwork QA"}</h3>
+              <p>{expressNumber ? "Your first proof for every piece is due by the end of the next business day." : "MOA reviews your art, mockup, and production specs. Usually 1 to 3 business days."}</p>
             </div>
           </li>
           <li>
             <span className="success-step-num">02</span>
             <div>
               <h3>Production</h3>
-              <p>{expressNumber ? "Approve the proof and pay the invoice, and your run goes into production that day." : "Once approved, your run goes into production with MOA quality control end to end."}</p>
+              <p>{expressNumber ? "Once payment is received and every piece is approved, we prepare your run for production." : "Once approved, your run goes into production with MOA quality control end to end."}</p>
             </div>
           </li>
           <li>

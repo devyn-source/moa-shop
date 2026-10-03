@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MOA Shop: custom cut and sew in smaller runs",
     description:
-      "Pick a style cut and sewn to our own patterns, design it on the garment and get a proof within 24 business hours. Prices per unit, 50 piece minimum.",
+      "Pick a style cut and sewn to our own patterns, design it on the garment and get a proof by the next business day. Prices per unit, 50 piece minimum.",
   },
 };
 
@@ -28,7 +28,7 @@ export default async function HomePage() {
     <main className="hx">
       <ScrollReveal />
       <PageHero title="The styles">
-        <p className="hx-body">Every style is cut and sewn to our own patterns. Design it on the garment, get a proof within 24 business hours and pay one invoice.</p>
+        <p className="hx-body">Every style is cut and sewn to our own patterns. Design it on the garment, pay at checkout and review your proof by the next business day.</p>
         <dl className="hx-facts">
           <div><dt>Piece minimum</dt><dd>{Math.min(...products.map((p) => p.moq))}</dd></div>
           <div><dt>Proof turnaround</dt><dd>24 hr</dd></div>

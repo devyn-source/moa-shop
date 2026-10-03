@@ -8,7 +8,7 @@ export default function TermsPage() {
   return (
     <main className="hx">
       <PageHero title="Terms of service">
-        <p className="hx-body">Magnum Opus Agency, MOA Shop. Last updated June 2026.</p>
+        <p className="hx-body">Magnum Opus Agency, MOA Shop. Last updated October 2026.</p>
       </PageHero>
       <div className="hx-row hx-legal">
 
@@ -23,11 +23,11 @@ export default function TermsPage() {
         </section>
         <section>
           <h2 style={hStyle}>3. Proof approval is the spec</h2>
-          <p>After payment we generate a digital proof and decoration specification. <strong>Nothing is sent to production until you approve it.</strong> Your approval confirms the artwork, placement, colours, sizes, and quantities are correct. You may adjust and regenerate your proof as many times as you like before approving. Once approved, the approved proof governs production.</p>
+          <p>After full payment at checkout, we prepare your first production proof by 5 p.m. Pacific on the next business day (Monday to Friday). <strong>Nothing is sent to production until you approve it.</strong> Your approval confirms the artwork, placement, colours, sizes, and quantities are correct. Your first proof and one revision round are included. Request changes from your account before approving; additional rounds are available on request. Once approved, the approved proof governs production.</p>
         </section>
         <section>
           <h2 style={hStyle}>4. Lead times, colours &amp; variance</h2>
-          <p>Lead times are good-faith estimates, not guarantees. Screen and printed colours may vary slightly from on-screen previews; Pantone references are targets within standard manufacturing tolerance. Minor placement variance within industry tolerance is normal.</p>
+          <p>Lead times begin after every piece in your order has an approved production proof. They are good-faith estimates, not guarantees. Screen and printed colours may vary slightly from on-screen previews; Pantone references are targets within standard manufacturing tolerance. Minor placement variance within industry tolerance is normal.</p>
         </section>
         <section>
           <h2 style={hStyle}>5. Shipping, customs &amp; duties</h2>

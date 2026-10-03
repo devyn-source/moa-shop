@@ -23,7 +23,7 @@ function MaybeClerk({ children }: { children: React.ReactNode }) {
 
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";
 const TITLE = "MOA Shop, Custom cut and sew for smaller orders";
-const DESC = "Fully custom apparel and accessories for smaller orders, cut and sewn to our own patterns. Design it on the garment, get your proof in 24 business hours, pay one invoice. From the Magnum Opus Agency studio.";
+const DESC = "Fully custom apparel and accessories for smaller orders, cut and sewn to our own patterns. Design it on the garment, pay at checkout and get your production proof by the next business day. From the Magnum Opus Agency studio.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="ft-brand">
               <Image className="ft-logo" src="/brand/logos/moa-logo.png" alt="MOA Magnum Opus" width={2104} height={766} sizes="232px" />
               <p className="ft-statement">
-                Every style is cut and sewn to our own patterns. Fixed prices, a proof in 24 hours and one invoice.
+                Every style is cut and sewn to our own patterns. Fixed prices, a proof in one business day and one invoice.
               </p>
             </div>
             <nav className="ft-nav" aria-label="Footer">
@@ -115,7 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="ft-base">
             <span className="ft-base-left">© {new Date().getFullYear()} Magnum Opus LLC, all rights reserved</span>
             <div className="ft-base-right">
-              <span className="ft-tagline">Custom cut and sew. Proof in 24 hours. One invoice.</span>
+              <span className="ft-tagline">Custom cut and sew. Proof in one business day. One invoice.</span>
               <span className="ft-legal">
                 <Link href="/terms">Terms</Link>
                 <Link href="/refund-policy">Refunds</Link>
