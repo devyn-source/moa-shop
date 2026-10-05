@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-05T20:56:49.429Z",
+  "scope": "Real Stripe test API and signed CLI delivery; in-memory shop persistence; simulated backend; no customer/factory messages",
+  "sessionId": "cs_test_b1udiCHDByA2Lr5Nwb26TXN9zTODek8TzxZb7xp0ALSDWnaik1lbGfvivd",
+  "checkoutId": "a17c09d8-c82d-4820-99ac-d21f346268bf",
+  "paymentIntent": "pi_3UNIwBDfm0wj0XMZ2NYtQE4v",
+  "refundId": "re_3UNIwBDfm0wj0XMZ279Y5TEb",
+  "subtotal": 285001,
+  "tax": 24581,
+  "total": 309582,
+  "refundAmount": 309582,
+  "checks": {
+    "paidWebhookDuringBackendOutage": true,
+    "retryHandoff": true,
+    "duplicateHandoffSuppressed": true,
+    "taxCentsPreserved": true,
+    "wrongOwnerRejected": true,
+    "backendRefundOutageRecovered": true,
+    "lostRefundResponseRecovered": true,
+    "singleRefund": true,
+    "forgedSignatureRejected": true,
+    "processorDecline": true
+  },
+  "webhookDeliveries": [
+    {
+      "id": "evt_1UNIwDDfm0wj0XMZlo6V0MWh",
+      "type": "checkout.session.completed",
+      "status": 500
+    },
+    {
+      "id": "evt_3UNIwBDfm0wj0XMZ2Yu0heS7",
+      "type": "refund.created",
+      "status": 200
+    },
+    {
+      "id": "evt_3UNIwBDfm0wj0XMZ26zdZfW0",
+      "type": "refund.updated",
+      "status": 200
+    }
+  ],
+  "finalProcessorVerification": {
+    "checkedAt": "2026-10-05T20:58:14.780Z",
+    "testOnly": true,
+    "paymentStatus": "succeeded",
+    "paymentAmount": 309582,
+    "refundStatus": "succeeded",
+    "refundAmount": 309582,
+    "refundCount": 1
+  }
+}

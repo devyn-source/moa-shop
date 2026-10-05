@@ -39,7 +39,7 @@ The supplied test environment initially had pending tax settings and no webhook 
 
 An opt-in harness is available under `scripts/stripe-rehearsal/`. It calls the actual shop payment, tax, webhook and refund functions against the real Stripe test API, using memory-only order storage and a simulated backend. Email, proof, legacy fulfillment and analytics functions are blocked. It refuses production persistence configuration and non-test Stripe keys.
 
-A two-line hosted test checkout was created for $2,850.01 plus $245.81 tax, total $3,095.82. Browser automation timed out; the hosted payment requires a manual Stripe test-card submission. Payment, replay and refund acceptance are PENDING until the harness writes a passing result. Independent asynchronous-refund processor probes passed: pending to succeeded, and succeeded to failed. The new sandbox initially lacked available balance; Stripe's documented bypass-pending test method supplied simulated funds. Evidence is saved in [stage-4-stripe-refund-probes.json](stage-4-stripe-refund-probes.json). Do not infer end-to-end readiness from setup or from a created session.
+The two-line hosted test checkout passed after Devyn submitted the Stripe test card on October 5. It charged $2,850.01 merchandise plus $245.81 tax, total $3,095.82, in TEST mode. Stripe independently confirmed one successful payment and exactly one successful full $3,095.82 refund. The first handoff webhook intentionally returned HTTP 500 during the injected backend outage; recovery and refund webhooks then passed. Evidence is saved in [stage-4-stripe-checkout-rehearsal.json](stage-4-stripe-checkout-rehearsal.json). Independent asynchronous-refund processor probes passed: pending to succeeded, and succeeded to failed. The new sandbox initially lacked available balance; Stripe's documented bypass-pending test method supplied simulated funds. Evidence is saved in [stage-4-stripe-refund-probes.json](stage-4-stripe-refund-probes.json). The harness verified real signed Stripe CLI delivery, exact tax cents, payment replay, duplicate handoff suppression, owner rejection, backend-refund outage recovery, lost-refund-response recovery, forged-signature rejection, and a processor decline. Shop persistence and the MoaOS backend were simulated. These results do not establish deployed database atomicity, real-account authorization, production webhook delivery, or operational monitoring.
 
 ## Stripe rehearsal acceptance matrix
 
@@ -59,7 +59,7 @@ Use Stripe test keys and Stripe test payment methods only. The production simula
 | Wrong owner or forged signature | Requests rejected before mutation. Two actual test accounts must be used. |
 | Recovery scheduling and outage | Record scheduled run, successful reconciliation, failed-item response, missed run, and operator acknowledgment. |
 
-The independent asynchronous-refund processor probes have passed. The full hosted-checkout/application rehearsal and deployed acceptance matrix are still pending. Unit tests and processor-only probes do not substitute for this matrix.
+The independent asynchronous-refund probes and isolated hosted-checkout/application-code rehearsal have passed. The deployed acceptance matrix remains open: actual shop and backend persistence, two signed-in customer accounts, production authentication, production webhook delivery, and scheduled monitoring still require evidence.
 
 ## Operating procedure proposed for the pilot
 
