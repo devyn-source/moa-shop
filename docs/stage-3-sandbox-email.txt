@@ -1,0 +1,21 @@
+From: Devyn DiStasio <devyn@magnumopus.supply>
+To: devyn@magnumopus.agency
+Subject: [SANDBOX] MOA EXP-STAGE3-QA-20261005: Shipped
+Attachments: none
+Status: exact content approved by Devyn and sent once on October 5, 2026
+
+Hi Devyn,
+
+SANDBOX ONLY. No factory or customer receives this message. No manufacturing or shipment has been requested.
+
+Order EXP-STAGE3-QA-20261005: Shipped
+Simulated shipment of all 50 units. No parcel was dispatched.
+UPS: SANDBOX123456
+https://example.invalid/sandbox-tracking
+This shipment covers every piece and unit in the order.
+
+Sandbox Hoodie: 50 units, factory Best Cover (sandbox assignment), proof round 1
+
+View order: https://shop.magnumopus.agency/orders/express/EXP-STAGE3-QA-20261005
+
+MOA
