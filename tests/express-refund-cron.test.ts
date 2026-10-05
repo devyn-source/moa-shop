@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ reconcile: vi.fn() }));
 vi.mock("@/lib/express-refunds", () => ({ reconcileExpressRefunds: mocks.reconcile }));
+vi.mock("@/lib/job-monitor", () => ({ monitoredJob: async (_job: string, work: () => Promise<unknown>) => work() }));
 import { GET } from "@/app/api/cron/express-refunds/route";
 afterEach(() => { vi.clearAllMocks(); vi.unstubAllEnvs(); });
 it("rejects missing cron authorization before attempting refunds", async () => {

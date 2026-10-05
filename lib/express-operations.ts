@@ -13,8 +13,8 @@ export async function getExpressOperations(): Promise<OperationsReport> {
   let truncated = false;
   const tasks = await Promise.allSettled([
     (async (): Promise<OperationCheck> => {
-      const url = env.UPSTASH_REDIS_REST_URL || env.KV_REST_API_URL;
-      const token = env.UPSTASH_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN;
+      const url = env.OPS_KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL || env.KV_REST_API_URL;
+      const token = env.OPS_KV_REST_API_TOKEN || env.UPSTASH_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN;
       if (!url || !token) return { id: "rate-limit", label: "Shared rate limiter", state: "blocked", detail: "Redis credentials are missing. Rate limiting is disabled." };
       const response = await fetch(`${url.replace(/\/$/, "")}/ping`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal: AbortSignal.timeout(5000) });
       const data = await response.json();
@@ -45,10 +45,23 @@ export async function getExpressOperations(): Promise<OperationsReport> {
           .is("data->fulfillment->>catalogOrderId", null).order("created_at").limit(101).abortSignal(AbortSignal.timeout(5000)),
       ]);
       if (refunds.error || handoffs.error) throw new Error("Operational queues unavailable");
-      truncated = (refunds.data?.length ?? 0) > 100 || (handoffs.data?.length ?? 0) > 100;
+      const queuesTruncated = (refunds.data?.length ?? 0) > 100 || (handoffs.data?.length ?? 0) > 100;
+      truncated ||= queuesTruncated;
       for (const row of (refunds.data || []).slice(0, 100)) incidents.push({ reference: row.order_number, mode: row.mode, issue: row.last_error ? "Refund recovery needs review" : `Refund ${row.status}${row.backend_synced_at ? "" : "; backend update pending"}`, since: row.created_at, action: "Verify the existing Stripe refund and backend cancellation before retrying. Never create a second refund manually." });
       for (const row of (handoffs.data || []).slice(0, 100)) incidents.push({ reference: row.order_number, mode: row.checkout_mode, issue: "Paid order has no backend handoff", since: row.created_at, action: "Check Stripe event delivery and replay the original paid event after restoring backend access. Do not charge again." });
-      return { id: "queues", label: "Payment and refund exception queues", state: incidents.length || truncated ? "blocked" : "pass", detail: truncated ? "More than 100 records in at least one queue. Resolve oldest items and reload; this view is incomplete." : incidents.length ? `${incidents.length} records need review; sandbox records are labelled separately.` : "No unresolved refunds or paid orders missing a backend reference at this check." };
+      const count = (refunds.data?.length || 0) + (handoffs.data?.length || 0);
+      return { id: "queues", label: "Payment and refund exception queues", state: count || queuesTruncated ? "blocked" : "pass", detail: queuesTruncated ? "More than 100 records in at least one queue. Resolve oldest items and reload; this view is incomplete." : count ? `${count} records need review; sandbox records are labelled separately.` : "No unresolved refunds or paid orders missing a backend reference at this check." };
+    })(),
+    (async (): Promise<OperationCheck> => {
+      const db = getSupabase();
+      const { data, error } = await db.from("express_job_monitors").select("job,enabled,checked_at").abortSignal(AbortSignal.timeout(5000));
+      if (error) throw new Error("Job monitoring unavailable");
+      const current = ["express-refunds", "fulfillment"].every(job => data?.some(row => row.job === job && row.enabled && row.checked_at && Date.now() - Date.parse(row.checked_at) < 10 * 60_000));
+      const open = await db.from("express_operation_incidents").select("source_key,summary,opened_at,acknowledged_at").is("recovered_at", null).order("opened_at").limit(101).abortSignal(AbortSignal.timeout(5000));
+      if (open.error) throw new Error("Monitoring incidents unavailable");
+      for (const row of (open.data || []).slice(0, 100)) incidents.push({ reference: row.source_key, mode: "Operations", issue: row.summary, since: row.opened_at, action: row.acknowledged_at ? "Acknowledged. Complete the recorded next action and verify recovery." : "Devyn to review; Tyler is backup. Record acknowledgment and a next review time." });
+      if ((open.data?.length || 0) > 100) truncated = true;
+      return { id: "job-monitor", label: "Independent scheduler watchdog", state: current && !open.data?.length ? "pass" : "blocked", detail: !current ? "Watchdog is disabled or has not checked all jobs in the last 10 minutes." : open.data?.length ? "Open monitoring incidents need operator review." : "Database watchdog checked both jobs recently. Notification delivery remains a separate gate." };
     })(),
   ]);
   const failures = [
@@ -56,6 +69,7 @@ export async function getExpressOperations(): Promise<OperationsReport> {
     ["backend-access", "Backend connectivity and mode", "Readiness probe failed. Verify the Express deployment, credentials, and mode."],
     ["stripe-events", "Stripe lifecycle subscriptions", "Could not inspect Stripe subscriptions. Verify credentials and service availability."],
     ["queues", "Payment and refund exception queues", "Could not read exception queues. An unavailable queue must not be treated as empty."],
+    ["job-monitor", "Independent scheduler watchdog", "Could not read durable monitoring state. Verify the database watchdog."],
   ];
   tasks.forEach((task, i) => checks.push(task.status === "fulfilled" ? task.value : unavailable(failures[i][0], failures[i][1], failures[i][2])));
   return { checkedAt: new Date().toISOString(), mode: env.EXPRESS_SANDBOX === "1" ? "Sandbox simulation" : "Stripe payments", checks, incidents, truncated };

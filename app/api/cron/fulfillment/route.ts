@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getOrdersNeedingFulfillment, getProofReminderCandidates, recordProofReminder, getStalePaymentOrders, updateOrderStatus } from "@/lib/store";
 import { pushOrderToMoaOS, syncOrderFromMoaOS, fulfillmentMode } from "@/lib/catalog-fulfillment";
 import { sendProofApproval } from "@/lib/email";
+import { monitoredJob } from "@/lib/job-monitor";
 
 export const runtime = "nodejs";
 
@@ -18,11 +19,19 @@ function authorized(request: Request): boolean {
 
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    return await monitoredJob("fulfillment", reconcile, response => response.ok);
+  } catch {
+    return NextResponse.json({ error: "Fulfillment reconciliation needs review" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+}
 
+async function reconcile() {
   const mode = fulfillmentMode();
   const orders = await getOrdersNeedingFulfillment();
   let pushed = 0;
   let synced = 0;
+  let failed = 0;
 
   for (const order of orders) {
     const f = order.fulfillment;
@@ -52,7 +61,7 @@ export async function GET(request: Request) {
       }
     }
   } catch {
-    /* reminders are best-effort */
+    failed++;
   }
 
   // Sweep dead checkouts: awaiting_payment older than 48h (Stripe sessions die
@@ -65,8 +74,8 @@ export async function GET(request: Request) {
       expired++;
     }
   } catch {
-    /* sweep is best-effort */
+    failed++;
   }
 
-  return NextResponse.json({ mode, scanned: orders.length, pushed, synced, reminded, expired });
+  return NextResponse.json({ mode, scanned: orders.length, pushed, synced, reminded, expired, failed }, { status: failed ? 503 : 200, headers: { "Cache-Control": "no-store" } });
 }

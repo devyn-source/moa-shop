@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { reconcileExpressRefunds } from "@/lib/express-refunds";
+import { monitoredJob } from "@/lib/job-monitor";
 
 export const maxDuration = 120;
 
 export async function GET(req: Request) {
   if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const result = await reconcileExpressRefunds();
+    const result = await monitoredJob("express-refunds", reconcileExpressRefunds, result => result.failed === 0);
     if (result.failed) console.error("[express-refund-recovery] Operator review required", result);
     return NextResponse.json(result, { status: result.failed ? 503 : 200, headers: { "Cache-Control": "no-store" } });
   }

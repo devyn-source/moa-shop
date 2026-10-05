@@ -63,7 +63,7 @@ The independent asynchronous-refund probes and isolated hosted-checkout/applicat
 
 ## Operating procedure proposed for the pilot
 
-Devyn is the proposed accountable owner until a production operator and backup are explicitly assigned. These are internal response targets, not new customer-facing promises.
+Devyn is the primary operator and Tyler is the backup, assigned by Devyn on October 5. Tyler's staff email and access verification remain outstanding. These are internal response targets, not new customer-facing promises.
 
 Every exception needs a durable case linked to the order/project: category, severity, responsible person, opened time, next action, next review time, evidence links, customer communication draft, financial exposure, resolution, and root cause. Use the existing project/task record for a pilot; a dedicated case UI is not implemented here. Do not keep the only record in email or chat.
 
@@ -90,3 +90,14 @@ Roll back application code only after confirming compatibility with saved order/
 - https://docs.stripe.com/testing: use sandbox/test keys; live-mode testing with real payment details is prohibited.
 - https://docs.stripe.com/currencies: minimum USD charge is $0.50.
 - https://docs.stripe.com/sandboxes/dashboard/manage: create a sandbox within the existing Stripe account.
+
+## Operations infrastructure progress, October 5
+
+- The former Upstash resource is uninstalled. A replacement named `moa-shop-operations` is provisioned on the Free plan with auto-upgrade disabled, connected to production and preview using the `OPS_` namespace. PING and a two-client shared-counter enforcement probe passed. The application now prioritizes these credentials.
+- Durable job start, success and failure records now cover refund recovery and fulfillment. Failed batch items and partial fulfillment sweep failures cannot appear as successful jobs.
+- An additive service-role-only monitoring schema is installed on the verified shop database. An independent pg_cron watchdog is scheduled every five minutes; monitored jobs stay disabled until deployment. A transactional real-database drill passed missed-run detection, recovery, failure, incident deduplication and restricted-access assertions. Synthetic rows were rolled back.
+- The operator console now supports durable acknowledgment, responsibility, next action and review time. Devyn is primary and Tyler backup. This is incident tracking, not proof that operators have completed the drill. No outbound alerts were sent.
+- Production Clerk remains blocked on the correct MOA account: the available CLI login belongs to Chase Contemporary and was not used to inspect or alter that account.
+- 118 automated tests and the production build pass. The monitoring deployment, observed scheduled execution, notification delivery and staff review remain separate acceptance checks.
+
+Watchdog installation follows [Supabase Cron](https://supabase.com/docs/guides/cron/quickstart). It detects missed Vercel jobs but cannot report a complete Supabase outage by itself; an external availability monitor remains required.

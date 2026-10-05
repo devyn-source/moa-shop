@@ -7,8 +7,8 @@ import { Redis } from "@upstash/redis";
 // prod before the account exists; the moment they're configured it enforces.
 // Accept both naming schemes: UPSTASH_* (direct Upstash account) and KV_* (the
 // Vercel Marketplace integration injects KV_REST_API_URL/_TOKEN — same REST API).
-const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const url = process.env.OPS_KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const token = process.env.OPS_KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const redis = url && token ? new Redis({ url, token }) : null;
 if (!redis && process.env.NODE_ENV === "production") {
   // Loud, not silent: prod without Upstash means every limiter is a no-op.
