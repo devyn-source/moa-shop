@@ -49,21 +49,22 @@ export async function processExpressRefund(ticket: RefundTicket): Promise<Refund
   }
   if (process.env.EXPRESS_SANDBOX === "1") throw new RefundError("Real refunds are disabled in sandbox", 409);
   const stripe = getStripe();
-  const session = await stripe.checkout.sessions.retrieve(ticket.payment_id);
+  const requestOptions = { timeout: 8000, maxNetworkRetries: 0 };
+  const session = await stripe.checkout.sessions.retrieve(ticket.payment_id, {}, requestOptions);
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
   if (!pi || session.metadata?.expressCheckoutId !== ticket.checkout_id || session.payment_status !== "paid" || session.currency !== "usd" || session.amount_total !== Number(ticket.amount_cents)) throw new RefundError("Payment does not match cancellation. Contact support.", 409);
   let refund: Stripe.Refund;
-  if (ticket.refund_id) refund = await stripe.refunds.retrieve(ticket.refund_id);
+  if (ticket.refund_id) refund = await stripe.refunds.retrieve(ticket.refund_id, {}, requestOptions);
   else {
     // Recover a lost Stripe response even after the idempotency cache expires.
     // Never create another refund when any refund exists against this payment.
-    const previous = await stripe.refunds.list({ payment_intent: pi, limit: 100 });
+    const previous = await stripe.refunds.list({ payment_intent: pi, limit: 100 }, requestOptions);
     if (previous.has_more) throw new RefundError("Refund history needs manual review", 409);
     const match = previous.data.find((r) => r.metadata?.expressCheckoutId === ticket.checkout_id);
     if (match) refund = match;
     else {
       if (previous.data.length) throw new RefundError("This payment already has another refund. Contact support.", 409);
-      refund = await stripe.refunds.create({ payment_intent: pi, amount: Number(ticket.amount_cents), reason: "requested_by_customer", metadata: { expressCheckoutId: ticket.checkout_id } }, { idempotencyKey: `express-refund-${ticket.checkout_id}` });
+      refund = await stripe.refunds.create({ payment_intent: pi, amount: Number(ticket.amount_cents), reason: "requested_by_customer", metadata: { expressCheckoutId: ticket.checkout_id } }, { ...requestOptions, idempotencyKey: `express-refund-${ticket.checkout_id}` });
     }
   }
   verifyRefund(ticket, refund, pi);
@@ -88,15 +89,33 @@ export async function cancelExpressCheckout(number: string, email: string): Prom
   return processExpressRefund(saved);
 }
 
-export async function reconcileExpressRefunds() {
-  const { data, error } = await getSupabase().from("express_checkout_refunds").select("*").or("status.in.(requested,pending,requires_action),backend_synced_at.is.null").limit(50);
+export type RefundRecoveryResult = { attempted: number; recovered: number; pending: number; failed: number; hasMore: boolean };
+
+export async function reconcileExpressRefunds(): Promise<RefundRecoveryResult> {
+  const mode = process.env.EXPRESS_SANDBOX === "1" ? "express_sandbox" : "express_stripe";
+  // Oldest attempts first prevents a repeatedly failing batch from starving
+  // newer cancellations. Never process the other environment's refund queue.
+  const { data, error } = await getSupabase().from("express_checkout_refunds").select("*")
+    .eq("mode", mode).or("status.in.(requested,pending,requires_action),backend_synced_at.is.null")
+    .order("updated_at", { ascending: true }).order("checkout_id", { ascending: true }).limit(51);
   if (error) throw new RefundError("Could not load refund recovery queue");
-  let recovered = 0;
-  for (const ticket of (data ?? []) as RefundTicket[]) {
-    try { await processExpressRefund(ticket); recovered++; }
-    catch { await getSupabase().from("express_checkout_refunds").update({ last_error: "Refund processing or order reconciliation needs operator review", updated_at: new Date().toISOString() }).eq("checkout_id", ticket.checkout_id); }
+  const result: RefundRecoveryResult = { attempted: 0, recovered: 0, pending: 0, failed: 0, hasMore: (data?.length ?? 0) > 50 };
+  const deadline = Date.now() + 40_000;
+  for (const ticket of ((data ?? []) as RefundTicket[]).slice(0, 50)) {
+    if (Date.now() >= deadline) { result.hasMore = true; break; }
+    result.attempted++;
+    try {
+      const saved = await processExpressRefund(ticket);
+      if (saved.status === "succeeded") result.recovered++;
+      else if (["failed", "canceled", "requires_action"].includes(saved.status)) result.failed++;
+      else result.pending++;
+    } catch {
+      result.failed++;
+      const saved = await getSupabase().from("express_checkout_refunds").update({ last_error: "Refund processing or order reconciliation needs operator review", updated_at: new Date().toISOString() }).eq("checkout_id", ticket.checkout_id);
+      if (saved.error) throw new RefundError("Could not record refund recovery failure");
+    }
   }
-  return recovered;
+  return result;
 }
 
 export async function handleExpressRefundUpdate(refund: Stripe.Refund) {

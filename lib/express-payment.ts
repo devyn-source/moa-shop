@@ -25,6 +25,7 @@ export function validSandboxToken(checkoutId: string, token: string): boolean {
 }
 
 export async function assertExpressPaymentReady(): Promise<void> {
+  if (process.env.EXPRESS_CHECKOUT_PAUSED === "1") throw new Error("New orders are temporarily paused. Your cart is saved. Please try again later.");
   const base = process.env.MOAOS_EXPRESS_URL?.replace(/\/$/, "");
   if (!base || !process.env.EXPRESS_SECRET) throw new Error("Checkout is being prepared. Please try again shortly.");
   const sandbox = process.env.EXPRESS_SANDBOX === "1";
@@ -42,6 +43,7 @@ export async function assertExpressPaymentReady(): Promise<void> {
 }
 
 export async function beginExpressPayment(orders: ShopOrder[], origin: string): Promise<string> {
+  if (process.env.EXPRESS_CHECKOUT_PAUSED === "1") throw new Error("New orders are temporarily paused. Your cart is saved. Please try again later.");
   const checkoutId = orders[0].id;
   const sandbox = process.env.EXPRESS_SANDBOX === "1";
   for (const o of orders) await setOrderCheckout(o.id, { checkoutId, checkoutMode: sandbox ? "express_sandbox" : "express_stripe" });

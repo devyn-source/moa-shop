@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/store", () => ({ getCheckoutOrders: mocks.getOrders, markOrderPaid: mocks.markPaid, setOrderCheckout: mocks.setCheckout, setOrderFulfillment: mocks.setFulfillment }));
 vi.mock("@/lib/express-bridge", () => ({ pushExpressOrder: mocks.push }));
 vi.mock("@/lib/stripe", () => ({ getStripe: () => ({ checkout: { sessions: { create: mocks.createSession, expire: mocks.expireSession } } }) }));
-import { beginExpressPayment, completeExpressPayment, handleExpressStripeSession, sandboxToken, validSandboxToken, validateExpressPayment } from "@/lib/express-payment";
+import { assertExpressPaymentReady, beginExpressPayment, completeExpressPayment, handleExpressStripeSession, sandboxToken, validSandboxToken, validateExpressPayment } from "@/lib/express-payment";
 
 const orders = [{ id: "one", checkoutId: "one", contactEmail: "qa@example.com", checkoutMode: "express_stripe", stripeSessionId: "cs_live_test", totalUsd: 1200, paymentStatus: "unpaid", shipToName: "Test", shipToAddress: {}, fulfillment: { mode: "express" } }, { id: "two", checkoutId: "one", contactEmail: "qa@example.com", checkoutMode: "express_stripe", stripeSessionId: "cs_live_test", totalUsd: 750, paymentStatus: "unpaid", fulfillment: { mode: "express" } }] as ShopOrder[];
 const payment = { method: "stripe" as const, id: "cs_live_test", amountUsd: 1950, paidAt: "2026-10-02T12:00:00.000Z" };
@@ -63,4 +63,13 @@ describe("payment before production proof", () => {
     vi.stubEnv("EXPRESS_SANDBOX", "1");
     expect(() => validateExpressPayment(orders, { ...payment, method: "sandbox" })).toThrow("Sandbox");
   });
+});
+
+
+it("pauses new checkouts without blocking an already-paid handoff", async () => {
+  vi.stubEnv("EXPRESS_CHECKOUT_PAUSED", "1");
+  await expect(assertExpressPaymentReady()).rejects.toThrow("temporarily paused");
+  await expect(beginExpressPayment(orders, "https://shop.test")).rejects.toThrow("temporarily paused");
+  expect(mocks.setCheckout).not.toHaveBeenCalled(); expect(mocks.createSession).not.toHaveBeenCalled();
+  expect(await completeExpressPayment("one", payment)).toBe("EXP-TEST");
 });

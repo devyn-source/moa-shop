@@ -6,7 +6,7 @@ vi.mock("@/lib/store", () => ({ getCheckoutOrders: mocks.getOrders }));
 vi.mock("@/lib/order-access", () => ({ ownsOrder: (o: { contactEmail: string }, e: string) => o?.contactEmail === e }));
 vi.mock("@/lib/express-payment", () => ({ checkoutTotalCents: (orders: { totalUsd: number }[]) => orders.reduce((n, o) => n + Math.round(o.totalUsd * 100), 0) }));
 vi.mock("@/lib/stripe", () => ({ getStripe: mocks.stripe }));
-import { cancelExpressCheckout, processExpressRefund } from "@/lib/express-refunds";
+import { cancelExpressCheckout, processExpressRefund, reconcileExpressRefunds } from "@/lib/express-refunds";
 const ticket: RefundTicket = { checkout_id: "checkout", order_number: "EXP-QA", payment_id: "cs_test", mode: "express_stripe", amount_cents: 10800, status: "requested", refund_id: null };
 const refund = { id: "re_test", payment_intent: "pi_test", currency: "usd", amount: 10800, status: "succeeded", metadata: { expressCheckoutId: "checkout" } };
 const orders = [{ id: "a", checkoutId: "checkout", checkoutMode: "express_stripe", stripeSessionId: "cs_test", contactEmail: "owner@example.com", totalUsd: 70, paymentStatus: "paid", fulfillment: { mode: "express", catalogOrderId: "EXP-QA" } }, { id: "b", checkoutId: "checkout", checkoutMode: "express_stripe", stripeSessionId: "cs_test", contactEmail: "owner@example.com", totalUsd: 38, paymentStatus: "paid", fulfillment: { mode: "express", catalogOrderId: "EXP-QA" } }];
@@ -28,7 +28,7 @@ describe("whole-checkout refund orchestration", () => {
     expect(result.status).toBe("succeeded");
     expect(fetchMock.mock.calls[0][0]).toContain("/cancel");
     expect(fetchMock.mock.invocationCallOrder[0]).toBeLessThan(mocks.createRefund.mock.invocationCallOrder[0]);
-    expect(mocks.createRefund).toHaveBeenCalledWith(expect.objectContaining({ amount: 10800, payment_intent: "pi_test" }), { idempotencyKey: "express-refund-checkout" });
+    expect(mocks.createRefund).toHaveBeenCalledWith(expect.objectContaining({ amount: 10800, payment_intent: "pi_test" }), expect.objectContaining({ idempotencyKey: "express-refund-checkout", timeout: 8000, maxNetworkRetries: 0 }));
     expect(fetchMock.mock.calls[1][0]).toContain("/refund");
   });
   it("rejects another owner and an approval conflict before touching Stripe", async () => {
@@ -69,5 +69,41 @@ describe("whole-checkout refund orchestration", () => {
     await expect(processExpressRefund(ticket)).rejects.toMatchObject({ status: 409 });
     const result = await processExpressRefund({ ...ticket, mode: "express_sandbox" });
     expect(result.refund_id).toBe("sandbox_refund_checkout"); expect(mocks.stripe).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("refund recovery queue", () => {
+  function queue(rows: RefundTicket[]) {
+    const calls: { method: string; args: unknown[] }[] = [];
+    mocks.from.mockImplementation(() => {
+      const q: Record<string, unknown> = {};
+      for (const method of ["select", "eq", "or", "order", "limit", "update"]) q[method] = (...args: unknown[]) => { calls.push({ method, args }); return q; };
+      q.then = (resolve: (value: unknown) => unknown) => Promise.resolve({ data: rows, error: null }).then(resolve);
+      return q;
+    });
+    return calls;
+  }
+  it("does not count a pending or failed processor refund as recovered", async () => {
+    const calls = queue([ticket]);
+    mocks.createRefund.mockResolvedValue({ ...refund, status: "pending" });
+    expect(await reconcileExpressRefunds()).toEqual({ attempted: 1, recovered: 0, pending: 1, failed: 0, hasMore: false });
+    expect(calls).toContainEqual({ method: "eq", args: ["mode", "express_stripe"] });
+    expect(calls).toContainEqual({ method: "order", args: ["updated_at", { ascending: true }] });
+    mocks.createRefund.mockResolvedValue({ ...refund, status: "failed" });
+    expect(await reconcileExpressRefunds()).toMatchObject({ recovered: 0, failed: 1 });
+  });
+  it("records a processor outage and continues the batch", async () => {
+    const calls = queue([ticket, ticket]);
+    mocks.createRefund.mockRejectedValueOnce(new Error("processor unavailable"));
+    expect(await reconcileExpressRefunds()).toMatchObject({ attempted: 2, recovered: 1, failed: 1 });
+    expect(calls.some(call => call.method === "update" && (call.args[0] as { last_error?: string }).last_error)).toBe(true);
+  });
+  it("bounds the batch and keeps sandbox recovery away from Stripe", async () => {
+    vi.stubEnv("EXPRESS_SANDBOX", "1");
+    const calls = queue(Array.from({ length: 51 }, () => ({ ...ticket, mode: "express_sandbox" })));
+    expect(await reconcileExpressRefunds()).toMatchObject({ attempted: 50, recovered: 50, hasMore: true });
+    expect(calls).toContainEqual({ method: "eq", args: ["mode", "express_sandbox"] });
+    expect(mocks.stripe).not.toHaveBeenCalled();
   });
 });

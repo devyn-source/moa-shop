@@ -59,6 +59,9 @@ type Body = {
 
 export async function POST(request: Request) {
   try {
+    if (expressCheckoutEnabled() && process.env.EXPRESS_CHECKOUT_PAUSED === "1") {
+      return NextResponse.json({ error: "New orders are temporarily paused. Your cart is saved. Please try again later." }, { status: 503, headers: { "Retry-After": "900" } });
+    }
     if (!(await rateLimit("checkout", clientIp(request)))) {
       return NextResponse.json({ error: "Too many checkout attempts. Please wait a few minutes." }, { status: 429 });
     }

@@ -17,10 +17,15 @@ export default async function AdminPage() {
       <p className="eyebrow">Operator Console</p>
       <h1 className="page-title">MOA Catalog Admin</h1>
       <p className="lede">
-        MVP admin is intentionally unlocked. Clerk role gating drops in once credentials are provisioned.
+        Review orders, production assets, and service readiness.
       </p>
 
       <section className="stat-grid">
+        <Link className="stat-card" href="/admin/operations">
+          <span className="stat-label">Launch operations</span>
+          <strong className="stat-value">Review</strong>
+          <span className="stat-sub">Service checks, paid handoffs, and refund exceptions</span>
+        </Link>
         <Link className="stat-card" href="/admin/orders">
           <span className="stat-label">Open orders</span>
           <strong className="stat-value">{openOrders.length}</strong>

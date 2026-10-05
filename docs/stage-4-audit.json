@@ -1,0 +1,68 @@
+{
+  "checkedAt": "2026-10-05T20:22:02.153Z",
+  "mode": "Sandbox simulation",
+  "checks": [
+    {
+      "id": "checkout-intake",
+      "label": "New checkout intake",
+      "state": "pass",
+      "detail": "New checkout intake is not paused. Payment and launch gates still apply."
+    },
+    {
+      "id": "customer-auth",
+      "label": "Production customer authentication",
+      "state": "blocked",
+      "detail": "Requires production Clerk keys and a separate sign-in and ownership rehearsal."
+    },
+    {
+      "id": "backend-target",
+      "label": "Stable production backend target",
+      "state": "blocked",
+      "detail": "A configured HTTPS target without a branch alias is required. Deployment and staff access still need verification."
+    },
+    {
+      "id": "tax",
+      "label": "Tax configuration",
+      "state": "blocked",
+      "detail": "Missing classifications: tee, hoodie, outerwear, headwear, bag. Finance review and Stripe Tax rehearsal remain required."
+    },
+    {
+      "id": "cron-auth",
+      "label": "Recovery job authorization",
+      "state": "pass",
+      "detail": "Secret presence only. Scheduler execution and missed-run monitoring need separate evidence."
+    },
+    {
+      "id": "webhook-secret",
+      "label": "Webhook signature configuration",
+      "state": "pass",
+      "detail": "Secret presence only. Signed event delivery must be rehearsed."
+    },
+    {
+      "id": "rate-limit",
+      "label": "Shared rate limiter",
+      "state": "unknown",
+      "detail": "Redis probe failed. Current limiter allows requests through when Redis is unavailable."
+    },
+    {
+      "id": "backend-access",
+      "label": "Backend connectivity and mode",
+      "state": "pass",
+      "detail": "Authenticated readiness probe matches the shop payment mode."
+    },
+    {
+      "id": "stripe-events",
+      "label": "Stripe lifecycle subscriptions",
+      "state": "blocked",
+      "detail": "No enabled endpoint at the configured webhook URL covers all required payment and refund events."
+    },
+    {
+      "id": "queues",
+      "label": "Payment and refund exception queues",
+      "state": "pass",
+      "detail": "No unresolved refunds or paid orders missing a backend reference at this check."
+    }
+  ],
+  "incidentCount": 0,
+  "truncated": false
+}

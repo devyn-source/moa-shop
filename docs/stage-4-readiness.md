@@ -1,0 +1,82 @@
+# Stage 4: operational readiness
+
+Started October 5, 2026. Status: OPEN. This is an engineering and operations gate, not permission to enable payments or release factory orders. Final LDP quotes, physical samples, and supplier commercial terms remain a separate deferred workstream.
+
+## Verified production findings
+
+Read-only checks used freshly downloaded Vercel production configuration and the actual Stripe API. No charges, refunds, messages, vendor orders, or configuration changes were made.
+
+| Area | Evidence on October 5 | Closure requirement |
+| --- | --- | --- |
+| Payment isolation | EXPRESS_CHECKOUT=1, EXPRESS_SANDBOX=1; configured Stripe key is live | Keep simulation enabled on production. Create a separate Stripe sandbox and isolated rehearsal deployment/data before exercising processor payments. |
+| Customer authentication | Clerk secret and publishable keys are test keys | Configure production Clerk, confirm domains and sign-in, and rehearse two-account isolation plus admin allowlist restrictions. Plan account identity continuity before switching. |
+| Backend | Express branch-preview alias; authenticated customer lookup returns expected not-found | Choose a stable deployment isolated from unrelated MoaOS work, verify matching secrets and payment mode, staff access, schema compatibility, and rollback. Do not merge OS main by inference. |
+| Tax | Tax enable flag and all category codes absent | Review classifications for tee, hoodie, outerwear, headwear, bag; validate registrations and actual tax results in Stripe sandbox. Presence of a code is not tax approval. |
+| Rate limiting | Configured Redis PING failed; application currently fails open | Restore or replace the Redis service and prove limits across two app instances. Do not simply fail all uploads and checkout while Redis is broken. |
+| Stripe subscriptions | Enabled endpoint at https://moa-shop-amber.vercel.app/api/webhooks/stripe; events only checkout.session.completed, checkout.session.expired, checkout.session.async_payment_failed | Add checkout.session.async_payment_succeeded, refund.created, refund.updated, refund.failed. Verify signatures and actual delivery before activation. Set STRIPE_WEBHOOK_URL to the exact chosen destination for the audit. |
+| Refund queue | Table readable, zero rows at audit time | Rehearse cancellation, refund, replay, and backend outage in Stripe sandbox. Empty queue is not proof the recovery job runs. |
+| Scheduler | Cron secret present; code schedules recovery every 15 minutes | Observe scheduled runs, add durable last-run/last-success heartbeat and missed-run detection, and verify operator notification delivery after exact-message approval. |
+| Staff operations | Stage 3 API rehearsal passed; authenticated staff browser rehearsal remains incomplete | Staff must execute handoff, hold, QC, tracking and incident follow-through using the actual screens in a test order. |
+
+## Local implementation in this change
+
+- `/admin/operations` provides authenticated, read-only configuration and dependency checks, plus unresolved refund and paid-order handoff exceptions. It uses existing brand components and excludes customer contact/address data.
+- `/api/admin/express-operations` is also authenticated in the handler. Unknown or blocked checks produce HTTP 503; the response is not cached. Dependency failures are never reported as empty queues. Queue scans are bounded and explicitly report truncation.
+- The audit checks exact webhook destination coverage. Alternate aliases must be explicitly configured with STRIPE_WEBHOOK_URL; no credential or private dependency URL is returned.
+- Refund recovery filters by the active payment mode, processes oldest attempts first, distinguishes succeeded/pending/failed results, exposes remaining work, and reports item failures as HTTP 503. Processor calls have timeouts and no SDK retries; durable retries retain the original idempotency key and recover existing refunds before considering creation.
+- EXPRESS_CHECKOUT_PAUSED=1 rejects new Express checkouts before creating orders or Stripe sessions. Existing paid-event processing and refund recovery remain available in their existing mode. The flag was not enabled in production.
+- This does not restore Redis, change provider configuration, set up external monitoring, authorize launch, or implement a support case-management system.
+
+## Validation
+
+114 automated shop tests pass, including queue failures, pending refunds, mode isolation, duplicate-refund recovery, admin authorization, webhook coverage, and checkout-pause recovery. Type checking and the production build pass. A separate read-only run of the new service checks against production succeeded; its sanitized snapshot is [stage-4-audit.json](stage-4-audit.json). Browser control timed out, so the new operator page has not received a visual or signed-in browser review. These Stage 4 changes are local and have not been deployed.
+
+## Stripe rehearsal acceptance matrix
+
+Use Stripe test keys and Stripe test payment methods only. The production simulation flag is not a Stripe sandbox: it bypasses Stripe entirely. A separate rehearsal configuration is required because the current backend calls processor mode `live` even when a Stripe test key is used. Its mail, vendor, and PO paths must be isolated or disabled before testing.
+
+| Scenario | Required evidence |
+| --- | --- |
+| Successful payment with tax | Cart amount and saved destination agree with Stripe subtotal, tax, and total. All pieces share one checkout. One backend order and one payment record exist. |
+| Decline and abandoned checkout | No paid state, production release, customer proof send, or vendor message. Customer can retry safely. |
+| Duplicate paid event | Replay the same signed event; no duplicate charge, backend order, or notification. |
+| Paid event during backend outage | Shop retains paid status; original event replay completes one handoff when restored; customer is not asked to pay again. |
+| Cancellation before approval | Whole checkout cancels, exact full amount including tax refunds, backend remains cancelled. |
+| Approval racing cancellation | One outcome wins atomically; no approved production order is refunded through the preapproval path. |
+| Refund pending, failed, requires action | UI and operations view retain the actual state; no false success. |
+| Refund created but response lost | Retry locates existing refund; no second refund. |
+| Refund succeeds, backend unavailable | Refund stays recorded; reconciliation updates the cancelled backend order after recovery. |
+| Wrong owner or forged signature | Requests rejected before mutation. Two actual test accounts must be used. |
+| Recovery scheduling and outage | Record scheduled run, successful reconciliation, failed-item response, missed run, and operator acknowledgment. |
+
+No processor rehearsal has passed yet. Unit tests do not substitute for this matrix.
+
+## Operating procedure proposed for the pilot
+
+Devyn is the proposed accountable owner until a production operator and backup are explicitly assigned. These are internal response targets, not new customer-facing promises.
+
+Every exception needs a durable case linked to the order/project: category, severity, responsible person, opened time, next action, next review time, evidence links, customer communication draft, financial exposure, resolution, and root cause. Use the existing project/task record for a pilot; a dedicated case UI is not implemented here. Do not keep the only record in email or chat.
+
+- **Paid order missing or duplicate-money concern:** stop further payment attempts for that order; verify Stripe's canonical payment and event record; restore and replay the original handoff. Never ask the customer to pay twice. Escalate immediately to Devyn.
+- **Refund problem:** confirm the existing refund ID and processor status, then reconcile. A failed refund needs explicit resolution, not a second blind refund attempt. Keep the customer cancellation cutoff locked.
+- **Proof deadline or production delay:** assign an owner, record the cause and supported recovery date, put production on hold where necessary, and prepare a factual customer update. Do not silently change the original promise.
+- **QC failure:** hold shipment, attach evidence against the approved specification, obtain the production lead's disposition, then record rework and reinspection before release.
+- **Damage, shortage, or defect:** record photos, quantities, delivery date and approved proof/spec references; review against the published policy; choose and authorize a remedy and its payer before creating a remake or refund. Post-approval remedies are not supported by the preapproval cancellation endpoint.
+- **Lost shipment:** retain tracking and carrier evidence, assign follow-up, and document the replacement or refund decision. Delivered status is not proof a complaint is resolved.
+- **Uncertain email delivery:** inspect the sender mailbox and provider reference before retrying. Do not blindly resend.
+
+Review open exceptions at opening and close of each operating day during the pilot. Urgent money, privacy, or production-release incidents require immediate escalation when detected. A durable monitored alert channel and backup owner must exist before accepting live orders. All outbound messages still require Devyn's separate approval of exact final content, recipients, and attachments.
+
+## Activation and rollback
+
+Close Stage 4 only when the rehearsal matrix, production identity checks, dependency checks, scheduled monitoring, staff-screen rehearsal, and owner/backup assignment have recorded evidence. Product clearance is an additional independent gate.
+
+Before activation: preserve deployed commit, configuration inventory without secrets, schema version, payment mode, and unresolved-queue count. Separate accepting new orders from processing already-paid events and refunds. Do not use EXPRESS_SANDBOX=1 as a universal live incident rollback: current code also blocks real payment handoffs and refunds in that mode. Use EXPRESS_CHECKOUT_PAUSED=1 to stop new checkout creation while preserving paid-event and refund recovery. Already-created Stripe Checkout sessions remain payable; an incident response may also require reviewing and expiring those sessions explicitly.
+
+Roll back application code only after confirming compatibility with saved order/refund state. Never delete payment/refund records or replay a vendor release as a rollback. Reconcile ambiguous money and email results against their providers before retrying.
+
+## Stripe references
+
+- https://docs.stripe.com/testing: use sandbox/test keys; live-mode testing with real payment details is prohibited.
+- https://docs.stripe.com/currencies: minimum USD charge is $0.50.
+- https://docs.stripe.com/sandboxes/dashboard/manage: create a sandbox within the existing Stripe account.
