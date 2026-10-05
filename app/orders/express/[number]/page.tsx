@@ -14,10 +14,14 @@ const STEPS = [
   { key: "proof", label: "Proof" },
   { key: "approved", label: "Approved" },
   { key: "production", label: "Preparing production" },
+  { key: "making", label: "In production" },
   { key: "shipped", label: "Shipped" },
+  { key: "delivered", label: "Delivered" },
 ];
 function stepIndex(o: ExpressOrderView): number {
-  if (o.shippedAt || o.status === "shipped" || o.status === "delivered") return 5;
+  if (o.status === "delivered") return 7;
+  if (o.shippedAt || o.status === "shipped") return 6;
+  if (["production", "qc"].includes(o.fulfillment?.stage || "")) return 5;
   if (o.status === "launched") return 4;
   if (o.allApproved) return 3;
   if (o.rounds.length) return 2;
@@ -46,11 +50,11 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
         <h1 style={{ margin: 0 }}>{o.statusLabel}</h1>
         <p style={{ margin: 0, opacity: 0.7, fontSize: 13 }}>
           Submitted {fmt(o.submittedAt)}
-          {!o.rounds.length && o.proofDueAt ? ` · your proof arrives by ${fmt(o.proofDueAt)}` : ""}
+          {!o.fulfillment && !o.rounds.length && o.proofDueAt ? ` · your proof arrives by ${fmt(o.proofDueAt)}` : ""}
         </p>
       </header>
 
-      {o.status !== "cancelled" ? <ol aria-label="Order progress" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))`, gap: 6 }}>
+      {o.status !== "cancelled" ? <ol aria-label="Order progress" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 6 }}>
         {STEPS.map((s, i) => (
           <li key={s.key} style={{ display: "grid", gap: 6 }}>
             <span style={{ height: 4, borderRadius: 2, background: i <= at ? "#1E1E1E" : "rgba(30,30,30,.12)" }} />
@@ -109,6 +113,14 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
           : "Your order is cancelled. Refund processing is in progress; no pieces will enter production."
           : "You can cancel the whole order for a full refund before approving any piece."}</p>
         {o.canCancel || o.cancellation?.status === "requested" ? <ExpressCancellation number={o.orderNumber} retry={!!o.cancellation} /> : null}
+      </section> : null}
+
+      {o.fulfillment ? <section style={{ ...card, display: "grid", gap: 12 }}>
+        <h2 style={{ margin: 0 }}>Production updates</h2>
+        {o.mode === "sandbox" ? <p style={{ margin: 0, fontSize: 12 }}>These are simulated milestones for your test order.</p> : null}
+        {o.fulfillment.onHold ? <p style={{ margin: 0, fontSize: 13 }}>Your order is on hold while our team resolves an issue. We will confirm the next update.</p> : null}
+        {o.fulfillment.expectedShipDate && !o.shippedAt ? <p style={{ margin: 0, fontSize: 13 }}>Estimated ship date: {o.fulfillment.expectedShipDate}. This is an estimate, not a delivery guarantee.</p> : null}
+        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>{o.fulfillment.events.map(e => <li key={e.id}>{e.label} · {fmt(e.at)}</li>)}</ol>
       </section> : null}
 
       {o.tracking ? (

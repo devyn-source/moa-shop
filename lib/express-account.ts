@@ -9,6 +9,7 @@ export type ExpressOrderView = {
   pieces: ExpressPiece[]; allApproved: boolean; openRound: { round: number; sentAt: string } | null; rounds: ExpressRound[]; includedRounds: number;
   invoice: { total: number; tax?: number; due: number; url: string | null; payUrl: string | null; paid: boolean; canPay: boolean };
   canCancel?: boolean;
+  fulfillment?: { stage: string; label: string; onHold: boolean; expectedShipDate: string | null; deliveredAt: string | null; events: { id: string; at: string; label: string }[] } | null;
   cancellation?: { status: string; refundId?: string; amountUsd: number; requestedAt: string } | null;
   tracking: { carrier?: string; number?: string; url?: string } | null; launchedAt: string | null; shippedAt: string | null;
 };
