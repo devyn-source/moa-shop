@@ -1,5 +1,6 @@
 {
   "crons": [
+    { "path": "/api/cron/express-operations", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/fulfillment", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/express-refunds", "schedule": "*/15 * * * *" }
   ]

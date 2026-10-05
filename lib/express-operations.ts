@@ -56,7 +56,7 @@ export async function getExpressOperations(): Promise<OperationsReport> {
       const db = getSupabase();
       const { data, error } = await db.from("express_job_monitors").select("job,enabled,checked_at").abortSignal(AbortSignal.timeout(5000));
       if (error) throw new Error("Job monitoring unavailable");
-      const current = ["express-refunds", "fulfillment"].every(job => data?.some(row => row.job === job && row.enabled && row.checked_at && Date.now() - Date.parse(row.checked_at) < 10 * 60_000));
+      const current = ["express-refunds", "fulfillment", "express-operations"].every(job => data?.some(row => row.job === job && row.enabled && row.checked_at && Date.now() - Date.parse(row.checked_at) < 10 * 60_000));
       const open = await db.from("express_operation_incidents").select("source_key,summary,opened_at,acknowledged_at").is("recovered_at", null).order("opened_at").limit(101).abortSignal(AbortSignal.timeout(5000));
       if (open.error) throw new Error("Monitoring incidents unavailable");
       for (const row of (open.data || []).slice(0, 100)) incidents.push({ reference: row.source_key, mode: "Operations", issue: row.summary, since: row.opened_at, action: row.acknowledged_at ? "Acknowledged. Complete the recorded next action and verify recovery." : "Devyn to review; Tyler is backup. Record acknowledgment and a next review time." });
