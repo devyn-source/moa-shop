@@ -15,6 +15,14 @@ Started October 5, 2026. Status: OPEN. This is an engineering and operations gat
 - **Deployment gate:** automatic approval review rejected copying production-derived database/admin/shared credentials into the preview. That operation did not run, and its generated credential bundle was removed. Separate temporary Supabase branches with synthetic data are proposed instead; approval is pending. Do not retry the rejected credential copy.
 - **Still open:** isolated deployed payment/refund/race rehearsal, production Clerk/DNS and real-account isolation, tax-origin/classification review, external availability monitoring and approved notification delivery, operator/backup drills and long-term backend hosting. Stage 4 is not cleared, and live payments remain disabled.
 
+## Reviewed incident alerts, October 5
+
+The operator console now prepares a message addressed only to Devyn, displaying its exact sender, recipient, subject, body and lack of attachments. Sending requires a separate approval action. The server binds that approval to a content hash and reserves the delivery atomically. Concurrent submissions and repeated sends cannot create a second accepted delivery. Provider timeouts and persistence failures retain an uncertain state that blocks automatic resend. Verified Clerk staff may review; sending requires Devyn's verified identity or the existing administrative automation credential. Agent use of that credential still requires Devyn's exact-message approval in conversation.
+
+The service-role-only delivery table is installed with row-level security and no customer access. Draft preparation does not send a message. No alert delivery has been attempted, and provider acceptance is not treated as evidence of inbox delivery. Notifications are not automatic; the separate external availability monitor and notification-delivery drill remain open.
+
+Validation: 137 shop tests and the production build pass, including content changes, concurrent submissions, uncertain outcomes, recovered incidents, staff authorization and cross-origin submission rejection. Signed-in browser review remains outstanding.
+
 ## Verified production findings
 
 Read-only checks used freshly downloaded Vercel production configuration and the actual Stripe API. No charges, refunds, messages, vendor orders, or configuration changes were made.
