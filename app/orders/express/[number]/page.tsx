@@ -1,152 +1,16 @@
-import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
-import { getExpressOrder, type ExpressOrderView } from "@/lib/express-account";
-import { currency } from "@/lib/pricing";
-import { ExpressDecision } from "@/components/ExpressDecision";
-import { ExpressCancellation } from "@/components/ExpressCancellation";
+import { getExpressOrder } from "@/lib/express-account";
+import { ExpressOrderPortal } from "@/components/ExpressOrderPortal";
 
 export const dynamic = "force-dynamic";
-
-const STEPS = [
-  { key: "received", label: "Order received" },
-  { key: "paid", label: "Paid" },
-  { key: "proof", label: "Proof" },
-  { key: "approved", label: "Approved" },
-  { key: "production", label: "Preparing production" },
-  { key: "making", label: "In production" },
-  { key: "shipped", label: "Shipped" },
-  { key: "delivered", label: "Delivered" },
-];
-function stepIndex(o: ExpressOrderView): number {
-  if (o.status === "delivered") return 7;
-  if (o.shippedAt || o.status === "shipped") return 6;
-  if (["production", "qc"].includes(o.fulfillment?.stage || "")) return 5;
-  if (o.status === "launched") return 4;
-  if (o.allApproved) return 3;
-  if (o.rounds.length) return 2;
-  if (o.invoice.paid) return 1;
-  return 0;
-}
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" }) + " PT" : "");
-const label: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", opacity: 0.6 };
-const card: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: 18, border: "1px solid rgba(30,30,30,.1)" };
 
 export default async function ExpressOrderPage({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress;
   if (!email) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/orders/express/${number}`)}`);
-  const o = await getExpressOrder(decodeURIComponent(number), email);
-  if (!o) notFound();
-  const at = stepIndex(o);
-  const round = o.openRound?.round ?? null;
-
-  return (
-    <main className="page" style={{ display: "grid", gap: 28 }}>
-      <header style={{ display: "grid", gap: 8 }}>
-        <Link href="/orders" style={{ ...label, textDecoration: "none", color: "inherit" }}>Your orders</Link>
-        <p className="eyebrow">{o.mode === "sandbox" ? "Sandbox order, " : ""}Order {o.orderNumber}</p>
-        <h1 style={{ margin: 0 }}>{o.statusLabel}</h1>
-        <p style={{ margin: 0, opacity: 0.7, fontSize: 13 }}>
-          Submitted {fmt(o.submittedAt)}
-          {!o.fulfillment && !o.rounds.length && o.proofDueAt ? ` · your proof arrives by ${fmt(o.proofDueAt)}` : ""}
-        </p>
-      </header>
-
-      {o.status !== "cancelled" ? <ol aria-label="Order progress" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 6 }}>
-        {STEPS.map((s, i) => (
-          <li key={s.key} style={{ display: "grid", gap: 6 }}>
-            <span style={{ height: 4, borderRadius: 2, background: i <= at ? "#1E1E1E" : "rgba(30,30,30,.12)" }} />
-            <span style={{ ...label, opacity: i <= at ? 1 : 0.45 }}>{s.label}</span>
-          </li>
-        ))}
-      </ol> : null}
-
-      <section style={{ display: "grid", gap: 14 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-          <h2 style={{ margin: 0 }}>{round ? `Proof round ${round}` : o.rounds.length ? "Your pieces" : "Your pieces"}</h2>
-          {round ? <span style={label}>{round <= o.includedRounds ? `Round ${round} of ${o.includedRounds} included` : `Round ${round}, beyond the included rounds`}</span> : null}
-        </div>
-        {!o.rounds.length ? <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>We are checking your artwork, measurements and placements. Your first production proof is due by 5 p.m. Pacific on the next business day after payment (Monday to Friday). You can approve it or request a change here.</p> : null}
-        <div style={{ display: "grid", gap: 14 }}>
-          {o.pieces.map((p) => (
-            <article key={p.ref} style={{ ...card, display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)", gap: 18 }} className="express-piece">
-              <div style={{ display: "grid", gridTemplateColumns: p.mockups.length > 1 ? "1fr 1fr" : "1fr", gap: 8, alignContent: "start" }}>
-                {p.mockups.length ? p.mockups.map((m) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={m} src={m} alt={`Proof mockup for ${p.title}`} style={{ width: "100%", height: "auto", borderRadius: 8, background: "#EEEAE3" }} />
-                )) : <div style={{ aspectRatio: "4 / 3", borderRadius: 8, background: "#EEEAE3", display: "grid", placeItems: "center", fontSize: 11, opacity: 0.6 }}>Mockup in progress</div>}
-              </div>
-              <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
-                <div>
-                  <p style={{ ...label, margin: 0 }}>{p.decision === "approved" ? "Approved" : p.decision === "changes" ? "Change requested" : p.decision === "pending" ? "Waiting for you" : "In progress"}</p>
-                  <h3 style={{ margin: "6px 0 0" }}>{p.summary}</h3>
-                </div>
-                {p.spec ? <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 12, lineHeight: 1.6, opacity: 0.8 }}>{p.spec.split("\n").filter((l) => !/^(Engine |Artwork: http)/.test(l)).join("\n")}</pre> : null}
-                {p.decision === "changes" && p.comment ? <p style={{ margin: 0, fontSize: 12 }}>Your note: &ldquo;{p.comment}&rdquo;</p> : null}
-                {p.decision === "pending" && p.skuId && round && !["cancelled", "launched", "shipped", "delivered"].includes(o.status) ? <ExpressDecision key={`${p.skuId}-${round}`} number={o.orderNumber} skuId={p.skuId} round={round} /> : null}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ ...card, display: "grid", gap: 10 }}>
-        <p style={{ ...label, margin: 0 }}>Payment · one payment for the full order</p>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <strong style={{ fontSize: 22 }}>{o.invoice.total ? currency(o.invoice.total) : "Order total"}</strong>
-          {o.cancellation?.status === "succeeded" ? <span style={label}>{o.mode === "sandbox" ? "Test refund complete" : "Refund issued"}</span> : o.invoice.paid ? <span style={label}>Paid</span>
-            : o.invoice.canPay ? <a className="button" href={o.invoice.payUrl || "#"}>Pay invoice</a>
-            : <span style={{ fontSize: 12, opacity: 0.7 }}>{o.rounds.length ? "Payment pending" : "Arrives with your proof"}</span>}
-        </div>
-        {o.invoice.url ? <a href={o.invoice.url} style={{ fontSize: 12 }}>View invoice</a> : null}
-        {o.mode !== "sandbox" && o.invoice.tax != null ? <p style={{ margin: 0, fontSize: 12 }}>Includes {currency(o.invoice.tax)} sales tax.</p> : null}
-        <p style={{ margin: 0, fontSize: 11, opacity: 0.6, lineHeight: 1.6 }}>By approving you confirm spelling, colours, placement and sizes. Screen colours may differ slightly from finished goods. Your first proof and one revision round are included. Production timing starts after every piece is approved.</p>
-      </section>
-
-      {o.canCancel || o.cancellation ? <section style={{ ...card, display: "grid", gap: 12 }}>
-        <h2 style={{ margin: 0 }}>{o.cancellation ? "Cancellation and refund" : "Need to cancel?"}</h2>
-        <p style={{ margin: 0, fontSize: 13 }}>{o.cancellation
-          ? o.cancellation.status === "succeeded" ? o.mode === "sandbox" ? "Your test order is cancelled. No real charge or refund was made." : "Your order is cancelled and your full refund has been issued to the original payment method. Your bank may take 5 to 10 business days to display it."
-          : ["failed","canceled","requires_action"].includes(o.cancellation.status) ? "Your order is cancelled, but the refund needs attention. Contact production@magnumopus.agency for help."
-          : "Your order is cancelled. Refund processing is in progress; no pieces will enter production."
-          : "You can cancel the whole order for a full refund before approving any piece."}</p>
-        {o.canCancel || o.cancellation?.status === "requested" ? <ExpressCancellation number={o.orderNumber} retry={!!o.cancellation} /> : null}
-      </section> : null}
-
-      {o.fulfillment ? <section style={{ ...card, display: "grid", gap: 12 }}>
-        <h2 style={{ margin: 0 }}>Production updates</h2>
-        {o.mode === "sandbox" ? <p style={{ margin: 0, fontSize: 12 }}>These are simulated milestones for your test order.</p> : null}
-        {o.fulfillment.onHold ? <p style={{ margin: 0, fontSize: 13 }}>Your order is on hold while our team resolves an issue. We will confirm the next update.</p> : null}
-        {o.fulfillment.expectedShipDate && !o.shippedAt ? <p style={{ margin: 0, fontSize: 13 }}>Estimated ship date: {o.fulfillment.expectedShipDate}. This is an estimate, not a delivery guarantee.</p> : null}
-        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>{o.fulfillment.events.map(e => <li key={e.id}>{e.label} · {fmt(e.at)}</li>)}</ol>
-      </section> : null}
-
-      {o.tracking ? (
-        <section style={{ ...card, display: "grid", gap: 6 }}>
-          <p style={{ ...label, margin: 0 }}>Tracking</p>
-          <p style={{ margin: 0 }}>{[o.tracking.carrier, o.tracking.number].filter(Boolean).join(" ")}</p>
-          {o.tracking.url ? <a href={o.tracking.url}>Track shipment</a> : null}
-        </section>
-      ) : null}
-
-      {o.rounds.length ? (
-        <section style={{ display: "grid", gap: 10 }}>
-          <h2 style={{ margin: 0 }}>History</h2>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8, fontSize: 12 }}>
-            {o.rounds.map((r) => (
-              <li key={r.round} style={{ ...card, padding: 14 }}>
-                <strong>Round {r.round}</strong> sent {fmt(r.sentAt)}
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                  {r.items.map((i) => <li key={i.skuId}>{i.title}: {i.decision === "approved" ? "approved" : i.decision === "changes" ? `change requested${i.comment ? ` (${i.comment})` : ""}` : "waiting"}{i.decidedBy ? ` by ${i.decidedBy}` : ""}</li>)}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      <style>{`@media (max-width: 760px){ .express-piece{ grid-template-columns: 1fr !important; } }`}</style>
-    </main>
-  );
+  const order = await getExpressOrder(decodeURIComponent(number), email);
+  if (!order) notFound();
+  return <ExpressOrderPortal order={order} />;
 }

@@ -17,8 +17,8 @@ export function ExpressCancellation({ number, retry = false }: { number: string;
     finally { setBusy(false); }
   }
   return <div style={{ display: "grid", gap: 10 }}>
-    {confirm ? <><p style={{ margin: 0 }}>Cancel every piece in this order and request a full refund to the original payment method?</p><div style={{ display: "flex", gap: 12 }}><button className="button" disabled={busy} onClick={cancel}>{busy ? "Cancelling…" : "Cancel order and refund"}</button><button className="button button--secondary" disabled={busy} onClick={() => setConfirm(false)}>Keep order</button></div></>
-      : <button className="button button--secondary" disabled={busy} onClick={() => retry ? cancel() : setConfirm(true)}>{busy ? "Checking refund…" : retry ? "Retry refund processing" : "Cancel order and refund"}</button>}
+    {confirm ? <><p style={{ margin: 0 }}>Cancel every piece in this order and request a full refund to the original payment method?</p><div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}><button className="button" disabled={busy} onClick={cancel}>{busy ? "Cancelling…" : "Cancel order and refund"}</button><button className="secondary-button" disabled={busy} onClick={() => setConfirm(false)}>Keep order</button></div></>
+      : <button className="secondary-button" disabled={busy} onClick={() => retry ? cancel() : setConfirm(true)}>{busy ? "Checking refund…" : retry ? "Retry refund processing" : "Cancel order and refund"}</button>}
     {error ? <p role="alert" style={{ margin: 0 }}>{error}</p> : null}
   </div>;
 }
