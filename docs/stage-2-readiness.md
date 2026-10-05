@@ -1,6 +1,6 @@
 # Stage 2 readiness
 
-Implemented October 5, 2026. Deployment is pending confirmation of the Supabase SQL editor warning. Production flags verified: EXPRESS_CHECKOUT=1 and EXPRESS_SANDBOX=1. No real payments, refunds, vendor messages or factory orders were executed.
+Implemented October 5, 2026. Both database migrations were applied successfully after approval on October 5. Backend and shop deployment verification is in progress. Production flags verified: EXPRESS_CHECKOUT=1 and EXPRESS_SANDBOX=1. No real payments, refunds, vendor messages or factory orders were executed.
 
 ## Implemented
 
@@ -15,7 +15,7 @@ Implemented October 5, 2026. Deployment is pending confirmation of the Supabase 
 
 ## Deployment order
 
-1. Apply backend migration `20261005120000_express_cancellation.sql` to MoaOS and shop migration `20261005121000_express_refunds.sql` to MOA Shop. Review the SQL editor permission-revocation warning.
+1. Apply backend migration `20261005120000_express_cancellation.sql` to MoaOS and shop migration `20261005121000_express_refunds.sql` to MOA Shop. Both migrations are applied; the SQL editor reported success.
 2. Deploy backend on express-lane only, preserving the main backend. Verify readiness before updating the shop.
 3. Deploy shop with sandbox flags retained. Verify account access and cancellation UI without initiating real transactions or outbound messages.
 
