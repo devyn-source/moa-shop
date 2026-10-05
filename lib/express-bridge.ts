@@ -9,12 +9,13 @@
 
 import { getProductById } from "./store";
 import type { ShopOrder } from "./types";
+import { backendSandbox } from "./express-payment-mode";
 
 export const expressCheckoutEnabled = () => process.env.EXPRESS_CHECKOUT === "1";
 
 type Contact = { contactName: string; contactEmail: string; contactPhone?: string; companyName: string };
 type Ship = { line1: string; line2: string; city: string; state: string; postalCode: string; country: string };
-export type ExpressPayment = { method: "stripe" | "sandbox"; id: string; amountUsd: number; paidAt: string; taxUsd?: number };
+export type ExpressPayment = { method: "stripe" | "stripe_test" | "sandbox"; id: string; amountUsd: number; paidAt: string; taxUsd?: number };
 
 export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, shipToName: string, shipTo: Ship, notes?: string, payment?: ExpressPayment): Promise<{ ok: true; orderNumber: string } | { ok: false; error: string }> {
   const base = (process.env.MOAOS_EXPRESS_URL || "").replace(/\/$/, "");
@@ -72,7 +73,7 @@ export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, sh
       ...(process.env.MOAOS_BYPASS ? { "x-vercel-protection-bypass": process.env.MOAOS_BYPASS } : {}),
     },
     body: JSON.stringify({
-      sandbox: process.env.EXPRESS_SANDBOX === "1",
+      sandbox: backendSandbox(),
       ipAttested: true,
       contact: { contactName: contact.contactName, contactEmail: contact.contactEmail, contactPhone: contact.contactPhone || undefined, companyName: contact.companyName },
       shipTo: { name: shipToName || undefined, line1: shipTo.line1 || undefined, line2: shipTo.line2 || undefined, city: shipTo.city || "Unknown", state: shipTo.state || undefined, postalCode: shipTo.postalCode || undefined, country: shipTo.country || "US" },

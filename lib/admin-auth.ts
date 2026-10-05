@@ -49,7 +49,8 @@ export async function clerkEmail(userId: string): Promise<string | null> {
   try {
     const client = await clerkClient();
     const u = await client.users.getUser(userId);
-    return (u.primaryEmailAddress?.emailAddress || u.emailAddresses?.[0]?.emailAddress || "").toLowerCase() || null;
+    const primary = u.primaryEmailAddress;
+    return primary?.verification?.status === "verified" ? primary.emailAddress.toLowerCase() : null;
   } catch {
     return null;
   }

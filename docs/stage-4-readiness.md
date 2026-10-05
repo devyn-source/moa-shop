@@ -2,6 +2,19 @@
 
 Started October 5, 2026. Status: OPEN. This is an engineering and operations gate, not permission to enable payments or release factory orders. Final LDP quotes, physical samples, and supplier commercial terms remain a separate deferred workstream.
 
+## Current closure status, October 5 at 14:48 PT
+
+- **Deployed:** operator console, intake pause control, refund recovery reporting, shared Redis repair, durable job records, independent database watchdog, and proof/hold/shipping incident synchronization.
+- **Observed:** production refund and fulfillment jobs succeeded at 14:30 and 14:45 PT; the order monitor succeeded on its 14:45 schedule. The database watchdog runs independently every five minutes. Empty queues and successful runs are recorded separately.
+- **Staff:** Devyn primary, Tyler backup. Both have verified accounts in the shop development instance and the separate MoaOS production instance. The shop allowlist now includes both existing MOA email addresses. Staff screen/drill acceptance remains open.
+- **Stripe subscriptions:** the existing live endpoint now covers all seven required events. Its URL and signing secret are preserved. A separate TEST endpoint is created but disabled until the isolated rehearsal deployment is ready.
+- **Backend:** production shop is pinned to reviewed immutable deployment `moa-byfdhqmyy-devyn-9049s-projects.vercel.app`, commit `ca8e8fa`, rather than the moving branch alias. This is still a preview deployment; retention and long-term production hosting remain open.
+- **Identity:** shop production still uses its development Clerk instance. The shop and MoaOS are separate instances in MOA's workspace. No Chase Contemporary application was inspected or changed. Production shop provisioning needs MOA account-level access; existing instance keys cannot provision it. Two verified existing emails establish a continuity plan, not completed production sign-in testing.
+- **Tax:** current Drive permit, signed W-9 and insurance were reviewed. Stripe's business identity agrees with Magnum Opus Agency LLC, and CA is the only active Stripe registration. Older permit/Stripe address differs from newer filing address, and Devyn identified a third current operating location. Live tax settings remain unchanged. Factory-direct physical shipment origin and registration/address review still need resolution before tax activation. See Stripe's [head-office guidance](https://docs.stripe.com/tax/set-up).
+- **Rehearsal isolation:** a distinct `express_stripe_test` mode now separates test refunds from live and simulated queues. It refuses live keys, Vercel production, unassigned test buyers and a backend without no-send readiness. Backend `stripe_test` payments require sandbox mode, a test session ID, an explicit preview flag and disabled outbound messages. Test orders remain marked as tests.
+- **Deployment gate:** automatic approval review rejected copying production-derived database/admin/shared credentials into the preview. That operation did not run, and its generated credential bundle was removed. Separate temporary Supabase branches with synthetic data are proposed instead; approval is pending. Do not retry the rejected credential copy.
+- **Still open:** isolated deployed payment/refund/race rehearsal, production Clerk/DNS and real-account isolation, tax-origin/classification review, external availability monitoring and approved notification delivery, operator/backup drills and long-term backend hosting. Stage 4 is not cleared, and live payments remain disabled.
+
 ## Verified production findings
 
 Read-only checks used freshly downloaded Vercel production configuration and the actual Stripe API. No charges, refunds, messages, vendor orders, or configuration changes were made.

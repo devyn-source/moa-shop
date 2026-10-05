@@ -14,6 +14,7 @@ import { apiError } from "@/lib/errors";
 import { inLaunchScope } from "@/lib/launch";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { currentCustomerEmail } from "@/lib/order-access";
+import { assertRehearsalCustomer } from "@/lib/express-payment-mode";
 import { validateCheckoutSelection } from "@/lib/checkout-selection";
 import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
     const email = await currentCustomerEmail();
     if (!email) return NextResponse.json({ error: "Sign in required to order" }, { status: 401 });
     if (contact.contactEmail !== email) return NextResponse.json({ error: "Use your signed-in account email so you can review your proof and manage this order." }, { status: 400 });
+    assertRehearsalCustomer(email);
 
     // Confirm the paid-order receiver is ready before creating a checkout.
     const express = expressCheckoutEnabled();

@@ -231,7 +231,7 @@ export type ShopOrder = {
   status: OrderStatus;
   stripeSessionId?: string;
   checkoutId?: string;
-  checkoutMode?: "express_sandbox" | "express_stripe";
+  checkoutMode?: "express_sandbox" | "express_stripe" | "express_stripe_test";
   shipToName: string;
   shipToAddress: {
     line1: string;

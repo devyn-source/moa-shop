@@ -5,9 +5,10 @@ import { ownsOrder } from "./order-access";
 import { checkoutTotalCents } from "./express-payment";
 import type { ShopOrder } from "./types";
 import type Stripe from "stripe";
+import { activeCheckoutMode, stripeTestMode, type ExpressCheckoutMode } from "./express-payment-mode";
 
 export type RefundState = NonNullable<ShopOrder["refundStatus"]>;
-export type RefundTicket = { checkout_id: string; order_number: string; payment_id: string; mode: "express_sandbox" | "express_stripe"; amount_cents: number; status: RefundState; refund_id: string | null; backend_synced_at?: string | null };
+export type RefundTicket = { checkout_id: string; order_number: string; payment_id: string; mode: ExpressCheckoutMode; amount_cents: number; status: RefundState; refund_id: string | null; backend_synced_at?: string | null };
 export class RefundError extends Error { constructor(message: string, public status = 503) { super(message); } }
 
 async function bridge(path: string, body: unknown) {
@@ -42,6 +43,7 @@ function verifyRefund(ticket: RefundTicket, refund: Stripe.Refund, paymentIntent
 }
 
 export async function processExpressRefund(ticket: RefundTicket): Promise<RefundTicket> {
+  if (ticket.mode !== activeCheckoutMode()) throw new RefundError("Refund mode mismatch", 409);
   if (ticket.mode === "express_sandbox") {
     if (process.env.EXPRESS_SANDBOX !== "1") throw new RefundError("Sandbox refunds are unavailable", 409);
     const result = await save(ticket, "succeeded", `sandbox_refund_${ticket.checkout_id}`);
@@ -51,6 +53,7 @@ export async function processExpressRefund(ticket: RefundTicket): Promise<Refund
   const stripe = getStripe();
   const requestOptions = { timeout: 8000, maxNetworkRetries: 0 };
   const session = await stripe.checkout.sessions.retrieve(ticket.payment_id, {}, requestOptions);
+  if (stripeTestMode() && session.livemode !== false) throw new RefundError("Live refunds are forbidden in rehearsal", 409);
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
   if (!pi || session.metadata?.expressCheckoutId !== ticket.checkout_id || session.payment_status !== "paid" || session.currency !== "usd" || session.amount_total !== Number(ticket.amount_cents)) throw new RefundError("Payment does not match cancellation. Contact support.", 409);
   let refund: Stripe.Refund;
@@ -92,7 +95,7 @@ export async function cancelExpressCheckout(number: string, email: string): Prom
 export type RefundRecoveryResult = { attempted: number; recovered: number; pending: number; failed: number; hasMore: boolean };
 
 export async function reconcileExpressRefunds(): Promise<RefundRecoveryResult> {
-  const mode = process.env.EXPRESS_SANDBOX === "1" ? "express_sandbox" : "express_stripe";
+  const mode = activeCheckoutMode();
   // Oldest attempts first prevents a repeatedly failing batch from starving
   // newer cancellations. Never process the other environment's refund queue.
   const { data, error } = await getSupabase().from("express_checkout_refunds").select("*")
@@ -123,7 +126,7 @@ export async function handleExpressRefundUpdate(refund: Stripe.Refund) {
   if (!checkout) return false;
   const { data, error } = await getSupabase().from("express_checkout_refunds").select("*").eq("checkout_id", checkout).maybeSingle();
   if (error || !data) throw new RefundError("Refund record not found; retry webhook");
-  if (data.mode !== "express_stripe") throw new RefundError("Refund mode mismatch", 409);
+  if (data.mode !== activeCheckoutMode() || data.mode === "express_sandbox") throw new RefundError("Refund mode mismatch", 409);
   await processExpressRefund(data as RefundTicket); // re-read canonical Stripe status
   return true;
 }

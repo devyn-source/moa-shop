@@ -5,7 +5,8 @@ import { currentUser } from "@clerk/nextjs/server";
 export async function currentCustomerEmail(): Promise<string | null> {
   try {
     const user = await currentUser();
-    return user?.primaryEmailAddress?.emailAddress?.toLowerCase() ?? null;
+    const primary = user?.primaryEmailAddress;
+    return primary?.verification?.status === "verified" ? primary.emailAddress.toLowerCase() : null;
   } catch {
     return null;
   }

@@ -5,6 +5,7 @@ import { checkoutTaxBreakdown, stripeTaxCode, taxableLineItems } from "./express
 import { pushExpressOrder, type ExpressPayment } from "@/lib/express-bridge";
 import type { ShopOrder } from "@/lib/types";
 import type Stripe from "stripe";
+import { activeCheckoutMode, assertRehearsalCustomer, backendSandbox, stripeTestMode } from "./express-payment-mode";
 
 export const checkoutTotalCents = (orders: ShopOrder[]) => orders.reduce((sum, o) => sum + Math.round(o.totalUsd * 100), 0);
 
@@ -25,10 +26,11 @@ export function validSandboxToken(checkoutId: string, token: string): boolean {
 }
 
 export async function assertExpressPaymentReady(): Promise<void> {
+  activeCheckoutMode();
   if (process.env.EXPRESS_CHECKOUT_PAUSED === "1") throw new Error("New orders are temporarily paused. Your cart is saved. Please try again later.");
   const base = process.env.MOAOS_EXPRESS_URL?.replace(/\/$/, "");
   if (!base || !process.env.EXPRESS_SECRET) throw new Error("Checkout is being prepared. Please try again shortly.");
-  const sandbox = process.env.EXPRESS_SANDBOX === "1";
+  const sandbox = backendSandbox();
   const response = await fetch(`${base}/api/express/engine-order?sandbox=${sandbox ? "1" : "0"}`, {
     headers: { "x-express-secret": process.env.EXPRESS_SECRET, ...(process.env.MOAOS_BYPASS ? { "x-vercel-protection-bypass": process.env.MOAOS_BYPASS } : {}) },
     cache: "no-store", signal: AbortSignal.timeout(15_000),
@@ -36,6 +38,7 @@ export async function assertExpressPaymentReady(): Promise<void> {
   const data = await response.json().catch(() => null);
   if (!response.ok || data?.payBeforeProof !== true) throw new Error("Payment checkout is being prepared. Your cart is saved. Please try again shortly.");
   if (data.mode !== (sandbox ? "sandbox" : "live")) throw new Error("Payment checkout is not ready for this order. Your cart is saved.");
+  if (stripeTestMode() && (data.stripeTest !== true || data.rehearsalNoSend !== true)) throw new Error("Stripe rehearsal backend is not enabled with messages disabled");
   if (process.env.EXPRESS_SANDBOX !== "1") {
     if (process.env.STRIPE_TAX_ENABLED !== "true") throw new Error("Tax checkout is being prepared. Please try again shortly.");
     getStripe();
@@ -45,8 +48,10 @@ export async function assertExpressPaymentReady(): Promise<void> {
 export async function beginExpressPayment(orders: ShopOrder[], origin: string): Promise<string> {
   if (process.env.EXPRESS_CHECKOUT_PAUSED === "1") throw new Error("New orders are temporarily paused. Your cart is saved. Please try again later.");
   const checkoutId = orders[0].id;
+  const mode = activeCheckoutMode();
+  for (const order of orders) assertRehearsalCustomer(order.contactEmail);
   const sandbox = process.env.EXPRESS_SANDBOX === "1";
-  for (const o of orders) await setOrderCheckout(o.id, { checkoutId, checkoutMode: sandbox ? "express_sandbox" : "express_stripe" });
+  for (const o of orders) await setOrderCheckout(o.id, { checkoutId, checkoutMode: mode });
   if (sandbox) return `${origin}/checkout/payment?checkout=${checkoutId}&token=${sandboxToken(checkoutId)}`;
   const stripe = getStripe();
   if (process.env.STRIPE_TAX_ENABLED !== "true") throw new Error("Tax checkout is not configured");
@@ -75,7 +80,7 @@ export async function beginExpressPayment(orders: ShopOrder[], origin: string): 
   }, { idempotencyKey: `express-checkout-${checkoutId}` });
   if (!session.url) throw new Error("Payment could not start. Please try again.");
   try {
-    for (const o of orders) await setOrderCheckout(o.id, { checkoutId, checkoutMode: "express_stripe", stripeSessionId: session.id });
+    for (const o of orders) await setOrderCheckout(o.id, { checkoutId, checkoutMode: mode, stripeSessionId: session.id });
   } catch (error) {
     await stripe.checkout.sessions.expire(session.id).catch(() => null);
     throw error;
@@ -88,7 +93,7 @@ export function validateExpressPayment(orders: ShopOrder[], payment: ExpressPaym
   if (checkoutTotalCents(orders) !== Math.round(payment.amountUsd * 100)) throw new Error("Payment total does not match the order");
   if (payment.method === "sandbox") {
     if (process.env.EXPRESS_SANDBOX !== "1" || orders.some((o) => o.checkoutMode !== "express_sandbox")) throw new Error("Sandbox payment is not available");
-  } else if (orders.some((o) => o.checkoutMode !== "express_stripe" || o.stripeSessionId !== payment.id)) throw new Error("Payment session does not match checkout");
+  } else if (payment.method !== (stripeTestMode() ? "stripe_test" : "stripe") || orders.some((o) => o.checkoutMode !== activeCheckoutMode() || o.stripeSessionId !== payment.id)) throw new Error("Payment session does not match checkout");
 }
 
 // Only a verified Stripe webhook or the gated sandbox POST reaches this.
@@ -102,7 +107,7 @@ export async function completeExpressPayment(checkoutId: string, payment: Expres
     if (number && orders.every((o) => o.fulfillment?.catalogOrderId === number)) return number;
     throw new Error("Order has been cancelled");
   }
-  for (const order of orders) await markOrderPaid(order.id, payment.id, payment.method === "sandbox");
+  for (const order of orders) await markOrderPaid(order.id, payment.id, payment.method !== "stripe");
   const existing = orders[0].fulfillment?.catalogOrderId;
   if (existing && orders.every((o) => o.fulfillment?.catalogOrderId === existing)) return existing;
   const first = orders[0];
@@ -116,13 +121,15 @@ export async function handleExpressStripeSession(session: Stripe.Checkout.Sessio
   if (session.payment_status !== "paid") return;
   if (session.currency !== "usd" || !session.metadata?.expressCheckoutId || session.amount_total == null) throw new Error("Invalid Express payment");
   if (process.env.EXPRESS_SANDBOX === "1") throw new Error("Live payment handoff is disabled in sandbox");
+  const mode = activeCheckoutMode();
+  if (stripeTestMode() && session.livemode !== false) throw new Error("Live Stripe events are forbidden in rehearsal");
   const orders = await getCheckoutOrders(session.metadata.expressCheckoutId);
-  if (!orders.length || orders.some((o) => o.stripeSessionId !== session.id || o.checkoutMode !== "express_stripe")) throw new Error("Payment session does not match checkout");
+  if (!orders.length || orders.some((o) => o.stripeSessionId !== session.id || o.checkoutMode !== mode)) throw new Error("Payment session does not match checkout");
   if (session.automatic_tax?.enabled) {
     const lineItems = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 100, expand: ["data.price.product"] });
     if (lineItems.has_more) throw new Error("Checkout has too many tax lines");
     const breakdown = checkoutTaxBreakdown(orders, session, lineItems.data);
     for (const order of orders) { const value = breakdown.get(order.id)!; await setOrderTax(order, session.id, value.subtotal, value.tax); }
   } else if ((session.total_details?.amount_tax ?? 0) !== 0) throw new Error("Unexpected tax on legacy checkout");
-  await completeExpressPayment(session.metadata.expressCheckoutId, { method: "stripe", id: session.id, amountUsd: session.amount_total / 100, taxUsd: (session.total_details?.amount_tax ?? 0) / 100, paidAt: new Date().toISOString() });
+  await completeExpressPayment(session.metadata.expressCheckoutId, { method: stripeTestMode() ? "stripe_test" : "stripe", id: session.id, amountUsd: session.amount_total / 100, taxUsd: (session.total_details?.amount_tax ?? 0) / 100, paidAt: new Date().toISOString() });
 }

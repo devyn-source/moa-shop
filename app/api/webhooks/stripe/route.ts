@@ -9,6 +9,7 @@ import { generateProof } from "@/lib/proof";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 import { trackServer } from "@/lib/analytics-server";
 import { handleExpressRefundUpdate } from "@/lib/express-refunds";
+import { stripeTestMode } from "@/lib/express-payment-mode";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
     catch { return NextResponse.json({ error: "Refund reconciliation needs retry" }, { status: 500 }); }
   }
   const checkoutEvent = event.data.object as Stripe.Checkout.Session;
+  // The test endpoint never invokes legacy order email/fulfillment paths.
+  if (stripeTestMode() && !checkoutEvent.metadata?.expressCheckoutId) return NextResponse.json({ received: true });
   if (checkoutEvent.metadata?.expressCheckoutId) {
     try {
       if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
