@@ -31,6 +31,16 @@ Read-only checks used freshly downloaded Vercel production configuration and the
 
 114 automated shop tests pass, including queue failures, pending refunds, mode isolation, duplicate-refund recovery, admin authorization, webhook coverage, and checkout-pause recovery. Type checking and the production build pass. A separate read-only run of the new service checks against production succeeded; its sanitized snapshot is [stage-4-audit.json](stage-4-audit.json). Browser control timed out, so the new operator page has not received a visual or signed-in browser review. These Stage 4 changes are local and have not been deployed.
 
+## Stripe test environment progress
+
+October 5: Devyn supplied test credentials. Verified the Stripe test account through read-only API calls. Credentials are stored outside the repository with owner-only access; live Vercel settings were not changed.
+
+The supplied test environment initially had pending tax settings and no webhook endpoints. Synthetic California origin and sales-tax registration fixtures are now active in TEST mode only. These fixtures are not production tax approval. A temporary official Stripe CLI listener receives signed test events on localhost; it does not add a permanent public webhook.
+
+An opt-in harness is available under `scripts/stripe-rehearsal/`. It calls the actual shop payment, tax, webhook and refund functions against the real Stripe test API, using memory-only order storage and a simulated backend. Email, proof, legacy fulfillment and analytics functions are blocked. It refuses production persistence configuration and non-test Stripe keys.
+
+A two-line hosted test checkout was created for $2,850.01 plus $245.81 tax, total $3,095.82. Browser automation timed out; the hosted payment requires a manual Stripe test-card submission. Payment, replay and refund acceptance are PENDING until the harness writes a passing result. Independent asynchronous-refund processor probes passed: pending to succeeded, and succeeded to failed. The new sandbox initially lacked available balance; Stripe's documented bypass-pending test method supplied simulated funds. Evidence is saved in [stage-4-stripe-refund-probes.json](stage-4-stripe-refund-probes.json). Do not infer end-to-end readiness from setup or from a created session.
+
 ## Stripe rehearsal acceptance matrix
 
 Use Stripe test keys and Stripe test payment methods only. The production simulation flag is not a Stripe sandbox: it bypasses Stripe entirely. A separate rehearsal configuration is required because the current backend calls processor mode `live` even when a Stripe test key is used. Its mail, vendor, and PO paths must be isolated or disabled before testing.
@@ -49,7 +59,7 @@ Use Stripe test keys and Stripe test payment methods only. The production simula
 | Wrong owner or forged signature | Requests rejected before mutation. Two actual test accounts must be used. |
 | Recovery scheduling and outage | Record scheduled run, successful reconciliation, failed-item response, missed run, and operator acknowledgment. |
 
-No processor rehearsal has passed yet. Unit tests do not substitute for this matrix.
+The independent asynchronous-refund processor probes have passed. The full hosted-checkout/application rehearsal and deployed acceptance matrix are still pending. Unit tests and processor-only probes do not substitute for this matrix.
 
 ## Operating procedure proposed for the pilot
 

@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-05T20:38:32.661Z",
+  "scope": "Stripe processor API only; no shop database or backend",
+  "cases": [
+    {
+      "name": "pending",
+      "paymentId": "pi_3UNIebDfm0wj0XMZ22t2fTOR",
+      "refundId": "re_3UNIebDfm0wj0XMZ2zJC8Alc",
+      "initial": "pending",
+      "expectedInitial": "pending",
+      "final": "succeeded",
+      "expectedFinal": "succeeded",
+      "passed": true
+    },
+    {
+      "name": "failure",
+      "paymentId": "pi_3UNIgbDfm0wj0XMZ0ECn91KC",
+      "refundId": "re_3UNIgbDfm0wj0XMZ0nhErPIy",
+      "initial": "succeeded",
+      "expectedInitial": "succeeded",
+      "final": "failed",
+      "expectedFinal": "failed",
+      "passed": true
+    }
+  ],
+  "notes": [
+    "The pending refund was observed with pending_reason=insufficient_funds before simulated test balance was supplied.",
+    "These are processor-only probes. They do not establish application reconciliation or deployed webhook delivery."
+  ]
+}
