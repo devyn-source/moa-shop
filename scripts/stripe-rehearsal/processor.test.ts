@@ -76,7 +76,12 @@ test("Stripe test checkout, tax, replay, backend outage and refund recovery", as
   });
   const checkoutId = randomUUID();
   state.orders = [2000.01, 850].map((totalUsd, index) => ({ id: index ? randomUUID() : checkoutId, orderNumber: `STAGE4-${index + 1}`, checkoutId, productId: "synthetic-tee", quantity: index ? 25 : 50, totalUsd, taxUsd: 0, contactEmail: "stage4@example.invalid", contactName: "Stage 4 Test", companyName: "Synthetic rehearsal", paymentStatus: "unpaid", status: "awaiting_payment", shipToName: "Test only", shipToAddress: { line1: "510 Townsend St", city: "San Francisco", state: "CA", postalCode: "94103", country: "US" }, fulfillment: { mode: "express" } }) as ShopOrder);
+  let hostedCheckoutUrl: string | null = null;
   const server = createServer(async (req, res) => {
+    if (req.url === "/checkout") {
+      if (!hostedCheckoutUrl) { res.writeHead(503).end("Test checkout is starting. Reload shortly."); return; }
+      res.writeHead(302, { Location: hostedCheckoutUrl, "Cache-Control": "no-store" }).end(); return;
+    }
     if (req.url === "/webhook" && req.method === "POST") {
       const chunks: Buffer[] = []; let size = 0;
       for await (const chunk of req) { size += chunk.length; if (size > 1_000_000) { res.writeHead(413).end(); return; } chunks.push(Buffer.from(chunk)); }
@@ -99,12 +104,13 @@ test("Stripe test checkout, tax, replay, backend outage and refund recovery", as
     for (let i = 0; i < 100 && !process.env.STRIPE_WEBHOOK_SECRET; i++) await pause(200);
     if (!process.env.STRIPE_WEBHOOK_SECRET) throw Error("Stripe listener did not become ready");
     const checkoutUrl = await beginExpressPayment(structuredClone(state.orders), "http://127.0.0.1:3054");
+    hostedCheckoutUrl = checkoutUrl;
     const sessionId = state.orders[0].stripeSessionId!;
     let session = await stripe.checkout.sessions.retrieve(sessionId);
     expect(session.livemode).toBe(false); expect(session.amount_subtotal).toBe(285001); expect(session.total_details!.amount_tax).toBeGreaterThan(0);
     save("checkout.json", { url: checkoutUrl, sessionId, checkoutId, amountSubtotal: session.amount_subtotal, amountTax: session.total_details!.amount_tax, amountTotal: session.amount_total, testOnly: true });
     console.log("Test checkout ready. Private checkout.json contains the hosted payment URL.");
-    const expiry = Date.now() + 18 * 60_000;
+    const expiry = Date.now() + 45 * 60_000;
     while (session.payment_status !== "paid" && Date.now() < expiry) { await pause(3000); session = await stripe.checkout.sessions.retrieve(sessionId); }
     expect(session.payment_status, "Complete the hosted checkout with a Stripe test card").toBe("paid");
     for (let i = 0; i < 50 && !state.savedEvents.some(e => e.type === "checkout.session.completed"); i++) await pause(200);

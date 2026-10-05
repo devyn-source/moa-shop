@@ -28,7 +28,7 @@ node --env-file=/private/path/to/test-credentials.env \
 node_modules/vitest/vitest.mjs run --config scripts/stripe-rehearsal/vitest.config.ts
 ```
 
-The harness reserves 127.0.0.1:3054 and starts a Stripe CLI listener. It writes checkout.json to the private output directory. Complete that hosted TEST Checkout using Stripe test card 4242 4242 4242 4242, a future expiry, and any CVC. Never use a real card. It waits up to 18 minutes for this step.
+The harness reserves 127.0.0.1:3054 and starts a Stripe CLI listener. It writes checkout.json to the private output directory. Complete that hosted TEST Checkout using Stripe test card 4242 4242 4242 4242, a future expiry, and any CVC. Never use a real card. It waits up to 45 minutes for this step. Open http://127.0.0.1:3054/checkout to redirect to the complete Stripe-generated URL. Never shorten the URL or remove its fragment.
 
 After payment it verifies the real signed webhook reaches the application's handler, intentionally receives a backend failure, then replays the canonical session through the actual payment module. It tests duplicate handoff suppression, exact tax/rounding, owner rejection, real test refund creation, backend-refund recovery, lost-response recovery without a second refund, forged webhook rejection, and a Stripe processor decline.
 
