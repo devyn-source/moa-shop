@@ -1,6 +1,6 @@
 # Stage 2 readiness
 
-Implemented October 5, 2026. Both database migrations were applied successfully after approval on October 5. Backend and shop deployment verification is in progress. Production flags verified: EXPRESS_CHECKOUT=1 and EXPRESS_SANDBOX=1. No real payments, refunds, vendor messages or factory orders were executed.
+Implemented October 5, 2026. Both database migrations were applied successfully after approval on October 5. The sandbox shop and Express preview backend are deployed and verified. Production flags verified: EXPRESS_CHECKOUT=1 and EXPRESS_SANDBOX=1. No real payments, refunds, vendor messages or factory orders were executed.
 
 ## Implemented
 
@@ -16,8 +16,17 @@ Implemented October 5, 2026. Both database migrations were applied successfully 
 ## Deployment order
 
 1. Apply backend migration `20261005120000_express_cancellation.sql` to MoaOS and shop migration `20261005121000_express_refunds.sql` to MOA Shop. Both migrations are applied; the SQL editor reported success.
-2. Deploy backend on express-lane only, preserving the main backend. Verify readiness before updating the shop.
-3. Deploy shop with sandbox flags retained. Verify account access and cancellation UI without initiating real transactions or outbound messages.
+2. Backend deployed on express-lane at `052752a`, deployment `dpl_2uyqEpMraMZeDetyx7gSJ7Q3BBuo`. Its production build passed on Vercel. MoaOS main was not merged.
+3. Shop deployed at `9714df5`, deployment `dpl_FPvbynPdSNyp5hCDrRLwH6yuvh4w`, serving https://shop.magnumopus.agency with sandbox flags retained.
+
+## Deployed checks
+
+- Homepage returns 200. Anonymous checkout, cancellation and recovery requests return 401.
+- Backend cancellation and refund routes reject missing shared secrets; a nonexistent cancellation returns the expected ownership-safe response. Fixed an omitted middleware route exemption found during this check.
+- Shop refund RPC rejects anonymous callers and rejects a nonexistent checkout. Refund table is accessible to the existing server role.
+- Authorized recovery ran against a verified empty queue and returned recovered: 0.
+- Signed-in customer order page rendered the new cancellation section. Opened its confirmation and selected Keep order; no cancellation was submitted.
+- No full deployed purchase-to-refund rehearsal was performed. Automated failure and lifecycle tests cover that behavior; a Stripe test-mode rehearsal remains pending.
 
 ## Before live payments
 
