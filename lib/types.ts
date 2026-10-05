@@ -225,6 +225,8 @@ export type ShopOrder = {
   cancelledAt?: string;
   refundedAt?: string;
   refundId?: string;
+  refundStatus?: "requested" | "pending" | "succeeded" | "failed" | "requires_action" | "canceled";
+  taxCalculation?: { source: "stripe_checkout"; sessionId: string; subtotalCents: number; taxCents: number; totalCents: number };
   paymentStatus: "simulated_paid" | "paid" | "unpaid" | "refunded";
   status: OrderStatus;
   stripeSessionId?: string;

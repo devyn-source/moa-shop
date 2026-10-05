@@ -1,0 +1,3000 @@
+{
+  "checkedAt": "2026-10-05T16:53:05.271Z",
+  "source": "Read-only production Supabase product, passport and zone tables",
+  "products": [
+    {
+      "slug": "heavyweight-tee",
+      "name": "Heavyweight Tee",
+      "sku": "TEE101",
+      "moq": 50,
+      "vendorId": "vendor-best-cover",
+      "databaseCostUsd": 14,
+      "leadTimeDays": 42,
+      "priceTiers": [
+        {
+          "maxQty": 149,
+          "minQty": 50,
+          "perUnitUsd": 44
+        },
+        {
+          "maxQty": 299,
+          "minQty": 150,
+          "perUnitUsd": 39
+        },
+        {
+          "maxQty": 599,
+          "minQty": 300,
+          "perUnitUsd": 37
+        },
+        {
+          "maxQty": null,
+          "minQty": 600,
+          "perUnitUsd": 35
+        }
+      ],
+      "decorations": [
+        {
+          "id": "screen_print",
+          "label": "Screen print",
+          "maxColors": 4,
+          "description": "Flat, durable ink for front, back and sleeve artwork. Up to 4 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "back",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 4
+        },
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "tee-econ",
+          "tier": "econ",
+          "label": "Heavyweight cotton",
+          "weight": "heavyweight",
+          "composition": "100% cotton",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "tee-prem",
+          "tier": "premium",
+          "label": "Premium heavyweight",
+          "weight": "premium heavyweight",
+          "composition": "100% cotton",
+          "upchargeUsd": 4
+        }
+      ],
+      "variants": [
+        {
+          "id": "heavyweight-tee-bone",
+          "color": "Bone",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "heavyweight-tee-jetBlack",
+          "color": "Jet Black",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "heavyweight-tee-heatherGray",
+          "color": "Heather Gray",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "heavyweight-tee-navy",
+          "color": "Navy",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "heavyweight-tee-forest",
+          "color": "Forest",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "heavyweight-tee-oxblood",
+          "color": "Oxblood",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "passport": {
+        "source": "database",
+        "status": "draft",
+        "reviewedAt": null,
+        "assumed": {
+          "bom": 4,
+          "sizeChart": 0,
+          "construction": 4,
+          "labelsPackaging": 1
+        },
+        "openQuestions": [
+          "Confirm shell mill + exact weight/yield",
+          "Confirm thread brand + ticket",
+          "Supply + approve technical flats (front/back)"
+        ],
+        "bom": [
+          {
+            "spec": "260gsm single jersey, compact cotton jersey",
+            "color": "Bone",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Shell fabric",
+            "weightGsm": 260,
+            "pantoneTcx": "12-0105 TCX",
+            "composition": "compact cotton jersey"
+          },
+          {
+            "spec": "1×1 rib, self or matching",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Neck rib",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "compact cotton jersey"
+          },
+          {
+            "spec": "3/8\" twill tape, back-neck",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Neck tape",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": ""
+          },
+          {
+            "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Thread",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "100% polyester"
+          }
+        ],
+        "construction": [
+          {
+            "spi": 12,
+            "area": "Sleeves",
+            "detail": "Set-in",
+            "stitch": "Overlock 504",
+            "_assumed": true,
+            "seamClass": "EFc"
+          },
+          {
+            "spi": 12,
+            "area": "Bottom + sleeve hem",
+            "detail": "1\" turn, double-needle coverstitch",
+            "stitch": "Coverstitch 406",
+            "_assumed": true,
+            "seamClass": "EFb"
+          },
+          {
+            "spi": 12,
+            "area": "Collar",
+            "detail": "3/4\" rib, single-needle set + back-neck tape",
+            "stitch": "Lockstitch 301",
+            "_assumed": true,
+            "seamClass": "LSa"
+          },
+          {
+            "spi": 12,
+            "area": "Side seams",
+            "detail": "Side-seamed",
+            "stitch": "Overlock 504",
+            "_assumed": true,
+            "seamClass": "SSa"
+          }
+        ],
+        "labelsPackaging": {
+          "fold": "Standard flat fold",
+          "hangTag": "MOA hangtag, looped at neck (per order)",
+          "polybag": "Individual recyclable polybag with suffocation warning",
+          "_assumed": true,
+          "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+          "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+          "sizeLabel": "Woven size tab, center-back neck below main label"
+        }
+      },
+      "measurements": {
+        "rows": [
+          {
+            "id": "pom-0",
+            "pom": "BODY LENGTH",
+            "values": {
+              "L": 29.5,
+              "M": 29,
+              "S": 28.625,
+              "XL": 30.25,
+              "XS": 28.375,
+              "XXL": 30.75
+            }
+          },
+          {
+            "id": "pom-1",
+            "pom": "CHEST-1\" FM ARMHOLE",
+            "values": {
+              "L": 25,
+              "M": 24,
+              "S": 23,
+              "XL": 26.25,
+              "XS": 22.5,
+              "XXL": 27.5
+            }
+          },
+          {
+            "id": "pom-2",
+            "pom": "SWEEP",
+            "values": {
+              "L": 24.75,
+              "M": 23.75,
+              "S": 22.75,
+              "XL": 26,
+              "XS": 22.25,
+              "XXL": 27.25
+            }
+          },
+          {
+            "id": "pom-3",
+            "pom": "SHOULDER WIDTH",
+            "values": {
+              "L": 23.5,
+              "M": 23.25,
+              "S": 22.75,
+              "XL": 24,
+              "XS": 22.75,
+              "XXL": 24.25
+            }
+          },
+          {
+            "id": "pom-4",
+            "pom": "ARMHOLE DROP",
+            "values": {
+              "L": 9.875,
+              "M": 9.375,
+              "S": 9,
+              "XL": 10.25,
+              "XS": 8.875,
+              "XXL": 10.75
+            }
+          },
+          {
+            "id": "pom-5",
+            "pom": "BICEP",
+            "values": {
+              "L": 8.625,
+              "M": 8.25,
+              "S": 8,
+              "XL": 9,
+              "XS": 7.75,
+              "XXL": 9.5
+            }
+          },
+          {
+            "id": "pom-6",
+            "pom": "SLEEVE OPENING",
+            "values": {
+              "L": 7.5,
+              "M": 7.125,
+              "S": 6.875,
+              "XL": 7.875,
+              "XS": 6.625,
+              "XXL": 8.25
+            }
+          },
+          {
+            "id": "pom-7",
+            "pom": "SLEEVE LENGTH",
+            "values": {
+              "L": 8.75,
+              "M": 8.5,
+              "S": 8.25,
+              "XL": 9,
+              "XS": 8,
+              "XXL": 9.5
+            }
+          },
+          {
+            "id": "pom-8",
+            "pom": "NECK WIDTH",
+            "values": {
+              "L": 8.25,
+              "M": 8.25,
+              "S": 8,
+              "XL": 8.5,
+              "XS": 8,
+              "XXL": 8.5
+            }
+          },
+          {
+            "id": "pom-9",
+            "pom": "FRONT NECK DROP",
+            "values": {
+              "L": 4.5,
+              "M": 4.5,
+              "S": 4.75,
+              "XL": 4.25,
+              "XS": 4.75,
+              "XXL": 4.25
+            }
+          },
+          {
+            "id": "pom-10",
+            "pom": "COLLAR HEIGHT",
+            "values": {
+              "L": 1,
+              "M": 1,
+              "S": 1,
+              "XL": 1,
+              "XS": 1,
+              "XXL": 1
+            }
+          }
+        ],
+        "unit": "in",
+        "sampleSize": "M"
+      },
+      "calibration": {
+        "model3d": {
+          "source": "dxf",
+          "hemFrac": 1,
+          "hpsFrac": 0,
+          "cfWorldX": 0.0229,
+          "fitUnits": 1.45,
+          "hpsWorldY": 0.6442,
+          "confidence": "high",
+          "bodyLengthIn": 27.48,
+          "chestWidthIn": null,
+          "inchesPerWorld": 20.2946
+        }
+      },
+      "zones": {
+        "back": [
+          {
+            "id": "yoke",
+            "box": {
+              "h": 0.1735,
+              "w": 0.4078,
+              "x": 0.2803,
+              "y": 0.0811
+            },
+            "label": "Upper back (yoke)"
+          },
+          {
+            "id": "center-back",
+            "box": {
+              "h": 0.5551,
+              "w": 0.4757,
+              "x": 0.2463,
+              "y": 0.1505
+            },
+            "label": "Center back"
+          }
+        ],
+        "front": [
+          {
+            "id": "left-chest",
+            "box": {
+              "h": 0.1735,
+              "w": 0.1699,
+              "x": 0.5668,
+              "y": 0.2372
+            },
+            "label": "Left chest"
+          },
+          {
+            "id": "right-chest",
+            "box": {
+              "h": 0.1735,
+              "w": 0.1699,
+              "x": 0.2949,
+              "y": 0.2372
+            },
+            "label": "Right chest"
+          },
+          {
+            "id": "center-chest",
+            "box": {
+              "h": 0.2082,
+              "w": 0.4078,
+              "x": 0.3119,
+              "y": 0.2546
+            },
+            "label": "Center chest"
+          },
+          {
+            "id": "full-front",
+            "box": {
+              "h": 0.5551,
+              "w": 0.4757,
+              "x": 0.2779,
+              "y": 0.2546
+            },
+            "label": "Full front"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "vintage-cut-tee",
+      "name": "Vintage Cut Tee",
+      "sku": "TEE102",
+      "moq": 50,
+      "vendorId": "vendor-best-cover",
+      "databaseCostUsd": 14,
+      "leadTimeDays": 42,
+      "priceTiers": [
+        {
+          "maxQty": 149,
+          "minQty": 50,
+          "perUnitUsd": 44
+        },
+        {
+          "maxQty": 299,
+          "minQty": 150,
+          "perUnitUsd": 39
+        },
+        {
+          "maxQty": 599,
+          "minQty": 300,
+          "perUnitUsd": 37
+        },
+        {
+          "maxQty": null,
+          "minQty": 600,
+          "perUnitUsd": 35
+        }
+      ],
+      "decorations": [
+        {
+          "id": "screen_print",
+          "label": "Screen print",
+          "maxColors": 4,
+          "description": "Flat, durable ink for front, back and sleeve artwork. Up to 4 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "back",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 4
+        },
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "vct-econ",
+          "tier": "econ",
+          "label": "Heavyweight cotton",
+          "weight": "heavyweight",
+          "composition": "100% cotton",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "vct-prem",
+          "tier": "premium",
+          "label": "Premium heavyweight",
+          "weight": "premium heavyweight",
+          "composition": "100% cotton",
+          "upchargeUsd": 4
+        }
+      ],
+      "variants": [
+        {
+          "id": "vintage-cut-tee-bone",
+          "color": "Bone",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "vintage-cut-tee-jetBlack",
+          "color": "Jet Black",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "vintage-cut-tee-heatherGray",
+          "color": "Heather Gray",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "vintage-cut-tee-navy",
+          "color": "Navy",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "vintage-cut-tee-forest",
+          "color": "Forest",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        },
+        {
+          "id": "vintage-cut-tee-oxblood",
+          "color": "Oxblood",
+          "fabric": "260gsm compact cotton jersey",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "3XL"
+      ],
+      "passport": {
+        "source": "database",
+        "status": "draft",
+        "reviewedAt": null,
+        "assumed": {
+          "bom": 4,
+          "sizeChart": 0,
+          "construction": 4,
+          "labelsPackaging": 1
+        },
+        "openQuestions": [
+          "Pattern: Devyn sourcing (graded spec on file, S to 3XL)",
+          "Confirm shell mill + exact weight/yield",
+          "Confirm thread brand + ticket",
+          "Supply + approve technical flats (front/back)"
+        ],
+        "bom": [
+          {
+            "spec": "260gsm single jersey, compact cotton jersey",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Shell fabric",
+            "weightGsm": 260,
+            "pantoneTcx": "",
+            "composition": "compact cotton jersey"
+          },
+          {
+            "spec": "1×1 rib, self or matching",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Neck rib",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "compact cotton jersey"
+          },
+          {
+            "spec": "3/8\" twill tape, back-neck",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Neck tape",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": ""
+          },
+          {
+            "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Thread",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "100% polyester"
+          }
+        ],
+        "construction": [
+          {
+            "spi": 12,
+            "area": "Sleeves",
+            "detail": "Set-in",
+            "stitch": "Overlock 504",
+            "_assumed": true,
+            "seamClass": "EFc"
+          },
+          {
+            "spi": 12,
+            "area": "Bottom + sleeve hem",
+            "detail": "1\" turn, double-needle coverstitch",
+            "stitch": "Coverstitch 406",
+            "_assumed": true,
+            "seamClass": "EFb"
+          },
+          {
+            "spi": 12,
+            "area": "Collar",
+            "detail": "3/4\" rib, single-needle set + back-neck tape",
+            "stitch": "Lockstitch 301",
+            "_assumed": true,
+            "seamClass": "LSa"
+          },
+          {
+            "spi": 12,
+            "area": "Side seams",
+            "detail": "Side-seamed",
+            "stitch": "Overlock 504",
+            "_assumed": true,
+            "seamClass": "SSa"
+          }
+        ],
+        "labelsPackaging": {
+          "fold": "Standard flat fold",
+          "hangTag": "MOA hangtag, looped at neck (per order)",
+          "polybag": "Individual recyclable polybag with suffocation warning",
+          "_assumed": true,
+          "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+          "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+          "sizeLabel": "Woven size tab, center-back neck below main label"
+        }
+      },
+      "measurements": null,
+      "calibration": null,
+      "zones": null
+    },
+    {
+      "slug": "heavyweight-hoodie",
+      "name": "Heavyweight Hoodie",
+      "sku": "HDY101",
+      "moq": 50,
+      "vendorId": "vendor-best-cover",
+      "databaseCostUsd": 32,
+      "leadTimeDays": 56,
+      "priceTiers": [
+        {
+          "maxQty": 99,
+          "minQty": 50,
+          "perUnitUsd": 100
+        },
+        {
+          "maxQty": 249,
+          "minQty": 100,
+          "perUnitUsd": 89
+        },
+        {
+          "maxQty": 499,
+          "minQty": 250,
+          "perUnitUsd": 84
+        },
+        {
+          "maxQty": null,
+          "minQty": 500,
+          "perUnitUsd": 80
+        }
+      ],
+      "decorations": [
+        {
+          "id": "screen_print",
+          "label": "Screen print",
+          "maxColors": 4,
+          "description": "Flat, durable ink for front, back and sleeve artwork. Up to 4 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "back",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 4
+        },
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "hd-econ",
+          "tier": "econ",
+          "label": "480gsm cotton fleece",
+          "weight": "480gsm",
+          "composition": "100% cotton",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "hd-prem",
+          "tier": "premium",
+          "label": "480gsm cotton fleece, premium",
+          "weight": "480gsm",
+          "composition": "100% cotton",
+          "upchargeUsd": 10
+        }
+      ],
+      "variants": [
+        {
+          "id": "heavyweight-hoodie-jetBlack",
+          "color": "Jet Black",
+          "fabric": "420gsm cotton/poly fleece",
+          "available": true
+        },
+        {
+          "id": "heavyweight-hoodie-heatherGray",
+          "color": "Heather Gray",
+          "fabric": "420gsm cotton/poly fleece",
+          "available": true
+        },
+        {
+          "id": "heavyweight-hoodie-bone",
+          "color": "Bone",
+          "fabric": "420gsm cotton/poly fleece",
+          "available": true
+        },
+        {
+          "id": "heavyweight-hoodie-navy",
+          "color": "Navy",
+          "fabric": "420gsm cotton/poly fleece",
+          "available": true
+        },
+        {
+          "id": "heavyweight-hoodie-forest",
+          "color": "Forest",
+          "fabric": "420gsm cotton/poly fleece",
+          "available": true
+        },
+        {
+          "id": "heavyweight-hoodie-oxblood",
+          "color": "Oxblood",
+          "fabric": "420gsm cotton/poly fleece",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "passport": {
+        "source": "database",
+        "status": "draft",
+        "reviewedAt": null,
+        "assumed": {
+          "bom": 5,
+          "sizeChart": 0,
+          "construction": 4,
+          "labelsPackaging": 1
+        },
+        "openQuestions": [
+          "Confirm shell mill + exact weight/yield",
+          "Confirm thread brand + ticket",
+          "Supply + approve technical flats (front/back)",
+          "Confirm drawcord + eyelet finish/supplier",
+          "Lined vs unlined hood?"
+        ],
+        "bom": [
+          {
+            "spec": "420gsm brushed-back fleece, cotton/poly fleece",
+            "color": "Jet Black",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Shell fabric",
+            "weightGsm": 420,
+            "pantoneTcx": "19-0303 TCX",
+            "composition": "cotton/poly fleece"
+          },
+          {
+            "spec": "2×2 rib, cuffs + hem",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Rib",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "cotton/poly fleece"
+          },
+          {
+            "spec": "Round/flat cord + tipped eyelets",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Drawcord",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "100% cotton/poly"
+          },
+          {
+            "spec": "Metal, matte, 2× at hood",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Eyelets",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "Metal"
+          },
+          {
+            "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Thread",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "100% polyester"
+          }
+        ],
+        "construction": [
+          {
+            "spi": 12,
+            "area": "Sleeves",
+            "detail": "Set-in",
+            "stitch": "Overlock 504 + coverstitch",
+            "_assumed": true,
+            "seamClass": "EFc"
+          },
+          {
+            "spi": 10,
+            "area": "Hood",
+            "detail": "2- or 3-panel, topstitched, drawcord through eyelets",
+            "stitch": "Lockstitch 301",
+            "_assumed": true,
+            "seamClass": "LSc"
+          },
+          {
+            "spi": 10,
+            "area": "Pocket",
+            "detail": "Kangaroo pouch, bartacked openings",
+            "stitch": "Lockstitch + bartack",
+            "_assumed": true,
+            "seamClass": "LSa"
+          },
+          {
+            "spi": 12,
+            "area": "Cuffs + hem",
+            "detail": "2×2 rib set",
+            "stitch": "Overlock + coverstitch",
+            "_assumed": true,
+            "seamClass": "EFb"
+          }
+        ],
+        "labelsPackaging": {
+          "fold": "Standard flat fold",
+          "hangTag": "MOA hangtag, looped at neck (per order)",
+          "polybag": "Individual recyclable polybag with suffocation warning",
+          "_assumed": true,
+          "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+          "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+          "sizeLabel": "Woven size tab, center-back neck below main label"
+        }
+      },
+      "measurements": {
+        "rows": [
+          {
+            "id": "pom-0",
+            "pom": "FRONT BODY LENGTH",
+            "values": {
+              "L": 26.25,
+              "M": 25.25,
+              "S": 24.25,
+              "XL": 27.25,
+              "XS": 23.25,
+              "XXL": 28.25
+            }
+          },
+          {
+            "id": "pom-1",
+            "pom": "BACK BODY LENGTH",
+            "values": {
+              "L": 26.25,
+              "M": 25.25,
+              "S": 24.25,
+              "XL": 27.25,
+              "XS": 23.25,
+              "XXL": 28.25
+            }
+          },
+          {
+            "id": "pom-2",
+            "pom": "SHOUDLER SLOPE",
+            "values": {
+              "L": 2.25,
+              "M": 2.25,
+              "S": 2.25,
+              "XL": 2.25,
+              "XS": 2.25,
+              "XXL": 2.25
+            }
+          },
+          {
+            "id": "pom-3",
+            "pom": "SHOULDER WIDTH",
+            "values": {
+              "L": 23,
+              "M": 21.5,
+              "S": 20,
+              "XL": 24.5,
+              "XS": 18.5,
+              "XXL": 26
+            }
+          },
+          {
+            "id": "pom-4",
+            "pom": "CHEST-1\" FROM AMRHOLE",
+            "values": {
+              "L": 25,
+              "M": 23,
+              "S": 21,
+              "XL": 27,
+              "XS": 19,
+              "XXL": 29
+            }
+          },
+          {
+            "id": "pom-5",
+            "pom": "SWEEP EXTEND",
+            "values": {
+              "L": 25,
+              "M": 23,
+              "S": 21,
+              "XL": 27,
+              "XS": 19,
+              "XXL": 29
+            }
+          },
+          {
+            "id": "pom-6",
+            "pom": "SWEEP RELAX",
+            "values": {
+              "L": 20,
+              "M": 18,
+              "S": 16,
+              "XL": 22,
+              "XS": 14,
+              "XXL": 24
+            }
+          },
+          {
+            "id": "pom-7",
+            "pom": "HEM RIB HEIGHT",
+            "values": {
+              "L": 2.25,
+              "M": 2.25,
+              "S": 2.25,
+              "XL": 2.25,
+              "XS": 2.25,
+              "XXL": 2.25
+            }
+          },
+          {
+            "id": "pom-8",
+            "pom": "SLEEVE LENGTH",
+            "values": {
+              "L": 24.5,
+              "M": 24.125,
+              "S": 23.75,
+              "XL": 24.875,
+              "XS": 23.375,
+              "XXL": 25.25
+            }
+          },
+          {
+            "id": "pom-9",
+            "pom": "BICEP",
+            "values": {
+              "L": 10.25,
+              "M": 9.5,
+              "S": 8.75,
+              "XL": 11,
+              "XS": 8,
+              "XXL": 11.75
+            }
+          },
+          {
+            "id": "pom-10",
+            "pom": "ARMHOLE DROP",
+            "values": {
+              "L": 13,
+              "M": 12.25,
+              "S": 11.5,
+              "XL": 13.75,
+              "XS": 10.75,
+              "XXL": 14.5
+            }
+          },
+          {
+            "id": "pom-11",
+            "pom": "SLEEVE OPENING EXTEND",
+            "values": {
+              "L": 6.5,
+              "M": 6,
+              "S": 5.5,
+              "XL": 7,
+              "XS": 5,
+              "XXL": 7.5
+            }
+          },
+          {
+            "id": "pom-12",
+            "pom": "SLEEVE OPENING RELAX",
+            "values": {
+              "L": 4,
+              "M": 3.75,
+              "S": 3.5,
+              "XL": 4.25,
+              "XS": 3.25,
+              "XXL": 4.5
+            }
+          },
+          {
+            "id": "pom-13",
+            "pom": "CUFF HEIGHT",
+            "values": {
+              "L": 2.25,
+              "M": 2.25,
+              "S": 2.25,
+              "XL": 2.25,
+              "XS": 2.25,
+              "XXL": 2.25
+            }
+          },
+          {
+            "id": "pom-14",
+            "pom": "FRONT NECK DROP",
+            "values": {
+              "L": 3.25,
+              "M": 3,
+              "S": 2.75,
+              "XL": 3.5,
+              "XS": 2.5,
+              "XXL": 3.75
+            }
+          },
+          {
+            "id": "pom-15",
+            "pom": "BACK NECK DROP",
+            "values": {
+              "L": 1,
+              "M": 1,
+              "S": 1,
+              "XL": 1,
+              "XS": 1,
+              "XXL": 1
+            }
+          },
+          {
+            "id": "pom-16",
+            "pom": "NECK WIDTH",
+            "values": {
+              "L": 10.625,
+              "M": 10.25,
+              "S": 9.875,
+              "XL": 11,
+              "XS": 9.5,
+              "XXL": 11.375
+            }
+          },
+          {
+            "id": "pom-17",
+            "pom": "HOODIE WIDTH",
+            "values": {
+              "L": 12.5,
+              "M": 12.25,
+              "S": 12,
+              "XL": 12.75,
+              "XS": 11.75,
+              "XXL": 13
+            }
+          },
+          {
+            "id": "pom-18",
+            "pom": "TOP POCKET WIDTH",
+            "values": {
+              "L": 10,
+              "M": 9.75,
+              "S": 9.75,
+              "XL": 10,
+              "XS": 9.75,
+              "XXL": 10
+            }
+          },
+          {
+            "id": "pom-19",
+            "pom": "POCKET HEIGHT",
+            "values": {
+              "L": 8,
+              "M": 7.75,
+              "S": 7.75,
+              "XL": 8,
+              "XS": 7.75,
+              "XXL": 8
+            }
+          },
+          {
+            "id": "pom-20",
+            "pom": "POCKE SIDE LENGTH",
+            "values": {
+              "L": 3,
+              "M": 2.875,
+              "S": 2.875,
+              "XL": 3,
+              "XS": 2.875,
+              "XXL": 3
+            }
+          },
+          {
+            "id": "pom-21",
+            "pom": "POCKET BOTTOM LENGTH",
+            "values": {
+              "L": 14.5,
+              "M": 14.25,
+              "S": 14.25,
+              "XL": 14.5,
+              "XS": 14.25,
+              "XXL": 14.5
+            }
+          }
+        ],
+        "unit": "in",
+        "sampleSize": "M"
+      },
+      "calibration": {
+        "model3d": {
+          "source": "spec",
+          "hemFrac": 1,
+          "hpsFrac": 0,
+          "cfWorldX": 0,
+          "fitUnits": 1.45,
+          "hpsWorldY": 0.725,
+          "confidence": "high",
+          "bodyLengthIn": 25.25,
+          "chestWidthIn": 23,
+          "inchesPerWorld": 17.4138
+        }
+      },
+      "zones": {
+        "back": [
+          {
+            "id": "upper-back",
+            "box": {
+              "h": 0.07,
+              "w": 0.24,
+              "x": 0.38,
+              "y": 0.36
+            },
+            "label": "Upper back"
+          },
+          {
+            "id": "center-back",
+            "box": {
+              "h": 0.22,
+              "w": 0.32,
+              "x": 0.34,
+              "y": 0.44
+            },
+            "label": "Center back"
+          },
+          {
+            "id": "lower-back",
+            "box": {
+              "h": 0.11,
+              "w": 0.24,
+              "x": 0.38,
+              "y": 0.66
+            },
+            "label": "Lower back"
+          },
+          {
+            "id": "left-sleeve",
+            "box": {
+              "h": 0.16,
+              "w": 0.12,
+              "x": 0.77,
+              "y": 0.46
+            },
+            "label": "Left sleeve"
+          },
+          {
+            "id": "right-sleeve",
+            "box": {
+              "h": 0.16,
+              "w": 0.12,
+              "x": 0.11,
+              "y": 0.46
+            },
+            "label": "Right sleeve"
+          }
+        ],
+        "front": [
+          {
+            "id": "left-chest",
+            "box": {
+              "h": 0.17598589866156794,
+              "w": 0.1530279039196941,
+              "x": 0.5502912882409177,
+              "y": 0.3634440726577437
+            },
+            "label": "Left chest"
+          },
+          {
+            "id": "center-chest",
+            "box": {
+              "h": 0.08455664435946474,
+              "w": 0.2384124043977055,
+              "x": 0.3775539256692161,
+              "y": 0.3763360420650095
+            },
+            "label": "Center chest"
+          },
+          {
+            "id": "right-chest",
+            "box": {
+              "h": 0.17442041108986614,
+              "w": 0.14771734584130022,
+              "x": 0.30538898183556396,
+              "y": 0.36636591778202676
+            },
+            "label": "Right chest"
+          },
+          {
+            "id": "full-front",
+            "box": {
+              "h": 0.20954827915869984,
+              "w": 0.39303821104206493,
+              "x": 0.3,
+              "y": 0.3638772705544933
+            },
+            "label": "Full front"
+          },
+          {
+            "id": "left-sleeve",
+            "box": {
+              "h": 0.2923382866834411,
+              "r": 343,
+              "w": 0.11916046726429556,
+              "x": 0.8064521092256213,
+              "y": 0.40063077621099585
+            },
+            "label": "Left sleeve"
+          },
+          {
+            "id": "right-sleeve",
+            "box": {
+              "h": 0.28570901644568264,
+              "r": 17,
+              "w": 0.12175106510929881,
+              "x": 0.06642912416581202,
+              "y": 0.4081328312617666
+            },
+            "label": "Right sleeve"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "work-jacket",
+      "name": "Canvas Work Jacket",
+      "sku": "JKT101",
+      "moq": 50,
+      "vendorId": "vendor-best-cover",
+      "databaseCostUsd": 48,
+      "leadTimeDays": 70,
+      "priceTiers": [
+        {
+          "maxQty": 74,
+          "minQty": 50,
+          "perUnitUsd": 150
+        },
+        {
+          "maxQty": 149,
+          "minQty": 75,
+          "perUnitUsd": 135
+        },
+        {
+          "maxQty": 299,
+          "minQty": 150,
+          "perUnitUsd": 125
+        },
+        {
+          "maxQty": null,
+          "minQty": 300,
+          "perUnitUsd": 120
+        }
+      ],
+      "decorations": [
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "wj-econ",
+          "tier": "econ",
+          "label": "12oz cotton canvas",
+          "liner": "Acetate liner",
+          "weight": "12oz",
+          "composition": "100% cotton canvas",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "wj-prem",
+          "tier": "premium",
+          "label": "14oz cotton canvas",
+          "liner": "Lyocell 6oz twill liner",
+          "weight": "14oz",
+          "composition": "100% cotton canvas",
+          "upchargeUsd": 15
+        }
+      ],
+      "variants": [
+        {
+          "id": "work-jacket-walnut",
+          "color": "Walnut",
+          "fabric": "12oz cotton canvas",
+          "available": true
+        },
+        {
+          "id": "work-jacket-jetBlack",
+          "color": "Jet Black",
+          "fabric": "12oz cotton canvas",
+          "available": true
+        },
+        {
+          "id": "work-jacket-natural",
+          "color": "Natural",
+          "fabric": "12oz cotton canvas",
+          "available": true
+        },
+        {
+          "id": "work-jacket-forest",
+          "color": "Forest",
+          "fabric": "12oz cotton canvas",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "passport": {
+        "source": "database",
+        "status": "draft",
+        "reviewedAt": null,
+        "assumed": {
+          "bom": 5,
+          "sizeChart": 0,
+          "construction": 4,
+          "labelsPackaging": 1
+        },
+        "openQuestions": [
+          "Confirm shell mill + exact weight/yield",
+          "Confirm thread brand + ticket",
+          "Supply + approve technical flats (front/back)",
+          "Confirm snap/button finish + supplier",
+          "Lined vs unlined body?"
+        ],
+        "bom": [
+          {
+            "spec": "Cotton canvas, 12oz cotton canvas",
+            "color": "Walnut",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Shell fabric",
+            "weightGsm": null,
+            "pantoneTcx": "18-1112 TCX",
+            "composition": "12oz cotton canvas"
+          },
+          {
+            "spec": "Corduroy contrast collar",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Collar",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "Cotton corduroy"
+          },
+          {
+            "spec": "Metal snaps/buttons",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Closure",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "Metal"
+          },
+          {
+            "spec": "Patch pockets",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Pockets",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "12oz cotton canvas"
+          },
+          {
+            "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Thread",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "100% polyester"
+          }
+        ],
+        "construction": [
+          {
+            "spi": 8,
+            "area": "Seams",
+            "detail": "Felled or double-topstitched",
+            "stitch": "Lockstitch 301",
+            "_assumed": true,
+            "seamClass": "LSc"
+          },
+          {
+            "spi": 8,
+            "area": "Front placket",
+            "detail": "Snap/button placket",
+            "stitch": "Lockstitch + bartack",
+            "_assumed": true,
+            "seamClass": "LSc"
+          },
+          {
+            "spi": 8,
+            "area": "Pockets",
+            "detail": "Patch, bartacked corners",
+            "stitch": "Lockstitch + bartack",
+            "_assumed": true,
+            "seamClass": "LSa"
+          },
+          {
+            "spi": 10,
+            "area": "Collar",
+            "detail": "Corduroy, topstitched",
+            "stitch": "Lockstitch 301",
+            "_assumed": true,
+            "seamClass": "LSa"
+          }
+        ],
+        "labelsPackaging": {
+          "fold": "Standard flat fold",
+          "hangTag": "MOA hangtag, looped at neck (per order)",
+          "polybag": "Individual recyclable polybag with suffocation warning",
+          "_assumed": true,
+          "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+          "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+          "sizeLabel": "Woven size tab, center-back neck below main label"
+        }
+      },
+      "measurements": {
+        "rows": [
+          {
+            "id": "pom-0",
+            "pom": "shoulder width",
+            "values": {
+              "L": 19.25,
+              "M": 18.75,
+              "S": 18.25,
+              "XL": 20,
+              "XXL": 20.75
+            }
+          },
+          {
+            "id": "pom-1",
+            "pom": "ACROSS FRONT-7\" DOWN FM HPS",
+            "values": {
+              "L": 17.5,
+              "M": 17,
+              "S": 16.5,
+              "XL": 18.25,
+              "XXL": 19
+            }
+          },
+          {
+            "id": "pom-2",
+            "pom": "ACROSS BACK-7\" DOWN FM HPS",
+            "values": {
+              "L": 18.5,
+              "M": 18,
+              "S": 17.5,
+              "XL": 19.25,
+              "XXL": 20
+            }
+          },
+          {
+            "id": "pom-3",
+            "pom": "CHEST-1\" DOWN FM ARMHOLE",
+            "values": {
+              "L": 50,
+              "M": 48,
+              "S": 46,
+              "XL": 52.5,
+              "XXL": 55
+            }
+          },
+          {
+            "id": "pom-4",
+            "pom": "WAIST-7\" DOWN FM ARMHOLE",
+            "values": {
+              "L": 48,
+              "M": 46,
+              "S": 44,
+              "XL": 50.5,
+              "XXL": 53
+            }
+          },
+          {
+            "id": "pom-5",
+            "pom": "SWEEP",
+            "values": {
+              "L": 45,
+              "M": 43,
+              "S": 41,
+              "XL": 47.5,
+              "XXL": 50
+            }
+          },
+          {
+            "id": "pom-6",
+            "pom": "FRONT BODY LENGTH-HPS",
+            "values": {
+              "L": 27.75,
+              "M": 27.25,
+              "S": 26.75,
+              "XL": 28.25,
+              "XXL": 28.75
+            }
+          },
+          {
+            "id": "pom-7",
+            "pom": "BACK BODY LENGTH",
+            "values": {
+              "L": 27,
+              "M": 26.5,
+              "S": 26,
+              "XL": 27.5,
+              "XXL": 28
+            }
+          },
+          {
+            "id": "pom-8",
+            "pom": "ARMHOLE",
+            "values": {
+              "L": 12.625,
+              "M": 12.25,
+              "S": 11.875,
+              "XL": 13.25,
+              "XXL": 13.875
+            }
+          },
+          {
+            "id": "pom-9",
+            "pom": "BICEP-1\" FM ARMHOLE",
+            "values": {
+              "L": 19.5,
+              "M": 19,
+              "S": 18.5,
+              "XL": 20.25,
+              "XXL": 21
+            }
+          },
+          {
+            "id": "pom-10",
+            "pom": "SLEEVE LENGTH",
+            "values": {
+              "L": 25.5,
+              "M": 25,
+              "S": 24.5,
+              "XL": 26,
+              "XXL": 26.5
+            }
+          },
+          {
+            "id": "pom-11",
+            "pom": "SLEEVE CUFF HEIGHT",
+            "values": {
+              "L": 3,
+              "M": 3,
+              "S": 3,
+              "XL": 3,
+              "XXL": 3
+            }
+          },
+          {
+            "id": "pom-12",
+            "pom": "SLEEVE OPENING-CLOSE",
+            "values": {
+              "L": 12.25,
+              "M": 12,
+              "S": 11.75,
+              "XL": 12.625,
+              "XXL": 13
+            }
+          },
+          {
+            "id": "pom-13",
+            "pom": "FRONT NECK DROP",
+            "values": {
+              "L": 4.625,
+              "M": 4.5,
+              "S": 4.375,
+              "XL": 4.875,
+              "XXL": 5.125
+            }
+          },
+          {
+            "id": "pom-14",
+            "pom": "BACK NECK DROP",
+            "values": {
+              "L": 0.75,
+              "M": 0.75,
+              "S": 0.75,
+              "XL": 0.75,
+              "XXL": 0.75
+            }
+          },
+          {
+            "id": "pom-15",
+            "pom": "COLLAR WIDTH",
+            "values": {
+              "L": 7.25,
+              "M": 7,
+              "S": 6.75,
+              "XL": 7.625,
+              "XXL": 8
+            }
+          },
+          {
+            "id": "pom-16",
+            "pom": "COLLAR GAP",
+            "values": {
+              "L": 3.75,
+              "M": 3.75,
+              "S": 3.75,
+              "XL": 3.75,
+              "XXL": 3.75
+            }
+          },
+          {
+            "id": "pom-17",
+            "pom": "COLLAR DEPTH",
+            "values": {
+              "L": 3.75,
+              "M": 3.75,
+              "S": 3.75,
+              "XL": 3.75,
+              "XXL": 3.75
+            }
+          },
+          {
+            "id": "pom-18",
+            "pom": "HEM HEIGHT",
+            "values": {
+              "L": 2.25,
+              "M": 2.25,
+              "S": 2.25,
+              "XL": 2.25,
+              "XXL": 2.25
+            }
+          },
+          {
+            "id": "pom-19",
+            "pom": "BOTTOM PKT LENGTH",
+            "values": {
+              "L": 7.25,
+              "M": 7,
+              "S": 7,
+              "XL": 7.25,
+              "XXL": 7.5
+            }
+          },
+          {
+            "id": "pom-20",
+            "pom": "PKT POSITION TO BOTTOM HEM",
+            "values": {
+              "L": 3.375,
+              "M": 3.25,
+              "S": 3.125,
+              "XL": 3.5,
+              "XXL": 3.625
+            }
+          },
+          {
+            "id": "pom-21",
+            "pom": "PKT TOP TO SIDE SEAM",
+            "values": {
+              "L": 6.5,
+              "M": 6.25,
+              "S": 6,
+              "XL": 6.75,
+              "XXL": 7
+            }
+          },
+          {
+            "id": "pom-22",
+            "pom": "PKT BOTTOM TO SIDE SEAM",
+            "values": {
+              "L": 2.25,
+              "M": 2,
+              "S": 1.75,
+              "XL": 2.5,
+              "XXL": 2.75
+            }
+          },
+          {
+            "id": "pom-23",
+            "pom": "SHOULDER FORWARD",
+            "values": {
+              "L": 1.25,
+              "M": 1.25,
+              "S": 1.25,
+              "XL": 1.25,
+              "XXL": 1.25
+            }
+          }
+        ],
+        "unit": "in",
+        "sampleSize": "M"
+      },
+      "calibration": {
+        "back": {
+          "cfX": 0.499,
+          "hpsY": 0.202,
+          "scaleY": 0.5,
+          "scaleAx": 0.093,
+          "scaleBx": 0.905,
+          "realInches": 30
+        },
+        "front": {
+          "cfX": 0.49862804878048783,
+          "hpsY": 0.24606326219512195,
+          "scaleY": 0.47570121951219513,
+          "scaleAx": 0.2646532012195122,
+          "scaleBx": 0.7301972179878049,
+          "realInches": 30.25
+        },
+        "model3d": {
+          "source": "spec",
+          "hemFrac": 1,
+          "hpsFrac": 0,
+          "cfWorldX": 0,
+          "fitUnits": 1.45,
+          "hpsWorldY": 0.725,
+          "confidence": "high",
+          "bodyLengthIn": 27.25,
+          "chestWidthIn": 48,
+          "inchesPerWorld": 18.7931
+        }
+      },
+      "zones": {
+        "back": [
+          {
+            "id": "yoke",
+            "box": {
+              "h": 0.08,
+              "w": 0.2,
+              "x": 0.4,
+              "y": 0.22
+            },
+            "label": "Upper back (yoke)"
+          },
+          {
+            "id": "center-back",
+            "box": {
+              "h": 0.34,
+              "w": 0.4,
+              "x": 0.3,
+              "y": 0.3
+            },
+            "label": "Center back"
+          },
+          {
+            "id": "lower-back",
+            "box": {
+              "h": 0.08,
+              "w": 0.2,
+              "x": 0.4,
+              "y": 0.64
+            },
+            "label": "Lower back"
+          },
+          {
+            "id": "left-sleeve-back",
+            "box": {
+              "h": 0.1,
+              "w": 0.06,
+              "x": 0.78,
+              "y": 0.4
+            },
+            "label": "Left sleeve (back)"
+          },
+          {
+            "id": "right-sleeve-back",
+            "box": {
+              "h": 0.1,
+              "w": 0.06,
+              "x": 0.16,
+              "y": 0.4
+            },
+            "label": "Right sleeve (back)"
+          }
+        ],
+        "front": [
+          {
+            "id": "left-chest",
+            "box": {
+              "h": 0.06753048780487803,
+              "w": 0.13870522103658534,
+              "x": 0.5399018673780489,
+              "y": 0.3639786585365854
+            },
+            "label": "Left chest"
+          },
+          {
+            "id": "right-chest",
+            "box": {
+              "h": 0.0636547256097561,
+              "w": 0.13286013719512202,
+              "x": 0.31773913871951226,
+              "y": 0.3650381097560976
+            },
+            "label": "Right chest"
+          },
+          {
+            "id": "left-sleeve",
+            "box": {
+              "h": 0.100796493902439,
+              "r": 345,
+              "w": 0.07533917682926827,
+              "x": 0.7607993521341464,
+              "y": 0.37175685975609757
+            },
+            "label": "Left sleeve"
+          },
+          {
+            "id": "right-sleeve",
+            "box": {
+              "h": 0.10910060975609753,
+              "r": 16,
+              "w": 0.08052686737804876,
+              "x": 0.16913490853658542,
+              "y": 0.35534298780487805
+            },
+            "label": "Right sleeve"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "track-jacket",
+      "name": "Nylon Track Jacket",
+      "sku": "TKJ101",
+      "moq": 50,
+      "vendorId": "vendor-best-cover",
+      "databaseCostUsd": 28,
+      "leadTimeDays": 50,
+      "priceTiers": [
+        {
+          "maxQty": 74,
+          "minQty": 50,
+          "perUnitUsd": 88
+        },
+        {
+          "maxQty": 149,
+          "minQty": 75,
+          "perUnitUsd": 78
+        },
+        {
+          "maxQty": 299,
+          "minQty": 150,
+          "perUnitUsd": 74
+        },
+        {
+          "maxQty": null,
+          "minQty": 300,
+          "perUnitUsd": 70
+        }
+      ],
+      "decorations": [
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Flat embroidery for chest, cap front, pocket, side seam, or patch placement.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "Raised silicone/rubber appliqué badge with a soft, tactile finish.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "tj-econ",
+          "tier": "econ",
+          "label": "Nylon Taslan self (4-ply)",
+          "liner": "Poly mesh liner",
+          "composition": "100% nylon Taslan, 4-ply",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "tj-prem",
+          "tier": "premium",
+          "label": "Japanese Taslan ripstop (DWR)",
+          "liner": "Cupro / Bemberg liner",
+          "composition": "100% nylon, 2-ply ripstop + DWR",
+          "upchargeUsd": 20
+        }
+      ],
+      "variants": [
+        {
+          "id": "track-jacket-jetBlack",
+          "color": "Jet Black",
+          "fabric": "recycled nylon shell",
+          "available": true
+        },
+        {
+          "id": "track-jacket-navy",
+          "color": "Navy",
+          "fabric": "recycled nylon shell",
+          "available": true
+        },
+        {
+          "id": "track-jacket-ink",
+          "color": "Ink",
+          "fabric": "recycled nylon shell",
+          "available": true
+        },
+        {
+          "id": "track-jacket-forest",
+          "color": "Forest",
+          "fabric": "recycled nylon shell",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "passport": {
+        "source": "database",
+        "status": "draft",
+        "reviewedAt": null,
+        "assumed": {
+          "bom": 5,
+          "sizeChart": 0,
+          "construction": 4,
+          "labelsPackaging": 1
+        },
+        "openQuestions": [
+          "Confirm shell mill + exact weight/yield",
+          "Confirm thread brand + ticket",
+          "Supply + approve technical flats (front/back)",
+          "Confirm zipper/snap brand + finish",
+          "Lining type (taffeta vs mesh) + fill?"
+        ],
+        "bom": [
+          {
+            "spec": "Nylon shell, recycled nylon shell",
+            "color": "Jet Black",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Shell fabric",
+            "weightGsm": null,
+            "pantoneTcx": "19-0303 TCX",
+            "composition": "recycled nylon shell"
+          },
+          {
+            "spec": "Taffeta or mesh",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Lining",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "Nylon/poly"
+          },
+          {
+            "spec": "CF zipper or snaps",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Closure",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "Metal/poly"
+          },
+          {
+            "spec": "Elastic or drawcord",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Hem",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": ""
+          },
+          {
+            "spec": "Spun polyester, Tkt 120 (seams) / Tkt 80 (topstitch)",
+            "color": "",
+            "_assumed": true,
+            "supplier": "Confirm w/ factory",
+            "component": "Thread",
+            "weightGsm": null,
+            "pantoneTcx": "",
+            "composition": "100% polyester"
+          }
+        ],
+        "construction": [
+          {
+            "spi": 10,
+            "area": "Seams",
+            "detail": "Bagged-out / serged",
+            "stitch": "Overlock 504 + topstitch",
+            "_assumed": true,
+            "seamClass": "SSa"
+          },
+          {
+            "spi": 10,
+            "area": "Closure",
+            "detail": "CF zipper set with topstitch (or snap placket)",
+            "stitch": "Lockstitch 301",
+            "_assumed": true,
+            "seamClass": "LSc"
+          },
+          {
+            "spi": null,
+            "area": "Stress points",
+            "detail": "Bartacked at pocket + placket",
+            "stitch": "Bartack",
+            "_assumed": true,
+            "seamClass": "—"
+          },
+          {
+            "spi": 10,
+            "area": "Cuffs",
+            "detail": "Elastic, rib, or adjustable",
+            "stitch": "Lockstitch",
+            "_assumed": true,
+            "seamClass": "EFb"
+          }
+        ],
+        "labelsPackaging": {
+          "fold": "Standard flat fold",
+          "hangTag": "MOA hangtag, looped at neck (per order)",
+          "polybag": "Individual recyclable polybag with suffocation warning",
+          "_assumed": true,
+          "careLabel": "Printed satin care label, sewn into left side seam — fiber content + care symbols + RN",
+          "mainLabel": "Woven damask main label, sewn at center-back neck (or per-order custom neck label)",
+          "sizeLabel": "Woven size tab, center-back neck below main label"
+        }
+      },
+      "measurements": {
+        "rows": [
+          {
+            "id": "pom-0",
+            "pom": "CHEST-1\" UNDER ARMHOLE",
+            "values": {
+              "L": 28.5,
+              "M": 27,
+              "S": 26,
+              "XL": 30,
+              "XS": 25,
+              "3XL": 33,
+              "XXL": 31.5
+            }
+          },
+          {
+            "id": "pom-1",
+            "pom": "SWEEP",
+            "values": {
+              "L": 26.5,
+              "M": 25,
+              "S": 24,
+              "XL": 28,
+              "XS": 23,
+              "3XL": 31,
+              "XXL": 29.5
+            }
+          },
+          {
+            "id": "pom-2",
+            "pom": "SHOULDER WIDTH",
+            "values": {
+              "L": 23,
+              "M": 22.25,
+              "S": 21.75,
+              "XL": 23.75,
+              "XS": 21.25,
+              "3XL": 25.25,
+              "XXL": 24.5
+            }
+          },
+          {
+            "id": "pom-3",
+            "pom": "FRONT ACROSS -7\" FM HPS",
+            "values": {
+              "L": 21.25,
+              "M": 20.5,
+              "S": 20,
+              "XL": 22,
+              "XS": 19.5,
+              "3XL": 23.5,
+              "XXL": 22.75
+            }
+          },
+          {
+            "id": "pom-4",
+            "pom": "BACK ACROSS -7\" FM HPS",
+            "values": {
+              "L": 22.25,
+              "M": 21.5,
+              "S": 21,
+              "XL": 23,
+              "XS": 20.5,
+              "3XL": 24.5,
+              "XXL": 23.75
+            }
+          },
+          {
+            "id": "pom-5",
+            "pom": "FRONT BODY LENGTH",
+            "values": {
+              "L": 27,
+              "M": 26,
+              "S": 25.5,
+              "XL": 28,
+              "XS": 25,
+              "3XL": 30,
+              "XXL": 29
+            }
+          },
+          {
+            "id": "pom-6",
+            "pom": "BACK BODY LENGTH",
+            "values": {
+              "L": 25.5,
+              "M": 24.5,
+              "S": 24,
+              "XL": 26.5,
+              "XS": 23.5,
+              "3XL": 28.5,
+              "XXL": 27.5
+            }
+          },
+          {
+            "id": "pom-7",
+            "pom": "HEM FOLED HEIGHT",
+            "values": {
+              "L": 1.25,
+              "M": 1.25,
+              "S": 1.25,
+              "XL": 1.25,
+              "XS": 1.25,
+              "3XL": 1.25,
+              "XXL": 1.25
+            }
+          },
+          {
+            "id": "pom-8",
+            "pom": "ARMHOLE DROP",
+            "values": {
+              "L": 12.875,
+              "M": 12.5,
+              "S": 12.25,
+              "XL": 13.25,
+              "XS": 12,
+              "3XL": 14,
+              "XXL": 13.625
+            }
+          },
+          {
+            "id": "pom-9",
+            "pom": "SLEEVE LENGTH-FROM CB",
+            "values": {
+              "L": 33.625,
+              "M": 33,
+              "S": 32.625,
+              "XL": 34.25,
+              "XS": 32.25,
+              "3XL": 35.5,
+              "XXL": 34.875
+            }
+          },
+          {
+            "id": "pom-10",
+            "pom": "BICEP",
+            "values": {
+              "L": 11.5,
+              "M": 11,
+              "S": 10.625,
+              "XL": 12,
+              "XS": 10.25,
+              "3XL": 13,
+              "XXL": 12.5
+            }
+          },
+          {
+            "id": "pom-11",
+            "pom": "SLEEVE OPENING EXTEND",
+            "values": {
+              "L": 6.25,
+              "M": 6,
+              "S": 5.75,
+              "XL": 6.5,
+              "XS": 5.5,
+              "3XL": 7,
+              "XXL": 6.75
+            }
+          },
+          {
+            "id": "pom-12",
+            "pom": "SLEEVE OPENING RELAX",
+            "values": {
+              "L": 4.75,
+              "M": 4.5,
+              "S": 4.25,
+              "XL": 5,
+              "XS": 4,
+              "3XL": 5.5,
+              "XXL": 5.25
+            }
+          },
+          {
+            "id": "pom-13",
+            "pom": "CUFF HEIGHT",
+            "values": {
+              "L": 1,
+              "M": 1,
+              "S": 1,
+              "XL": 1,
+              "XS": 1,
+              "3XL": 1,
+              "XXL": 1
+            }
+          },
+          {
+            "id": "pom-14",
+            "pom": "NECK WIDTH",
+            "values": {
+              "L": 7.875,
+              "M": 7.5,
+              "S": 7.25,
+              "XL": 8.25,
+              "XS": 7,
+              "3XL": 9,
+              "XXL": 8.625
+            }
+          },
+          {
+            "id": "pom-15",
+            "pom": "FRONT NECK DROP",
+            "values": {
+              "L": 4.125,
+              "M": 4,
+              "S": 3.875,
+              "XL": 4.25,
+              "XS": 3.75,
+              "3XL": 4.5,
+              "XXL": 4.375
+            }
+          },
+          {
+            "id": "pom-16",
+            "pom": "BACK NECK DROP",
+            "values": {
+              "L": 1,
+              "M": 1,
+              "S": 1,
+              "XL": 1,
+              "XS": 1,
+              "3XL": 1,
+              "XXL": 1
+            }
+          },
+          {
+            "id": "pom-17",
+            "pom": "SHOULDER FORWAR",
+            "values": {
+              "L": 0.625,
+              "M": 0.625,
+              "S": 0.625,
+              "XL": 0.625,
+              "XS": 0.625,
+              "3XL": 0.625,
+              "XXL": 0.625
+            }
+          },
+          {
+            "id": "pom-18",
+            "pom": "POCKET OPENING",
+            "values": {
+              "L": 7,
+              "M": 7,
+              "S": 7,
+              "XL": 7,
+              "XS": 7,
+              "3XL": 7,
+              "XXL": 7
+            }
+          },
+          {
+            "id": "pom-19",
+            "pom": "CB COLLAR HEIGHT",
+            "values": {
+              "L": 3,
+              "M": 3,
+              "S": 3,
+              "XL": 3,
+              "XS": 3,
+              "3XL": 3,
+              "XXL": 3
+            }
+          }
+        ],
+        "unit": "in",
+        "sampleSize": "M"
+      },
+      "calibration": {
+        "model3d": {
+          "source": "spec",
+          "cfWorldX": 0,
+          "fitUnits": 1.45,
+          "hpsWorldY": 0.725,
+          "confidence": "medium",
+          "bodyLengthIn": 26,
+          "chestWidthIn": 27,
+          "inchesPerWorld": 17.931
+        }
+      },
+      "zones": {
+        "back": [
+          {
+            "id": "yoke",
+            "box": {
+              "h": 0.08,
+              "w": 0.2,
+              "x": 0.3962223704268293,
+              "y": 0.2122903963414634
+            },
+            "label": "Upper back (yoke)"
+          },
+          {
+            "id": "center-back",
+            "box": {
+              "h": 0.34,
+              "w": 0.4,
+              "x": 0.3,
+              "y": 0.3
+            },
+            "label": "Center back"
+          },
+          {
+            "id": "left-sleeve-back",
+            "box": {
+              "h": 0.1,
+              "w": 0.06,
+              "x": 0.78,
+              "y": 0.4
+            },
+            "label": "Left sleeve (back)"
+          },
+          {
+            "id": "right-sleeve-back",
+            "box": {
+              "h": 0.1,
+              "w": 0.06,
+              "x": 0.16,
+              "y": 0.4
+            },
+            "label": "Right sleeve (back)"
+          }
+        ],
+        "front": [
+          {
+            "id": "left-chest",
+            "box": {
+              "h": 0.08000000000000002,
+              "w": 0.14720750762195123,
+              "x": 0.539962842987805,
+              "y": 0.3
+            },
+            "label": "Left chest"
+          },
+          {
+            "id": "right-chest",
+            "box": {
+              "h": 0.08055259146341465,
+              "w": 0.14894150152439023,
+              "x": 0.3010584984756097,
+              "y": 0.29944740853658536
+            },
+            "label": "Right chest"
+          },
+          {
+            "id": "left-sleeve",
+            "box": {
+              "h": 0.3416577743902438,
+              "r": 354,
+              "w": 0.10162538109756103,
+              "x": 0.7888033536585366,
+              "y": 0.36962271341463415
+            },
+            "label": "Left sleeve"
+          },
+          {
+            "id": "right-sleeve",
+            "box": {
+              "h": 0.3254725609756097,
+              "r": 7,
+              "w": 0.10076314786585366,
+              "x": 0.1039357850609756,
+              "y": 0.3642682926829269
+            },
+            "label": "Right sleeve"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "dad-hat",
+      "name": "Twill Dad Hat",
+      "sku": "CAP101",
+      "moq": 50,
+      "vendorId": "vendor-headwear-one",
+      "databaseCostUsd": 11,
+      "leadTimeDays": 42,
+      "priceTiers": [
+        {
+          "maxQty": 199,
+          "minQty": 50,
+          "perUnitUsd": 34
+        },
+        {
+          "maxQty": 499,
+          "minQty": 200,
+          "perUnitUsd": 31
+        },
+        {
+          "maxQty": 999,
+          "minQty": 500,
+          "perUnitUsd": 29
+        },
+        {
+          "maxQty": null,
+          "minQty": 1000,
+          "perUnitUsd": 28
+        }
+      ],
+      "decorations": [
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "dh-econ",
+          "tier": "econ",
+          "label": "Cotton twill",
+          "composition": "100% cotton twill",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "dh-prem",
+          "tier": "premium",
+          "label": "Nylon Taslan",
+          "composition": "100% nylon Taslan",
+          "upchargeUsd": 3
+        }
+      ],
+      "variants": [
+        {
+          "id": "dad-hat-jetBlack",
+          "color": "Jet Black",
+          "fabric": "cotton twill",
+          "available": true
+        },
+        {
+          "id": "dad-hat-bone",
+          "color": "Bone",
+          "fabric": "cotton twill",
+          "available": true
+        },
+        {
+          "id": "dad-hat-navy",
+          "color": "Navy",
+          "fabric": "cotton twill",
+          "available": true
+        },
+        {
+          "id": "dad-hat-forest",
+          "color": "Forest",
+          "fabric": "cotton twill",
+          "available": true
+        },
+        {
+          "id": "dad-hat-oxblood",
+          "color": "Oxblood",
+          "fabric": "cotton twill",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "ONE"
+      ],
+      "passport": {
+        "source": "missing",
+        "status": "missing",
+        "reviewedAt": null,
+        "assumed": null,
+        "openQuestions": []
+      },
+      "measurements": null,
+      "calibration": null,
+      "zones": {
+        "back": [
+          {
+            "id": "back-panel",
+            "box": {
+              "h": 0.18,
+              "w": 0.32,
+              "x": 0.34,
+              "y": 0.34
+            },
+            "label": "Back panel"
+          }
+        ],
+        "front": [
+          {
+            "id": "front-panel",
+            "box": {
+              "h": 0.1294054878048781,
+              "w": 0.3187185594512196,
+              "x": 0.34258669969512195,
+              "y": 0.39176067073170734
+            },
+            "label": "Front panel"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "rib-knit-beanie",
+      "name": "Rib Knit Beanie",
+      "sku": "BNI101",
+      "moq": 50,
+      "vendorId": "vendor-headwear-one",
+      "databaseCostUsd": 10,
+      "leadTimeDays": 38,
+      "priceTiers": [
+        {
+          "maxQty": 249,
+          "minQty": 50,
+          "perUnitUsd": 31
+        },
+        {
+          "maxQty": 499,
+          "minQty": 250,
+          "perUnitUsd": 28
+        },
+        {
+          "maxQty": 999,
+          "minQty": 500,
+          "perUnitUsd": 26
+        },
+        {
+          "maxQty": null,
+          "minQty": 1000,
+          "perUnitUsd": 25
+        }
+      ],
+      "decorations": [
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "fabricOptions": [
+        {
+          "id": "bn-econ",
+          "tier": "econ",
+          "label": "Cotton",
+          "composition": "100% cotton",
+          "upchargeUsd": 0
+        },
+        {
+          "id": "bn-prem",
+          "tier": "premium",
+          "label": "Cotton-cashmere",
+          "composition": "92% cotton / 8% cashmere",
+          "upchargeUsd": 8
+        }
+      ],
+      "variants": [
+        {
+          "id": "rib-knit-beanie-heatherGray",
+          "color": "Heather Gray",
+          "fabric": "acrylic rib knit",
+          "available": true
+        },
+        {
+          "id": "rib-knit-beanie-ink",
+          "color": "Ink",
+          "fabric": "acrylic rib knit",
+          "available": true
+        },
+        {
+          "id": "rib-knit-beanie-jetBlack",
+          "color": "Jet Black",
+          "fabric": "acrylic rib knit",
+          "available": true
+        },
+        {
+          "id": "rib-knit-beanie-navy",
+          "color": "Navy",
+          "fabric": "acrylic rib knit",
+          "available": true
+        },
+        {
+          "id": "rib-knit-beanie-forest",
+          "color": "Forest",
+          "fabric": "acrylic rib knit",
+          "available": true
+        },
+        {
+          "id": "rib-knit-beanie-natural",
+          "color": "Natural",
+          "fabric": "acrylic rib knit",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "ONE"
+      ],
+      "passport": {
+        "source": "missing",
+        "status": "missing",
+        "reviewedAt": null,
+        "assumed": null,
+        "openQuestions": []
+      },
+      "measurements": null,
+      "calibration": null,
+      "zones": {
+        "back": [
+          {
+            "id": "back-panel",
+            "box": {
+              "h": 0.18,
+              "w": 0.32,
+              "x": 0.34,
+              "y": 0.34
+            },
+            "label": "Back panel"
+          }
+        ],
+        "front": [
+          {
+            "id": "cuff",
+            "box": {
+              "h": 0.1,
+              "w": 0.36,
+              "x": 0.3191282393292683,
+              "y": 0.5998246951219512
+            },
+            "label": "Cuff face"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "standard-tote",
+      "name": "Standard Tote",
+      "sku": "TOT101",
+      "moq": 50,
+      "vendorId": "vendor-best-cover",
+      "databaseCostUsd": 12,
+      "leadTimeDays": 45,
+      "priceTiers": [
+        {
+          "maxQty": 249,
+          "minQty": 50,
+          "perUnitUsd": 38
+        },
+        {
+          "maxQty": 499,
+          "minQty": 250,
+          "perUnitUsd": 33
+        },
+        {
+          "maxQty": 999,
+          "minQty": 500,
+          "perUnitUsd": 32
+        },
+        {
+          "maxQty": null,
+          "minQty": 1000,
+          "perUnitUsd": 30
+        }
+      ],
+      "decorations": [
+        {
+          "id": "screen_print",
+          "label": "Screen print",
+          "maxColors": 4,
+          "description": "Flat, durable ink for front, back and sleeve artwork. Up to 4 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "back",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 4
+        },
+        {
+          "id": "embroidery",
+          "label": "Embroidery",
+          "maxColors": 12,
+          "description": "Stitched thread for chest logos, cap fronts and small marks. Up to 12 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "chest",
+            "cap front",
+            "pocket",
+            "side seam"
+          ],
+          "perUnitAdderUsd": 7.5
+        },
+        {
+          "id": "rubber_applique",
+          "label": "Rubber appliqué",
+          "maxColors": 3,
+          "description": "A raised rubber badge with a soft, tactile finish. Up to 3 colours.",
+          "isAvailable": true,
+          "placementZones": [
+            "front",
+            "chest",
+            "sleeve"
+          ],
+          "perUnitAdderUsd": 6.5
+        }
+      ],
+      "variants": [
+        {
+          "id": "standard-tote-natural",
+          "color": "Natural",
+          "fabric": "14oz cotton canvas",
+          "available": true
+        },
+        {
+          "id": "standard-tote-walnut",
+          "color": "Walnut",
+          "fabric": "14oz cotton canvas",
+          "available": true
+        },
+        {
+          "id": "standard-tote-jetBlack",
+          "color": "Jet Black",
+          "fabric": "14oz cotton canvas",
+          "available": true
+        }
+      ],
+      "sizes": [
+        "ONE"
+      ],
+      "passport": {
+        "source": "missing",
+        "status": "missing",
+        "reviewedAt": null,
+        "assumed": null,
+        "openQuestions": []
+      },
+      "measurements": null,
+      "calibration": null,
+      "zones": {
+        "back": [
+          {
+            "id": "panel-center-back",
+            "box": {
+              "h": 0.24,
+              "w": 0.4,
+              "x": 0.3,
+              "y": 0.4
+            },
+            "label": "Panel · center (back)"
+          }
+        ],
+        "front": [
+          {
+            "id": "panel-lower",
+            "box": {
+              "h": 0.190327743902439,
+              "w": 0.1316368140243902,
+              "x": 0.4300562118902439,
+              "y": 0.5849885670731707
+            },
+            "label": "Panel · lower"
+          }
+        ]
+      }
+    }
+  ]
+}

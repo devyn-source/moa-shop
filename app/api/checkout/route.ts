@@ -13,6 +13,8 @@ import { isPromoWithinWindow, PR_BOX_PROMO } from "@/lib/promo";
 import { apiError } from "@/lib/errors";
 import { inLaunchScope } from "@/lib/launch";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { currentCustomerEmail } from "@/lib/order-access";
+import { validateCheckoutSelection } from "@/lib/checkout-selection";
 import type { DecorationMethod, OrderInput, ShopOrder } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -74,6 +76,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsedContact.error.issues[0]?.message || "Check your contact and shipping details." }, { status: 400 });
     }
     const contact = parsedContact.data;
+    const email = await currentCustomerEmail();
+    if (!email) return NextResponse.json({ error: "Sign in required to order" }, { status: 401 });
+    if (contact.contactEmail !== email) return NextResponse.json({ error: "Use your signed-in account email so you can review your proof and manage this order." }, { status: 400 });
 
     // Confirm the paid-order receiver is ready before creating a checkout.
     const express = expressCheckoutEnabled();
@@ -83,7 +88,9 @@ export async function POST(request: Request) {
     // Express launch scope: only the production-ready styles (plus packaging
     // add-ons) can be ordered, whatever an old cart still holds.
     if (express) {
+      if (!["United States", "USA", "US"].includes(contact.shipToAddress.country)) return NextResponse.json({ error: "Express delivery is currently available in the United States" }, { status: 400 });
       for (const item of items) {
+        if (item.bundleId) return NextResponse.json({ error: "PR Box orders are not available in this launch" }, { status: 400 });
         const product = await getProductById(item.productId);
         if (product && product.slug in plateIndex && !item.bundleId && !item.mockupUrls) {
           return NextResponse.json({ error: `Open ${product.displayName} from your cart and save its design before checking out.` }, { status: 400 });
@@ -91,6 +98,7 @@ export async function POST(request: Request) {
         if (!product || !inLaunchScope(product)) {
           return NextResponse.json({ error: `${item.displayName || "One item"} is not available to order right now. Remove it from your cart to continue.` }, { status: 400 });
         }
+        validateCheckoutSelection(product, item);
       }
     }
 

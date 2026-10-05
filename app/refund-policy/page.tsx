@@ -12,7 +12,7 @@ export default function RefundPolicyPage() {
       <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-charcoal)", marginTop: 24, display: "grid", gap: 22 }}>
         <section>
           <h2 style={hStyle}>Before you approve your proof</h2>
-          <p>Cancel any time before approving your proof for a <strong>full refund</strong>, no questions asked. Until you approve, nothing has been produced.</p>
+          <p>Cancel your whole order from your account before approving any piece for a <strong>full refund</strong>, including sales tax. Until you approve, nothing has been produced. For orders with several pieces, automatic cancellation applies to the whole order. Once you approve a piece, contact us to discuss changes or cancellation.</p>
         </section>
         <section>
           <h2 style={hStyle}>After production begins</h2>

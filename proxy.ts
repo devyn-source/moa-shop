@@ -69,10 +69,9 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // 2. Order gate — must have a Clerk account to reach checkout/orders.
-  // EXPRESS_GUEST_CHECKOUT=1 lets Express customers submit an order without an
-  // account (checkout only; order history and reorder still need one).
-  const guestExpress = process.env.EXPRESS_GUEST_CHECKOUT === "1" && (pathname.startsWith("/checkout") || pathname.startsWith("/api/checkout"));
-  if (requiresAccount(req) && !guestExpress) {
+  // An account is required so every paid order has an owner who can review its
+  // proof and manage cancellation. The old guest-checkout override is retired.
+  if (requiresAccount(req)) {
     const { userId } = await auth();
     if (!userId) {
       // API calls get a 401; pages bounce to sign-up (the "sign up to order"

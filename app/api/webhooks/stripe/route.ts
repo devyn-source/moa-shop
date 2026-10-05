@@ -8,6 +8,7 @@ import { sendOrderConfirmation, sendProofApproval, sendPaymentIncomplete } from 
 import { generateProof } from "@/lib/proof";
 import { pushOrderToMoaOS } from "@/lib/catalog-fulfillment";
 import { trackServer } from "@/lib/analytics-server";
+import { handleExpressRefundUpdate } from "@/lib/express-refunds";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Signature verification failed: ${error instanceof Error ? error.message : ""}` }, { status: 400 });
   }
 
+  if (["refund.created", "refund.updated", "refund.failed"].includes(event.type)) {
+    try { await handleExpressRefundUpdate(event.data.object as Stripe.Refund); return NextResponse.json({ received: true }); }
+    catch { return NextResponse.json({ error: "Refund reconciliation needs retry" }, { status: 500 }); }
+  }
   const checkoutEvent = event.data.object as Stripe.Checkout.Session;
   if (checkoutEvent.metadata?.expressCheckoutId) {
     try {

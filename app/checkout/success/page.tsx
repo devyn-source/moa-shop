@@ -4,6 +4,7 @@ import { CartClear } from "@/components/CartClear";
 import { currency } from "@/lib/pricing";
 import { getOrderById } from "@/lib/store";
 import { PaidCheckout } from "./PaidCheckout";
+import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,8 @@ export default async function CheckoutSuccessPage({
   if (params.checkout) return <PaidCheckout checkoutId={params.checkout} token={params.token} sessionId={params.session_id} />;
   const ids = (params.orders ?? "").split(",").filter(Boolean);
   const fetched = await Promise.all(ids.map((id) => getOrderById(id)));
-  const orders = fetched.filter((o): o is NonNullable<typeof o> => o !== null);
+  const email = await currentCustomerEmail();
+  const orders = fetched.filter((o): o is NonNullable<typeof o> => o !== null && ownsOrder(o, email));
   const total = orders.reduce((s, o) => s + o.totalUsd, 0);
   const units = orders.reduce((s, o) => s + o.quantity, 0);
   const expressNumber = params.express || null;

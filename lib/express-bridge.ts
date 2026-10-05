@@ -14,7 +14,7 @@ export const expressCheckoutEnabled = () => process.env.EXPRESS_CHECKOUT === "1"
 
 type Contact = { contactName: string; contactEmail: string; contactPhone?: string; companyName: string };
 type Ship = { line1: string; line2: string; city: string; state: string; postalCode: string; country: string };
-export type ExpressPayment = { method: "stripe" | "sandbox"; id: string; amountUsd: number; paidAt: string };
+export type ExpressPayment = { method: "stripe" | "sandbox"; id: string; amountUsd: number; paidAt: string; taxUsd?: number };
 
 export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, shipToName: string, shipTo: Ship, notes?: string, payment?: ExpressPayment): Promise<{ ok: true; orderNumber: string } | { ok: false; error: string }> {
   const base = (process.env.MOAOS_EXPRESS_URL || "").replace(/\/$/, "");
@@ -52,7 +52,7 @@ export async function pushExpressOrder(orders: ShopOrder[], contact: Contact, sh
       qty: o.quantity,
       sizeBreakdown: o.sizeBreakdown,
       perUnitUsd: o.perUnitUsd,
-      totalUsd: o.totalUsd,
+      totalUsd: Math.round((o.totalUsd - o.taxUsd) * 100) / 100,
       bundleLabel: o.bundleLabel,
       bundleRole: o.bundleRole,
       wovenLabel: o.wovenLabel,

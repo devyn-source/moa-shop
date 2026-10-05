@@ -5,10 +5,13 @@ import { validSandboxToken, checkoutTotalCents } from "@/lib/express-payment";
 import { currency } from "@/lib/pricing";
 import { CartClear } from "@/components/CartClear";
 import { CheckoutRefresh } from "./CheckoutRefresh";
+import { currentCustomerEmail, ownsOrder } from "@/lib/order-access";
 
 export async function PaidCheckout({ checkoutId, token, sessionId }: { checkoutId: string; token?: string; sessionId?: string }) {
   const orders = await getCheckoutOrders(checkoutId);
   if (!orders.length) notFound();
+  const email = await currentCustomerEmail();
+  if (!orders.every((o) => ownsOrder(o, email))) notFound();
   const sandbox = orders.every((o) => o.checkoutMode === "express_sandbox");
   if (sandbox ? !validSandboxToken(checkoutId, token ?? "") : !sessionId || !orders.every((o) => o.stripeSessionId === sessionId)) notFound();
   const paid = orders.every((o) => o.paymentStatus === "paid" || o.paymentStatus === "simulated_paid");

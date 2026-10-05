@@ -10,7 +10,8 @@ export async function POST(request: Request) {
     const email = await currentCustomerEmail();
     if (!email) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
     const input = (await request.json()) as OrderInput;
-    const order = await createOrder(input);
+    if (input.contactEmail?.trim().toLowerCase() !== email) return NextResponse.json({ error: "Use your signed-in account email" }, { status: 400 });
+    const order = await createOrder({ ...input, contactEmail: email });
     return NextResponse.json({ id: order.id, orderNumber: order.orderNumber });
   } catch (error) {
     return apiError(error, { fallback: "Order failed.", status: 400 });

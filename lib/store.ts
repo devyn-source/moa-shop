@@ -364,6 +364,21 @@ export async function setOrderCheckout(id: string, checkout: Pick<ShopOrder, "ch
   if (error) throw new Error("Could not save checkout");
 }
 
+export async function setOrderTax(order: ShopOrder, sessionId: string, subtotalCents: number, taxCents: number): Promise<void> {
+  const current = await getOrderById(order.id);
+  if (!current || current.stripeSessionId !== sessionId) throw new Error("Tax session does not match order");
+  const snapshot = { source: "stripe_checkout" as const, sessionId, subtotalCents, taxCents, totalCents: subtotalCents + taxCents };
+  if (current.taxCalculation) {
+    if (JSON.stringify(current.taxCalculation) !== JSON.stringify(snapshot)) throw new Error("Paid tax snapshot changed");
+    return;
+  }
+  const { error } = await getSupabase().from("orders").update({ data: { ...current, taxUsd: taxCents / 100, totalUsd: snapshot.totalCents / 100, taxCalculation: snapshot } }).eq("id", current.id).eq("data", JSON.stringify(current));
+  if (error) throw new Error("Could not save checkout tax");
+  // Read back after CAS: a concurrent payment/refund write must not lose tax.
+  const saved = await getOrderById(order.id);
+  if (JSON.stringify(saved?.taxCalculation) !== JSON.stringify(snapshot)) throw new Error("Checkout changed while saving tax; retry payment confirmation");
+}
+
 // Merge a patch into the order's fulfillment mirror (MoaOS pipeline state).
 export async function setOrderFulfillment(
   id: string,
@@ -537,7 +552,8 @@ export async function markOrderCancelledRefunded(id: string, refundId: string | 
     updatedAt: now,
     statusLog: [...current.statusLog, { statusFrom: current.status, statusTo: "cancelled", note: refundId ? `Cancelled + refunded (${refundId}).` : "Cancelled.", createdAt: now }],
   };
-  await getSupabase().from("orders").update({ status: "cancelled", data: updated, updated_at: now }).eq("id", id);
+  const { error } = await getSupabase().from("orders").update({ status: "cancelled", data: updated, updated_at: now }).eq("id", id);
+  if (error) throw new Error("Could not save cancellation");
   return updated;
 }
 

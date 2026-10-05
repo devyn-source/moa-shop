@@ -4,6 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getExpressOrder, type ExpressOrderView } from "@/lib/express-account";
 import { currency } from "@/lib/pricing";
 import { ExpressDecision } from "@/components/ExpressDecision";
+import { ExpressCancellation } from "@/components/ExpressCancellation";
 
 export const dynamic = "force-dynamic";
 
@@ -49,14 +50,14 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
         </p>
       </header>
 
-      <ol aria-label="Order progress" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))`, gap: 6 }}>
+      {o.status !== "cancelled" ? <ol aria-label="Order progress" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))`, gap: 6 }}>
         {STEPS.map((s, i) => (
           <li key={s.key} style={{ display: "grid", gap: 6 }}>
             <span style={{ height: 4, borderRadius: 2, background: i <= at ? "#1E1E1E" : "rgba(30,30,30,.12)" }} />
             <span style={{ ...label, opacity: i <= at ? 1 : 0.45 }}>{s.label}</span>
           </li>
         ))}
-      </ol>
+      </ol> : null}
 
       <section style={{ display: "grid", gap: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
@@ -91,13 +92,24 @@ export default async function ExpressOrderPage({ params }: { params: Promise<{ n
         <p style={{ ...label, margin: 0 }}>Payment · one payment for the full order</p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <strong style={{ fontSize: 22 }}>{o.invoice.total ? currency(o.invoice.total) : "Order total"}</strong>
-          {o.invoice.paid ? <span style={label}>Paid</span>
+          {o.cancellation?.status === "succeeded" ? <span style={label}>{o.mode === "sandbox" ? "Test refund complete" : "Refund issued"}</span> : o.invoice.paid ? <span style={label}>Paid</span>
             : o.invoice.canPay ? <a className="button" href={o.invoice.payUrl || "#"}>Pay invoice</a>
             : <span style={{ fontSize: 12, opacity: 0.7 }}>{o.rounds.length ? "Payment pending" : "Arrives with your proof"}</span>}
         </div>
         {o.invoice.url ? <a href={o.invoice.url} style={{ fontSize: 12 }}>View invoice</a> : null}
+        {o.mode !== "sandbox" && o.invoice.tax != null ? <p style={{ margin: 0, fontSize: 12 }}>Includes {currency(o.invoice.tax)} sales tax.</p> : null}
         <p style={{ margin: 0, fontSize: 11, opacity: 0.6, lineHeight: 1.6 }}>By approving you confirm spelling, colours, placement and sizes. Screen colours may differ slightly from finished goods. Your first proof and one revision round are included. Production timing starts after every piece is approved.</p>
       </section>
+
+      {o.canCancel || o.cancellation ? <section style={{ ...card, display: "grid", gap: 12 }}>
+        <h2 style={{ margin: 0 }}>{o.cancellation ? "Cancellation and refund" : "Need to cancel?"}</h2>
+        <p style={{ margin: 0, fontSize: 13 }}>{o.cancellation
+          ? o.cancellation.status === "succeeded" ? o.mode === "sandbox" ? "Your test order is cancelled. No real charge or refund was made." : "Your order is cancelled and your full refund has been issued to the original payment method. Your bank may take 5 to 10 business days to display it."
+          : ["failed","canceled","requires_action"].includes(o.cancellation.status) ? "Your order is cancelled, but the refund needs attention. Contact production@magnumopus.agency for help."
+          : "Your order is cancelled. Refund processing is in progress; no pieces will enter production."
+          : "You can cancel the whole order for a full refund before approving any piece."}</p>
+        {o.canCancel || o.cancellation?.status === "requested" ? <ExpressCancellation number={o.orderNumber} retry={!!o.cancellation} /> : null}
+      </section> : null}
 
       {o.tracking ? (
         <section style={{ ...card, display: "grid", gap: 6 }}>

@@ -78,7 +78,7 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
     setAccountEmail(email);
     for (const [key, value] of [["contactName", name], ["contactEmail", email]]) {
       const field = formRef.current?.elements.namedItem(key || "");
-      if (field instanceof HTMLInputElement && !field.value && value) field.value = value;
+      if (field instanceof HTMLInputElement && value && (key === "contactEmail" || !field.value)) field.value = value;
     }
   }, []);
 
@@ -154,10 +154,10 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
         <form onSubmit={submit} ref={formRef} className="co-form" id="checkout-form" autoComplete="on" aria-busy={submitting}>
           {accountEmail ? <div className="co-identity"><span>Signed in as</span> {accountEmail}</div> : null}
           <section className="co-card" aria-labelledby="contact-heading">
-            <div className="co-card-head"><span className="co-section-number">01</span><div><h2 id="contact-heading">Contact</h2><p>Order updates and your proof go to this email.</p></div></div>
+            <div className="co-card-head"><span className="co-section-number">01</span><div><h2 id="contact-heading">Contact</h2><p>Order updates and your proof go to your account email.</p></div></div>
             <div className="co-grid">
               <label className="co-field" htmlFor="contact-name"><span className="label">Full name</span><input className="co-input" id="contact-name" name="contactName" required autoComplete="section-contact name" maxLength={120} /></label>
-              <label className="co-field" htmlFor="contact-email"><span className="label">Email address</span><input className="co-input" id="contact-email" name="contactEmail" type="email" required autoComplete="section-contact email" autoCapitalize="none" spellCheck={false} maxLength={200} /></label>
+              <label className="co-field" htmlFor="contact-email"><span className="label">Email address</span><input className="co-input" id="contact-email" name="contactEmail" type="email" readOnly={!!accountEmail} required autoComplete="section-contact email" autoCapitalize="none" spellCheck={false} maxLength={200} /></label>
               <label className="co-field" htmlFor="contact-phone"><span className="label">Phone <small>Optional</small></span><input className="co-input" id="contact-phone" name="contactPhone" type="tel" autoComplete="section-contact tel" maxLength={40} /></label>
               <label className="co-field" htmlFor="contact-company"><span className="label">Company <small>Optional</small></span><input className="co-input" id="contact-company" name="companyName" autoComplete="section-contact organization" maxLength={160} /></label>
             </div>
@@ -165,7 +165,7 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
           <section className="co-card" aria-labelledby="shipping-heading">
             <div className="co-card-head"><span className="co-section-number">02</span><div><h2 id="shipping-heading">Shipping address</h2><p>Where should we send your finished pieces?</p></div></div>
             <div className="co-grid">
-              <label className="co-field co-field--full" htmlFor="shipping-country"><span className="label">Country / region</span><select className="co-input co-native-select" id="shipping-country" name="country" autoComplete="section-shipping shipping country-name" defaultValue="United States" onChange={(e) => setCountry(e.target.value)} required>{COUNTRIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
+              <label className="co-field co-field--full" htmlFor="shipping-country"><span className="label">Country / region</span><select className="co-input co-native-select" id="shipping-country" name="country" autoComplete="section-shipping shipping country-name" defaultValue="United States" onChange={(e) => setCountry(e.target.value)} required>{(express ? COUNTRIES.slice(0, 1) : COUNTRIES).map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
               {country === "Other" ? <label className="co-field co-field--full" htmlFor="shipping-other-country"><span className="label">Country name</span><input className="co-input" id="shipping-other-country" name="otherCountry" required autoComplete="section-shipping shipping country-name" maxLength={80} /></label> : null}
               <label className="co-field co-field--full" htmlFor="shipping-recipient"><span className="label">Recipient <small>Optional</small></span><input className="co-input" id="shipping-recipient" name="shipToName" autoComplete="section-shipping shipping name" maxLength={160} placeholder="Same as contact name" /></label>
               <label className="co-field co-field--full" htmlFor="shipping-address"><span className="label">Street address</span><input className="co-input" id="shipping-address" name="line1" required autoComplete="section-shipping shipping address-line1" maxLength={200} /></label>
@@ -187,11 +187,11 @@ export function CheckoutClient({ express = false }: { express?: boolean }) {
               <div><h3>{item.displayName}</h3><p>{item.colorLabel} · {item.quantity.toLocaleString()} units</p><p>{item.decorationLabel}</p><strong>{currency(item.totalUsd)}</strong></div>
             </article>
           ))}</div>
-          <div className="co-total"><div><span>Order total</span><small>{count.toLocaleString()} units · {items.length} {items.length === 1 ? "style" : "styles"}</small></div><strong>{currency(total)}</strong></div>
+          <div className="co-total"><div><span>Subtotal</span><small>{count.toLocaleString()} units · {items.length} {items.length === 1 ? "style" : "styles"}</small></div><strong>{currency(total)}</strong></div>
           <label className="co-consent"><input type="checkbox" name="ipAttested" form="checkout-form" checked={ipAttested} onChange={(e) => setIpAttested(e.target.checked)} required /><span>I have the rights to use this artwork and agree to the <Link href="/terms" target="_blank">Terms</Link> and <Link href="/refund-policy" target="_blank">Refund Policy</Link>.</span></label>
           {error ? <p className="co-error" role="alert">{error}</p> : null}
           <button className="button button--lg button--full co-pay" type="submit" form="checkout-form" disabled={submitting || !ipAttested}>{submitting ? "Opening payment…" : "Continue to payment"}<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
-          <p className="co-payment-note">Pay for your order, then review your production proof. Nothing is made until you approve.</p>
+          <p className="co-payment-note">Applicable sales tax is calculated at payment. Pay for your order, then review your production proof. Nothing is made until you approve.</p>
           <div className="co-next"><span>After payment</span><h3>Your proof, then production.</h3><p>{express ? "We check every placement and prepare your proof by the end of the next business day. Review it or request a change from your account." : "We check your artwork and prepare your production proof for approval in your account."}</p></div>
           <div className="co-help"><InvoiceRequestDialog prefillEmail={accountEmail ?? ""} /><BespokeLine from="checkout" className="trust-note" /></div>
         </aside>
