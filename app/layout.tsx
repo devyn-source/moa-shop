@@ -13,12 +13,13 @@ import { AnalyticsProviders } from "@/components/AnalyticsProviders";
 import { PromoBanner } from "@/components/PromoBanner";
 import { ToastProvider } from "@/components/ToastProvider";
 import { launchMode } from "@/lib/launch";
+import { moaClerkAppearance, moaAuthLocalization } from "@/lib/clerk-appearance";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 function MaybeClerk({ children }: { children: React.ReactNode }) {
   if (!clerkConfigured) return <>{children}</>;
-  return <ClerkProvider>{children}</ClerkProvider>;
+  return <ClerkProvider appearance={moaClerkAppearance} localization={moaAuthLocalization} signInUrl="/sign-in" signUpUrl="/sign-up">{children}</ClerkProvider>;
 }
 
 const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://shop.magnumopus.agency";

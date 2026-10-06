@@ -1,26 +1,58 @@
-// MOA brand appearance for Clerk — terracotta primary, Archivo, warm linen card.
-// Shared by /sign-in and /sign-up so the two halves of the auth flow match.
+import type { ComponentProps } from "react";
+import type { SignIn } from "@clerk/nextjs";
+type Appearance = NonNullable<ComponentProps<typeof SignIn>["appearance"]>;
+
+// Shared tokens cover sign-in, verification, account menus and profile UI.
 export const moaClerkAppearance = {
   variables: {
     colorPrimary: "#B04731",
-    colorText: "#1E1E1E",
-    colorTextSecondary: "#8A8680",
+    colorPrimaryForeground: "#FFFFFF",
+    colorForeground: "#1E1E1E",
+    colorMutedForeground: "#6F6A63",
     colorBackground: "#FFFFFF",
-    colorInputBackground: "#FFFFFF",
-    colorInputText: "#1E1E1E",
+    colorInput: "#FFFFFF",
+    colorInputForeground: "#1E1E1E",
+    colorBorder: "#E2DED6",
+    colorMuted: "#EEEAE3",
     colorDanger: "#B04731",
-    borderRadius: "0.6rem",
-    fontFamily: "Archivo, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontSize: "0.95rem",
+    colorSuccess: "#3D7A4A",
+    colorRing: "rgba(176, 71, 49, 0.25)",
+    borderRadius: "0.5rem",
+    fontFamily: '"Archivo Text", -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamilyButtons: '"Archivo", sans-serif',
+    fontSize: "0.9375rem",
   },
   elements: {
-    rootBox: "moa-clerk-root",
-    card: "moa-clerk-card",
     headerTitle: "moa-clerk-title",
     headerSubtitle: "moa-clerk-subtitle",
     socialButtonsBlockButton: "moa-clerk-social",
+    socialButtons: "moa-clerk-socials",
+    socialButtonsBlockButtonText: "moa-clerk-social-text",
     formButtonPrimary: "moa-clerk-primary",
     formFieldInput: "moa-clerk-input",
+    formFieldLabel: "moa-clerk-label",
+    otpCodeFieldInput: "moa-clerk-otp",
     footerActionLink: "moa-clerk-link",
+    footerAction: "moa-clerk-footer-action",
+    footerActionText: "moa-clerk-footer-text",
+    form: "moa-clerk-form",
+    formFieldRow: "moa-clerk-field-row",
   },
-} as const;
+} satisfies Appearance;
+
+export const moaAuthAppearance = {
+  ...moaClerkAppearance,
+  options: { socialButtonsVariant: "blockButton", socialButtonsPlacement: "top" },
+  elements: {
+    ...moaClerkAppearance.elements,
+    rootBox: "moa-auth-root",
+    cardBox: "moa-auth-card-box",
+    card: "moa-auth-card",
+    footer: "moa-auth-footer",
+  },
+} satisfies Appearance;
+
+export const moaAuthLocalization = {
+  signIn: { start: { title: "Welcome back", titleCombined: "Welcome back", subtitle: "", subtitleCombined: "" } },
+  signUp: { start: { title: "Create an account", titleCombined: "Create an account", subtitle: "", subtitleCombined: "" } },
+};

@@ -161,6 +161,13 @@ Roll back application code only after confirming compatibility with saved order/
 
 Watchdog installation follows [Supabase Cron](https://supabase.com/docs/guides/cron/quickstart). It detects missed Vercel jobs but cannot report a complete Supabase outage by itself; an external availability monitor remains required.
 
+## Customer account design, October 5 evening
+
+- Sign-in and sign-up share a compact MOA layout with Archivo typography, cream, charcoal and terracotta, a single studio image on desktop, and a focused form on mobile. Promotional paragraphs and feature lists were removed after Devyn's design feedback.
+- Clerk verification and recovery screens inherit the shared appearance. New standalone sign-ups have a short authenticated welcome page; explicit checkout return destinations retain priority.
+- Local browser checks passed at 390px: no truncated provider labels, required-field validation, sign-in navigation, and checkout-to-sign-up redirect preservation (including the sign-in link). Typecheck, all 149 tests and production build passed.
+- These checks cover the interface, not completed production sign-up or Google account acceptance. Production Clerk activation remains a separate open gate. Payment and fulfillment sandbox settings are unchanged.
+
 ## Supplier-origin evidence
 
 Devyn reconfirmed direct overseas-factory delivery. Drive invoice BEST20260403-11, dated April 3, 2026, identifies BEST COVER TRADING (HONGKONG) CO., LIMITED and prints No.782, Gangchengdadao, Zhangjiagang City, Jiangsu, China (invoice spelling: ZHANGJIAGNG). [Source invoice](https://drive.google.com/file/d/1KayoVOmnmBySJKwcLGZocyzyzgxplxmb/view). This is supplier-address evidence, not confirmation that every launch style dispatches from that address. No invoice bank details are reproduced and no factory was contacted.
