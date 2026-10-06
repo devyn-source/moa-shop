@@ -22,7 +22,17 @@ Three separate synthetic sandbox orders exercised approval/cancellation races in
 
 Evidence is saved in [stage-4-isolated-rehearsal.json](stage-4-isolated-rehearsal.json). The final test deployment was `dpl_9BTMrnkTwxcqaB28VWxToE82Xvte`. Private runner scripts and synthetic raw evidence remain outside the repository under `/Users/moabot/.config/moa-stage4/`. Cleanup is complete: the TEST webhook is disabled, both temporary Supabase databases and Vercel projects are deleted, and both synthetic Clerk users are deleted. The unclaimed temporary Clerk development instance remains without test users. Neither production payment mode nor production shop Clerk was changed.
 
-149 shop tests, type checking, and the local and isolated deployment builds pass. The backend's 43 tests and isolated deployment build passed. Source hardening also separates authenticated machine endpoints from Clerk availability and requires verified primary emails for customer history, portal and proof decisions. Publication status is recorded below after deployment verification.
+149 shop tests, type checking, and the local and isolated deployment builds pass. The backend's 43 tests and isolated deployment build passed. Source hardening also separates authenticated machine endpoints from Clerk availability and requires verified primary emails for customer history, portal and proof decisions. Published to shop production at commit `23d0ce5`, READY deployment `moa-shop-rjo2wua93-devyn-9049s-projects.vercel.app`. The authenticated post-deployment audit confirms Sandbox simulation, working Redis and backend connectivity, and no unresolved payment/refund queues. Backend commit `dcf04bc` is pushed only to `express-lane`; MoaOS main is untouched and the production shop retains its reviewed immutable backend target.
+
+## Latest production follow-up, October 5 evening
+
+Signed into Clerk through Devyn's MOA Google account and verified the shop application `app_3EjVOKNpmFJAB3bCcohfPczbXcf` (display name Magnum Opus Supply), with the existing development instance and Devyn/Tyler accounts. The MOA internal, vendor and client portals remain separate applications. Browser access is now available; the saved CLI account is still unrelated and was not used for MOA mutations. The Create production instance form is prepared with Clone development instance selected. Automatic approval review rejected Continue as production-instance creation with possible account/billing impact. Devyn's explicit approval is requested and pending; no production instance has been created.
+
+The MOA Clerk workspace displays an outstanding-invoice warning asking for payment to avoid service disruption. No invoice payment or billing change was performed.
+
+Devyn reconfirmed direct shipment from the overseas factory to each customer. A Los Angeles office or registration address alone therefore does not resolve physical shipment origin. Factory dispatch address(es), category classification and registration/address reconciliation remain open; live Stripe Tax settings are unchanged. See [Stripe head-office setup](https://docs.stripe.com/tax/set-up) and [ship-from calculation input](https://docs.stripe.com/api/tax/calculations/create).
+
+The post-deployment monitor correctly surfaces an overdue proof on sandbox order EXP-1010. It remains an open operator-review item, not a passed drill or a resolved incident. No alert was sent.
 
 ## Remaining Stage 4 closure work
 

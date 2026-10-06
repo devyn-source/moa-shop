@@ -211,5 +211,14 @@
     "http": 200,
     "shopLinesRemainRefunded": 2,
     "backendRemainsCancelled": true
+  },
+  "publication": {
+    "shopCommit": "23d0ce5",
+    "shopDeployment": "https://moa-shop-rjo2wua93-devyn-9049s-projects.vercel.app",
+    "shopStatus": "READY",
+    "productionMode": "Sandbox simulation",
+    "backendCommit": "dcf04bc",
+    "backendBranch": "express-lane",
+    "moaosMainMerged": false
   }
 }
