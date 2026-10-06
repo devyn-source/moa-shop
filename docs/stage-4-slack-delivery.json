@@ -1,0 +1,12 @@
+{
+  "status": "delivered",
+  "channel": "C0C793D39K6",
+  "providerId": "C0C793D39K6:1791308146.194589",
+  "permalink": "https://magnumopusagency.slack.com/archives/C0C793D39K6/p1791308146194589",
+  "verification": "Native Slack accessibility readback of private moa-shop channel: exact approved message visible from Claude-CLI at 10:35:46 AM",
+  "duplicate": false,
+  "attachments": [],
+  "historyApi": "missing_scope; no scopes added",
+  "incidentAcknowledged": false,
+  "approvedContentHash": "fcbf1730821431b92e113bab5431f6fd772cca088e10e958562990e4f84fd6de"
+}

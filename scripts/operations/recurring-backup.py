@@ -85,7 +85,10 @@ class Runner:
         save(self.root / 'state.json', self.state)
 
     def command(self, args, timeout=120, json_result=True):
-        result = subprocess.run(args, cwd=self.repo, capture_output=True, timeout=timeout, check=False)
+        # gws deliberately restricts file upload/download paths to its cwd.
+        # Keep that boundary around private backup files, outside the source repo.
+        directory = self.root if args[0] == self.config['gws'] else self.repo
+        result = subprocess.run(args, cwd=directory, capture_output=True, timeout=timeout, check=False)
         if result.returncode:
             raise RuntimeError('Subprocess failed; private output suppressed')
         return json.loads(result.stdout) if json_result else result.stdout

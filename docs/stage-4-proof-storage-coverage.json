@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-06T17:38:59.270Z",
+  "uniqueUrlReferences": 6,
+  "storageObjectsPresentInVerifiedArchive": 5,
+  "missingStorageObjects": 0,
+  "versionedPublicAssetsVerified": 1,
+  "uncoveredReferences": 0,
+  "scope": "All currently saved Express order payload/artwork and proof-round URL references; existing records are sandbox only; no files or records changed",
+  "staticAsset": "app/icon.svg matches served sandbox proof placeholder"
+}

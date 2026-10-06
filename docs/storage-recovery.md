@@ -60,6 +60,8 @@ Each capture verifies the signed-in Drive identity, owner-only permissions on bo
 
 Status, the last successful manifest summary, pending archive and bounded working files live at `/Users/moabot/.local/share/moa-backups/scheduled`. Completed temporary local archives are removed only after Drive verification. Cloud archives are retained; no automatic deletion policy is enabled. Review retention before accumulated storage becomes material. Free capacity was checked under the existing Drive plan; no upgrade was made.
 
+The installed runner's first completed capture is [the October 6 recurring archive](https://drive.google.com/file/d/1wyaZopIZaEtrre2L6_KwNO3fiDFAnZkz/view), with 197 objects, owner-only access and downloaded SHA-256 `567d9f9ebcd93d86eed3c7fb73a96166df52df92c5a47c08d2e1e5a0cade5efd`. Initial failures remained visible in status. The successful launchd-managed retry resumed the pending verified capture after the Drive working-directory correction; no second archive was created for that run. This verifies the runner and Drive delivery, while long-term daily reliability still requires observation. [Evidence](stage-4-recurring-backup.json).
+
 ```sh
 python3 scripts/operations/recurring-backup.py status /Users/moabot/.config/moa-backup-scheduler/config.json
 python3 scripts/operations/recurring-backup.py run /Users/moabot/.config/moa-backup-scheduler/config.json

@@ -10,6 +10,16 @@ spec.loader.exec_module(backup)
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_drive_runs_within_private_archive_directory(self):
+        runner = backup.Runner({'stateRoot': '/private/backups', 'repository': '/code', 'gws': '/bin/gws'})
+        with patch.object(backup.subprocess, 'run') as run:
+            run.return_value.returncode = 0
+            run.return_value.stdout = b'{}'
+            runner.command(['/bin/gws', 'drive', 'files', 'create'])
+            self.assertEqual(run.call_args.kwargs['cwd'], Path('/private/backups'))
+            runner.command(['/bin/node', 'backup.mjs'])
+            self.assertEqual(run.call_args.kwargs['cwd'], Path('/code'))
+
     def test_health_rejects_missing_stale_future_or_failed(self):
         self.assertFalse(backup.health({}, 1000000)['healthy'])
         self.assertFalse(backup.health({'lastSuccessAt': 1}, 1000000)['healthy'])

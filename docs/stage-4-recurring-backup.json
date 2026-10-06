@@ -1,0 +1,35 @@
+{
+  "runId": "e7bcd766-811e-4b18-b057-cdaeff727cc9",
+  "createdAt": 1791308387.711024,
+  "sha256": "567d9f9ebcd93d86eed3c7fb73a96166df52df92c5a47c08d2e1e5a0cade5efd",
+  "md5": "cf002c72f9862ccb8b9a2c2aa85599ee",
+  "size": 114053120,
+  "reports": [
+    {
+      "profile": "shop",
+      "objectCount": 194,
+      "bytes": 113572995,
+      "verified": true,
+      "keyId": "7712e232fb57642a",
+      "capturedAt": "2026-10-06T17:39:38.708Z"
+    },
+    {
+      "profile": "backend",
+      "objectCount": 3,
+      "bytes": 210,
+      "verified": true,
+      "keyId": "7712e232fb57642a",
+      "capturedAt": "2026-10-06T17:39:43.010Z"
+    }
+  ],
+  "driveFileId": "1wyaZopIZaEtrre2L6_KwNO3fiDFAnZkz",
+  "verifiedAt": 1791308530.374562,
+  "ownerOnly": true,
+  "roundtripVerified": true,
+  "scheduler": "com.moa.catalog-storage-backup",
+  "schedule": "Checks at login and minute 36 of each hour; capture only when last success is at least 24 hours old",
+  "lastExecutionTrigger": "launchctl retry after working-directory correction",
+  "dependsOnMac": true,
+  "independentBackupWatchdog": false,
+  "initialFailuresDetected": true
+}

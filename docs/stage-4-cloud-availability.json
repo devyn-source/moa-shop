@@ -1,0 +1,44 @@
+{
+  "id": "3pcoIJotE7sgBUP8",
+  "name": "MOA Catalog availability observations",
+  "active": true,
+  "versionId": "59837795-0bae-45ef-8505-75fa0e12532c",
+  "cron": "4,19,34,49 * * * *",
+  "executionBudgetPerDay": 96,
+  "credentialsConfigured": false,
+  "messagesConfigured": false,
+  "executions": [
+    {
+      "id": "21018",
+      "status": "success",
+      "mode": "trigger",
+      "startedAt": "2026-10-06T17:49:00.149Z",
+      "stoppedAt": "2026-10-06T17:49:06.144Z",
+      "result": {
+        "checkedAt": "2026-10-06T17:49:06.143Z",
+        "healthy": true,
+        "checks": [
+          {
+            "name": "Storefront",
+            "status": 200,
+            "healthy": true
+          },
+          {
+            "name": "Sign-in",
+            "status": 200,
+            "healthy": true
+          },
+          {
+            "name": "Dependencies",
+            "status": 200,
+            "healthy": true
+          }
+        ],
+        "notificationsSent": false
+      },
+      "lastNodeExecuted": "Availability result"
+    }
+  ],
+  "unattendedRunVerified": true,
+  "source": "scripts/operations/n8n-availability.mjs"
+}
