@@ -1,24 +1,28 @@
 {
-  "checkedAt": "2026-10-06T15:35:48.926Z",
+  "checkedAt": "2026-10-06T15:50:36.708Z",
   "healthy": true,
   "checks": [
     {
       "name": "Storefront",
       "status": 200,
       "healthy": true,
-      "durationMs": 1084
+      "durationMs": 877
     },
     {
       "name": "Sign-in",
       "status": 200,
       "healthy": true,
-      "durationMs": 1806
+      "durationMs": 1372
     },
     {
       "name": "Shop database and backend",
       "status": 200,
       "healthy": true,
-      "durationMs": 3738
+      "durationMs": 1866
     }
-  ]
+  ],
+  "trigger": "workflow_dispatch",
+  "runUrl": "https://github.com/devyn-source/moa-shop/actions/runs/37490866839",
+  "scheduleInstalled": true,
+  "scheduledTriggerObserved": false
 }
