@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { isDeepStrictEqual } from "node:util";
 import { calculateOrderPrice, round2 } from "./pricing";
 import { getSupabase, orderLookupColumn } from "./supabase";
 import { seedProducts, seedVendors } from "./seed";
@@ -369,14 +370,15 @@ export async function setOrderTax(order: ShopOrder, sessionId: string, subtotalC
   if (!current || current.stripeSessionId !== sessionId) throw new Error("Tax session does not match order");
   const snapshot = { source: "stripe_checkout" as const, sessionId, subtotalCents, taxCents, totalCents: subtotalCents + taxCents };
   if (current.taxCalculation) {
-    if (JSON.stringify(current.taxCalculation) !== JSON.stringify(snapshot)) throw new Error("Paid tax snapshot changed");
+    // JSONB can reorder object keys on persistence. Compare values, not serialization.
+    if (!isDeepStrictEqual(current.taxCalculation, snapshot)) throw new Error("Paid tax snapshot changed");
     return;
   }
   const { error } = await getSupabase().from("orders").update({ data: { ...current, taxUsd: taxCents / 100, totalUsd: snapshot.totalCents / 100, taxCalculation: snapshot } }).eq("id", current.id).eq("data", JSON.stringify(current));
   if (error) throw new Error("Could not save checkout tax");
   // Read back after CAS: a concurrent payment/refund write must not lose tax.
   const saved = await getOrderById(order.id);
-  if (JSON.stringify(saved?.taxCalculation) !== JSON.stringify(snapshot)) throw new Error("Checkout changed while saving tax; retry payment confirmation");
+  if (!isDeepStrictEqual(saved?.taxCalculation, snapshot)) throw new Error("Checkout changed while saving tax; retry payment confirmation");
 }
 
 // Merge a patch into the order's fulfillment mirror (MoaOS pipeline state).

@@ -1,6 +1,6 @@
 {
-  "recordedAt": "2026-10-06T02:53:15.479Z",
-  "status": "awaiting_user_test_payment",
+  "recordedAt": "2026-10-06T03:05:54.069749+00:00",
+  "status": "deployed_financial_and_fulfillment_rehearsal_passed",
   "productionRecordsCopied": false,
   "productionCredentialsCopied": false,
   "testDatabases": {
@@ -8,7 +8,7 @@
     "backend": "eebmgvlfrlduykjhbnsb"
   },
   "deployments": {
-    "shop": "https://moa-stage4-shop-20261005-8y7wa9zrk-devyn-9049s-projects.vercel.app",
+    "shop": "https://moa-stage4-shop-20261005-4foujyc9u-devyn-9049s-projects.vercel.app",
     "backend": "https://moa-stage4-backend-20261005-3duwvrkmh-devyn-9049s-projects.vercel.app"
   },
   "schemaHashes": {
@@ -25,7 +25,7 @@
     "taxCents": 53915,
     "totalCents": 679015,
     "lines": 2,
-    "paid": false
+    "paid": true
   },
   "abandoned": {
     "at": "2026-10-06T02:51:07.467Z",
@@ -38,10 +38,178 @@
   "backendFaultInjection": "SELECT revoked from service_role on isolated express_orders",
   "outboundMessagesSent": 0,
   "remaining": [
-    "hosted payment click",
-    "paid handoff recovery",
-    "real database refund and approval race",
-    "fulfillment lifecycle",
-    "production identity and operator browser acceptance"
-  ]
+    "production Clerk provisioning, DNS and real-account acceptance",
+    "production tax origin and classification review",
+    "operator and backup screen drills",
+    "external availability monitoring and approved alert delivery",
+    "stable Express backend production hosting",
+    "backend full migration-history baseline repair"
+  ],
+  "decline": {
+    "at": "2026-10-06T03:05:07.030Z",
+    "paymentIntent": "pi_3UNOVZDfm0wj0XMZ14c3CRSr",
+    "declineEvents": [
+      {
+        "id": "evt_3UNOVZDfm0wj0XMZ1UqUhzOv",
+        "type": "payment_intent.payment_failed",
+        "code": "card_declined",
+        "declineCode": "generic_decline"
+      }
+    ]
+  },
+  "outage": {
+    "at": "2026-10-06T03:01:24.217Z",
+    "paymentStatus": "paid",
+    "shopPaidLines": 2,
+    "backendHandoffs": 0,
+    "totalCents": 679015,
+    "taxCents": 53915,
+    "webhookDuringOutage": {
+      "status": 500,
+      "data": {
+        "error": "Paid order handoff needs retry"
+      }
+    }
+  },
+  "handoff": {
+    "at": "2026-10-06T03:01:59.323Z",
+    "number": "EXP-1001",
+    "projectId": "864bc4bc-fee8-4c71-92ff-5ed0c9214e26",
+    "backendOrders": 1,
+    "paymentRecords": 1,
+    "replayHttp": 200,
+    "duplicateHttp": [
+      200,
+      200,
+      200
+    ],
+    "totalCents": 679015
+  },
+  "ownership": {
+    "at": "2026-10-06T03:02:21.170Z",
+    "signedInWrongOwnerCancel": 404,
+    "signedInWrongOwnerApproval": 404,
+    "ownerRead": 200,
+    "otherRead": 404,
+    "customerPortal": {
+      "ownerHttp": 200,
+      "ownerOrderRendered": true,
+      "otherHttp": 200,
+      "otherStreamedNotFound": true,
+      "otherOrderDataAbsent": true
+    }
+  },
+  "refund-lost-confirmation": {
+    "at": "2026-10-06T03:03:12.724Z",
+    "http": 503,
+    "shopStatus": "requested",
+    "savedRefundId": null,
+    "processorRefundId": "re_3UNOVZDfm0wj0XMZ1otdPzIV",
+    "processorStatus": "succeeded",
+    "refundCount": 1,
+    "amountCents": 679015
+  },
+  "refund-outage": {
+    "at": "2026-10-06T03:04:15.751Z",
+    "http": 503,
+    "refundId": "re_3UNOVZDfm0wj0XMZ1otdPzIV",
+    "amountCents": 679015,
+    "status": "succeeded",
+    "backendSynced": false
+  },
+  "refund-recovery": {
+    "at": "2026-10-06T03:05:05.870Z",
+    "recoveryHttp": 200,
+    "recovery": {
+      "attempted": 1,
+      "recovered": 1,
+      "pending": 0,
+      "failed": 0,
+      "hasMore": false
+    },
+    "duplicateHttp": [
+      200,
+      200
+    ],
+    "refundCount": 1,
+    "amountCents": 679015,
+    "status": "succeeded",
+    "backend": {
+      "status": "cancelled",
+      "cancellation": {
+        "status": "succeeded",
+        "refundId": "re_3UNOVZDfm0wj0XMZ1otdPzIV",
+        "amountUsd": 6790.15,
+        "paymentId": "cs_test_b1hcCAY0BCrv69v9473CVn13Jy0Vk85DT3e67eBQOOyyEfZ2WIiG39MCGT",
+        "updatedAt": "2026-10-06T03:05:04.593013+00:00",
+        "requestedAt": "2026-10-06T03:03:10.682735+00:00"
+      }
+    }
+  },
+  "race": {
+    "at": "2026-10-06T03:04:04.972Z",
+    "fixturePayments": "synthetic sandbox, no Stripe charge",
+    "races": [
+      {
+        "number": "EXP-1002",
+        "approvalHttp": 503,
+        "cancelHttp": 200,
+        "winner": "cancellation"
+      },
+      {
+        "number": "EXP-1003",
+        "approvalHttp": 409,
+        "cancelHttp": 200,
+        "winner": "cancellation"
+      },
+      {
+        "number": "EXP-1004",
+        "approvalHttp": 200,
+        "cancelHttp": 409,
+        "winner": "approval"
+      }
+    ]
+  },
+  "fulfillment": {
+    "at": "2026-10-06T03:04:11.833Z",
+    "number": "EXP-1005",
+    "syntheticOnly": true,
+    "stage": "delivered",
+    "eventCount": 8,
+    "paidAndApprovedGate": true,
+    "postApprovalCancellationBlocked": true,
+    "holdGate": true,
+    "staleVersionRejected": true,
+    "duplicateOperationDeduplicated": true,
+    "immutableApprovedPack": true,
+    "mailDeliveries": 0
+  },
+  "fix": {
+    "file": "lib/store.ts",
+    "issue": "JSONB key reordering broke tax snapshot equality and payment replay",
+    "resolution": "Compare snapshot values independently of object key order",
+    "regressionTests": 3
+  },
+  "validation": {
+    "shopTests": 149,
+    "shopTypecheck": "passed",
+    "shopBuild": "passed",
+    "backendTests": 43,
+    "isolatedDeployments": "ready"
+  },
+  "cleanup": {
+    "at": "2026-10-06T03:07:56.578114+00:00",
+    "status": "complete",
+    "testWebhookDisabled": true,
+    "shopDatabaseDeleted": true,
+    "backendDatabaseDeleted": true,
+    "temporaryVercelProjectsDeleted": 2,
+    "syntheticClerkUsersDeleted": 2,
+    "temporaryClerkInstance": "unclaimed development instance remains without test users"
+  },
+  "latePaidEventAfterRefund": {
+    "http": 200,
+    "shopLinesRemainRefunded": 2,
+    "backendRemainsCancelled": true
+  }
 }
