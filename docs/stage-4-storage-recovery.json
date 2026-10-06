@@ -1,0 +1,41 @@
+{
+  "observedDate": "2026-10-06",
+  "status": "manual-snapshot-verified",
+  "driveFolderId": "1IGbP1f78FSkJXOY6GopJPNJHwm3e2YA2",
+  "driveFileId": "1UIA3keysnVpEK1L5DYo-ETNNZRblwRNf",
+  "permissions": "Devyn only; owner; no other principals",
+  "archiveBytes": 114053120,
+  "archiveSha256": "98f2eec2bc9d563277b78e3de8cfd950e1c08ee3f1bfffae887881959c6395b3",
+  "driveMd5MatchesLocal": true,
+  "downloadedSha256MatchesLocal": true,
+  "keyId": "7712e232fb57642a",
+  "keyOffDevice": true,
+  "keyUploadApproval": "explicitly approved by Devyn",
+  "keyFileId": "1r_0vZIV6auVYzJL1UgfIcRAGYXYbg_Kv",
+  "keyPermissions": "Devyn only; owner; no other principals",
+  "uploadedKeyChecksumMatchesLocal": true,
+  "shop": {
+    "buckets": ["artwork", "sku-patterns", "sku-models", "sku-plates"],
+    "capturedAt": "2026-10-06T16:59:17.661Z",
+    "objects": 194,
+    "bytes": 113572995,
+    "driveCopyExtractedAndVerified": true,
+    "completedDatabaseBackups": 8,
+    "latestDatabaseBackupAt": "2026-10-06T11:04:05.656Z",
+    "pitrEnabled": false
+  },
+  "backend": {
+    "buckets": ["express-artwork"],
+    "capturedAt": "2026-10-06T16:55:45.230Z",
+    "objects": 3,
+    "bytes": 210,
+    "driveCopyExtractedAndVerified": true,
+    "completedDatabaseBackups": 8,
+    "latestDatabaseBackupAt": "2026-10-06T09:30:47.226Z",
+    "pitrEnabled": false
+  },
+  "sourceWrites": false,
+  "hostedDatabaseRestorePerformed": false,
+  "recurringStorageScheduleInstalled": false,
+  "allExternalProofReferencesCovered": false
+}
