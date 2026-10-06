@@ -1,0 +1,10 @@
+{
+  "url": "https://shop.magnumopus.agency/sign-up",
+  "expandedFamilyInDeployedCss": true,
+  "normalWidthOverrideAbsent": true,
+  "fontFilesMatchLocalExpandedAssets": {
+    "Archivo_Expanded-Regular.ttf": true,
+    "Archivo_Expanded-Bold.ttf": true
+  },
+  "clerkAppearanceIncludesExpanded": true
+}
