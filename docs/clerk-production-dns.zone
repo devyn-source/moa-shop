@@ -1,0 +1,10 @@
+; Applied in Squarespace October 5, 2026. All five records resolve and Clerk verifies them.
+; MOA Catalog production Clerk, isolated to shop.magnumopus.agency.
+; Instance: ins_3KIslZNqnxb2ZRQEaGH1T4SYb56
+$ORIGIN magnumopus.agency.
+$TTL 14400
+clerk.shop IN CNAME frontend-api.clerk.services.
+accounts.shop IN CNAME accounts.clerk.services.
+clkmail.shop IN CNAME mail.zvd55ddeog9r.clerk.services.
+clk._domainkey.shop IN CNAME dkim1.zvd55ddeog9r.clerk.services.
+clk2._domainkey.shop IN CNAME dkim2.zvd55ddeog9r.clerk.services.
