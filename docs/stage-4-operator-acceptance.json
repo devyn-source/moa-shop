@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-06T19:57:48.154Z",
+  "operator": "Devyn",
+  "order": "EXP-1010",
+  "mode": "sandbox",
+  "acknowledgment": {
+    "at": "2026-10-06 19:56:32.485+00",
+    "via": "Production Clerk account and operator screen",
+    "nextAction": "Sandbox drill: review the overdue proof and record its resolution before launch",
+    "reviewAt": "2026-10-06 20:56:32.485+00"
+  },
+  "resolutionVerified": false,
+  "remaining": "Customer sandbox cancellation requested; confirm refund and backend state, then automatic incident recovery. Backup operator acceptance remains deferred."
+}
