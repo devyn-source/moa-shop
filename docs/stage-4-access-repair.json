@@ -1,0 +1,24 @@
+{
+  "verifiedAt": "2026-10-06T21:28:35.730989+00:00",
+  "status": "passed",
+  "appliedBy": "Devyn through SQL Editor",
+  "applicationRelease": "d35b50acbb178f15e0a221ae8151bb0f0c6b48c5",
+  "deployment": "dpl_4tE3FU3S6NqNtsVYJkELdaPrcFgx",
+  "databaseClientAccess": "denied",
+  "serverAccess": "preserved",
+  "anonymousRestProbes": {
+    "passed": true,
+    "count": 10,
+    "businessRecordsDownloaded": 0
+  },
+  "shopOperations": {
+    "http": 200,
+    "passingChecks": 11,
+    "openIncidents": 0,
+    "mode": "Sandbox simulation"
+  },
+  "limits": [
+    "Staff fulfillment acceptance and production recovery remain separate open gates.",
+    "Historical physical backups retain their original permissions; restrict a restored database before connecting applications."
+  ]
+}
