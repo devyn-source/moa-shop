@@ -48,4 +48,24 @@ A listing/download failure, changed source, safety limit or integrity failure le
 
 Both production projects returned eight completed physical backups spanning September 29 through October 6. Latest timestamps: shop `2026-10-06T11:04:05.656Z`, backend `2026-10-06T09:30:47.226Z`. PITR is disabled on both. This is backup availability evidence, not a hosted database restore drill. Database backups exclude Storage API file bytes; see [Supabase backup documentation](https://supabase.com/docs/guides/platform/backups).
 
-This is a verified manual file snapshot. Recurring capture, retention, missed-backup detection and recovery of every linked proof remain open. Off-device key custody is verified under Devyn's approved access. No new subscription or paid recovery feature was enabled. Provider configuration and database/file reconciliation must also be included in a complete disaster-recovery rehearsal. Stage 4 remains open.
+The original archive is a verified manual file snapshot. Off-device key custody is verified under Devyn's approved access. No new subscription or paid recovery feature was enabled. Provider configuration and database/file reconciliation must also be included in a complete disaster-recovery rehearsal. Stage 4 remains open.
+
+## Recurring capture on the MOA Mac
+
+`scripts/operations/recurring-backup.py` orchestrates a daily capture using the existing read-only source transport and approved recovery key. The installed LaunchAgent is `com.moa.catalog-storage-backup`. It runs at login and checks at minute 36 of each hour; a completed capture suppresses another for 24 hours. A missed calendar invocation resumes after wake. It cannot run while this Mac is shut down or the user session is unavailable. It is not independent cloud recovery infrastructure. [Apple scheduling behavior](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/ScheduledJobs.html).
+
+Private installation configuration is `/Users/moabot/.config/moa-backup-scheduler/config.json`. Its two minimum-scope env files contain only each source project's URL and service-role credential. No provider credentials were exported to a new service. The runner pins reviewed script and dependency-lock hashes; changes require reviewing and updating that local installation. This intentionally prevents a later source change from silently changing the scheduled job.
+
+Each capture verifies the signed-in Drive identity, owner-only permissions on both folders and the key file, off-device key checksum, and available local/Drive capacity. Successful uploads require matching size/MD5, owner-only file permissions and a downloaded SHA-256 match. A pending encrypted archive and run ID survive uncertain uploads; a retry looks for the same run before creating another file. Concurrent invocations are locked. Failed attempts retain the previous success timestamp and do not become healthy.
+
+Status, the last successful manifest summary, pending archive and bounded working files live at `/Users/moabot/.local/share/moa-backups/scheduled`. Completed temporary local archives are removed only after Drive verification. Cloud archives are retained; no automatic deletion policy is enabled. Review retention before accumulated storage becomes material. Free capacity was checked under the existing Drive plan; no upgrade was made.
+
+```sh
+python3 scripts/operations/recurring-backup.py status /Users/moabot/.config/moa-backup-scheduler/config.json
+python3 scripts/operations/recurring-backup.py run /Users/moabot/.config/moa-backup-scheduler/config.json
+python3 scripts/operations/recurring-backup-test.py
+```
+
+Status exits nonzero when no verified success exists, the last success exceeds 30 hours, time is inconsistent or the last attempt failed. It reports stages and identifiers without content or credentials. This provides a missed-backup signal when queried; no independent watchdog or outbound notification is installed. A machine that is down cannot report its own failure. Review this status with the operator checklist until an independently hosted watchdog is verified.
+
+To pause the local job, unload only this LaunchAgent with `launchctl bootout gui/501 /Users/moabot/Library/LaunchAgents/com.moa.catalog-storage-backup.plist`. To resume, use `launchctl bootstrap` with the same domain and file. Do not remove archived backups or keys when pausing. After credential rotation or script updates, review and refresh the minimum-scope env files or pinned hashes before reloading.

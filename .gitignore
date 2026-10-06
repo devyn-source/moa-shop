@@ -11,3 +11,4 @@ tsconfig.tsbuildinfo
 supabase/.temp/
 .env*.local
 public/lab/
+__pycache__/
