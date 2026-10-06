@@ -1,0 +1,47 @@
+{
+  "recordedAt": "2026-10-06T02:53:15.479Z",
+  "status": "awaiting_user_test_payment",
+  "productionRecordsCopied": false,
+  "productionCredentialsCopied": false,
+  "testDatabases": {
+    "shop": "ifepwvgnlfkujnlzapge",
+    "backend": "eebmgvlfrlduykjhbnsb"
+  },
+  "deployments": {
+    "shop": "https://moa-stage4-shop-20261005-8y7wa9zrk-devyn-9049s-projects.vercel.app",
+    "backend": "https://moa-stage4-backend-20261005-3duwvrkmh-devyn-9049s-projects.vercel.app"
+  },
+  "schemaHashes": {
+    "shop": "576485e1436a9038ec7ef7424936a9c4f01bbce06f208d5d2e8e41a7a29e48ff",
+    "backend": "5fe3e4f85477afc42e5c2f678027cc5659d858af1e2c8c68ea64a3a50be9ca5c"
+  },
+  "emptyDatabaseCountsVerified": true,
+  "shopMigrationReplayTables": 14,
+  "syntheticClerkUsers": 2,
+  "anonymousCheckoutHttp": 401,
+  "wrongEmailCheckoutHttp": 400,
+  "checkout": {
+    "subtotalCents": 625100,
+    "taxCents": 53915,
+    "totalCents": 679015,
+    "lines": 2,
+    "paid": false
+  },
+  "abandoned": {
+    "at": "2026-10-06T02:51:07.467Z",
+    "checkoutId": "00b37535-c196-4553-820e-49bf21e19a14",
+    "sessionId": "cs_test_b14eYyNXr6aZwbUVeThbjfZwiyXY2HuyQpKAW8JaBspbmo3LRSSy3srs1w",
+    "expiredWebhookClosedBothUnpaidOrders": true,
+    "noHandoff": true,
+    "forgedSignatureRejected": true
+  },
+  "backendFaultInjection": "SELECT revoked from service_role on isolated express_orders",
+  "outboundMessagesSent": 0,
+  "remaining": [
+    "hosted payment click",
+    "paid handoff recovery",
+    "real database refund and approval race",
+    "fulfillment lifecycle",
+    "production identity and operator browser acceptance"
+  ]
+}

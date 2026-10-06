@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 export default async function ExpressOrderPage({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
   const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress;
+  const primary = user?.primaryEmailAddress;
+  const email = primary?.verification?.status === "verified" ? primary.emailAddress.toLowerCase() : null;
   if (!email) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/orders/express/${number}`)}`);
   const order = await getExpressOrder(decodeURIComponent(number), email);
   if (!order) notFound();

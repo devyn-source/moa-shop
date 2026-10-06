@@ -6,7 +6,8 @@ import { postExpressDecision } from "@/lib/express-account";
 // comes from the session, never from the request body.
 export async function POST(request: Request) {
   const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress;
+  const primary = user?.primaryEmailAddress;
+  const email = primary?.verification?.status === "verified" ? primary.emailAddress.toLowerCase() : null;
   if (!email) return NextResponse.json({ error: "Sign in to review your proof" }, { status: 401 });
   const b = (await request.json().catch(() => ({}))) as { number?: string; skuId?: string; round?: number; decision?: string; comment?: string };
   if (!b.number || !b.skuId || (b.decision !== "approved" && b.decision !== "changes")) return NextResponse.json({ error: "Missing decision" }, { status: 400 });

@@ -3,7 +3,7 @@
 //   2. Require a Clerk account to ORDER (checkout / order history / order API).
 //      Browsing + pricing stay public. Customer auth = Clerk.
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
 import { basicAuthValid, emailIsAdmin, clerkEmail } from "@/lib/admin-auth";
 import { CLOSED_PREFIXES, launchMode, isLaunchSlug } from "@/lib/launch";
 
@@ -33,7 +33,7 @@ function isBackgroundRequest(req: NextRequest): boolean {
 // rather than returning a bare 401.
 const requiresAccount = createRouteMatcher(["/checkout(.*)", "/orders(.*)", "/adjust(.*)", "/api/checkout(.*)"]);
 
-export default clerkMiddleware(async (auth, req) => {
+const customerMiddleware = clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
   // 1. Admin gate — Clerk allowlist (primary) with Basic Auth break-glass.
@@ -87,6 +87,14 @@ export default clerkMiddleware(async (auth, req) => {
 
   return NextResponse.next();
 });
+
+// These handlers authenticate their own processor signature or cron secret.
+// Payment recovery must stay available during an identity-provider outage.
+const machineRoutes = new Set(["/api/webhooks/stripe", "/api/cron/express-refunds", "/api/cron/express-operations", "/api/cron/fulfillment"]);
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (machineRoutes.has(req.nextUrl.pathname)) return NextResponse.next();
+  return customerMiddleware(req, event);
+}
 
 export const config = {
   matcher: [

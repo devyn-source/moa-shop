@@ -7,7 +7,7 @@ const body = { number: "EXP-QA", skuId: "tee", round: 2, decision: "approved" };
 const submit = (value: unknown = body) => POST(new Request("https://shop.test/api/express/decision", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(value) }));
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.user.mockResolvedValue({ primaryEmailAddress: { emailAddress: "owner@example.com" }, firstName: "Order", lastName: "Owner" });
+  mocks.user.mockResolvedValue({ primaryEmailAddress: { emailAddress: "owner@example.com", verification: { status: "verified" } }, firstName: "Order", lastName: "Owner" });
   mocks.post.mockResolvedValue({ ok: true, status: 200 });
 });
 describe("customer production-proof decisions", () => {
@@ -17,6 +17,11 @@ describe("customer production-proof decisions", () => {
   });
   it("requires sign-in before forwarding any decision", async () => {
     mocks.user.mockResolvedValue(null);
+    expect((await submit()).status).toBe(401);
+    expect(mocks.post).not.toHaveBeenCalled();
+  });
+  it("rejects an unverified primary email before forwarding an approval", async () => {
+    mocks.user.mockResolvedValue({ primaryEmailAddress: { emailAddress: "owner@example.com", verification: { status: "unverified" } } });
     expect((await submit()).status).toBe(401);
     expect(mocks.post).not.toHaveBeenCalled();
   });

@@ -2,6 +2,22 @@
 
 Started October 5, 2026. Status: OPEN. This is an engineering and operations gate, not permission to enable payments or release factory orders. Final LDP quotes, physical samples, and supplier commercial terms remain a separate deferred workstream.
 
+## Isolated deployed rehearsal, October 5 evening
+
+Devyn approved the temporary databases. Created schema-only branches `ifepwvgnlfkujnlzapge` (shop) and `eebmgvlfrlduykjhbnsb` (backend), plus separate Vercel projects `moa-stage4-shop-20261005` and `moa-stage4-backend-20261005`. These projects use new database credentials, fresh shared/admin/cron secrets, a new accountless Clerk development instance and Stripe TEST credentials. No production credential bundle was copied. No mail-provider or factory credentials were configured; backend no-send readiness was verified over HTTP.
+
+The initial branch restores revealed incomplete migration history. The backend had no application baseline, and the shop was missing catalog/shared-design/analytics baselines. Both isolated schemas were restored from inspected schema-only exports, excluding records and ownership grants. Empty order, contact, project and payment counts were verified before fixtures. The shop now includes the missing baseline migration before account_features; all shop migrations replayed successfully into a separate empty schema, producing 14 tables, with the probe rolled back. The backend's full migration-history repair remains separate from the successful schema-snapshot restore.
+
+Two verified synthetic Clerk users and actual development sessions exercised the deployed checkout. Anonymous checkout returned 401; a second user submitting the first user's email returned 400. The first user's two-item checkout persisted in the isolated shop database and created a hosted Stripe TEST session: subtotal 625100 cents, tax 53915 cents, total 679015 cents. Its synthetic destination is not production tax-origin approval.
+
+A second real TEST checkout was expired through Stripe. Its signed expiry webhook closed both unpaid order lines without backend handoff. A forged webhook signature returned 400. Evidence is in `docs/stage-4-isolated-rehearsal.json`.
+
+Payment completion is still pending. Browser automatic approval review rejected the agent's Pay click even in sandbox and required user handoff. The Chrome checkout is left open with Stripe's decline card; Devyn was asked to test the decline, then use the standard success test card. No payment click was executed by the agent. SELECT access on the isolated backend's express_orders table is deliberately revoked for the outage drill. Restore that grant only after capturing the paid-state/no-handoff evidence, then replay the canonical event and continue refund/race/fulfillment checks. This grant change affects only the disposable backend database.
+
+Private credentials, full checkout URL, fixture IDs, restore scripts and the current HTTP rehearsal runner are stored under `/Users/moabot/.config/moa-stage4/`. The payment runner is `rehearsal.cjs`; `deployed-checkout.json` contains the unmodified hosted URL. Keep the test resources only while the rehearsal is active, then disable the TEST webhook and remove the temporary databases/deployments after saving results. Neither production payment mode nor production shop Clerk was changed.
+
+Code hardening prepared during the rehearsal: processor/cron handlers remain available without Clerk, while retaining signature/secret checks; backend staff alternatives still use Clerk. Verified-primary-email checks now also cover order history, the Express portal and proof decisions. 146 shop tests and its build pass; 43 backend tests pass, and the isolated backend deployment build passes. These final source changes are not yet published to the live shop or merged into MoaOS main.
+
 ## Current closure status, October 5 at 14:48 PT
 
 - **Deployed:** operator console, intake pause control, refund recovery reporting, shared Redis repair, durable job records, independent database watchdog, and proof/hold/shipping incident synchronization.

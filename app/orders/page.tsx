@@ -35,7 +35,8 @@ function groupOrders(orders: ShopOrder[]): OrderRow[] {
 
 export default async function OrdersPage() {
   const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress;
+  const primary = user?.primaryEmailAddress;
+  const email = primary?.verification?.status === "verified" ? primary.emailAddress.toLowerCase() : null;
   if (!email) {
     redirect("/sign-in");
   }
