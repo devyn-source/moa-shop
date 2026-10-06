@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: node --test scripts/operations/availability.test.mjs
       - run: node scripts/operations/availability.mjs
       - uses: actions/upload-artifact@v4
         with:

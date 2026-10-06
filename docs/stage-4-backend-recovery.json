@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-06T16:23:04.820Z",
+  "engine": "PGlite in-memory PostgreSQL",
+  "bootstrapSha256": "58e7fd685ab869b08a13337ca7754fcf0f1cc540c2d040214d14001a09e7f5c3",
+  "passed": [
+    "empty bootstrap creates the complete captured schema",
+    "bootstrap contains no application records",
+    "bootstrap refuses a populated schema without changing it",
+    "anonymous and customer roles cannot access tables or privileged functions",
+    "service role can create a synthetic order; wrong owner and payment are rejected",
+    "cancellation reserves once and locks the order and proof writes",
+    "refund rejects amount/reference drift and does not regress on a late pending update",
+    "one approved piece closes self-service cancellation",
+    "handoff matches the approved proof and repeated operation IDs are idempotent",
+    "fulfillment rejects stale updates, skipped stages and changed history"
+  ],
+  "productionAccess": false,
+  "externalMessages": false,
+  "limits": [
+    "No hosted Supabase configuration, storage or provider secrets restored.",
+    "Single connection; hosted concurrency is covered by the separate deployed rehearsal.",
+    "Captured schema bootstrap is not a repair of historical production migration metadata."
+  ],
+  "backendCommit": "cfe994d"
+}
