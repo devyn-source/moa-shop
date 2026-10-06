@@ -8,9 +8,9 @@ Latest operational pass: the independent hourly backup watchdog is active and it
 
 The existing n8n availability observer has a verified scheduled run every 15 minutes. The approved sandbox Slack test was delivered once and visibly verified. Daily encrypted Drive capture is installed and verified; capture still depends on this Mac, while the independent watchdog detects overdue archives. Automatic outbound notifications remain disabled. No live payment or factory activation was performed.
 
-Remaining Stage 4 gates: reconcile live tax-origin/registration inputs; complete the deferred staff, production account-isolation and email-flow screen drills; record actual operator acknowledgment and follow-through; verify production provider-level recovery and configuration separately from synthetic logical snapshots. Historical backend migration metadata remains unresolved, with the tested pinned bootstrap available for fresh recovery. The current proof-reference audit has no missing files, but future external references still require coverage. Final costing and physical samples remain the separate deferred product workstream.
+Remaining Stage 4 gates: verify the separate CDTFA address record; complete the deferred staff, production account-isolation and email-flow screen drills; record actual operator acknowledgment and follow-through; verify production provider-level recovery and configuration separately from synthetic logical snapshots. Historical backend migration metadata remains unresolved, with the tested pinned bootstrap available for fresh recovery. The current proof-reference audit has no missing files, but future external references still require coverage. Final costing and physical samples remain the separate deferred product workstream.
 
-Devyn confirmed every launch order ships from China, directly from the overseas factory. Exact physical dispatch addresses are not yet confirmed. The Zhangjiagang invoice address remains evidence of a supplier address only. China origin does not resolve the head-office/registration address mismatch. Live Stripe Tax remains unchanged.
+Devyn confirmed the current Los Angeles operating address, California as the only active sales-tax registration, and China dispatch, directing the supplier-address lookup to Best Cover on file. The saved vendor address matches the Zhangjiagang invoice. Stripe Tax now uses the confirmed current office address; the precise unit address stays outside this public repository. California remains the sole active Stripe registration. All five launch category codes and STRIPE_TAX_ENABLED=true are configured in Vercel production, while EXPRESS_SANDBOX=1 remains in place. The separate CDTFA address record has not been independently updated or verified. [Tax evidence](stage-4-tax-configuration.json).
 
 Devyn asked to defer other-user acceptance until the system is ready. Tyler sign-in, production two-account isolation and backup screen drills remain explicit deferred gates, rather than blocking continued engineering work. No invitations or factory messages were sent.
 
@@ -76,7 +76,7 @@ The post-deployment monitor correctly surfaces an overdue proof on sandbox order
 
 ## Remaining Stage 4 closure work
 
-The deployed financial and synthetic fulfillment rehearsal, scheduled external availability run, approved Slack delivery, independent backup watchdog, and hosted synthetic SQL/file restore have passed. Stage 4 remains OPEN for production tax inputs and classification, deferred account/staff drills, actual incident acknowledgment, provider-level production recovery/configuration verification, and backend migration-history reconciliation. A successful synthetic logical restore does not establish that the production physical backups have been restored. The pinned schema bootstrap provides a tested fresh-database path without rewriting production migration metadata.
+The deployed financial and synthetic fulfillment rehearsal, scheduled external availability run, approved Slack delivery, independent backup watchdog, and hosted synthetic SQL/file restore have passed. Stage 4 remains OPEN for the separate CDTFA address record, deferred account/staff drills, actual incident acknowledgment, provider-level production recovery/configuration verification, and backend migration-history reconciliation. A successful synthetic logical restore does not establish that the production physical backups have been restored. The pinned schema bootstrap provides a tested fresh-database path without rewriting production migration metadata.
 
 Validation for this recovery update: 158 application tests and 36 operations tests pass; type checking and the production build pass. The hosted restore includes all 14 shop tables and 87 backend tables, with two synthetic orders per database and matching proof/refund state. No production records or credentials were copied.
 
@@ -220,14 +220,16 @@ Watchdog installation follows [Supabase Cron](https://supabase.com/docs/guides/c
 
 Devyn reconfirmed direct overseas-factory delivery. Drive invoice BEST20260403-11, dated April 3, 2026, identifies BEST COVER TRADING (HONGKONG) CO., LIMITED and prints No.782, Gangchengdadao, Zhangjiagang City, Jiangsu, China (invoice spelling: ZHANGJIAGNG). [Source invoice](https://drive.google.com/file/d/1KayoVOmnmBySJKwcLGZocyzyzgxplxmb/view). This is supplier-address evidence, not confirmation that every launch style dispatches from that address. No invoice bank details are reproduced and no factory was contacted.
 
-## Prepared tax classification review
+## Tax configuration and rehearsal, October 6
 
-Draft candidates from [Stripe's product tax codes](https://docs.stripe.com/tax/tax-codes), not applied to production:
+Verified exact identifiers and descriptions through the Stripe Tax Codes API and [official code list](https://docs.stripe.com/tax/tax-codes). The current launch products map to:
 
-| Catalog category | Candidate | Review needed |
+| Catalog category | Configured code | Catalog fit |
 | --- | --- | --- |
-| Tee, hoodie, outerwear | `txcd_30011000`, Clothing & Footwear | Confirm each launch product fits ordinary apparel treatment. |
-| Headwear | `txcd_30060006`, Hats | Confirm dad hat and beanie classification. |
-| Bag | `txcd_30060001`, Purses and Handbags | Confirm the launch tote fits this definition before choosing it. |
+| Tee, hoodie, outerwear | `txcd_30011000`, Clothing & Footwear | General-use tees, hoodie and jackets. |
+| Headwear | `txcd_30060006`, Hats | Dad hat and beanie are head coverings for fashion or warmth. |
+| Bag | `txcd_30060001`, Purses and Handbags | The canvas carry tote fits the listed bag category; this is not a luggage or specialist bag. |
 
-Final setup still needs the actual China dispatch address for each supplier, reconciliation of the business/registration addresses, and confirmed sales-tax registrations. A supplier invoice address is not dispatch confirmation. No factory was contacted and no tax settings were changed.
+Stripe explicitly documents that a US head office, international dispatch and US customer use the head-office address for tax origin. Hosted Checkout does not accept ship-from addresses, but that limitation does not change the origin for this launch model. [Address rules](https://docs.stripe.com/tax/ship-from-address). Six actual TEST Tax API calculations compared the confirmed head office with an explicit China supplier address, across Los Angeles, San Francisco and New York destinations. Each pair matched line by line. California returned positive tax; New York returned `not_collecting` under the confirmed CA-only registration. This is configured collection behavior, not an assessment of future nexus obligations.
+
+An actual unpaid hosted TEST Checkout with 50 hoodies, 50 hats and 50 totes returned automatic tax `complete`: $6,500 subtotal, $666.25 tax and $7,166.25 total for the Los Angeles test destination. The session was expired and its synthetic customer deleted. Production Stripe head-office settings were updated only after these inputs and API calculations were validated; other defaults and the existing active registration were preserved. No real payment or factory message occurred. [Sanitized evidence](stage-4-tax-configuration.json). Earlier tax checkpoints in this document describe historical state. Updating Stripe does not update CDTFA records.
