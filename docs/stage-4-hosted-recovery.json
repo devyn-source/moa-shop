@@ -1,0 +1,108 @@
+{
+  "checkedAt": "2026-10-06T18:53:56.531Z",
+  "elapsedSeconds": 114,
+  "resumedFromVerifiedCapture": true,
+  "passed": [
+    "shop: actual row/file loss restored, all row fingerprints and proof bytes match, private access preserved",
+    "backend: actual row/file loss restored, all row fingerprints and proof bytes match, private access preserved",
+    "Restored proof references reconcile across databases and files; handoff replay is idempotent and refund cannot regress"
+  ],
+  "branches": [
+    {
+      "kind": "shop",
+      "ref": "ljjqxecobutaorqwsvkh",
+      "tables": 14,
+      "snapshotSha256": "536a22b6a508440ed378b88d6030f19b8422fbabdbe339bdb924c3cacaf7c30c",
+      "dataFingerprintSha256": "ed46a90da49e2305872f79b04ad3bc2edd5f2ea3f9f4c403d0e37e82e938d49c",
+      "populatedTables": [
+        {
+          "table": "orders",
+          "rows": 2
+        },
+        {
+          "table": "express_checkout_refunds",
+          "rows": 1
+        }
+      ],
+      "storage": {
+        "profile": "shop",
+        "objectCount": 1,
+        "bytes": 117,
+        "verified": true,
+        "keyId": "b57dd44b3bfbd91d",
+        "capturedAt": "2026-10-06T18:50:18.082Z"
+      },
+      "restoredObjectSha256": "959160174d55f3f12a611e63f1a1bf12b2d358689f5af9467e03b49517eac952"
+    },
+    {
+      "kind": "backend",
+      "ref": "mywiahomkqhhzerquzhh",
+      "tables": 87,
+      "snapshotSha256": "97ce38c7a5bc5b0f7b6ae34c45feb21c457c26d7c49785ab64ace21bdfd51881",
+      "dataFingerprintSha256": "38e15dff7e31479551c99b12d44ebe273e86ccd1acd3bd387a7b89fd6b1d906b",
+      "populatedTables": [
+        {
+          "table": "express_orders",
+          "rows": 2
+        },
+        {
+          "table": "express_proof_rounds",
+          "rows": 1
+        }
+      ],
+      "storage": {
+        "profile": "backend",
+        "objectCount": 1,
+        "bytes": 120,
+        "verified": true,
+        "keyId": "b57dd44b3bfbd91d",
+        "capturedAt": "2026-10-06T18:50:37.664Z"
+      },
+      "restoredObjectSha256": "c1bbb74baed309db752d5271e3fba4978ef957b638ce22fa0724ab4cb6441af3"
+    }
+  ],
+  "productionAccess": false,
+  "externalMessages": false,
+  "paymentProviderAccess": false,
+  "cleanupVerified": true,
+  "limits": [
+    "Synthetic logical SQL snapshots, not a production physical backup or PITR restore.",
+    "Source branches were quiescent; live recovery must reconcile later payment and file changes.",
+    "Production customer data, auth identities, secrets and provider configuration were not copied."
+  ],
+  "restoredApiChecks": [
+    {
+      "kind": "shop",
+      "serviceRoleRows": 2,
+      "serviceRoleHttp": 200,
+      "anonymousHttp": 401
+    },
+    {
+      "kind": "backend",
+      "serviceRoleRows": 2,
+      "serviceRoleHttp": 200,
+      "anonymousHttp": 401
+    }
+  ],
+  "cleanup": [
+    {
+      "kind": "shop",
+      "ref": "ljjqxecobutaorqwsvkh",
+      "branchId": "b3c99ef9-1a48-4929-b40c-7f31a0e43cad",
+      "deleted": true,
+      "absenceVerified": true
+    },
+    {
+      "kind": "backend",
+      "ref": "mywiahomkqhhzerquzhh",
+      "branchId": "b220df31-7553-478b-af3b-42bdcabe3e39",
+      "deleted": true,
+      "absenceVerified": true
+    }
+  ],
+  "cleanupCheckedAt": "2026-10-06T18:55:25.670081+00:00",
+  "initialRunnerIssues": [
+    "Cached download after deletion; corrected with storage-row check and unique uncached requests.",
+    "SQL dump creates public schema; removed precreation and resumed from capture checkpoints."
+  ]
+}

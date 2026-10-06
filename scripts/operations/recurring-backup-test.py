@@ -34,6 +34,9 @@ class RecoveryTests(unittest.TestCase):
         self.assertFalse(backup.owner_only({'permissions': [owner], 'nextPageToken': 'more'}))
         self.assertFalse(backup.owner_only({'permissions': [{**owner, 'emailAddress': 'other@example.com'}]}))
 
+    def test_late_verification_cannot_make_an_old_capture_current(self):
+        self.assertFalse(backup.health({'lastSuccessAt': 999999, 'lastCapturedAt': 1, 'status': 'succeeded'}, 1000000)['healthy'])
+
     def test_remote_identity_size_and_content_must_all_match(self):
         candidate = {'md5': 'abc', 'size': 10, 'runId': 'run'}
         remote = {'md5Checksum': 'abc', 'size': '10', 'appProperties': {'moaRecoveryRun': 'run'}}
@@ -62,7 +65,7 @@ class RecoveryTests(unittest.TestCase):
             runner = backup.Runner({'stateRoot': folder, 'repository': folder})
             content = b'synthetic encrypted archive'
             (Path(folder) / 'pending.tar').write_bytes(content)
-            candidate = {'md5': backup.digest(Path(folder) / 'pending.tar', 'md5'), 'sha256': backup.digest(Path(folder) / 'pending.tar'), 'size': len(content), 'runId': 'run'}
+            candidate = {'md5': backup.digest(Path(folder) / 'pending.tar', 'md5'), 'sha256': backup.digest(Path(folder) / 'pending.tar'), 'size': len(content), 'runId': 'run', 'reports': [{'profile': p, 'verified': True, 'capturedAt': '2026-10-06T00:00:00Z', 'objectCount': 1} for p in ['shop', 'backend']]}
             actions = []
             def drive(resource, action, params, body=None, extra=None):
                 actions.append(action)
@@ -71,10 +74,13 @@ class RecoveryTests(unittest.TestCase):
                 if action == 'get':
                     Path(extra[-1]).write_bytes(content)
                     return {}
+                if action == 'update':
+                    return {'properties': body['properties'], 'md5Checksum': candidate['md5'], 'size': str(len(content))}
                 self.fail('Unexpected Drive mutation')
             with patch.object(runner, 'drive', drive), patch.object(runner, 'permissions'):
                 self.assertEqual(runner.upload(candidate), 'existing')
             self.assertNotIn('create', actions)
+            self.assertEqual(actions.count('update'), 1)
             self.assertFalse((Path(folder) / 'roundtrip.tar').exists())
 
 

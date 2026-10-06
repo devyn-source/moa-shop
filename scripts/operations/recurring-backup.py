@@ -4,6 +4,7 @@ Configuration contains local paths only. Credentials stay in existing private
 env files; all subprocess output is captured and never copied into logs.
 """
 import argparse
+from datetime import datetime
 import fcntl
 import hashlib
 import json
@@ -52,7 +53,7 @@ def read(path, default=None):
 
 def health(state, now=None):
     now = time.time() if now is None else now
-    last = state.get('lastSuccessAt')
+    last = state.get('lastCapturedAt', state.get('lastSuccessAt'))
     age = now - last if last else None
     return {'checkedAt': now, 'lastSuccessAt': last,
             'ageHours': round(age / 3600, 2) if age is not None else None,
@@ -71,6 +72,18 @@ def remote_matches(remote, candidate):
     return (remote.get('md5Checksum') == candidate['md5']
             and str(remote.get('size')) == str(candidate['size'])
             and remote.get('appProperties', {}).get('moaRecoveryRun') == candidate['runId'])
+
+
+def receipt(candidate):
+    reports = candidate['reports']
+    if len(reports) != 2 or {r['profile'] for r in reports} != {'shop', 'backend'} or not all(r.get('verified') is True for r in reports):
+        raise RuntimeError('Both verified source captures are required')
+    captured = min(datetime.fromisoformat(r['capturedAt'].replace('Z', '+00:00')).timestamp() for r in reports)
+    if captured > time.time() + 300:
+        raise RuntimeError('Capture timestamp is in the future')
+    return {'moaCatalogBackup': 'verified-v1', 'moaCapturedAt': str(captured),
+            'moaArchiveSha256': candidate['sha256'], 'moaArchiveMd5': candidate['md5'],
+            'moaObjectCount': str(sum(r['objectCount'] for r in reports)), 'moaArchiveBytes': str(candidate['size'])}
 
 
 class Runner:
@@ -195,10 +208,15 @@ class Runner:
                 raise RuntimeError('Downloaded archive differs from verified local capture')
         finally:
             download.unlink(missing_ok=True)
+        properties = receipt(candidate)
+        marked = self.drive('files', 'update', {'fileId': remote['id'], 'fields': 'id,properties,md5Checksum,size'}, {'properties': properties})
+        if marked.get('properties') != properties or marked.get('md5Checksum') != candidate['md5'] or str(marked.get('size')) != str(candidate['size']):
+            raise RuntimeError('Cloud verification receipt did not persist')
         return remote['id']
 
     def run(self, force=False):
-        if not force and self.state.get('lastSuccessAt') and 0 <= time.time() - self.state['lastSuccessAt'] < DAY and not (self.root / 'pending.json').exists():
+        captured = self.state.get('lastCapturedAt', self.state.get('lastSuccessAt'))
+        if not force and captured and 0 <= time.time() - captured < DAY and not (self.root / 'pending.json').exists():
             return health(self.state)
         try:
             self.preflight()
@@ -206,7 +224,7 @@ class Runner:
             file_id = self.upload(candidate)
             report = {**candidate, 'driveFileId': file_id, 'verifiedAt': time.time(), 'ownerOnly': True, 'roundtripVerified': True}
             save(self.root / 'last-success.json', report)
-            self.state.update(status='succeeded', stage='complete', lastSuccessAt=time.time(), driveFileId=file_id)
+            self.state.update(status='succeeded', stage='complete', lastSuccessAt=time.time(), lastCapturedAt=float(receipt(candidate)['moaCapturedAt']), driveFileId=file_id)
             save(self.root / 'state.json', self.state)
             (self.root / 'pending.json').unlink(missing_ok=True)
             (self.root / 'pending.tar').unlink(missing_ok=True)

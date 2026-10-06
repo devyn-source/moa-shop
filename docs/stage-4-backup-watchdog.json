@@ -1,0 +1,54 @@
+{
+  "workflowId": "d6V1hF9JBDmXZzC1",
+  "schedule": "42 * * * * (UTC)",
+  "active": true,
+  "executionId": "21038",
+  "mode": "trigger",
+  "startedAt": "2026-10-06T18:42:00.094Z",
+  "result": {
+    "checkedAt": "2026-10-06T18:42:02.536Z",
+    "healthy": true,
+    "notificationsSent": false,
+    "reason": "verified-backup-current",
+    "ageHours": 1.04,
+    "driveFileId": "1wyaZopIZaEtrre2L6_KwNO3fiDFAnZkz",
+    "objectCount": 197
+  },
+  "identityAndPermissionReads": [
+    {
+      "name": "Drive identity",
+      "status": "success",
+      "http": 200
+    },
+    {
+      "name": "Recovery folder",
+      "status": "success",
+      "http": 200
+    },
+    {
+      "name": "Verified archives",
+      "status": "success",
+      "http": 200
+    }
+  ],
+  "newCredentials": false,
+  "fileContentsRead": false,
+  "keyFolderAccessed": false,
+  "notificationsSent": false,
+  "failureTests": [
+    "stale capture",
+    "missing archive",
+    "Drive outage",
+    "incomplete inventory",
+    "wrong account",
+    "widened folder access",
+    "checksum mismatch",
+    "future timestamp",
+    "unverified receipt"
+  ],
+  "limits": [
+    "A successful workflow means the observation completed, not that the backup is healthy.",
+    "The scheduled observation records results only. Operators must review them; no automatic message is authorized.",
+    "Capture still depends on the Mac; this cloud job detects overdue captures and does not create them."
+  ]
+}

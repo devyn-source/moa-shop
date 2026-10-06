@@ -27,9 +27,10 @@
   "ownerOnly": true,
   "roundtripVerified": true,
   "scheduler": "com.moa.catalog-storage-backup",
-  "schedule": "Checks at login and minute 36 of each hour; capture only when last success is at least 24 hours old",
+  "schedule": "Checks at login and minute 36 of each hour; capture only when oldest verified source capture is at least 24 hours old",
   "lastExecutionTrigger": "launchctl retry after working-directory correction",
   "dependsOnMac": true,
-  "independentBackupWatchdog": false,
-  "initialFailuresDetected": true
+  "independentBackupWatchdog": true,
+  "initialFailuresDetected": true,
+  "watchdogEvidence": "stage-4-backup-watchdog.json"
 }
