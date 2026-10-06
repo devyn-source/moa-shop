@@ -1,0 +1,43 @@
+{
+  "deployment": "dpl_3CdeiTwkNXP9k9ncYMNc382C4PBn",
+  "target": "https://moa-shop-express-service.vercel.app",
+  "crons": [],
+  "checks": [
+    {
+      "path": "/api/express/health",
+      "status": 200
+    },
+    {
+      "path": "/api/express/engine-order",
+      "status": 401
+    },
+    {
+      "path": "/api/express/engine-order",
+      "status": 401
+    },
+    {
+      "path": "/api/mcp",
+      "status": 404
+    },
+    {
+      "path": "/api/outbound/autopilot",
+      "status": 404
+    },
+    {
+      "path": "/projects",
+      "status": 404
+    }
+  ],
+  "readiness": {
+    "ok": true,
+    "payBeforeProof": true,
+    "serviceOnly": true,
+    "deploymentEnvironment": "production",
+    "rehearsalNoSend": true,
+    "stripeTest": false,
+    "mode": "sandbox"
+  },
+  "monitorReadMatchesPrevious": true,
+  "ordersScanned": 2,
+  "sandboxFulfillmentRead": true
+}

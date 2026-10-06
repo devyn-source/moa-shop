@@ -29,9 +29,16 @@ const C = {
   success: "#3D7A4A",
   white: "#FFFFFF"
 };
-// Heavy display stack approximates Archivo Expanded where web fonts can't load.
-const DISPLAY = `'Archivo Expanded','Archivo','Arial Black','Helvetica Neue',Arial,sans-serif`;
-const BODY = `-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif`;
+// MOA uses the same Expanded face for all customer-facing typography.
+// Email clients that block web fonts control their own fallback rendering.
+const DISPLAY = `'Archivo Expanded',sans-serif`;
+const BODY = DISPLAY;
+const FONT_CSS = `<style>
+  @font-face{font-family:'Archivo Expanded';src:url('https://shop.magnumopus.agency/brand/fonts/Archivo_Expanded-Regular.ttf') format('truetype');font-weight:400;}
+  @font-face{font-family:'Archivo Expanded';src:url('https://shop.magnumopus.agency/brand/fonts/Archivo_Expanded-Bold.ttf') format('truetype');font-weight:700;}
+  @font-face{font-family:'Archivo Expanded';src:url('https://shop.magnumopus.agency/brand/fonts/Archivo_Expanded-ExtraBold.ttf') format('truetype');font-weight:800;}
+  body,table,td{font-family:'Archivo Expanded',sans-serif;}
+</style>`;
 
 let client: Resend | null = null;
 function getResend(): Resend | null {
@@ -124,7 +131,6 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
   <meta name="x-apple-disable-message-reformatting" />
   <meta name="color-scheme" content="light only" />
   <title>Order ${esc(order.orderNumber)} · MOA</title>
-  <!--[if mso]><style>* { font-family: Arial, sans-serif !important; }</style><![endif]-->
   <style>
     @media only screen and (max-width:600px){
       .container{width:100% !important;}
@@ -133,7 +139,7 @@ export function renderHtml(order: ShopOrder, product: CatalogProduct | null, ori
     }
     a{color:${C.terracotta};}
   </style>
-</head>
+${FONT_CSS}</head>
 <body style="margin:0;padding:0;background:${C.cream};">
   <!-- preheader (hidden) -->
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.cream};font-size:1px;line-height:1px;">Order ${esc(order.orderNumber)} confirmed: ${esc(productName)}, ${order.quantity.toLocaleString()} units. Into MOA artwork QA now.</div>
@@ -353,7 +359,7 @@ export async function sendPaymentIncomplete(
   const productName = product?.displayName ?? "your MOA Shop order";
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
   const subject = `Your order wasn't completed · MOA`;
-  const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${esc(subject)}</title></head>
+  const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${esc(subject)}</title>${FONT_CSS}</head>
   <body style="margin:0;padding:0;background:${C.cream};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
@@ -414,7 +420,7 @@ function renderProofHtml(order: ShopOrder, product: CatalogProduct | null, origi
         )
         .join("")}</tr></table>`
     : "";
-  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Approve your proof · ${esc(order.orderNumber)}</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Approve your proof · ${esc(order.orderNumber)}</title>${FONT_CSS}</head>
   <body style="margin:0;padding:0;background:${C.cream};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
@@ -474,7 +480,7 @@ export async function sendProofApproval(
 function renderShippingHtml(order: ShopOrder, origin: string, tracking: { carrier: string; number: string }): string {
   const trackerUrl = `${origin}/orders`;
   const greeting = order.contactName ? order.contactName.split(" ")[0] : null;
-  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Your order shipped · ${esc(order.orderNumber)}</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="x-apple-disable-message-reformatting"/><title>Your order shipped · ${esc(order.orderNumber)}</title>${FONT_CSS}</head>
   <body style="margin:0;padding:0;background:${C.cream};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.cream}"><tr><td align="center" style="background:${C.cream};">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">

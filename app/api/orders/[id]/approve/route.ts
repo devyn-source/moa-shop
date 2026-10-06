@@ -17,8 +17,10 @@ function page(eyebrow: string, title: string, body: string): NextResponse {
   const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${title}</title>
   <style>
     @font-face{font-family:'Archivo Expanded';src:url('${ORIGIN}/brand/fonts/Archivo_Expanded-ExtraBold.ttf') format('truetype');font-weight:800;font-display:swap;}
-    body{margin:0;background:#EEEAE3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1E1E1E;}
-    .display{font-family:'Archivo Expanded','Arial Black',Arial,sans-serif;font-weight:800;}
+    @font-face{font-family:'Archivo Expanded';src:url('${ORIGIN}/brand/fonts/Archivo_Expanded-Regular.ttf') format('truetype');font-weight:400;font-display:swap;}
+    @font-face{font-family:'Archivo Expanded';src:url('${ORIGIN}/brand/fonts/Archivo_Expanded-Bold.ttf') format('truetype');font-weight:700;font-display:swap;}
+    body{margin:0;background:#EEEAE3;font-family:'Archivo Expanded',sans-serif;color:#1E1E1E;}
+    .display{font-family:'Archivo Expanded',sans-serif;font-weight:800;}
   </style></head>
   <body>
     <div style="max-width:520px;margin:0 auto;padding:72px 24px;text-align:center;">

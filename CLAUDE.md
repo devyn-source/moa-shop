@@ -121,10 +121,12 @@ Source of truth: `~/moa-os` (`src/app/globals.css`, `sidebar.tsx`, `stat-card.ts
 --color-cream:#EEEAE3; --color-cream-dark:#E2DED6; --color-charcoal:#1E1E1E;
 --color-terracotta:#B04731; --color-terracotta-light:#C45A42;
 --color-success:#3D7A4A; --color-warning:#C4880D; --color-danger:#B04731; --color-neutral:#8A8680;
---font-display:"Archivo",sans-serif; --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter",Helvetica,Arial,sans-serif;
+--font-display:"Archivo Expanded",sans-serif; --font-body:var(--font-display);
 --background:#EEEAE3; --foreground:#1E1E1E; --card:#FFFFFF; --muted:#E2DED6;
 --border:#E2DED6; --input:#E2DED6; --ring:#B04731; --radius:0.5rem;
 ```
+
+**Typography requirement, reconfirmed October 6, 2026:** Archivo Expanded is the only typeface for front-facing MOA. Use the actual local Expanded font files for headings, body text, forms, authentication, account components and customer order screens. Normal-width Archivo, system-font body text and secondary typefaces are not brand alternatives. Preserve the existing brand palette and composition; hierarchy comes from size, weight and spacing. Typed customer text keeps its original case.
 
 **Visual rules:** feel like MOA OS, not generic ecommerce. Compact operational proportions. Page titles ~1.4–1.8rem uppercase Archivo Expanded — no oversized marketing hero type. Cards white, cream-dark border, subtle shadow, 8–10px radius. Labels tiny uppercase Archivo (0.58–0.65rem, positive tracking). Primary action = terracotta bg / white text; secondary = white bg / cream-dark border / charcoal text.
 

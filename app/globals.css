@@ -1,52 +1,43 @@
 @font-face {
-  font-family: "Archivo";
+  font-family: "Archivo Expanded";
   src: url("/brand/fonts/Archivo_Expanded-Regular.ttf") format("truetype");
   font-display: swap;
   font-weight: 400;
 }
 
 @font-face {
-  font-family: "Archivo";
+  font-family: "Archivo Expanded";
   src: url("/brand/fonts/Archivo_Expanded-Medium.ttf") format("truetype");
   font-display: swap;
   font-weight: 500;
 }
 
 @font-face {
-  font-family: "Archivo";
+  font-family: "Archivo Expanded";
   src: url("/brand/fonts/Archivo_Expanded-SemiBold.ttf") format("truetype");
   font-display: swap;
   font-weight: 600;
 }
 
 @font-face {
-  font-family: "Archivo";
+  font-family: "Archivo Expanded";
   src: url("/brand/fonts/Archivo_Expanded-Bold.ttf") format("truetype");
   font-display: swap;
   font-weight: 700;
 }
 
 @font-face {
-  font-family: "Archivo";
+  font-family: "Archivo Expanded";
   src: url("/brand/fonts/Archivo_Expanded-ExtraBold.ttf") format("truetype");
   font-display: swap;
   font-weight: 800;
 }
 
 @font-face {
-  font-family: "Archivo";
+  font-family: "Archivo Expanded";
   src: url("/brand/fonts/Archivo_Expanded-Black.ttf") format("truetype");
   font-display: swap;
   font-weight: 900;
-}
-
-/* Archivo NORMAL width (variable) — the text cut of the same superfamily as
-   Archivo Expanded. Used for body copy: readable, narrower, sentence case. */
-@font-face {
-  font-family: "Archivo Text";
-  src: url("/brand/fonts/Archivo-Variable-latin.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 100 900;
 }
 
 :root {
@@ -65,10 +56,9 @@
   /* Darkened from MoaOS's #8A8680: at body-copy sizes on cream that was ~3.0:1
      (fails WCAG AA). #6F6A63 reads the same temperature at ~4.6:1. */
   --color-neutral: #6F6A63;
-  /* Display = Archivo Expanded (ALL CAPS). Body = Archivo normal width (sentence
-     case) — same superfamily, readable, gives hierarchy via width + case + weight. */
-  --font-display: "Archivo", sans-serif;
-  --font-body: "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  /* Archivo Expanded is the only MOA interface typeface, including body and forms. */
+  --font-display: "Archivo Expanded", sans-serif;
+  --font-body: var(--font-display);
   --background: #EEEAE3;
   --foreground: #1E1E1E;
   --card: #FFFFFF;
@@ -9348,9 +9338,9 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .moa-auth-card-box { box-shadow: none !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
 .moa-auth-card { padding: 0 !important; width: 100% !important; border: 0 !important; box-shadow: none !important; background: white !important; gap: 26px !important; }
 .moa-clerk-title { font: 700 21px/1.25 var(--font-display) !important; text-transform: uppercase !important; letter-spacing: -.025em !important; color: var(--color-charcoal) !important; }
-.moa-clerk-subtitle { color: var(--color-neutral) !important; font: 400 15px/1.6 "Archivo Text", sans-serif !important; margin-top: 8px !important; }
+.moa-clerk-subtitle { color: var(--color-neutral) !important; font: 400 15px/1.6 var(--font-body) !important; margin-top: 8px !important; }
 .moa-clerk-label { font: 600 10px/1.5 var(--font-display) !important; text-transform: uppercase !important; letter-spacing: .035em !important; }
-.moa-clerk-input { min-height: 48px !important; border: 1px solid #c8c1b7 !important; border-radius: 6px !important; background: #fff !important; box-shadow: none !important; font: 400 16px/1.5 "Archivo Text", sans-serif !important; padding: 11px 13px !important; }
+.moa-clerk-input { min-height: 48px !important; border: 1px solid #c8c1b7 !important; border-radius: 6px !important; background: #fff !important; box-shadow: none !important; font: 400 16px/1.5 var(--font-body) !important; padding: 11px 13px !important; }
 .moa-clerk-input:focus { border-color: var(--color-terracotta) !important; outline: 2px solid rgba(176,71,49,.18) !important; outline-offset: 1px !important; }
 .moa-clerk-input[aria-invalid="true"] { border-color: var(--color-danger) !important; }
 .moa-clerk-primary { min-height: 48px !important; background: var(--color-terracotta) !important; color: white !important; border-radius: 6px !important; box-shadow: none !important; font: 600 10px/1.5 var(--font-display) !important; letter-spacing: .045em !important; text-transform: uppercase !important; }
@@ -9359,7 +9349,7 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .moa-clerk-socials { display: grid !important; grid-template-columns: 1fr !important; gap: 8px !important; }
 .moa-clerk-social-text { font: 500 10px/1.5 var(--font-display) !important; }
 .moa-clerk-footer-action { display: flex !important; justify-content: center !important; align-items: baseline !important; flex-wrap: wrap !important; gap: 6px !important; padding: 0 !important; }
-.moa-clerk-footer-text, .moa-clerk-footer-action .moa-clerk-link { font: 400 12px/1.5 "Archivo Text", sans-serif !important; }
+.moa-clerk-footer-text, .moa-clerk-footer-action .moa-clerk-link { font: 400 12px/1.5 var(--font-body) !important; }
 .moa-clerk-footer-action .moa-clerk-link { white-space: nowrap !important; font-weight: 600 !important; }
 .moa-clerk-form { gap: 20px !important; }
 .moa-clerk-field-row { margin: 0 !important; }
@@ -9371,11 +9361,11 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; }
 .moa-clerk-otp { min-width: 0 !important; height: 48px !important; border-radius: 6px !important; border-color: #c8c1b7 !important; box-shadow: none !important; }
 .moa-auth-footer { margin-top: 24px !important; background: none !important; background-image: none !important; padding: 0 !important; border-radius: 0 !important; }
 .account-welcome h2, .account-unavailable h2 { font: 700 26px/1.2 var(--font-display); text-transform: uppercase; letter-spacing: -.03em; margin: 22px 0 14px; }
-.account-welcome > p, .account-unavailable p { font: 400 15px/1.65 "Archivo Text", sans-serif; color: var(--color-neutral); }
+.account-welcome > p, .account-unavailable p { font: 400 15px/1.65 var(--font-body); color: var(--color-neutral); }
 .account-success { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 50%; background: #edf1e9; color: var(--color-success); }
 .account-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; min-height: 50px; margin-top: 26px; border-radius: 6px; background: var(--color-terracotta); color: white; font: 600 10px/1.5 var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
 .account-cta:hover { background: var(--terracotta-dark); }
-.account-secondary { display: block; padding: 18px 0; text-align: center; font: 500 13px/1.5 "Archivo Text", sans-serif; text-decoration: underline; text-underline-offset: 4px; }
+.account-secondary { display: block; padding: 18px 0; text-align: center; font: 500 13px/1.5 var(--font-body); text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 760px) {
   .account-entry { max-width: 500px; padding-top: 14px; padding-bottom: 30px; }
   .account-entry-top { margin-bottom: 12px; }

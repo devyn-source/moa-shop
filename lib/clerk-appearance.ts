@@ -18,8 +18,9 @@ export const moaClerkAppearance = {
     colorSuccess: "#3D7A4A",
     colorRing: "rgba(176, 71, 49, 0.25)",
     borderRadius: "0.5rem",
-    fontFamily: '"Archivo Text", -apple-system, BlinkMacSystemFont, sans-serif',
-    fontFamilyButtons: '"Archivo", sans-serif',
+    fontFamily: '"Archivo Expanded", sans-serif',
+    fontFamilyButtons: '"Archivo Expanded", sans-serif',
+    fontFamilyMono: '"Archivo Expanded", sans-serif',
     fontSize: "0.9375rem",
   },
   elements: {
@@ -53,6 +54,8 @@ export const moaAuthAppearance = {
 } satisfies Appearance;
 
 export const moaAuthLocalization = {
+  formFieldInputPlaceholder__emailAddress: "Your email",
+  formFieldInputPlaceholder__emailAddress_username: "Your email",
   signIn: { start: { title: "Welcome back", titleCombined: "Welcome back", subtitle: "", subtitleCombined: "" } },
   signUp: { start: { title: "Create an account", titleCombined: "Create an account", subtitle: "", subtitleCombined: "" } },
 };

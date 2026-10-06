@@ -2,6 +2,22 @@
 
 Started October 5, 2026. Status: OPEN. This is an engineering and operations gate, not permission to enable payments or release factory orders. Final LDP quotes, physical samples, and supplier commercial terms remain a separate deferred workstream.
 
+## Current checkpoint, October 6
+
+Devyn confirmed every launch order ships from China, directly from the overseas factory. Exact physical dispatch addresses are not yet confirmed. The Zhangjiagang invoice address remains evidence of a supplier address only. China origin does not resolve the head-office/registration address mismatch. Live Stripe Tax remains unchanged.
+
+Devyn asked to defer other-user acceptance until the system is ready. Tyler sign-in, production two-account isolation and backup screen drills remain explicit deferred gates, rather than blocking continued engineering work. No invitations or factory messages were sent.
+
+The dedicated Express service is now deployed to Vercel production in `moa-shop-express-service`, separate from MoaOS main. Devyn explicitly approved its narrow production credential setup and previews-only Vercel protection. Its machine routes require the Express secret; unrelated pages, outbound jobs and MCP routes return 404. Public health returns only availability. Production deployment `dpl_3CdeiTwkNXP9k9ncYMNc382C4PBn` has an independently verified empty cron list and enforces sandbox/no-send at build time. Monitoring reads match the previous backend and the existing sandbox fulfillment record is readable. The shop target is being switched to its stable production alias; final shop deployment verification follows. Evidence: [stage-4-service-hosting.json](stage-4-service-hosting.json).
+
+The first service package unexpectedly registered default MoaOS cron paths despite the alternate-config CLI flag. The API boundary rejected those paths. The corrected clean package explicitly replaces the root configuration, and the final deployed cron list is empty. The deployment procedure records this requirement.
+
+A credential-free availability script checks the storefront, sign-in and a dependency health endpoint. A GitHub Actions workflow is prepared at `scripts/operations/availability.workflow.yml` for a best-effort 15-minute schedule, but is not installed: the saved GitHub authorization lacks workflow scope and rejected its creation. The endpoint checks both databases and authenticated backend mode. Results are stored in a job summary and 30-day artifact. Outages are recorded without sending notifications; successful workflow completion is not a healthy-site assertion. Alert delivery is still an open gate requiring exact-message approval.
+
+Archivo Expanded is the only front-facing MOA typeface. The actual local Expanded files now serve global body and display text, embedded Clerk forms, verification/account defaults, welcome content and standalone approval pages. Normal-width Archivo overrides were removed. Legacy shop HTML email templates also request Expanded with hosted font declarations; email clients that block web fonts control fallback rendering. No message was sent. The project brand guide records this requirement. Desktop and 390px signup were visually reviewed locally; a clipped email placeholder was shortened. The approved compact composition and palette are preserved.
+
+Validation: 156 shop tests, type checking and production build pass. Backend has 51 passing tests and a successful production build. The backend full migration-history baseline remains unrepaired; snapshot restore evidence is retained. Operator incident acknowledgment and inbox alert delivery remain unpassed drills.
+
 ## Isolated deployed rehearsal, October 5 evening
 
 Devyn approved the temporary databases. Created schema-only branches `ifepwvgnlfkujnlzapge` (shop) and `eebmgvlfrlduykjhbnsb` (backend), plus separate Vercel projects `moa-stage4-shop-20261005` and `moa-stage4-backend-20261005`. These projects use new database credentials, fresh shared/admin/cron secrets, a new accountless Clerk development instance and Stripe TEST credentials. No production credential bundle was copied. No mail-provider or factory credentials were configured; backend no-send readiness was verified over HTTP.
@@ -36,7 +52,7 @@ The post-deployment monitor correctly surfaces an overdue proof on sandbox order
 
 ## Remaining Stage 4 closure work
 
-The deployed financial recovery and synthetic fulfillment rehearsal is complete. Stage 4 remains OPEN for Tyler sign-in, production account isolation and email-flow acceptance, production tax origin and category review, Devyn/Tyler screen drills, external availability monitoring and approved alert delivery, stable Express backend production hosting, and repair of the backend's full migration baseline. The backend schema snapshot restored successfully, but that does not establish a replayable complete migration history.
+The deployed financial recovery and synthetic fulfillment rehearsal is complete. Stage 4 remains OPEN for Tyler sign-in, production account isolation and email-flow acceptance, production tax origin and category review, Devyn/Tyler screen drills, scheduled external availability observations and approved alert delivery, final dedicated-backend cutover acceptance, and repair of the backend's full migration baseline. The backend schema snapshot restored successfully, but that does not establish a replayable complete migration history.
 
 Production stays in simulation. Samples, final LDP costs and supplier commercial readiness remain the separate deferred workstream.
 

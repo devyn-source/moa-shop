@@ -92,6 +92,7 @@ const customerMiddleware = clerkMiddleware(async (auth, req) => {
 // Payment recovery must stay available during an identity-provider outage.
 const machineRoutes = new Set(["/api/webhooks/stripe", "/api/cron/express-refunds", "/api/cron/express-operations", "/api/cron/fulfillment"]);
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (req.nextUrl.pathname === "/api/health") return NextResponse.next();
   if (machineRoutes.has(req.nextUrl.pathname)) return NextResponse.next();
   return customerMiddleware(req, event);
 }

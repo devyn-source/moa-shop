@@ -26,6 +26,11 @@ export async function getExpressOperations(): Promise<OperationsReport> {
       const sandbox = env.EXPRESS_SANDBOX === "1";
       const response = await fetch(`${base}/api/express/engine-order?sandbox=${sandbox ? "1" : "0"}`, { headers: { "x-express-secret": env.EXPRESS_SECRET, ...(env.MOAOS_BYPASS ? { "x-vercel-protection-bypass": env.MOAOS_BYPASS } : {}) }, cache: "no-store", signal: AbortSignal.timeout(5000) });
       const data = await response.json();
+      const target = checks.find(check => check.id === "backend-target")!;
+      if (target.state === "unknown" && response.ok && data.ok === true && data.serviceOnly === true && data.deploymentEnvironment === "production") {
+        target.state = "pass";
+        target.detail = "Authenticated restricted Express service confirms production deployment. Rollback and schema evidence are recorded separately.";
+      }
       const valid = response.ok && data.payBeforeProof === true && data.mode === (sandbox ? "sandbox" : "live");
       return { id: "backend-access", label: "Backend connectivity and mode", state: valid ? "pass" : "blocked", detail: valid ? "Authenticated readiness probe matches the shop payment mode." : "Backend readiness, authentication, or payment mode does not match." };
     })(),
@@ -61,7 +66,7 @@ export async function getExpressOperations(): Promise<OperationsReport> {
       if (open.error) throw new Error("Monitoring incidents unavailable");
       for (const row of (open.data || []).slice(0, 100)) incidents.push({ reference: row.source_key, mode: "Operations", issue: row.summary, since: row.opened_at, action: row.acknowledged_at ? "Acknowledged. Complete the recorded next action and verify recovery." : "Devyn to review; Tyler is backup. Record acknowledgment and a next review time." });
       if ((open.data?.length || 0) > 100) truncated = true;
-      return { id: "job-monitor", label: "Independent scheduler watchdog", state: current && !open.data?.length ? "pass" : "blocked", detail: !current ? "Watchdog is disabled or has not checked all jobs in the last 10 minutes." : open.data?.length ? "Open monitoring incidents need operator review." : "Database watchdog checked both jobs recently. Notification delivery remains a separate gate." };
+      return { id: "job-monitor", label: "Independent scheduler watchdog", state: current && !open.data?.length ? "pass" : "blocked", detail: !current ? "Watchdog is disabled or has not checked all jobs in the last 10 minutes." : open.data?.length ? "Open monitoring incidents need operator review." : "Database watchdog checked all three jobs recently. Notification delivery remains a separate gate." };
     })(),
   ]);
   const failures = [

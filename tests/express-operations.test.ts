@@ -12,6 +12,10 @@ describe("operational readiness", () => {
     expect(JSON.stringify(checks)).not.toContain("secret-never-disclose");
     expect(checks.find(check => check.id === "tax")?.detail).toContain("headwear");
   });
+  it("does not treat an immutable preview URL as proof of production hosting", () => {
+    const checks = configurationChecks({ MOAOS_EXPRESS_URL: "https://moa-immutable.vercel.app", EXPRESS_SECRET: "private" });
+    expect(checks.find(check => check.id === "backend-target")?.state).toBe("unknown");
+  });
   it("rejects payment-only, disabled and wrong-destination webhook subscriptions", () => {
     const url = "https://shop.test/api/webhooks/stripe";
     const endpoint = { url, status: "enabled", enabled_events: REQUIRED_STRIPE_EVENTS };
