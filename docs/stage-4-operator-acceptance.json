@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-06T19:57:48.154Z",
+  "checkedAt": "2026-10-06T20:48:50.815Z",
   "operator": "Devyn",
   "order": "EXP-1010",
   "mode": "sandbox",
@@ -9,6 +9,67 @@
     "nextAction": "Sandbox drill: review the overdue proof and record its resolution before launch",
     "reviewAt": "2026-10-06 20:56:32.485+00"
   },
-  "resolutionVerified": false,
-  "remaining": "Customer sandbox cancellation requested; confirm refund and backend state, then automatic incident recovery. Backup operator acceptance remains deferred."
+  "resolutionVerified": true,
+  "remaining": "Backup operator, staff fulfillment screens, production second-account isolation and email/recovery acceptance remain deferred.",
+  "resolution": {
+    "orderStatus": "cancelled",
+    "refundStatus": "succeeded",
+    "mode": "express_sandbox",
+    "amountCents": 742500,
+    "backendSyncedAt": "2026-10-06T20:46:56.154Z",
+    "incidentRecoveredAt": "2026-10-06 20:47:45.954872+00",
+    "submittedBy": "Devyn through customer portal after agent prepared confirmation",
+    "realMoneyMoved": false,
+    "messagesSent": false
+  },
+  "operationsAudit": {
+    "http": 200,
+    "checks": [
+      {
+        "id": "checkout-intake",
+        "state": "pass"
+      },
+      {
+        "id": "customer-auth",
+        "state": "pass"
+      },
+      {
+        "id": "backend-target",
+        "state": "pass"
+      },
+      {
+        "id": "tax",
+        "state": "pass"
+      },
+      {
+        "id": "cron-auth",
+        "state": "pass"
+      },
+      {
+        "id": "webhook-secret",
+        "state": "pass"
+      },
+      {
+        "id": "rate-limit",
+        "state": "pass"
+      },
+      {
+        "id": "backend-access",
+        "state": "pass"
+      },
+      {
+        "id": "stripe-events",
+        "state": "pass"
+      },
+      {
+        "id": "queues",
+        "state": "pass"
+      },
+      {
+        "id": "job-monitor",
+        "state": "pass"
+      }
+    ],
+    "openIncidents": 0
+  }
 }
