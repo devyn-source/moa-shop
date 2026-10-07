@@ -7,7 +7,7 @@ export default async function OperationsPage() {
   const report = await getExpressOperations();
   const cases = await getSupabase().from("express_operation_incidents").select("id,summary,owner,opened_at,acknowledged_at,next_action,next_review_at").is("recovered_at", null).order("opened_at").limit(100);
   return <main className="page">
-    <p className="eyebrow">Operator console</p><h1 className="page-title">Launch operations</h1>
+    <p className="eyebrow">Operator console</p><div className="section-head"><h1 className="page-title">Launch operations</h1><Link className="ghost-button" href="/admin/fulfillment">Order fulfillment</Link></div>
     <p className="lede">{report.mode}. Checked {report.checkedAt}. Reload to run fresh read-only checks.</p>
     <p>Passing checks do not authorize launch. Stripe rehearsal, staff access, job monitoring, samples, supplier terms, and final costs still require evidence.</p>
     <p>Primary operator: Devyn. Backup: Tyler. Outbound alerts require approved content.</p>
