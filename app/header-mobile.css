@@ -1,0 +1,8 @@
+/* Keep the centered wordmark clear when a signed-in customer has a full cart. */
+@media (max-width: 540px) {
+  .site-header { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; }
+  .site-actions .nav-link[href="/orders"] { display: none; }
+  .site-actions .cart-button > span:not(.cart-badge) { display: none; }
+  .site-header .site-actions { gap: 10px; }
+  .site-header .brand-logo { height: 28px; }
+}

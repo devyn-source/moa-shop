@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+import "./header-mobile.css";
 import { CartProvider } from "@/components/CartProvider";
 import { CartButton } from "@/components/CartButton";
 import { NavLink } from "@/components/NavLink";

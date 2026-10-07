@@ -58,7 +58,8 @@ function OrderWorkspace({ initial, reload, onUpdate }: { initial: StaffOrder; re
   const needs = order.lines.filter(line => line.sku_id && (!order.rounds.length || latest.get(line.sku_id)?.decision === "changes"));
   const nextRound = order.rounds.length + 1;
   const proofOpen = order.rounds.some(round => !round.closed_at);
-  const proofReady = order.paid && !order.cancelled && !order.approved && !proofOpen && needs.length > 0 && nextRound <= 2;
+  const setupIncomplete = !order.cancelled && !order.approved && !order.projectId;
+  const proofReady = !setupIncomplete && order.paid && !order.cancelled && !order.approved && !proofOpen && needs.length > 0 && nextRound <= 2;
   const disabled = busy || uncertain || order.cancelled || !order.paid;
   const action = state ? ({ handoff: "acknowledge", acknowledged: "start", production: "qc", qc: "ship", shipped: "deliver", delivered: "" } as const)[state.stage] : "prepare";
   const actionLabel: Record<string, string> = { prepare: "Prepare handoff", acknowledge: "Record acknowledgment", start: "Record production start", qc: "Record QC passed", ship: "Record shipment", deliver: "Record delivery" };
@@ -96,6 +97,7 @@ function OrderWorkspace({ initial, reload, onUpdate }: { initial: StaffOrder; re
     <section className={css.card}><div className={css.row}><div><p className={css.label}>{order.number}</p><h2>{order.cancelled ? "Cancelled" : state?.hold ? "On hold" : state ? LABELS[state.stage] : order.approved ? "Ready for handoff" : proofOpen ? "Awaiting customer review" : "Prepare the proof"}</h2><p className={css.muted}>{order.lines.length} {order.lines.length === 1 ? "style" : "styles"} / {order.lines.reduce((n, line) => n + line.qty, 0)} units</p></div><span className={css.badge}>{order.cancelled ? "Cancelled" : order.paid ? "Paid" : "Payment required"}</span></div><div className={css.row}><Link href={`/orders/express/${order.number}`} className={css.muted}>Customer view</Link>{order.projectId ? <a className={css.muted} href={`https://os.magnumopus.agency/projects/${order.projectId}`} target="_blank" rel="noreferrer">MoaOS project</a> : null}<button className={css.secondary} disabled={busy} onClick={reload}>Reload order</button></div></section>
     {error ? <p role="alert" className={css.error}>{error}{uncertain ? " Reload the order before another update." : ""}</p> : null}
     {saved ? <p role="status" className={css.success}>{saved}</p> : null}
+    {setupIncomplete ? <p role="alert" className={css.error}>The linked MoaOS project is unavailable. Restore the order setup and specifications before preparing a proof.</p> : null}
     <section className={css.card}><div className={css.row}><h2>Production proof</h2><span className={css.muted}>{order.rounds.length ? `Round ${order.rounds.length}` : `Due ${date(order.proofDueAt)}`}</span></div>
       {order.lines.map(line => { const item = line.sku_id ? latest.get(line.sku_id) : undefined; const needed = proofReady && needs.includes(line); const images = needed ? mockups[line.sku_id!] || [] : item?.mockups || []; const savedMockup = order.specs[line.sku_id!]?.match(/Engine mockup: (https:\/\/[^\s)]+)/)?.[1];
         return <article className={css.piece} key={line.ref}><div className={css.row}><h3>{line.title} / {line.qty} units</h3><span className={css.badge}>{item?.decision || "Needs proof"}</span></div>{item?.comment ? <p>Customer note: {item.comment}</p> : null}
