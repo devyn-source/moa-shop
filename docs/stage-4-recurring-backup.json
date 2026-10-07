@@ -1,17 +1,17 @@
 {
-  "runId": "e7bcd766-811e-4b18-b057-cdaeff727cc9",
-  "createdAt": 1791308387.711024,
-  "sha256": "567d9f9ebcd93d86eed3c7fb73a96166df52df92c5a47c08d2e1e5a0cade5efd",
-  "md5": "cf002c72f9862ccb8b9a2c2aa85599ee",
-  "size": 114053120,
+  "runId": "5809e404-b526-4f1c-84ed-efc4829c5ade",
+  "createdAt": 1791406039.187927,
+  "sha256": "2faf08392ae13ecb05df46e2616272a40a643de8e3e9f116bd5b0b2352c4bb31",
+  "md5": "b822f0aa3270fa81d07a6ade0e0d9d4a",
+  "size": 114718720,
   "reports": [
     {
       "profile": "shop",
-      "objectCount": 194,
-      "bytes": 113572995,
+      "objectCount": 198,
+      "bytes": 114233795,
       "verified": true,
       "keyId": "7712e232fb57642a",
-      "capturedAt": "2026-10-06T17:39:38.708Z"
+      "capturedAt": "2026-10-07T20:47:16.113Z"
     },
     {
       "profile": "backend",
@@ -19,16 +19,16 @@
       "bytes": 210,
       "verified": true,
       "keyId": "7712e232fb57642a",
-      "capturedAt": "2026-10-06T17:39:43.010Z"
+      "capturedAt": "2026-10-07T20:47:19.075Z"
     }
   ],
-  "driveFileId": "1wyaZopIZaEtrre2L6_KwNO3fiDFAnZkz",
-  "verifiedAt": 1791308530.374562,
+  "driveFileId": "1s8-wFEngeOULMCjmvZ9onHDkseJT2Dl7",
+  "verifiedAt": 1791406072.2671812,
   "ownerOnly": true,
   "roundtripVerified": true,
   "scheduler": "com.moa.catalog-storage-backup",
   "schedule": "Checks at login and minute 36 of each hour; capture only when oldest verified source capture is at least 24 hours old",
-  "lastExecutionTrigger": "launchctl retry after working-directory correction",
+  "lastExecutionTrigger": "One additional capture explicitly approved by Devyn after the October 7 screen rehearsal",
   "dependsOnMac": true,
   "independentBackupWatchdog": true,
   "initialFailuresDetected": true,

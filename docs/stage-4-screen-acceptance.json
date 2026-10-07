@@ -169,5 +169,17 @@
     "Email-flow acceptance",
     "Production physical and provider-configuration recovery",
     "Separate deferred physical product and commercial approval"
-  ]
+  ],
+  "handoff": {
+    "build": "deployed and ready for review",
+    "otherUserAcceptance": "deferred by Devyn; finish build first and improve afterward",
+    "paidPhysicalRestore": "explicitly deferred by Devyn",
+    "approvedExtraStorageBackup": {
+      "verifiedAt": 1791406072.2671812,
+      "ownerOnly": true,
+      "roundtripVerified": true,
+      "objectCount": 201,
+      "driveFileId": "1s8-wFEngeOULMCjmvZ9onHDkseJT2Dl7"
+    }
+  }
 }
