@@ -2,7 +2,17 @@
 
 Started October 5, 2026. Status: OPEN. This is an engineering and operations gate, not permission to enable payments or release factory orders. Final LDP quotes, physical samples, and supplier commercial terms remain a separate deferred workstream.
 
-## Current checkpoint, October 6
+## Current checkpoint, October 7
+
+The complete primary-operator and customer screen rehearsal passed on EXP-1012: fresh uploads, two proof rounds, partial approval and revision locking, final approval, factory handoff, acknowledgment, production start, hold/resume, QC, tracking and delivery. The customer page visibly showed delivery, and the service independently confirmed both closed rounds plus all eight attributable fulfillment events. The incomplete-address check correctly blocked the first handoff attempt. [Screen acceptance](stage-4-screen-acceptance.json) and [staff console detail](stage-4-staff-console.md).
+
+The original EXP-1011 interruption was traced to a project deletion in the application audit. Its retained order was cancelled with a successful reconciled sandbox refund; no records were restored. MoaOS PR 35 now blocks four application deletion routes for Shop-linked records, including completed orders. Twelve regression tests, type checking and production build passed; production is READY at `dpl_GatyoUcVMuLiyh9JBAmV4g4b7v2q`. This was a narrow fix on main, not a merge of the Express branch.
+
+The October 7 20:32 UTC operations audit is HTTP 200 with all 11 checks passing and zero open incidents. Production remains Sandbox simulation. No money, messages, factory release or physical shipment occurred.
+
+Remaining engineering/operations gates: Tyler's backup-operator sign-in, production second-account isolation, approved email-flow acceptance, and production physical/provider-configuration recovery. Other-user acceptance was previously deferred and is now ready to coordinate. Final costs, samples, supplier terms and product publication remain a separate deferred workstream. Earlier checkpoints below are historical and do not override this status.
+
+## Previous checkpoint, October 6
 
 Tax configuration is deployed at `655c1a8`, READY `dpl_4Ny1cjWbbUg5iAWgvfHWcz8qaTfB`. The production operations audit reports tax pass and Sandbox simulation. Storefront, sign-in and dependency health all returned HTTP 200 and healthy at 20:00 UTC. Twelve focused tax/operations tests, type checking and the production build passed. Devyn completed the actual production operator acknowledgment at 19:56 UTC, retaining himself as owner with a next action and one-hour review time. Devyn then cancelled the old sandbox order through the customer portal. The shop recorded a successful simulated 742,500-cent refund, the backend reconciled the same amount and cancelled order, and the no-send monitor marked the incident recovered at 20:47:45 UTC. The subsequent production audit returned HTTP 200 with all 11 checks passing and zero open incidents. [Operator evidence](stage-4-operator-acceptance.json).
 

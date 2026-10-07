@@ -1,0 +1,173 @@
+{
+  "checkedAt": "2026-10-07T20:36:17.452Z",
+  "order": "EXP-1012",
+  "mode": "sandbox",
+  "operator": "Devyn, existing production Clerk account",
+  "status": "delivered",
+  "paid": true,
+  "approved": true,
+  "rounds": [
+    {
+      "round": 1,
+      "closed": true,
+      "items": [
+        {
+          "title": "Standard Tote",
+          "decision": "approved"
+        },
+        {
+          "title": "Canvas Work Jacket",
+          "decision": "changes"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "closed": true,
+      "items": [
+        {
+          "title": "Canvas Work Jacket",
+          "decision": "approved"
+        }
+      ]
+    }
+  ],
+  "freshFileUploads": 2,
+  "uploadMechanism": "Chrome native file picker",
+  "fulfillment": {
+    "stage": "delivered",
+    "version": 8,
+    "hold": null,
+    "deliveredAt": "2026-10-07T20:22:08.708Z",
+    "events": [
+      {
+        "action": "prepare",
+        "at": "2026-10-07T20:16:31.443Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "acknowledge",
+        "at": "2026-10-07T20:17:50.291Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "start",
+        "at": "2026-10-07T20:18:21.586Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "hold",
+        "at": "2026-10-07T20:19:04.232Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "resume",
+        "at": "2026-10-07T20:19:54.363Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "qc",
+        "at": "2026-10-07T20:20:32.028Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "ship",
+        "at": "2026-10-07T20:21:26.958Z",
+        "operatorAttributed": true
+      },
+      {
+        "action": "deliver",
+        "at": "2026-10-07T20:22:08.708Z",
+        "operatorAttributed": true
+      }
+    ]
+  },
+  "negativeChecks": [
+    "Approved tote was locked during jacket-only revision",
+    "Cancellation disappeared after first piece approval",
+    "Incomplete synthetic shipping address blocked handoff",
+    "Active hold prevented QC advancement"
+  ],
+  "orphanFixture": {
+    "number": "EXP-1011",
+    "rootCause": "Project deletion recorded by api/projects/delete at 2026-10-07T16:30:15.387907+00:00",
+    "recordsRestored": false,
+    "closure": "Existing application cancellation and refund routine, server-side maintenance",
+    "refundStatus": "succeeded",
+    "amountCents": 2227500,
+    "mode": "express_sandbox"
+  },
+  "operations": {
+    "checkedAt": "2026-10-07T20:32:25.280Z",
+    "http": 200,
+    "mode": "Sandbox simulation",
+    "checks": [
+      {
+        "id": "checkout-intake",
+        "state": "pass"
+      },
+      {
+        "id": "customer-auth",
+        "state": "pass"
+      },
+      {
+        "id": "backend-target",
+        "state": "pass"
+      },
+      {
+        "id": "tax",
+        "state": "pass"
+      },
+      {
+        "id": "cron-auth",
+        "state": "pass"
+      },
+      {
+        "id": "webhook-secret",
+        "state": "pass"
+      },
+      {
+        "id": "rate-limit",
+        "state": "pass"
+      },
+      {
+        "id": "backend-access",
+        "state": "pass"
+      },
+      {
+        "id": "stripe-events",
+        "state": "pass"
+      },
+      {
+        "id": "queues",
+        "state": "pass"
+      },
+      {
+        "id": "job-monitor",
+        "state": "pass"
+      }
+    ],
+    "openIncidents": 0,
+    "truncated": false
+  },
+  "retentionRepair": {
+    "pr": "https://github.com/devyn-source/moa-os/pull/35",
+    "commit": "3d97f896b9ff9a774350ca1b51e0094c5b1c5527",
+    "deployment": "dpl_GatyoUcVMuLiyh9JBAmV4g4b7v2q",
+    "state": "READY",
+    "tests": 12,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "scope": "Four authenticated delete routes; application-level preflight"
+  },
+  "messagesSent": false,
+  "realMoneyMoved": false,
+  "physicalShipment": false,
+  "remaining": [
+    "Backup operator sign-in",
+    "Production second-account isolation",
+    "Email-flow acceptance",
+    "Production physical and provider-configuration recovery",
+    "Separate deferred physical product and commercial approval"
+  ]
+}

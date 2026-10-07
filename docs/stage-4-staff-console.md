@@ -1,6 +1,6 @@
 # Stage 4 staff console, October 7
 
-Status: deployed in sandbox; the complete staff screen rehearsal remains open.
+Status: deployed in sandbox; the full staff and primary-customer screen rehearsal passed October 7 at 20:22 UTC. Other Stage 4 gates remain open.
 
 The signed-in staff workflow is available at https://shop.magnumopus.agency/admin/fulfillment and linked from the operations console. It uses the shop's existing Clerk allowlist and isolated Express service connection. MoaOS main was not changed and no credentials were copied into another project.
 
@@ -25,12 +25,20 @@ The shop server resolves the verified operator from Clerk. It rejects customer a
 - Desktop and 390px interface review confirmed Archivo Expanded. The 390px page had no horizontal overflow. A signed-in mobile header overlap was found, repaired and visually rechecked.
 - The final operations audit remained in Sandbox simulation: ten checks passed, with the watchdog blocked by the existing overdue EXP-1011 proof incident.
 
-## Rehearsal interruption
+## Completed screen rehearsal, October 7
 
-EXP-1011 initially had its linked MoaOS project, two SKU specifications, saved mockups and recorded simulated payment. During the screen rehearsal, its project reference became null and both SKU specification records became unavailable. The read-only staff API independently confirmed this change. A narrowly scoped application audit query returned no matching entries, so the change's source is not established. This session did not delete or restore those records.
+EXP-1012 completed the actual signed-in Chrome screens with the existing primary operator. Two fresh PNG uploads passed through the native file picker. Round one approved the tote and requested a jacket revision. Round two exposed only the jacket, retained the tote's approval, and saved the customer's jacket approval. Cancellation was unavailable after the first approval. This supersedes the earlier upload and missing-specification blocker.
 
-The proof upload automation also encountered the Chrome extension's disabled file-URL access. Native picker attempts did not produce a verified upload. Do not count the upload, proof save, customer decision or subsequent milestone screen rehearsal as passed. The existing API/model rehearsals are separate evidence and do not close this screen gate.
+Handoff initially rejected an incomplete synthetic shipping address without creating a handoff. After the sandbox address was completed, the screens saved preparation, acknowledgment, production start, hold, resume, QC, shipment and delivery. The hold prevented QC advancement. The authenticated service independently returned delivered, fulfillment version 8, no active hold, two closed proof rounds, two specifications and all eight events attributed to the operator. The customer page visibly showed delivered at 1:22 PM PT. All factory names, evidence and tracking were explicitly synthetic. [Screen and persistence evidence](stage-4-screen-acceptance.json).
 
-Next: coordinate the sandbox cleanup with Devyn, then use a complete sandbox fixture for the actual proof, approval, handoff, hold/resume, QC and tracking screen drill. Preserve current records until that coordination is complete. Fresh file upload remains a separate browser acceptance check. Backup-operator access, production account isolation, email-flow acceptance and provider-level recovery remain other Stage 4 gates.
+## Original fixture and prevention
+
+A corrected audit query using the actual `ts` field found the original EXP-1011 project deletion at `2026-10-07T16:30:15.387907+00:00`, through `api/projects/delete`, recorded under Devyn's account. No restoration was performed. The retained order was closed using the application's existing cancellation/refund routine in sandbox mode; the simulated 2,227,500-cent refund succeeded and reconciled. This was server-side maintenance, separate from the browser acceptance evidence.
+
+The narrow MoaOS repair [PR 35](https://github.com/devyn-source/moa-os/pull/35) is merged at `3d97f896b9ff9a774350ca1b51e0094c5b1c5527`, READY production deployment `dpl_GatyoUcVMuLiyh9JBAmV4g4b7v2q`. Four deletion routes now reject records linked to Shop orders before deleting dependent data, including cancelled and delivered orders. A failed lookup returns 503 without deletion. Twelve route regression tests, type checking and the production build passed. This is application-level preflight protection, not a database-level immutability guarantee. The Express branch was not merged into MoaOS main.
+
+The no-send monitor recovered the obsolete proof incident. The October 7 20:32 UTC operations audit returned HTTP 200, all 11 checks passing, zero open incidents and Sandbox simulation.
+
+Backup-operator access, production second-account isolation, email-flow acceptance and production physical/provider-configuration recovery remain separate Stage 4 gates. Physical product and supplier clearance remain deferred. The primary-operator rehearsal does not establish those results.
 
 No email, Slack notification, real charge, real refund or factory release was sent by this implementation or verification.
