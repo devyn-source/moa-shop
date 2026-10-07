@@ -40,12 +40,12 @@ export default function FulfillmentConsole() {
     {error ? <p role="alert" className={css.error}>{error} <button className={css.secondary} onClick={() => load(selected)}>Reload</button></p> : null}
     <div className={css.layout}>
       <aside className={css.queue}><h2>Orders</h2>{queue.map(item => <button key={item.order_number} className={css.order} aria-current={selected === item.order_number} disabled={loading} onClick={() => load(item.order_number)}><strong>{item.order_number}</strong><span className={css.muted}>{item.status.replaceAll("_", " ")}</span></button>)}{!loading && !queue.length ? <p className={css.card}>No sandbox orders.</p> : null}{truncated ? <p className={css.muted}>Showing the latest 100 orders.</p> : null}</aside>
-      {loading ? <section className={css.card} aria-live="polite">Loading order</section> : order ? <OrderWorkspace key={order.number} initial={order} reload={() => load(order.number)} /> : null}
+      {loading ? <section className={css.card} aria-live="polite">Loading order</section> : order ? <OrderWorkspace key={order.number} initial={order} reload={() => load(order.number)} onUpdate={updated => setQueue(previous => previous.map(item => item.order_number === updated.number ? { ...item, status: updated.status } : item))} /> : null}
     </div>
   </main>;
 }
 
-function OrderWorkspace({ initial, reload }: { initial: StaffOrder; reload: () => void }) {
+function OrderWorkspace({ initial, reload, onUpdate }: { initial: StaffOrder; reload: () => void; onUpdate: (order: StaffOrder) => void }) {
   const [order, setOrder] = useState(initial), [busy, setBusy] = useState(false), [error, setError] = useState(""), [saved, setSaved] = useState("");
   const [uncertain, setUncertain] = useState(false), [note, setNote] = useState(""), [shipDate, setShipDate] = useState("");
   const [factories, setFactories] = useState<Record<string, string>>({}), [evidence, setEvidence] = useState(""), [checked, setChecked] = useState(false);
@@ -68,7 +68,7 @@ function OrderWorkspace({ initial, reload }: { initial: StaffOrder; reload: () =
     inFlight.current = true; setBusy(true); setError(""); setSaved("");
     try {
       const result = await read(await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...command, number: order.number }) }));
-      setOrder(result.order); setNote(""); setSpecChecked(false); setMockups({}); setChecked(false); setSaved("Update saved.");
+      setOrder(result.order); onUpdate(result.order); setNote(""); setSpecChecked(false); setMockups({}); setChecked(false); setSaved("Update saved.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Connection interrupted. Reload to check the saved order.");
       setUncertain(true);
@@ -99,7 +99,7 @@ function OrderWorkspace({ initial, reload }: { initial: StaffOrder; reload: () =
     <section className={css.card}><div className={css.row}><h2>Production proof</h2><span className={css.muted}>{order.rounds.length ? `Round ${order.rounds.length}` : `Due ${date(order.proofDueAt)}`}</span></div>
       {order.lines.map(line => { const item = line.sku_id ? latest.get(line.sku_id) : undefined; const needed = proofReady && needs.includes(line); const images = needed ? mockups[line.sku_id!] || [] : item?.mockups || [];
         return <article className={css.piece} key={line.ref}><div className={css.row}><h3>{line.title} / {line.qty} units</h3><span className={css.badge}>{item?.decision || "Needs proof"}</span></div>{item?.comment ? <p>Customer note: {item.comment}</p> : null}
-          <details><summary>Production specification</summary><p className={css.spec}>{(needed ? order.specs[line.sku_id!] : item?.spec || order.specs[line.sku_id!]) || "Add the production specification in the MoaOS project before preparing the proof."}</p></details>
+          <details><summary>Production specification</summary><Specification text={(needed ? order.specs[line.sku_id!] : item?.spec || order.specs[line.sku_id!]) || "Add the production specification in the MoaOS project before preparing the proof."} /></details>
           <div className={css.images}>{images.map((url, index) => <div key={url}><a href={url} target="_blank" rel="noreferrer">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={url} alt={`${line.title} proof ${index + 1}`} /></a>{needed ? <button className={css.secondary} disabled={disabled} onClick={() => setMockups(previous => ({ ...previous, [line.sku_id!]: previous[line.sku_id!].filter(value => value !== url) }))}>Remove</button> : null}</div>)}</div>
           {needed ? <label className={css.form}><span className={css.label}>Upload proof / PNG, JPG, WebP or PDF</span><input aria-label={`Upload proof for ${line.title}`} type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple disabled={disabled || images.length >= 8} onChange={e => upload(line.sku_id!, e.target.files)} /></label> : null}
         </article>;
@@ -115,8 +115,12 @@ function OrderWorkspace({ initial, reload }: { initial: StaffOrder; reload: () =
         {action === "ship" && !state?.hold ? <><label>Carrier<select value={carrier} disabled={disabled} onChange={e => setCarrier(e.target.value)}>{["UPS", "FedEx", "DHL", "USPS", "Other"].map(value => <option key={value}>{value}</option>)}</select></label><label>Tracking number<input value={tracking} disabled={disabled} maxLength={100} onChange={e => setTracking(e.target.value)} /></label><label>Tracking link<input type="url" value={trackingUrl} disabled={disabled} placeholder="https://" onChange={e => setTrackingUrl(e.target.value)} /></label><p className={css.muted}>This shipment must cover the entire order.</p></> : null}
         <div className={css.row}>{!state?.hold ? <button className={css.button} disabled={disabled || !validMilestone} onClick={advance}>{busy ? "Saving" : actionLabel[action]}</button> : null}{state ? <button className={css.secondary} disabled={disabled || note.trim().length < 3} onClick={() => milestone({ action: state.hold ? "resume" : "hold", note })}>{state.hold ? "Resolve hold" : "Put on hold"}</button> : null}</div>
       </div>}
-      {state ? <details className={css.piece}><summary>Approved factory handoff</summary><p className={css.spec}>Ship to: {typeof state.pack.shipTo === "string" ? state.pack.shipTo : Object.values(state.pack.shipTo).filter(Boolean).join(", ")}</p>{state.pack.pieces.map(piece => <article key={piece.skuId} className={css.piece}><h3>{piece.title} / {piece.qty} units / {piece.factory}</h3><p className={css.muted}>Proof {piece.proofRound}, approved by {piece.approvedBy} / {date(piece.approvedAt)}</p><p className={css.spec}>{piece.spec}</p></article>)}</details> : null}
+      {state ? <details className={css.piece}><summary>Approved factory handoff</summary><p className={css.spec}>Ship to: {typeof state.pack.shipTo === "string" ? state.pack.shipTo : Object.values(state.pack.shipTo).filter(Boolean).join(", ")}</p>{state.pack.pieces.map(piece => <article key={piece.skuId} className={css.piece}><h3>{piece.title} / {piece.qty} units / {piece.factory}</h3><p className={css.muted}>Proof {piece.proofRound}, approved by {piece.approvedBy} / {date(piece.approvedAt)}</p><Specification text={piece.spec} /></article>)}</details> : null}
     </section>
     {state?.events.length ? <section className={css.card}><h2>Order history</h2><div style={{ marginTop: 24 }}>{[...state.events].reverse().map(event => <article className={css.event} key={event.id}><div className={css.row}><h3>{event.action === "hold" ? "On hold" : event.action === "resume" ? "Hold resolved" : LABELS[event.stage]}</h3><span className={css.muted}>{date(event.at)}</span></div><p className={css.spec}>{event.note}</p><span className={css.muted}>{event.actor}</span></article>)}</div></section> : null}
   </div>;
+}
+
+function Specification({ text }: { text: string }) {
+  return <p className={css.spec}>{text.split(/(https:\/\/[^\s)]+)/g).map((part, index) => part.startsWith("https://") ? <a key={index} href={part} target="_blank" rel="noreferrer" className={css.fileLink}>Open reference file</a> : part)}</p>;
 }
